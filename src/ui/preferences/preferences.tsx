@@ -1,10 +1,14 @@
 import {
+  AccessibilityIcon,
+  BellIcon,
   CheckIcon,
   CopyIcon,
   GearIcon,
   GitCommitIcon,
   HomeIcon,
   PaintbrushIcon,
+  PersonIcon,
+  QuestionIcon,
   RepoIcon,
   TrashIcon
 } from "@primer/octicons-react"
@@ -13,6 +17,7 @@ import { Touchpad } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { type PreferencesTab, PreferencesTabs } from "@/features/preferences/store"
 import { getGlobalConfigValue, setGlobalConfigValue } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import { pollDeviceAuthorization } from "@/lib/device-authorization"
@@ -37,17 +42,28 @@ import { instanceFromURL } from "../../lib/account-host"
 import { validateURL } from "../../lib/enterprise-validate-url"
 import { Select } from "../desktop/select"
 import { AutolinkRules } from "./autolink-rules"
+import { AccessibilityTab, BackgroundUpdatesSettings, NotificationsTab, PromptsTab } from "./desktop-settings"
 
 /** Settings use the project's shadcn/Base UI Dialog and vertical Tabs.
  * The navigation, active state, focus and panel relationships belong to Tabs. */
 
-const TABS = ["accounts", "git", "repository", "appearance", "advanced", "trackpad"] as const
-
-const TAB_ICONS = [HomeIcon, GitCommitIcon, RepoIcon, PaintbrushIcon, GearIcon, Touchpad]
+/** 图标照原版各页签（home / person / gitCommit / paintbrush / bell / question / gear / accessibility） */
+const TAB_ICONS: Record<PreferencesTab, React.ComponentType<{ size?: number; "data-icon"?: string }>> = {
+  accounts: HomeIcon,
+  integrations: PersonIcon,
+  git: GitCommitIcon,
+  appearance: PaintbrushIcon,
+  notifications: BellIcon,
+  prompts: QuestionIcon,
+  advanced: GearIcon,
+  accessibility: AccessibilityIcon,
+  repository: RepoIcon,
+  trackpad: Touchpad
+}
 
 interface Props {
   open: boolean
-  initialTab?: number
+  initialTab?: PreferencesTab
   onOpenChange: (open: boolean) => void
   state: AppState
   onPatch: (p: Partial<AppState>) => void
@@ -95,12 +111,12 @@ export function Preferences({
   hosts,
   accounts,
   onAccountsChanged,
-  initialTab = 0
+  initialTab = "accounts"
 }: Props) {
   const { t } = useTranslation()
-  const [index, setIndex] = useState(initialTab)
+  const [tab, setTab] = useState(initialTab)
   useEffect(() => {
-    if (open) setIndex(initialTab)
+    if (open) setTab(initialTab)
   }, [open, initialTab])
 
   return (
@@ -111,17 +127,16 @@ export function Preferences({
             左栏菜单从上到下通栏拉满、与右列之间一条发丝线；标题只属于右列。 */}
         <Tabs
           orientation="vertical"
-          value={TABS[index]}
+          value={tab}
           onValueChange={value => {
-            const next = TABS.indexOf(value)
-            if (next !== -1) setIndex(next)
+            if (PreferencesTabs.includes(value)) setTab(value)
           }}
           className="h-full min-h-0 gap-0">
           <TabsList
             aria-label={t("prefs.title")}
             className="w-48 shrink-0 items-stretch justify-start gap-0.5 rounded-none border-r bg-transparent px-3 py-4 group-data-vertical/tabs:h-full">
-            {TABS.map((id, i) => {
-              const Icon = TAB_ICONS[i]
+            {PreferencesTabs.map(id => {
+              const Icon = TAB_ICONS[id]
               return (
                 <TabsTrigger key={id} value={id} className="h-9 flex-none justify-start gap-2 px-3">
                   <Icon data-icon="inline-start" size={16} />
@@ -150,6 +165,9 @@ export function Preferences({
                 }
               />
             </TabsContent>
+            <TabsContent value="integrations" className="min-h-0 overflow-y-auto p-4">
+              <IntegrationSettings state={state} onPatch={onPatch} />
+            </TabsContent>
             <TabsContent value="git" className="min-h-0 overflow-y-auto p-4">
               <GitTab repo={repo} />
             </TabsContent>
@@ -159,6 +177,15 @@ export function Preferences({
             <TabsContent value="appearance" className="min-h-0 overflow-y-auto p-4">
               <AppearanceTab theme={state.theme} onChange={theme => onPatch({ theme })} />
             </TabsContent>
+            <TabsContent value="notifications" className="min-h-0 overflow-y-auto p-4">
+              <NotificationsTab />
+            </TabsContent>
+            <TabsContent value="prompts" className="min-h-0 overflow-y-auto p-4">
+              <PromptsTab />
+            </TabsContent>
+            <TabsContent value="accessibility" className="min-h-0 overflow-y-auto p-4">
+              <AccessibilityTab />
+            </TabsContent>
             <TabsContent value="trackpad" className="min-h-0 overflow-y-auto p-4">
               <TrackpadTab
                 enabled={state.canvasTrackpadGestures ?? false}
@@ -166,8 +193,8 @@ export function Preferences({
               />
             </TabsContent>
             <TabsContent value="advanced" className="min-h-0 overflow-y-auto p-4">
+              <BackgroundUpdatesSettings />
               <DesktopImportSettings state={state} onPatch={onPatch} />
-              <IntegrationSettings state={state} onPatch={onPatch} />
               <AdvancedTab language={state.language} onChange={language => onPatch({ language })} />
               <SettingGroup>
                 <AutolinkRules rules={state.autolinks ?? []} onChange={autolinks => onPatch({ autolinks })} />

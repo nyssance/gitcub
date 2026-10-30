@@ -2,6 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePreferencesStore } from "@/features/preferences/store"
 import { type DiffTokens, toTextDiff } from "@/lib/diff"
 import type { ILineTokens } from "@/upstream/lib/highlighter/types"
 import {
@@ -224,6 +225,7 @@ export function SplitDiff({
   // 不换行时整张 diff 一起横向滚动：行组撑到已渲染行里最宽的那行，短行的底色才能跟着铺满。
   // 虚拟列表只渲染可见行，往下滚出现更长的行时再变宽；换文件或切回换行时重来。
   // 测量结果跟着这份布局走：换文件、切换行或并排时旧宽度作废，按新内容重新量
+  const showDiffCheckMarks = usePreferencesStore(s => s.showDiffCheckMarks)
   const layoutKey = useMemo(() => ({ diff, wrap, split }), [diff, wrap, split])
   const [measured, setMeasured] = useState<{ key: object; width: number } | null>(null)
   const contentWidth = measured?.key === layoutKey ? measured.width : 0
@@ -487,7 +489,7 @@ export function SplitDiff({
                   if (button) expansionRefs.current.set(key, button)
                   else expansionRefs.current.delete(key)
                 }}
-                showDiffCheckMarks
+                showDiffCheckMarks={showDiffCheckMarks}
                 rowSelectableGroup={groupFor(item.index)}
               />
             </div>

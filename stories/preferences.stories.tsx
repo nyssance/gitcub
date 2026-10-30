@@ -2,8 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 
 import { assertNativeFixtures, installNativeFixtures, nativeCall, withNativeFixtures } from "../.storybook/mocks/native"
+import { PreferencesTabs, usePreferencesStore } from "../src/features/preferences/store"
 import i18n from "../src/lib/i18n"
 import { Preferences } from "../src/ui/preferences/preferences"
+import { UncommittedChangesStrategy } from "../src/upstream/models/uncommitted-changes-strategy"
 
 const meta = {
   title: "Settings/Navigation",
@@ -55,7 +57,7 @@ export const NavigationContract: Story = {
         await expect(getComputedStyle(tab).borderTopColor).toBe("rgba(0, 0, 0, 0)")
       }
     }
-    for (const id of ["git", "repository", "appearance", "advanced", "trackpad", "accounts"]) {
+    for (const id of [...PreferencesTabs.slice(1), "accounts"]) {
       const tab = within(dialog).getByRole("tab", { name: i18n.t(`prefs.${id}`) })
       await userEvent.click(tab)
       await waitFor(() => {
@@ -79,11 +81,11 @@ export const NavigationContract: Story = {
   }
 }
 export const Accounts: Story = {}
-export const GitIdentity: Story = { args: { initialTab: 1 } }
-export const RepositoryNotSelected: Story = { args: { initialTab: 2 } }
-export const Appearance: Story = { args: { initialTab: 3 } }
+export const GitIdentity: Story = { args: { initialTab: "git" } }
+export const RepositoryNotSelected: Story = { args: { initialTab: "repository" } }
+export const Appearance: Story = { args: { initialTab: "appearance" } }
 export const Trackpad: Story = {
-  args: { initialTab: 5 },
+  args: { initialTab: "trackpad" },
   beforeEach: withNativeFixtures({ has_trackpad: () => true }),
   play: async ({ args }) => {
     const toggle = await within(document.body).findByRole("switch", { name: i18n.t("prefs.canvasTrackpad") })
@@ -93,7 +95,7 @@ export const Trackpad: Story = {
     await expect(args.onPatch).toHaveBeenCalledWith({ canvasTrackpadGestures: true })
   }
 }
-export const Advanced: Story = { args: { initialTab: 4 } }
+export const Advanced: Story = { args: { initialTab: "advanced" } }
 
 const repositoryFixtures = {
   remotes: () => [["origin", "https://github.com/gitcub/gitcub.git"]],
@@ -101,7 +103,7 @@ const repositoryFixtures = {
   git_identity: () => ({ name: "GitCub Preview", email: "preview@example.test" })
 }
 export const RepositoryLoadingCannotWrite: Story = {
-  args: { initialTab: 2, repo: "/preview/repository" },
+  args: { initialTab: "repository", repo: "/preview/repository" },
   beforeEach: withNativeFixtures({
     ...repositoryFixtures,
     read_gitignore: () => new Promise<never>(() => {}),
@@ -119,7 +121,7 @@ export const RepositoryLoadingCannotWrite: Story = {
   }
 }
 export const RepositoryFailedReadCannotWrite: Story = {
-  args: { initialTab: 2, repo: "/preview/repository" },
+  args: { initialTab: "repository", repo: "/preview/repository" },
   beforeEach: withNativeFixtures({
     ...repositoryFixtures,
     read_gitignore: () => {
@@ -134,7 +136,7 @@ export const RepositoryFailedReadCannotWrite: Story = {
   }
 }
 export const RemoteRefreshPreservesIgnoreEdits: Story = {
-  args: { initialTab: 2, repo: "/preview/repository" },
+  args: { initialTab: "repository", repo: "/preview/repository" },
   beforeEach: () => {
     let removed = false
     return withNativeFixtures({
@@ -163,7 +165,10 @@ export const RemoteRefreshPreservesIgnoreEdits: Story = {
 }
 
 export const ImportLocalDesktop: Story = {
-  args: { initialTab: 4, state: { ...meta.args.state, repositories: ["/existing"], selectedRepository: "/existing" } },
+  args: {
+    initialTab: "advanced",
+    state: { ...meta.args.state, repositories: ["/existing"], selectedRepository: "/existing" }
+  },
   beforeEach: withNativeFixtures({
     read_desktop_import: () => ({
       repositories: ["/existing", "/imported"],
@@ -196,7 +201,7 @@ export const ImportLocalDesktop: Story = {
 }
 
 export const ImportLocalDesktopFailure: Story = {
-  args: { initialTab: 4 },
+  args: { initialTab: "advanced" },
   beforeEach: withNativeFixtures({
     read_desktop_import: () => {
       throw new Error("Desktop storage changed. Retry after quitting Desktop.")
@@ -217,7 +222,7 @@ export const ImportLocalDesktopFailure: Story = {
 }
 
 export const ImportLocalDesktopBusy: Story = {
-  args: { initialTab: 4 },
+  args: { initialTab: "advanced" },
   beforeEach: withNativeFixtures({ read_desktop_import: () => new Promise<never>(() => {}) }),
   play: async () => {
     const screen = within(document.body)
@@ -249,7 +254,7 @@ export const GitLabFromDesktop: Story = {
 }
 
 export const TrackpadUnavailable: Story = {
-  args: { initialTab: 5, state: { ...meta.args.state, canvasTrackpadGestures: true } },
+  args: { initialTab: "trackpad", state: { ...meta.args.state, canvasTrackpadGestures: true } },
   play: async ({ args }) => {
     const screen = within(document.body)
     await expect(await screen.findByText(i18n.t("prefs.noTrackpad"))).toBeVisible()
@@ -261,7 +266,7 @@ export const TrackpadUnavailable: Story = {
   }
 }
 export const TrackpadReconnect: Story = {
-  args: { initialTab: 5, state: { ...meta.args.state, canvasTrackpadGestures: true } },
+  args: { initialTab: "trackpad", state: { ...meta.args.state, canvasTrackpadGestures: true } },
   beforeEach: () => {
     let present = false
     return withNativeFixtures({
@@ -285,3 +290,33 @@ export const TrackpadReconnect: Story = {
     await expect(toggle).not.toBeChecked()
   }
 }
+
+/** Desktop preferences/prompts.tsx：确认项、切换分支时的未提交更改、提交长度警告，改了立即写回 localStorage */
+export const Prompts: Story = {
+  args: { initialTab: "prompts" },
+  beforeEach: () => {
+    const reset = () => {
+      localStorage.removeItem("confirmForcePush")
+      localStorage.removeItem("uncommittedChangesStrategyKind")
+      usePreferencesStore.setState({
+        confirmForcePush: true,
+        uncommittedChangesStrategy: UncommittedChangesStrategy.AskForConfirmation
+      })
+    }
+    reset()
+    return reset
+  },
+  play: async () => {
+    const screen = within(document.body)
+    const forcePush = await screen.findByRole("checkbox", { name: i18n.t("prefs.forcePushing") })
+    await expect(forcePush).toBeChecked()
+    await userEvent.click(forcePush)
+    await expect(forcePush).not.toBeChecked()
+    await expect(localStorage.getItem("confirmForcePush")).toBe("0")
+    await userEvent.click(screen.getByRole("radio", { name: i18n.t("prefs.alwaysBringMyChangesToMyNewBranch") }))
+    await expect(localStorage.getItem("uncommittedChangesStrategyKind")).toBe("MoveToNewBranch")
+  }
+}
+
+export const Accessibility: Story = { args: { initialTab: "accessibility" } }
+export const Notifications: Story = { args: { initialTab: "notifications" } }

@@ -2,6 +2,7 @@ import { open } from "@tauri-apps/plugin-dialog"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePreferencesStore } from "@/features/preferences/store"
 import { ipc } from "@/lib/ipc"
 import { showContextualMenu } from "@/lib/menu/menu-item"
 import type { Worktree } from "@/models/app-state"
@@ -39,6 +40,21 @@ export function Worktrees({
   const [revision, setRevision] = useState(0)
   const [deleting, setDeleting] = useState<Worktree | null>(null)
   const [renaming, setRenaming] = useState<Worktree | null>(null)
+  const confirmWorktreeRemoval = usePreferencesStore(s => s.confirmWorktreeRemoval)
+  const deleteWorktree = async (path: string) => {
+    setError(null)
+    try {
+      await ipc.removeWorktree(repo, path)
+      setRevision(v => v + 1)
+    } catch (e) {
+      setError(String(e))
+    }
+  }
+  // Desktop _requestDeleteWorktree：关了「删除工作树前确认」就直接删；目录已不在的总要确认
+  const requestDelete = (tree: Worktree) => {
+    if (confirmWorktreeRemoval || tree.prunable) setDeleting(tree)
+    else void deleteWorktree(tree.path)
+  }
   // Desktop Dispatcher.moveWorktree: failures are surfaced and reported as `false`.
   const renameDispatcher = {
     moveWorktree: async (_repository: Repository, worktreePath: string, newPath: string) => {
@@ -61,7 +77,7 @@ export function Worktrees({
         isMainWorktree: tree.main,
         isLocked: !!tree.locked,
         onRenameWorktree: () => setRenaming(tree),
-        onRemoveWorktree: () => setDeleting(tree)
+        onRemoveWorktree: () => requestDelete(tree)
       })
     )
   // revision reloads after a mutation.
@@ -142,7 +158,7 @@ export function Worktrees({
                       variant="outline"
                       size="sm"
                       disabled={busy || tree.path === repo || !!tree.locked}
-                      onClick={() => setDeleting(tree)}>
+                      onClick={() => requestDelete(tree)}>
                       {t("worktree.remove")}
                     </Button>
                   </>
@@ -220,19 +236,13 @@ export function Worktrees({
         <DeleteWorktreeDialog
           repository={repository}
           worktreePath={deleting.path}
-          options={{}}
-          askForConfirmationOnWorktreeRemoval
-          onConfirmWorktreeRemovalChanged={() => {}}
+          options={{ isMissing: !!deleting.prunable }}
+          askForConfirmationOnWorktreeRemoval={confirmWorktreeRemoval}
+          onConfirmWorktreeRemovalChanged={value =>
+            usePreferencesStore.getState().setPrompt("confirmWorktreeRemoval", value)
+          }
           onDismissed={() => setDeleting(null)}
-          onDeleteWorktree={async (_repo, path) => {
-            setError(null)
-            try {
-              await ipc.removeWorktree(repo, path)
-              setRevision(v => v + 1)
-            } catch (e) {
-              setError(String(e))
-            }
-          }}
+          onDeleteWorktree={(_repo, path) => deleteWorktree(path)}
         />
       )}
     </>

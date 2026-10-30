@@ -113,6 +113,7 @@ function createRuntime() {
     },
     appStore,
     accountsStore,
+    notificationsStore,
     repositoriesStore,
     signInStore,
     statsStore,

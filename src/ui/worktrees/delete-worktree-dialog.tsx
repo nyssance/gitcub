@@ -62,7 +62,7 @@ export class DeleteWorktreeDialog extends React.Component<IDeleteWorktreeDialogP
           </p>
           {!isMissing && (
             <Checkbox
-              label={i18n.t("desktopUI.dontAskAgain")}
+              label={i18n.t("desktopUI.doNotShowThisMessageAgain")}
               value={this.state.confirmWorktreeRemoval ? CheckboxValue.Off : CheckboxValue.On}
               onChange={this.onConfirmWorktreeRemovalChanged}
             />

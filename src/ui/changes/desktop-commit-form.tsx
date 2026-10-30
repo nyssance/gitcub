@@ -2,11 +2,14 @@ import { confirm } from "@tauri-apps/plugin-dialog"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useMemo, useState } from "react"
 
+import { useDialogsStore } from "../../features/dialogs/store"
+import { usePreferencesStore } from "../../features/preferences/store"
 import { getCommits } from "../../lib/commit-history"
 import { getPlaceholderMessage } from "../../lib/commit-placeholder"
 import { getDesktopRuntime } from "../../lib/desktop-runtime"
 import { appStatus } from "../../lib/desktop-status"
 import { EMOJI } from "../../lib/emoji"
+import i18n from "../../lib/i18n"
 import { ipc } from "../../lib/ipc"
 import { emitMenuEvent } from "../../lib/menu/native-menu"
 import { useRepositoryPolicy } from "../../lib/use-repository-policy"
@@ -46,6 +49,7 @@ export function DesktopCommitForm(props: Props) {
   const [coAuthors, setCoAuthors] = useState<readonly Author[]>([])
   const [showCoAuthors, setShowCoAuthors] = useState(false)
   const [spellcheck, setSpellcheck] = useState(true)
+  const showCommitLengthWarning = usePreferencesStore(s => s.showCommitLengthWarning)
   const [options, setOptions] = useState({ skipCommitHooks: false, signOffCommits: false, allowEmptyCommit: false })
   const [busy, setBusy] = useState(false)
 
@@ -178,7 +182,7 @@ export function DesktopCommitForm(props: Props) {
         onShowCoAuthoredByChanged={setShowCoAuthors}
         commitSpellcheckEnabled={spellcheck}
         onCommitSpellcheckEnabledChanged={setSpellcheck}
-        showCommitLengthWarning={true}
+        showCommitLengthWarning={showCommitLengthWarning}
         {...options}
         showAllowEmptyCommitOption={true}
         onUpdateCommitOptions={(_repo, next) => setOptions(previous => ({ ...previous, ...next }))}
@@ -210,9 +214,13 @@ export function DesktopCommitForm(props: Props) {
           })
         }}
         onFilesToCommitNotVisible={proceed => {
-          void confirm("Commit the selected files hidden by the current filter?", { kind: "warning" }).then(ok => {
-            if (ok) proceed()
-          })
+          // Desktop ConfirmCommitFilteredChanges：可在「提示」里关掉
+          void useDialogsStore
+            .getState()
+            .ask(i18n.t("desktopUI.youHaveAFilterApplied"), "confirmCommitFilteredChanges")
+            .then(ok => {
+              if (ok) proceed()
+            })
         }}
       />
     </>

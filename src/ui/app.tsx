@@ -10,6 +10,7 @@ import { activeRepository, useAppStateStore } from "@/features/app-state/store"
 import { type FileState, useChangesStore } from "@/features/changes/store"
 import { selectDialogBlocking, useDialogsStore } from "@/features/dialogs/store"
 import { useHistoryStore } from "@/features/history/store"
+import { usePreferencesStore } from "@/features/preferences/store"
 import { usePullRequestsStore } from "@/features/pull-requests/store"
 import { useRepositoryIndicatorsStore } from "@/features/repository-indicators/store"
 import { useRepositoryStore } from "@/features/repository/store"
@@ -41,7 +42,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/ui/base/alert-dialog"
+import { Checkbox } from "@/ui/base/checkbox"
 import { Input } from "@/ui/base/input"
+import { Label } from "@/ui/base/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/base/tabs"
 import { TooltipProvider } from "@/ui/base/tooltip"
 import { Blame } from "@/ui/blame/blame"
@@ -124,7 +127,14 @@ export function App() {
   const answerText = useDialogsStore(s => s.answerText)
   const stashPrompt = useDialogsStore(s => s.stashPrompt)
   const answerStashPrompt = useDialogsStore(s => s.answerStashPrompt)
-  const promptStashAndSwitch = useDialogsStore(s => s.promptStashAndSwitch)
+  const askStashAndSwitch = useDialogsStore(s => s.promptStashAndSwitch)
+  // Desktop「提示」页的「切换分支时的未提交更改」：选了固定做法就不再问
+  const promptStashAndSwitch = (target: string, current: string) => {
+    const strategy = usePreferencesStore.getState().uncommittedChangesStrategy
+    if (strategy === UncommittedChangesStrategy.StashOnCurrentBranch) return Promise.resolve(true)
+    if (strategy === UncommittedChangesStrategy.MoveToNewBranch) return Promise.resolve("carry" as const)
+    return askStashAndSwitch(target, current)
+  }
   const prefsOpen = useDialogsStore(s => s.prefsOpen)
   const setPrefsOpen = useDialogsStore(s => s.setPrefsOpen)
   const prefsTab = useDialogsStore(s => s.prefsTab)
@@ -545,9 +555,23 @@ export function App() {
             push({ path }, { name: remote }, branch, target, null, { forceWithLease })
         },
         () => ask(t("push.needsPull")),
-        () => ask(t("push.forceConfirm"))
+        () => ask(t("push.forceConfirm"), "confirmForcePush")
       )
     })
+  }
+
+  // Desktop _undoCommit：有未提交改动时提示（可在「提示」里关掉）；撤销合并提交总是提示
+  const doUndoCommit = async () => {
+    if (!repo) return
+    const head = graphRows.find(row => row.head != null)?.commit
+    const clean = status.changes.length === 0
+    if (head && head.parentCount > 1) {
+      const lead = clean ? "" : `${t("desktopUI.youHaveChangesInProgressUndoingTheMergeCommit")}\n\n`
+      const warning = `${lead}${t("desktopUI.undoingAMergeCommitWillApplyTheChanges")}\n\n${t("desktopUI.doYouWantToContinueAnyway")}`
+      if (!(await ask(warning))) return
+    } else if (!clean && !(await ask(t("desktopUI.youHaveChangesInProgressUndoingTheCommit"), "confirmUndoCommit")))
+      return
+    await run(() => ipc.undoCommit(repo))
   }
 
   const doCheckout = async (branch: string) => {
@@ -745,7 +769,7 @@ export function App() {
   const onMenu = useEffectEvent((payload: string) => {
     switch (payload) {
       case "preferences":
-        openPreferences(0)
+        openPreferences("accounts")
         break
       case "new-repository":
         void newRepo()
@@ -759,7 +783,7 @@ export function App() {
         })
         break
       case "show-repository-settings":
-        openPreferences(2)
+        openPreferences("repository")
         break
       case "show-repository-list":
         document.querySelector<HTMLInputElement>(".rail-filter input")?.focus()
@@ -821,7 +845,7 @@ export function App() {
         break
       case "remove-repository":
         if (repo)
-          void ask(t("rail.removeConfirm")).then(ok => {
+          void ask(t("rail.removeConfirm"), "confirmRepoRemoval").then(ok => {
             if (!ok || !state) return
             const remaining = state.repositories.filter(path => path !== repo)
             patch({ repositories: remaining, selectedRepository: remaining[0] ?? null })
@@ -829,7 +853,7 @@ export function App() {
         break
       case "discard-all-changes":
         if (repo)
-          void ask(t("changes.discardAllConfirm")).then(ok => {
+          void ask(t("changes.discardAllConfirm"), "confirmDiscardChanges").then(ok => {
             if (ok) return run(() => ipc.discardChanges(repo, status.changes))
           })
         break
@@ -846,7 +870,7 @@ export function App() {
           })
         break
       case "open-with-external-editor":
-        openPreferences(4)
+        openPreferences("integrations")
         break
       case "branch-on-github":
       case "compare-on-github":
@@ -937,7 +961,7 @@ export function App() {
         if (repo) void run(() => ipc.stashPush(repo, status.branch ?? "HEAD"))
         break
       case "undo-commit":
-        if (repo) void run(() => ipc.undoCommit(repo))
+        void doUndoCommit()
         break
       case "show-branches-list":
         document.querySelector<HTMLElement>(".branch-button button")?.click()
@@ -987,6 +1011,15 @@ export function App() {
           <AlertDialogTitle>{t("common.confirmTitle")}</AlertDialogTitle>
           <AlertDialogDescription className="whitespace-pre-line">{asking.message}</AlertDialogDescription>
         </AlertDialogHeader>
+        {asking.prompt && (
+          <Label className="font-normal">
+            <Checkbox
+              checked={asking.dontAskAgain}
+              onCheckedChange={checked => useDialogsStore.getState().setDontAskAgain(checked)}
+            />
+            {t("desktopUI.doNotShowThisMessageAgain")}
+          </Label>
+        )}
         <AlertDialogFooter>
           <AlertDialogCancel
             onClick={() => {
@@ -1412,7 +1445,14 @@ export function App() {
                           <Stashes
                             stashes={stashList}
                             onPop={name => void run(() => ipc.stashPop(repo, name))}
-                            onDrop={name => void run(() => ipc.stashDrop(repo, name))}
+                            onDrop={name =>
+                              void ask(
+                                t("desktopUI.areYouSureYouWantToDiscardTheseStashedChanges"),
+                                "confirmDiscardStash"
+                              ).then(ok => {
+                                if (ok) return run(() => ipc.stashDrop(repo, name))
+                              })
+                            }
                           />
                         )}
                         <ChangesSidebar
@@ -1475,7 +1515,7 @@ export function App() {
                           onShowHistory={showFileHistory}
                           onCommit={doCommit}
                           onStashAll={() => void run(() => ipc.stashPush(repo, status.branch ?? "HEAD"))}
-                          onUndoCommit={() => void run(() => ipc.undoCommit(repo))}
+                          onUndoCommit={() => void doUndoCommit()}
                           onAmend={async (summary, description) => {
                             return (
                               (await run(async () => {
@@ -1623,7 +1663,7 @@ export function App() {
                       }}
                       isExternalEditorAvailable
                       onOpenIntegrationPreferences={() => {
-                        openPreferences(4)
+                        openPreferences("integrations")
                       }}
                     />
                   ) : selectedPaths.length > 1 ? (
