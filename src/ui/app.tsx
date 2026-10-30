@@ -10,6 +10,7 @@ import { activeRepository, useAppStateStore } from "@/features/app-state/store"
 import { type FileState, useChangesStore } from "@/features/changes/store"
 import { selectDialogBlocking, useDialogsStore } from "@/features/dialogs/store"
 import { useHistoryStore } from "@/features/history/store"
+import { useRepositoryIndicatorsStore } from "@/features/repository-indicators/store"
 import { useRepositoryStore } from "@/features/repository/store"
 import { useWorkspaceStore } from "@/features/workspace/store"
 import { accountRemoteFor } from "@/lib/account-host"
@@ -199,6 +200,8 @@ export function App() {
       active = false
     }
   }, [registeredRepositoryPaths, selectedRepositoryPath])
+
+  useEffect(() => useRepositoryIndicatorsStore.getState().bind(), [])
 
   useEffect(() => useAccountsStore.getState().loadRemotes(repositories), [repositories, rawRemotes, remoteErrors])
 

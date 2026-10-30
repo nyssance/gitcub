@@ -48,7 +48,12 @@
     "fork": "Fork 到我的账号",
     "removeConfirm": "从列表移除此仓库？磁盘文件会保留。",
     "accountFailedTitle": "{{host}} 账号验证失败",
-    "openSettings": "打开设置"
+    "openSettings": "打开设置",
+    "behindTrackedBranch_one": "当前分支落后跟踪分支 {{count}} 个提交",
+    "behindTrackedBranch_other": "当前分支落后跟踪分支 {{count}} 个提交",
+    "aheadOfTrackedBranch_one": "当前分支领先跟踪分支 {{count}} 个提交",
+    "aheadOfTrackedBranch_other": "当前分支领先跟踪分支 {{count}} 个提交",
+    "uncommittedChanges": "这个仓库有未提交的改动"
   },
   "tabs": {
     "changes": "更改",

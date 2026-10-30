@@ -50,7 +50,12 @@
     "fork": "Fork to my account",
     "removeConfirm": "Remove this repository from the list? Files on disk will be kept.",
     "accountFailedTitle": "Account check failed for {{host}}",
-    "openSettings": "Open Settings"
+    "openSettings": "Open Settings",
+    "behindTrackedBranch_one": "The checked out branch is {{count}} commit behind its tracked branch",
+    "behindTrackedBranch_other": "The checked out branch is {{count}} commits behind its tracked branch",
+    "aheadOfTrackedBranch_one": "The checked out branch is {{count}} commit ahead of its tracked branch",
+    "aheadOfTrackedBranch_other": "The checked out branch is {{count}} commits ahead of its tracked branch",
+    "uncommittedChanges": "There are uncommitted changes in this repository"
   },
   "tabs": {
     "changes": "Changes",

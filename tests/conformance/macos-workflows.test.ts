@@ -560,6 +560,20 @@ test("push confirmation pulls then retries without reentering the operation lock
 })
 
 /** 仓库导航按归属分「我的 / 第三方」页签；冒烟仓库的 origin 是本地路径，自动判定落在第三方。 */
+test("repository rail marks uncommitted changes in the selected repository", async ({ mainWindow: page }) => {
+  const main = realpathSync(smokeRepoPath)
+  const file = join(smokeRepoPath, "rail-indicator.txt")
+  await clickRailRepository(page, main)
+  const dot = page.locator(`button[title="${main}"] [data-testid="repository-changes"]`)
+  try {
+    writeFileSync(file, "indicator\n")
+    await dot.waitFor({ state: "visible" })
+  } finally {
+    rmSync(file, { force: true })
+  }
+  await dot.waitFor({ state: "hidden" })
+})
+
 async function clickRailRepository(page: Page, path: string) {
   const button = page.locator(`button[title="${path}"]`)
   if (!(await button.isVisible())) {

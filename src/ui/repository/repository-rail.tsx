@@ -1,6 +1,9 @@
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
   BellIcon,
   ChevronDownIcon,
+  DotFillIcon,
   FlameIcon,
   GearIcon,
   MarkGithubIcon,
@@ -12,11 +15,14 @@ import { UserIcon } from "lucide-react"
 import { type CSSProperties, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { useRepositoryIndicatorsStore } from "@/features/repository-indicators/store"
+import { useRepositoryStore } from "@/features/repository/store"
 import { accountEmptyState } from "@/lib/account-state"
 import { avatarUrl } from "@/lib/avatar"
 import { ipc } from "@/lib/ipc"
 import { type Route, routes } from "@/lib/navigate"
 import type { Accounts, Ownership, Remote } from "@/models/app-state"
+import type { ILocalRepositoryState } from "@/models/repository"
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/base/avatar"
 import { Badge } from "@/ui/base/badge"
 import { Button } from "@/ui/base/button"
@@ -95,6 +101,37 @@ const autoOwnership = (remote: Remote | null, accounts: Accounts): Ownership => 
     : "third"
 }
 
+/** Desktop repository-list-item.tsx renderRepoIndicators：领先／落后的箭头，再加未提交改动的圆点。 */
+function RepoIndicators({ state }: { state: ILocalRepositoryState | undefined }) {
+  const { t } = useTranslation()
+  if (!state) return null
+  const { ahead, behind } = state.aheadBehind ?? { ahead: 0, behind: 0 }
+  const tooltip = [
+    behind > 0 && t("rail.behindTrackedBranch", { count: behind }),
+    ahead > 0 && t("rail.aheadOfTrackedBranch", { count: ahead })
+  ]
+    .filter(Boolean)
+    .join("\n")
+  return (
+    <span className="ml-auto flex shrink-0 items-center gap-1">
+      {tooltip && (
+        <span
+          className="bg-sidebar-accent text-sidebar-accent-foreground flex h-3 items-center rounded-full px-0.5"
+          title={tooltip}
+          data-testid="repository-ahead-behind">
+          {ahead > 0 && <ArrowUpIcon size={12} />}
+          {behind > 0 && <ArrowDownIcon size={12} />}
+        </span>
+      )}
+      {state.changedFilesCount > 0 && (
+        <span className="text-primary flex" title={t("rail.uncommittedChanges")} data-testid="repository-changes">
+          <DotFillIcon size={12} />
+        </span>
+      )}
+    </span>
+  )
+}
+
 interface Props {
   repositories: string[]
   /** 当前路由。选中态由它推导——右侧开着「发现」时仓库行就不该是选中的 */
@@ -137,6 +174,16 @@ export function RepositoryRail({
   const [tab, setTab] = useState<Tab>("mine")
   const [q, setQ] = useState("")
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const indicators = useRepositoryIndicatorsStore(s => s.byPath)
+  const status = useRepositoryStore(s => s.status)
+  // 当前仓库不归后台刷新管（Desktop getRepositoriesForIndicatorRefresh 排除了它），用工作区状态
+  const indicatorOf = (r: string): ILocalRepositoryState | undefined =>
+    r === current
+      ? {
+          aheadBehind: status.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null,
+          changedFilesCount: status.changes.length
+        }
+      : indicators[r]
   const buckets = useMemo(() => {
     const query = q.trim().toLowerCase()
     // 「我的」按 host 分组；没有 origin 的纯本地仓无法判断归属，列在「第三方」
@@ -180,6 +227,7 @@ export function RepositoryRail({
               aria-current={!trendingActive && route.kind === "repo" && r === current ? "page" : undefined}
               className="w-full justify-start">
               <span className="min-w-0 flex-1 truncate text-left">{nameOf(r)}</span>
+              <RepoIndicators state={indicatorOf(r)} />
             </SidebarMenuButton>
           }
         />
