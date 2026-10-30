@@ -1,5 +1,6 @@
-import type { BranchDetails } from "../models/app-state"
+import type { BranchDetails, StashEntry } from "../models/app-state"
 import type { RepoStatus } from "../models/repo-status"
+import { UncommittedChangesStrategy } from "../upstream/models/uncommitted-changes-strategy"
 
 const workflowErrors = {
   branchChanged: "The current branch or Git operation changed. Review the repository before trying again.",
@@ -21,27 +22,82 @@ export interface BranchGit {
   stashPush(repo: string, branch: string): Promise<unknown>
 }
 
-/** Match Desktop's overwritten-local-changes recovery. The caller owns the
- * operation lock; recovery must not acquire that lock a second time.
- * `true` stashes on the current branch first (Desktop StashOnCurrentBranch);
- * `"carry"` retries the checkout with the changes in place (MoveToNewBranch).
+/** Desktop 按分支只保留一份贮藏：留在当前分支要先找到并丢掉旧的，带走更改要找回刚建的那份 */
+export interface StashGit extends BranchGit {
+  lastBranchStash(repo: string, branch: string): Promise<StashEntry | null>
+  dropStashSha(repo: string, sha: string): Promise<unknown>
+  popStashSha(repo: string, sha: string): Promise<unknown>
+}
+
+const isLocalChangesOverwrittenError = (error: unknown) =>
+  /would be overwritten|commit your changes or stash/i.test(String(error))
+
+/** Desktop createStashAndDropPreviousEntry：先建新的，成功后再丢掉这个分支之前的那份 */
+export async function createStashAndDropPreviousEntry(repo: string, branch: string, git: StashGit) {
+  const previous = await git.lastBranchStash(repo, branch)
+  await git.stashPush(repo, branch)
+  if (previous) await git.dropStashSha(repo, previous.sha)
+}
+
+export interface CheckoutPrompts {
+  /** Desktop StashAndSwitchBranch：`true` 留在当前分支，`"carry"` 带到新分支 */
+  stashAndSwitch: (target: string, current: string, hasAssociatedStash: boolean) => Promise<boolean | "carry">
+  /** Desktop ConfirmOverwriteStash：设置里选了「总是贮藏」而当前分支已有贮藏时 */
+  overwriteStash: () => Promise<boolean>
+}
+
+/** Desktop AppStore._checkoutBranch + checkoutImplementation。调用方持有操作锁，这里不再取锁。
+ *  - 有更改且策略是「每次询问」：先问更改放哪里（不再等 Git 拒绝后才问）
+ *  - 「总是贮藏」且当前分支已有贮藏：先确认覆盖
+ *  - 分离 HEAD / 未出生分支总是带走更改
+ *  - 留在当前分支：贮藏并丢掉旧的那份再切换；带走：直接切换，被拦下就临时贮藏、切换、弹出
  */
 export async function checkoutWithStash(
   repo: string,
   branch: string,
-  git: BranchGit,
-  confirmStash: (target: string, current: string) => Promise<boolean | "carry">
+  git: StashGit,
+  prompts: CheckoutPrompts,
+  preferred: UncommittedChangesStrategy = UncommittedChangesStrategy.AskForConfirmation
 ) {
   const before = await git.repoStatus(repo)
+  if (before.branch === branch) return
+  const hasChanges = before.changes.length > 0
+  const current = before.branch
+  let strategy = current ? preferred : UncommittedChangesStrategy.MoveToNewBranch
+
+  if (hasChanges && current) {
+    if (strategy === UncommittedChangesStrategy.AskForConfirmation) {
+      const stash = await git.lastBranchStash(repo, current)
+      const choice = await prompts.stashAndSwitch(branch, current, stash !== null)
+      if (!choice) return
+      strategy =
+        choice === "carry"
+          ? UncommittedChangesStrategy.MoveToNewBranch
+          : UncommittedChangesStrategy.StashOnCurrentBranch
+      if (strategy === UncommittedChangesStrategy.StashOnCurrentBranch && stash && !(await prompts.overwriteStash()))
+        return
+    } else if (strategy === UncommittedChangesStrategy.StashOnCurrentBranch) {
+      if ((await git.lastBranchStash(repo, current)) && !(await prompts.overwriteStash())) return
+    }
+    await assertSameBranch(repo, current, git)
+  }
+
+  if (strategy === UncommittedChangesStrategy.StashOnCurrentBranch) {
+    if (hasChanges && current) await createStashAndDropPreviousEntry(repo, current, git)
+    await git.checkout(repo, branch)
+    return
+  }
   try {
     await git.checkout(repo, branch)
   } catch (error) {
-    if (!/would be overwritten|commit your changes or stash/i.test(String(error))) throw error
-    const choice = await confirmStash(branch, before.branch ?? "")
-    if (!choice) return
-    await assertSameBranch(repo, before.branch, git)
-    if (choice !== "carry") await git.stashPush(repo, before.branch ?? "")
+    if (strategy !== UncommittedChangesStrategy.MoveToNewBranch || !isLocalChangesOverwrittenError(error)) throw error
+    // 临时贮藏记在目标分支名下，不会覆盖目标分支已有的那份
+    await git.stashPush(repo, branch)
+    const stash = await git.lastBranchStash(repo, branch)
+    // 建不出贮藏多半是 assume-unchanged / skip-worktree：照原版把检出错误交给用户
+    if (!stash) throw error
     await git.checkout(repo, branch)
+    await git.popStashSha(repo, stash.sha)
   }
 }
 

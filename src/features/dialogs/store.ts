@@ -12,7 +12,12 @@ import { type PreferencesTab, type Prompt, usePreferencesStore } from "@/feature
 /** prompt：原版 Prompts 页里对应的那一项；弹窗带「不再显示」，关掉后直接放行 */
 type Asking = { message: string; prompt?: Prompt; dontAskAgain: boolean; resolve: (ok: boolean) => void }
 type AskingText = { message: string; value: string; resolve: (value: string | null) => void }
-type StashPrompt = { name: string; current: string; resolve: (choice: boolean | "carry") => void }
+type StashPrompt = {
+  name: string
+  current: string
+  hasAssociatedStash: boolean
+  resolve: (choice: boolean | "carry") => void
+}
 
 interface DialogsStore {
   asking: Asking | null
@@ -31,7 +36,7 @@ interface DialogsStore {
   askText: (message: string, initial?: string) => Promise<string | null>
   setAskingTextValue: (value: string) => void
   answerText: (value: string | null) => void
-  promptStashAndSwitch: (name: string, current: string) => Promise<boolean | "carry">
+  promptStashAndSwitch: (name: string, current: string, hasAssociatedStash: boolean) => Promise<boolean | "carry">
   answerStashPrompt: (choice: boolean | "carry") => void
   openPreferences: (tab?: PreferencesTab) => void
   setPrefsOpen: (open: boolean) => void
@@ -71,8 +76,8 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
     get().askingText?.resolve(value)
     set({ askingText: null })
   },
-  promptStashAndSwitch: (name, current) =>
-    new Promise<boolean | "carry">(done => set({ stashPrompt: { name, current, resolve: done } })),
+  promptStashAndSwitch: (name, current, hasAssociatedStash) =>
+    new Promise<boolean | "carry">(done => set({ stashPrompt: { name, current, hasAssociatedStash, resolve: done } })),
   answerStashPrompt: choice => {
     get().stashPrompt?.resolve(choice)
     set({ stashPrompt: null })

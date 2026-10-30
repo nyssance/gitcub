@@ -724,6 +724,7 @@
     "editor": "外部编辑器"
   },
   "desktopUI": {
+    "areYouSureYouWantToProceedThisWillOverwriteYourExistingStash": "确定要继续吗？这会用当前的更改覆盖已有的贮藏。",
     "areYouSureYouWantToDiscardTheseStashedChanges": "确定要丢弃这些贮藏的更改吗？",
     "youHaveChangesInProgressUndoingTheCommit": "你有未提交的更改。撤销提交可能会丢失其中一部分更改。仍要继续吗？",
     "youHaveChangesInProgressUndoingTheMergeCommit": "你有未提交的更改。撤销合并提交可能会丢失其中一部分更改。",

@@ -16,7 +16,13 @@ import { useRepositoryIndicatorsStore } from "@/features/repository-indicators/s
 import { useRepositoryStore } from "@/features/repository/store"
 import { useWorkspaceStore } from "@/features/workspace/store"
 import { accountRemoteFor } from "@/lib/account-host"
-import { BranchWorkflowError, checkoutWithStash, cherryPickToBranch, pushWithRecovery } from "@/lib/branch-workflows"
+import {
+  BranchWorkflowError,
+  checkoutWithStash,
+  cherryPickToBranch,
+  createStashAndDropPreviousEntry,
+  pushWithRecovery
+} from "@/lib/branch-workflows"
 import { getGlobalConfigValue, getRemoteHEAD } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import i18n from "@/lib/i18n"
@@ -127,14 +133,7 @@ export function App() {
   const answerText = useDialogsStore(s => s.answerText)
   const stashPrompt = useDialogsStore(s => s.stashPrompt)
   const answerStashPrompt = useDialogsStore(s => s.answerStashPrompt)
-  const askStashAndSwitch = useDialogsStore(s => s.promptStashAndSwitch)
-  // Desktop「提示」页的「切换分支时的未提交更改」：选了固定做法就不再问
-  const promptStashAndSwitch = (target: string, current: string) => {
-    const strategy = usePreferencesStore.getState().uncommittedChangesStrategy
-    if (strategy === UncommittedChangesStrategy.StashOnCurrentBranch) return Promise.resolve(true)
-    if (strategy === UncommittedChangesStrategy.MoveToNewBranch) return Promise.resolve("carry" as const)
-    return askStashAndSwitch(target, current)
-  }
+  const promptStashAndSwitch = useDialogsStore(s => s.promptStashAndSwitch)
   const prefsOpen = useDialogsStore(s => s.prefsOpen)
   const setPrefsOpen = useDialogsStore(s => s.setPrefsOpen)
   const prefsTab = useDialogsStore(s => s.prefsTab)
@@ -528,16 +527,28 @@ export function App() {
   /** Keep confirmation, transport and recovery inside one operation lock. */
   const confirmBranchStash = (name: string, current: string) => ask(t("branch.stashConfirm", { name, current }))
 
-  /** Desktop's StashAndSwitchBranch dialog: Git refused to carry the changes, so
-   *  the user picks between stashing on the current branch and retrying with
-   *  them in place. Nothing is overwritten: this client never drops a previous
-   *  branch stash, so the overwrite warning path of the dialog is not reachable. */
+  /** Desktop StashAndSwitchBranch：切换前有更改时问放哪里。选了「留在当前分支」而这个分支已有贮藏时，
+   *  原版会弹 ConfirmOverwriteStash —— checkoutWithStash 里接着问，这里只回答选择。 */
   const stashAndSwitchDispatcher = {
-    showPopup: () => {},
+    showPopup: () => answerStashPrompt(true),
     checkoutBranch: async (repository: Repository, _branch: Branch, strategy?: UncommittedChangesStrategy) => {
-      stashPrompt?.resolve(strategy === UncommittedChangesStrategy.MoveToNewBranch ? "carry" : true)
+      answerStashPrompt(strategy === UncommittedChangesStrategy.MoveToNewBranch ? "carry" : true)
       return repository
     }
+  }
+  // Desktop OverwriteStashedChanges
+  const confirmOverwriteStash = () => ask(t("desktopUI.areYouSureYouWantToProceedThisWillOverwriteYourExistingStash"))
+  const checkoutPrompts = {
+    stashAndSwitch: promptStashAndSwitch,
+    overwriteStash: confirmOverwriteStash
+  }
+  const checkoutStrategy = () => usePreferencesStore.getState().uncommittedChangesStrategy
+  // Desktop createStashForCurrentBranch：这个分支已有贮藏时先确认覆盖，新的建好后丢掉旧的
+  const doStashAll = async () => {
+    const branch = status.branch
+    if (!repo || !branch) return
+    if ((await ipc.lastBranchStash(repo, branch)) && !(await confirmOverwriteStash())) return
+    await run(() => createStashAndDropPreviousEntry(repo, branch, ipc))
   }
   const branchNamed = (name: string) => new Branch(name, null, { sha: "" }, BranchType.Local, `refs/heads/${name}`)
   const stashAndSwitchDialog = repo && stashPrompt && (
@@ -546,7 +557,7 @@ export function App() {
       dispatcher={stashAndSwitchDispatcher}
       currentBranch={branchNamed(stashPrompt.current)}
       branchToCheckout={branchNamed(stashPrompt.name)}
-      hasAssociatedStash={false}
+      hasAssociatedStash={stashPrompt.hasAssociatedStash}
       onDismissed={() => answerStashPrompt(false)}
     />
   )
@@ -583,7 +594,7 @@ export function App() {
   }
 
   const doCheckout = async (branch: string) => {
-    if (repo) await run(() => checkoutWithStash(repo, branch, ipc, promptStashAndSwitch))
+    if (repo) await run(() => checkoutWithStash(repo, branch, ipc, checkoutPrompts, checkoutStrategy()))
   }
 
   const doCommit = async (summary: string, description: string, options: CommitOptions) => {
@@ -966,7 +977,7 @@ export function App() {
         break
       }
       case "stash-all-changes":
-        if (repo) void run(() => ipc.stashPush(repo, status.branch ?? "HEAD"))
+        void doStashAll()
         break
       case "undo-commit":
         void doUndoCommit()
@@ -1371,7 +1382,7 @@ export function App() {
                                 ipc,
                                 source.kind === "gitlab" ? "mr" : "pr"
                               )
-                              await checkoutWithStash(repo, branch, ipc, promptStashAndSwitch)
+                              await checkoutWithStash(repo, branch, ipc, checkoutPrompts, checkoutStrategy())
                             })
                           }}
                           onCreate={() => {
@@ -1522,7 +1533,7 @@ export function App() {
                           onBlame={path => setBlaming(path)}
                           onShowHistory={showFileHistory}
                           onCommit={doCommit}
-                          onStashAll={() => void run(() => ipc.stashPush(repo, status.branch ?? "HEAD"))}
+                          onStashAll={() => void doStashAll()}
                           onUndoCommit={() => void doUndoCommit()}
                           onAmend={async (summary, description) => {
                             return (

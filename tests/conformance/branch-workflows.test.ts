@@ -14,6 +14,7 @@ import {
 import { ipc } from "../../src/lib/ipc"
 import { push } from "../../src/lib/push"
 import type { RepoStatus } from "../../src/models/repo-status"
+import { UncommittedChangesStrategy } from "../../src/upstream/models/uncommitted-changes-strategy"
 
 const clean: RepoStatus = {
   branch: "feature",
@@ -25,17 +26,31 @@ const clean: RepoStatus = {
   operation: null,
   theirs: null
 }
+const dirty: RepoStatus = {
+  ...clean,
+  changes: [{ path: "local.txt", kind: "unstaged", change: "modified", oldPath: null, conflict: null, submodule: null }]
+}
 function fixture() {
   const calls: string[] = []
   let status = { ...clean }
+  const stashes: Record<string, string> = {}
   const git = {
     repoStatus: async () => status,
+    lastBranchStash: async (_repo: string, branch: string) =>
+      stashes[branch] ? { name: "stash@{0}", sha: stashes[branch], message: "", ours: true } : null,
+    dropStashSha: async (_repo: string, sha: string) => {
+      calls.push(`drop ${sha}`)
+    },
+    popStashSha: async (_repo: string, sha: string) => {
+      calls.push(`pop ${sha}`)
+    },
     branchDetails: async () => [],
     checkout: async (_repo: string, branch: string) => {
       calls.push(`checkout ${branch}`)
     },
-    stashPush: async () => {
+    stashPush: async (_repo: string, branch: string) => {
       calls.push("stash")
+      stashes[branch] = `new-${branch}`
     },
     cherryPick: async () => {
       calls.push("cherry-pick")
@@ -51,6 +66,7 @@ function fixture() {
   return {
     calls,
     git,
+    stashes,
     setStatus: (value: RepoStatus) => {
       status = value
     }
@@ -152,26 +168,107 @@ it("cancelled force confirmation performs no transport", async () => {
   )
   assert.deepEqual(calls, [])
 })
+const prompts = (choice: boolean | "carry", overwrite = true) => {
+  const asked: string[] = []
+  return {
+    asked,
+    prompts: {
+      stashAndSwitch: async (target: string, current: string, hasStash: boolean) => {
+        asked.push(`switch ${current}->${target}${hasStash ? " (has stash)" : ""}`)
+        return choice
+      },
+      overwriteStash: async () => {
+        asked.push("overwrite")
+        return overwrite
+      }
+    }
+  }
+}
 it("checkout recovery preserves local changes if the branch changes during confirmation", async () => {
   const { calls, git, setStatus } = fixture()
+  setStatus(dirty)
   await assert.rejects(
-    checkoutWithStash(
-      "repo",
-      "target",
-      {
-        ...git,
-        checkout: async () => {
-          throw new Error("would be overwritten")
-        }
-      },
-      async () => {
-        setStatus({ ...clean, branch: "other" })
+    checkoutWithStash("repo", "target", git, {
+      stashAndSwitch: async () => {
+        setStatus({ ...dirty, branch: "other" })
         return true
-      }
-    ),
+      },
+      overwriteStash: async () => true
+    }),
     /changed/
   )
   assert.deepEqual(calls, [])
+})
+// Desktop _checkoutBranch：策略是「每次询问」且有更改时，切换前就问，不等 Git 拒绝
+it("checkout asks where local changes go before switching", async () => {
+  const { calls, git, setStatus } = fixture()
+  setStatus(dirty)
+  const { asked, prompts: p } = prompts(false)
+  await checkoutWithStash("repo", "target", git, p)
+  assert.deepEqual(asked, ["switch feature->target"])
+  assert.deepEqual(calls, [])
+})
+it("checkout without local changes switches without asking", async () => {
+  const { calls, git } = fixture()
+  const { asked, prompts: p } = prompts(true)
+  await checkoutWithStash("repo", "target", git, p)
+  assert.deepEqual(asked, [])
+  assert.deepEqual(calls, ["checkout target"])
+})
+// Desktop checkoutAndLeaveChanges → createStashAndDropPreviousEntry；已有贮藏先 ConfirmOverwriteStash
+it("leaving changes on the current branch replaces that branch's previous stash after confirming", async () => {
+  const { calls, git, setStatus, stashes } = fixture()
+  setStatus(dirty)
+  stashes.feature = "old"
+  const { asked, prompts: p } = prompts(true)
+  await checkoutWithStash("repo", "target", git, p)
+  assert.deepEqual(asked, ["switch feature->target (has stash)", "overwrite"])
+  assert.deepEqual(calls, ["stash", "drop old", "checkout target"])
+})
+it("declining to overwrite the existing stash leaves everything in place", async () => {
+  const { calls, git, setStatus, stashes } = fixture()
+  setStatus(dirty)
+  stashes.feature = "old"
+  await checkoutWithStash("repo", "target", git, prompts(true, false).prompts)
+  assert.deepEqual(calls, [])
+})
+// Desktop checkoutAndBringChanges：先直接切换，被更改拦下才临时贮藏（记在目标分支名下）、切换、弹出
+it("bringing changes retries through a transient stash only when Git refuses", async () => {
+  const { calls, git, setStatus } = fixture()
+  setStatus(dirty)
+  let refused = false
+  await checkoutWithStash(
+    "repo",
+    "target",
+    {
+      ...git,
+      checkout: async (repo: string, branch: string) => {
+        if (!refused) {
+          refused = true
+          throw new Error("error: Your local changes to the following files would be overwritten by checkout")
+        }
+        await git.checkout(repo, branch)
+      }
+    },
+    prompts("carry").prompts
+  )
+  assert.deepEqual(calls, ["stash", "checkout target", "pop new-target"])
+})
+it("the preference to always stash skips the question", async () => {
+  const { calls, git, setStatus } = fixture()
+  setStatus(dirty)
+  const { asked, prompts: p } = prompts(false)
+  await checkoutWithStash("repo", "target", git, p, UncommittedChangesStrategy.StashOnCurrentBranch)
+  assert.deepEqual(asked, [])
+  assert.deepEqual(calls, ["stash", "checkout target"])
+})
+it("detached HEAD always brings changes along", async () => {
+  const { calls, git, setStatus } = fixture()
+  setStatus({ ...dirty, branch: null })
+  const { asked, prompts: p } = prompts(false)
+  await checkoutWithStash("repo", "target", git, p)
+  assert.deepEqual(asked, [])
+  assert.deepEqual(calls, ["checkout target"])
 })
 it("history cherry-pick cancellation does not move local modifications to another branch", async () => {
   const { calls, git, setStatus } = fixture()
