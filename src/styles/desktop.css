@@ -459,3 +459,29 @@
   background: var(--accent);
   color: var(--accent-foreground);
 }
+
+/* _resizable.scss：工具栏按钮右缘 6px 的拖动把手 */
+.resizable-component {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+
+  /* This is for the absolutely positioned resize handle */
+  position: relative;
+
+  .resize-handle {
+    position: absolute;
+    right: -3px;
+    top: 0px;
+    height: 100%;
+    width: 6px;
+    padding: 0;
+    /* _variables.scss --drag-overlay-z-index */
+    z-index: 15;
+    cursor: ew-resize;
+
+    /* remove button styles */
+    background: none;
+    border: none;
+  }
+}

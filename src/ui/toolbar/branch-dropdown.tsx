@@ -263,13 +263,13 @@ export function BranchDropdown({
 
   return (
     <>
-      <div ref={buttonRef} className="branch-button flex shrink-0">
+      <div ref={buttonRef} className="branch-button flex h-full min-w-0">
         <ToolbarDropdown
           icon={<GitBranchIcon size={16} className="shrink-0" />}
           title={t("toolbar.currentBranch")}
           description={branch ?? "—"}
-          // Desktop app-store defaultBranchDropdownWidth
-          width={230}
+          // 宽度由外面的 Resizable 给（原版 defaultBranchDropdownWidth 230px，可拖动）
+          grow
           disabled={!repo}
           open={open}
           // Desktop branch-dropdown.tsx foldoutStyleOverrides：分支 foldout 最窄 365px；高度铺到窗口底部

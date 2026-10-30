@@ -1,4 +1,8 @@
+import { useEffect, useRef } from "react"
+
+import { useToolbarStore } from "@/features/toolbar/store"
 import type { RepoStatus } from "@/models/repo-status"
+import { Resizable } from "@/ui/resizable/resizable"
 
 import { BranchDropdown } from "./branch-dropdown"
 import { PushPullButton } from "./push-pull-button"
@@ -25,30 +29,59 @@ export function ToolbarRight(props: {
   onWorktrees: () => void
   onOpenWorktree: (path: string) => void
 }) {
+  const toolbar = useRef<HTMLDivElement>(null)
+  const branchDropdownWidth = useToolbarStore(s => s.branchDropdownWidth)
+  const pushPullButtonWidth = useToolbarStore(s => s.pushPullButtonWidth)
+  // 原版在窗口尺寸变化时重算上下限（updateResizableConstraints）；这里量工具栏自己
+  useEffect(() => {
+    const element = toolbar.current
+    if (!element) return
+    const observer = new ResizeObserver(() => useToolbarStore.getState().setAvailable(element.clientWidth))
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+  const store = useToolbarStore.getState()
+
   return (
-    <div className="bg-toolbar flex h-[50px] shrink-0 items-stretch" data-tauri-drag-region>
-      <BranchDropdown
-        repo={props.busy ? null : props.repo}
-        branch={props.status.branch}
-        onCheckout={props.onCheckout}
-        onCreate={props.onCreateBranch}
-        onDelete={props.onDeleteBranch}
-        onMerge={props.onMergeBranch}
-        onRebase={props.onRebaseBranch}
-        onRename={props.onRenameBranch}
-        onWorktrees={props.onWorktrees}
-        onOpenWorktree={props.onOpenWorktree}
-      />
-      <PushPullButton
-        status={props.status}
-        disabled={!props.repo}
-        busy={props.busy}
-        progress={props.progress}
-        onPush={props.onPush}
-        onPull={props.onPull}
-        onFetch={props.onFetch}
-        onPublish={props.onPublish}
-      />
+    <div ref={toolbar} className="bg-toolbar flex h-[50px] shrink-0 items-stretch" data-tauri-drag-region>
+      <Resizable
+        width={branchDropdownWidth.value}
+        onReset={store.resetBranchDropdownWidth}
+        onResize={store.setBranchDropdownWidth}
+        maximumWidth={branchDropdownWidth.max}
+        minimumWidth={branchDropdownWidth.min}
+        description="Current branch dropdown button">
+        <BranchDropdown
+          repo={props.busy ? null : props.repo}
+          branch={props.status.branch}
+          onCheckout={props.onCheckout}
+          onCreate={props.onCreateBranch}
+          onDelete={props.onDeleteBranch}
+          onMerge={props.onMergeBranch}
+          onRebase={props.onRebaseBranch}
+          onRename={props.onRenameBranch}
+          onWorktrees={props.onWorktrees}
+          onOpenWorktree={props.onOpenWorktree}
+        />
+      </Resizable>
+      <Resizable
+        width={pushPullButtonWidth.value}
+        onReset={store.resetPushPullButtonWidth}
+        onResize={store.setPushPullButtonWidth}
+        maximumWidth={pushPullButtonWidth.max}
+        minimumWidth={pushPullButtonWidth.min}
+        description="Push pull button">
+        <PushPullButton
+          status={props.status}
+          disabled={!props.repo}
+          busy={props.busy}
+          progress={props.progress}
+          onPush={props.onPush}
+          onPull={props.onPull}
+          onFetch={props.onFetch}
+          onPublish={props.onPublish}
+        />
+      </Resizable>
     </div>
   )
 }
