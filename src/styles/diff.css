@@ -558,6 +558,13 @@
 .side-by-side-diff-container .row .content {
   white-space: var(--split-white-space, pre-wrap);
 }
+/* 关掉自动换行：整张 diff 一起横向滚动。行撑到最长内容的宽度，单元格不再各自出滚动条 */
+.side-by-side-diff-container.no-wrap .row {
+  min-width: max-content;
+}
+.side-by-side-diff-container.no-wrap .row .content {
+  overflow: visible;
+}
 .side-by-side-diff-container .cm-search-result-current {
   background: Highlight;
   color: HighlightText;

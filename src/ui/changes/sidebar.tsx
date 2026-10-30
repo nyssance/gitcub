@@ -20,6 +20,7 @@ import {
 } from "@/ui/base/dropdown-menu"
 import { Empty, EmptyHeader, EmptyTitle } from "@/ui/base/empty"
 import { Input } from "@/ui/base/input"
+import { Label } from "@/ui/base/label"
 import { Separator } from "@/ui/base/separator"
 import { LinkButton } from "@/ui/desktop/link-button"
 import { hasUnresolvedConflicts, isConflictedFile } from "@/upstream/lib/status"
@@ -165,66 +166,77 @@ export function ChangesSidebar({
     const status = appStatus(file)
     return isConflictedFile(status) && hasUnresolvedConflicts(status)
   })
+  // 筛选选项：原版放在筛选框左侧；筛选框隐藏时它仍要能用（修改上一次提交、贮藏都在里面），挪到全选行右侧
+  const filterMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            size="icon-xs"
+            variant={hasActiveFilters(filters) ? "secondary" : "ghost"}
+            aria-label={t("changes.filter")}
+          />
+        }>
+        <FilterIcon />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-52">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => setAmendRequest(value => value + 1)}>{t("changes.amend")}</DropdownMenuItem>
+          {filterOptions.map(key => (
+            <DropdownMenuCheckboxItem
+              key={key}
+              checked={filters[key]}
+              onCheckedChange={checked => setFilters({ ...filters, [key]: checked })}>
+              {t(`changes.${key}`)}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem disabled={changes.length === 0} onClick={onStashAll}>
+            {t("stash.stashAll")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onUndoCommit}>{t("changes.undoCommit")}</DropdownMenuItem>
+          <DropdownMenuItem disabled={!hasActiveFilters(filters)} onClick={() => setFilters(emptyChangesFilter)}>
+            {t("changes.clearFilters")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
   return (
     <div className="changes-list-container">
-      <div className="flex h-10 shrink-0 items-center gap-2 overflow-x-auto border-b px-2.5">
-        <Checkbox
-          checked={allChecked}
-          indeterminate={partial}
-          onCheckedChange={onToggleAll}
-          aria-label={t("changes.toggleAll")}
-        />
+      {/* 原版 filter-changes-list renderFilterRow：.header 底色 box-alt、底边线；
+          上一行筛选选项与筛选框，下一行全选框与「N changed files」 */}
+      <div className="flex shrink-0 flex-col gap-1 border-b bg-(--box-alt) px-2.5 py-1">
         {filterVisible && (
-          <Input
-            value={filters.filterText}
-            onChange={event => setFilters({ ...filters, filterText: event.currentTarget.value })}
-            placeholder={t("changes.filter")}
-            aria-label={t("changes.filter")}
-            className="min-w-16 flex-1"
-          />
+          <div className="flex min-w-0 items-center gap-1.5">
+            {filterMenu}
+            <Input
+              value={filters.filterText}
+              onChange={event => setFilters({ ...filters, filterText: event.currentTarget.value })}
+              placeholder={t("changes.filter")}
+              aria-label={t("changes.filter")}
+              className="h-7 min-w-16 flex-1"
+            />
+          </div>
         )}
-        <span
-          className="text-muted-foreground shrink-0 text-xs whitespace-nowrap"
-          title={t("changes.fileCountFiltered", { shown: shown.length, total: changes.length })}>
-          {shown.length}/{changes.length}
-        </span>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                size="icon-xs"
-                variant={hasActiveFilters(filters) ? "secondary" : "ghost"}
-                aria-label={t("changes.filter")}
-              />
-            }>
-            <FilterIcon />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-52">
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setAmendRequest(value => value + 1)}>
-                {t("changes.amend")}
-              </DropdownMenuItem>
-              {filterOptions.map(key => (
-                <DropdownMenuCheckboxItem
-                  key={key}
-                  checked={filters[key]}
-                  onCheckedChange={checked => setFilters({ ...filters, [key]: checked })}>
-                  {t(`changes.${key}`)}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem disabled={changes.length === 0} onClick={onStashAll}>
-                {t("stash.stashAll")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onUndoCommit}>{t("changes.undoCommit")}</DropdownMenuItem>
-              <DropdownMenuItem disabled={!hasActiveFilters(filters)} onClick={() => setFilters(emptyChangesFilter)}>
-                {t("changes.clearFilters")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex h-[21px] min-w-0 items-center gap-2">
+          <Label className="min-w-0 flex-1 text-xs font-normal">
+            <Checkbox
+              checked={allChecked}
+              indeterminate={partial}
+              onCheckedChange={onToggleAll}
+              aria-label={t("changes.toggleAll")}
+            />
+            <span className="truncate">
+              {shown.length === changes.length
+                ? t("changes.fileCount", { count: changes.length })
+                : t("changes.fileCountFiltered", { shown: shown.length, total: changes.length })}
+            </span>
+          </Label>
+          {!filterVisible && filterMenu}
+        </div>
       </div>
 
       <div className="list-scroller">

@@ -14,7 +14,6 @@ import { type DiffHunk, DiffHunkExpansionType, DiffType, type IRawDiff } from "@
 import type { DiffSelection } from "@/upstream/models/diff/diff-selection"
 import type { DiffExpansionKind } from "@/upstream/ui/diff/text-diff-expansion"
 
-import { Button } from "../base/button"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -23,6 +22,7 @@ import {
   ContextMenuTrigger
 } from "../base/context-menu"
 import { Input } from "../base/input"
+import { DiffOptions } from "./diff-options"
 import { SplitDiff } from "./split-diff"
 
 interface Props {
@@ -181,28 +181,21 @@ function FileDiffView(props: Props) {
           {searchResults.current}/{searchResults.total}
         </span>
       )}
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => {
-          setSplit(!split)
-          localStorage.setItem("diff-layout", split ? "unified" : "split")
-        }}>
-        {t(split ? "diff.unified" : "diff.split")}
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        aria-pressed={wrap}
-        onClick={() => {
-          setWrap(!wrap)
-          localStorage.setItem("diff-wrap", String(!wrap))
-        }}>
-        {t("diff.wrap")}
-      </Button>
-      <Button size="sm" variant="ghost" aria-pressed={hide} onClick={() => setHide(!hide)}>
-        {t("diff.hideWhitespace")}
-      </Button>
+      <DiffOptions
+        isInteractiveDiff={!!props.onSelectionChange}
+        hideWhitespaceChanges={hide}
+        onHideWhitespaceChangesChanged={setHide}
+        showSideBySideDiff={split}
+        onShowSideBySideDiffChanged={value => {
+          setSplit(value)
+          localStorage.setItem("diff-layout", value ? "split" : "unified")
+        }}
+        wrap={wrap}
+        onWrapChanged={value => {
+          setWrap(value)
+          localStorage.setItem("diff-wrap", String(value))
+        }}
+      />
     </>
   )
   // Keep controls available during a filtered reload or error so the user can recover.

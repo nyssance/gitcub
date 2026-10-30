@@ -66,7 +66,7 @@ export function PushPullButton({ status, disabled, busy, progress, onPush, onPul
       onClick={config.on}
       className={cn(
         // 原版 app-store defaultPushPullButtonWidth：230px，不撑满工具栏
-        "border-toolbar-border flex h-full w-[230px] min-w-0 shrink-0 items-center gap-2 border-r px-3 text-left",
+        "border-toolbar-border flex h-full w-[230px] min-w-0 shrink-0 items-center gap-2 rounded-none border-0 border-r px-3 text-left",
         "text-toolbar-foreground hover:bg-toolbar-hover disabled:opacity-50"
       )}>
       <Icon size={16} className={cn("shrink-0", busy && "animate-spin")} />

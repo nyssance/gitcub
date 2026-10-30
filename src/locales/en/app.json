@@ -225,10 +225,15 @@
     "hunkCount_other": "{{count}} hunks",
     "noChanges": "No changes against the index",
     "search": "Find in diff",
-    "split": "Split diff",
-    "unified": "Unified diff",
-    "wrap": "Wrap lines",
-    "hideWhitespace": "Ignore whitespace"
+    "split": "Split",
+    "unified": "Unified",
+    "wrap": "Wrap Lines",
+    "hideWhitespace": "Hide Whitespace Changes",
+    "settings": "Diff Settings",
+    "whitespace": "Whitespace",
+    "hideWhitespaceHint": "Interacting with individual lines or hunks will be disabled while hiding whitespace.",
+    "display": "Diff display",
+    "lines": "Lines"
   },
   "history": {
     "peopleCount": "{{count}} people",

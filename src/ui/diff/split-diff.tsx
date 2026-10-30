@@ -346,7 +346,7 @@ export function SplitDiff({
       role="table"
       aria-label={t(split ? "diff.split" : "diff.unified")}
       aria-rowcount={rows.length}
-      className={`side-by-side-diff-container min-h-0 flex-1 ${split ? "" : "unified-diff"} ${onChange ? "editable" : ""} ${split ? `selecting-${selectingColumn}` : ""}`}
+      className={`side-by-side-diff-container min-h-0 flex-1 ${split ? "" : "unified-diff"} ${onChange ? "editable" : ""} ${split ? `selecting-${selectingColumn}` : ""} ${wrap ? "" : "no-wrap"}`}
       style={{ overflow: "auto", "--split-white-space": wrap ? "pre-wrap" : "pre" } as React.CSSProperties}
       // keyboard focus enables selecting text in the diff viewport.
       tabIndex={0}

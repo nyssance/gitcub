@@ -486,6 +486,9 @@ export class SideBySideDiffRow extends React.Component<ISideBySideDiffRowProps, 
     return (
       <div className="hunk-expansion-handle selectable hoverable" style={{ width }}>
         <Button
+          // 原版这里是没有外框的整格按钮（_side-by-side-diff.scss .hunk-expansion-handle button）
+          variant="ghost"
+          className="h-full rounded-none border-0 p-0 shadow-none"
           onClick={elementInfo.handler}
           onContextMenu={this.props.onContextMenuExpandHunk}
           tooltip={elementInfo.title}

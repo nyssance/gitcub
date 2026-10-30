@@ -313,15 +313,15 @@ test("diff layout, whitespace projection and search work through the native rend
   await page.locator(`.list-scroller [title="${file}"]`).waitFor({ state: "visible", timeout: 15000 })
   await page.locator(`.list-scroller [title="${file}"]`).click()
   await expect(page.locator(".diff-container")).toContainText("white  space")
-  await page.locator('button:has-text("Split diff")').click()
+  await setDiffOption(page, "Split")
   await page.locator(".side-by-side-diff-container .modified").waitFor({ state: "visible" })
   await expect(page.locator(".side-by-side-diff-container")).toContainText("new")
-  await page.locator('button:has-text("Ignore whitespace")').click()
+  await setDiffOption(page, "Hide Whitespace Changes")
   await expect(page.locator(".side-by-side-diff-container")).toContainText("new")
-  await page.locator('button:has-text("Unified diff")').click()
+  await setDiffOption(page, "Unified")
   await page.locator('.diff-container input[placeholder="Find in diff"]').fill("new")
   await expect(page.locator(".diff-container .unified-diff")).toContainText("new")
-  await page.locator('button:has-text("Ignore whitespace")').click()
+  await setDiffOption(page, "Hide Whitespace Changes")
   await expect(page.locator(".diff-container")).toContainText("white  space")
 })
 
@@ -373,7 +373,7 @@ test("split diff highlights both revisions and drag-selects a patch range withou
   const entry = page.locator(`.list-scroller [title="${file}"]`)
   await entry.waitFor({ state: "visible", timeout: 15000 })
   await entry.click()
-  await page.locator('button:has-text("Split diff")').click()
+  await setDiffOption(page, "Split")
   await page.locator(".side-by-side-diff-container .modified").waitFor({ state: "visible" })
   await expect
     .poll(() =>
@@ -420,15 +420,15 @@ test("split diff highlights both revisions and drag-selects a patch range withou
     )
     .toBe("false,false,false,false,true,true")
   assert.equal(git("diff", "--cached", "--name-only"), "", "UI range selection must not stage files")
-  await page.locator('button:has-text("Wrap lines")').click()
+  await setDiffOption(page, "Wrap Lines")
   assert.equal(
     await page.evaluate(
       () => getComputedStyle(document.querySelector(".side-by-side-diff-container .content")!).whiteSpace
     ),
     "pre"
   )
-  await page.locator('button:has-text("Wrap lines")').click()
-  await page.locator('button:has-text("Unified diff")').click()
+  await setDiffOption(page, "Wrap Lines")
+  await setDiffOption(page, "Unified")
 })
 
 test("native menu toggles filters, resizes the focused sidebar and confirms force push", async ({
@@ -574,6 +574,15 @@ test("repository rail marks uncommitted changes in the selected repository", asy
   // 前面的用例可能在冒烟仓库里留了改动：删掉临时文件后，圆点跟随仓库的实际状态
   await dot.waitFor({ state: git("status", "--porcelain") ? "visible" : "hidden" })
 })
+
+/** 差异设置在齿轮弹层里（Desktop diff-options.tsx）：打开、点选项、再点齿轮关上。 */
+async function setDiffOption(page: Page, label: string) {
+  const gear = page.locator('button[aria-label="Diff Settings"]')
+  await gear.click()
+  await page.locator(`[data-slot="popover-content"] label:has-text("${label}")`).click()
+  await gear.click()
+  await page.locator('[data-slot="popover-content"]').waitFor({ state: "hidden" })
+}
 
 async function clickRailRepository(page: Page, path: string) {
   const button = page.locator(`button[title="${path}"]`)

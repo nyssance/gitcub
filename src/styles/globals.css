@@ -223,12 +223,19 @@
    不用 shadcn 的近黑底和半透明白线（_variables.scss / themes/_dark.scss 的
    --background-color、--box-border-color、--text-secondary-color）。 */
 [data-floating-board="workspace"] {
+  /* 主按钮、勾选框：原版 --button-background = $blue */
+  --primary: #0366d6;
+  --primary-foreground: #ffffff;
   --background: #ffffff;
+  --box-alt: #f6f8fa; /* --box-alt-background-color = gray-100 */
   --border: #e1e4e8; /* gray-200 */
   --muted-foreground: #6a737d; /* gray-500 */
 }
 .dark [data-floating-board="workspace"] {
+  --primary: #0366d6;
+  --primary-foreground: #ffffff;
   --background: #24292e; /* gray-900 */
+  --box-alt: #2b3137; /* lighten(gray-900, 3%) */
   --border: #141414;
   --muted-foreground: #959da5; /* gray-400 */
 }

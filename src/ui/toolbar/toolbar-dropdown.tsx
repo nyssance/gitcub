@@ -50,7 +50,7 @@ export function ToolbarDropdown({
 
   const className = cn(
     grow ? "w-full flex-1" : "shrink-0",
-    "border-toolbar-border h-full justify-start gap-2 rounded-none border-r px-3",
+    "border-toolbar-border h-full justify-start gap-2 rounded-none border-0 border-r px-3",
     "text-toolbar-foreground hover:bg-toolbar-hover hover:text-toolbar-foreground",
     open && "bg-toolbar-hover"
   )
