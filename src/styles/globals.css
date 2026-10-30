@@ -218,6 +218,20 @@
   --diff-line-number: #9da5ad;
 }
 
+/* 工作区浮板是 Desktop 的业务区域：底色、分隔线和次级文字用原版主题的值，
+   不用 shadcn 的近黑底和半透明白线（_variables.scss / themes/_dark.scss 的
+   --background-color、--box-border-color、--text-secondary-color）。 */
+[data-floating-board="workspace"] {
+  --background: #ffffff;
+  --border: #e1e4e8; /* gray-200 */
+  --muted-foreground: #6a737d; /* gray-500 */
+}
+.dark [data-floating-board="workspace"] {
+  --background: #24292e; /* gray-900 */
+  --border: #141414;
+  --muted-foreground: #959da5; /* gray-400 */
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);

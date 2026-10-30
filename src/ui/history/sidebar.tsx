@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 
 import { avatarUrl } from "@/lib/avatar"
 import { endCommitDrag, startCommitDrag } from "@/lib/commit-drag"
+import { isCoAuthoredByTrailer, parseSingleUnfoldedTrailer } from "@/lib/commit-trailers"
 import { ipc } from "@/lib/ipc"
 import { isUnpushedCommit, type LocalCommits, type PushStatus } from "@/lib/unpushed-commits"
 import { cn } from "@/lib/utils"
@@ -620,22 +621,7 @@ export function HistorySidebar({
                           {c.summary || t("history.emptySummary")}
                         </span>
                       </ItemTitle>
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <Avatar
-                          size="sm"
-                          className="data-[size=sm]:size-4"
-                          title={`${c.authorName} <${c.authorEmail}>`}>
-                          <AvatarImage src={avatarUrl(c.authorEmail, 32)} alt={c.authorName} loading="lazy" />
-                          <AvatarFallback className="text-foreground group-data-[size=sm]/avatar:text-[10px]">
-                            {c.authorName.trim().slice(0, 1).toUpperCase() || "?"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <ItemDescription className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px]">
-                          <span className="min-w-10 truncate">{c.authorName}</span>
-                          <span className="shrink-0">•</span>
-                          <span className="truncate">{relativeTime(c.time)}</span>
-                        </ItemDescription>
-                      </div>
+                      <CommitByline commit={c} />
                     </ItemContent>
                     {unpushed(c.sha) && <UnpushedIndicator title={t("history.unpushed")} />}
                   </ContextMenuTrigger>
@@ -756,18 +742,58 @@ function Section({
               <span className="min-w-0 flex-1 truncate text-xs">{c.summary}</span>
               {unpushed(c.sha) && <UnpushedIndicator title={t("history.unpushed")} />}
             </span>
-            <span className="flex w-full min-w-0 items-center gap-1.5 text-[11px]">
-              <Avatar size="sm" className="data-[size=sm]:size-4" title={`${c.authorName} <${c.authorEmail}>`}>
-                <AvatarImage src={avatarUrl(c.authorEmail, 32)} alt={c.authorName} loading="lazy" />
-                <AvatarFallback className="text-foreground group-data-[size=sm]/avatar:text-[10px]">
-                  {c.authorName.trim().slice(0, 1).toUpperCase() || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-muted-foreground truncate">{c.authorName}</span>
-            </span>
+            <CommitByline commit={c} />
           </Item>
         ))
       )}
+    </div>
+  )
+}
+
+/** 提交的作者加 Co-authored-by 共同作者。Desktop 的 coAuthors 来自 `%(trailers:unfold,only)`，
+ *  即消息最后一段里的 trailer；这里从正文最后一段取同样的行。 */
+const commitAuthors = (commit: CommitInfo) => {
+  const authors = [{ name: commit.authorName, email: commit.authorEmail }]
+  const last =
+    commit.body
+      .trimEnd()
+      .split(/\n\s*\n/)
+      .at(-1) ?? ""
+  for (const line of last.split("\n")) {
+    const trailer = parseSingleUnfoldedTrailer(line, ":")
+    const match = trailer && isCoAuthoredByTrailer(trailer) ? /^(.*?)\s*<([^>]*)>/.exec(trailer.value) : null
+    if (match) authors.push({ name: match[1], email: match[2] })
+  }
+  return authors
+}
+
+/** Desktop `commit-list-item.tsx` 的 `.description`：AvatarStack，再接 CommitAttribution 与 ` • ` 相对时间
+ *  （两人列名字，三人以上写「N people」）。 */
+function CommitByline({ commit }: { commit: CommitInfo }) {
+  const { t } = useTranslation()
+  const authors = commitAuthors(commit)
+  return (
+    <div className="flex min-w-0 items-center gap-1">
+      <span className="flex shrink-0">
+        {authors.slice(0, 3).map((author, index) => (
+          <Avatar
+            key={`${index}:${author.email}`}
+            size="sm"
+            className={cn("ring-background data-[size=sm]:size-4", index > 0 && "-ml-1.5 ring-1")}
+            title={`${author.name} <${author.email}>`}>
+            <AvatarImage src={avatarUrl(author.email, 32)} alt={author.name} loading="lazy" />
+            <AvatarFallback className="text-foreground group-data-[size=sm]/avatar:text-[10px]">
+              {author.name.trim().slice(0, 1).toUpperCase() || "?"}
+            </AvatarFallback>
+          </Avatar>
+        ))}
+      </span>
+      <ItemDescription className="min-w-0 flex-1 truncate text-[11px]">
+        {authors.length > 2
+          ? t("history.peopleCount", { count: authors.length })
+          : authors.map(author => author.name).join(", ")}
+        {` • ${relativeTime(commit.time)}`}
+      </ItemDescription>
     </div>
   )
 }

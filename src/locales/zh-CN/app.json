@@ -225,6 +225,7 @@
     "hideWhitespace": "忽略空白"
   },
   "history": {
+    "peopleCount": "{{count}} 人",
     "compareWith": "对比",
     "noCompare": "不对比",
     "aheadTitle": "我有对方没有的 {{count}} 个",

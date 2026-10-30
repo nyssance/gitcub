@@ -231,6 +231,7 @@
     "hideWhitespace": "Ignore whitespace"
   },
   "history": {
+    "peopleCount": "{{count}} people",
     "compareWith": "Compare",
     "noCompare": "No comparison",
     "aheadTitle": "{{count}} only here",
