@@ -435,31 +435,6 @@
   white-space: var(--split-white-space, pre-wrap);
 }
 
-/* Desktop SectionFilterList requires a bounded flex container for AutoSizer.
-   PR/MR rows retain the upstream pull-request-list.tsx RowHeight of 47px. */
-.native-pull-request-list {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-.native-pull-request-list .filter-list-container {
-  flex: 1;
-  min-height: 0;
-}
-.native-pull-request-list .list-item,
-.native-pull-request-list .list-item-content-wrapper {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-}
-.native-pull-request-list .list-item.selected {
-  --muted-foreground: var(--accent-foreground);
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
 /* _resizable.scss：工具栏按钮右缘 6px 的拖动把手 */
 .resizable-component {
   display: flex;

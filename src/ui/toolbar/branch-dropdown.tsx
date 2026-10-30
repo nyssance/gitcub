@@ -1,13 +1,15 @@
 import { FileDirectoryIcon, GitBranchIcon } from "@primer/octicons-react"
 import { listen } from "@tauri-apps/api/event"
-import { useEffect, useEffectEvent, useRef, useState } from "react"
+import { type ReactNode, useEffect, useEffectEvent, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { canDropCommits } from "@/lib/commit-drag"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import { ipc } from "@/lib/ipc"
 import { useRepositoryPolicy } from "@/lib/use-repository-policy"
 import type { Worktree } from "@/models/app-state"
 import { Button as StandardButton } from "@/ui/base/button"
+import { Tabs, TabsList, TabsTrigger } from "@/ui/base/tabs"
 import { shouldShowWorktreeDropdown } from "@/upstream/lib/worktree-dropdown"
 
 import { getBranches } from "../../lib/desktop-git"
@@ -37,6 +39,14 @@ interface Props {
   onRename: (from: string) => void
   onWorktrees: () => void
   onOpenWorktree: (path: string) => void
+  /** 有托管远端（GitHub / GitLab）时才有「Pull Requests」页签 */
+  renderPullRequests?: (options: {
+    close: () => void
+    isOnDefaultBranch: boolean
+    onCreateBranch: () => void
+  }) => ReactNode
+  /** 页签上的数量气泡（Desktop renderOpenPullRequestsBubble） */
+  pullRequestCount?: number
 }
 
 export function BranchDropdown({
@@ -49,10 +59,15 @@ export function BranchDropdown({
   onRebase,
   onRename,
   onWorktrees,
-  onOpenWorktree
+  onOpenWorktree,
+  renderPullRequests,
+  pullRequestCount = 0
 }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  // Desktop BranchesTab：Branches / Pull Requests
+  const [tab, setTab] = useState<"branches" | "pullRequests">("branches")
+  const selectedTab = renderPullRequests ? tab : "branches"
   const buttonRef = useRef<HTMLDivElement>(null)
   const [foldoutHeight, setFoldoutHeight] = useState(0)
   const measureFoldout = () => {
@@ -120,6 +135,12 @@ export function BranchDropdown({
     if (payload === "create-branch") void showCreateDialog()
     if (["merge-branch", "squash-and-merge-branch", "rebase-branch"].includes(payload)) {
       setAction(payload)
+      setTab("branches")
+      measureFoldout()
+      setOpen(true)
+    }
+    if (payload === "show-prs" && renderPullRequests) {
+      setTab("pullRequests")
       measureFoldout()
       setOpen(true)
     }
@@ -267,7 +288,15 @@ export function BranchDropdown({
 
   return (
     <>
-      <div ref={buttonRef} className="branch-button flex h-full min-w-0">
+      <div
+        ref={buttonRef}
+        className="branch-button flex h-full min-w-0"
+        // Desktop branch-dropdown onMouseEnter：拖着提交经过分支按钮就展开，好落到分支或 PR 上
+        onDragEnter={event => {
+          if (open || !repo || !canDropCommits(event.dataTransfer, repo)) return
+          measureFoldout()
+          setOpen(true)
+        }}>
         <ToolbarDropdown
           icon={<GitBranchIcon size={16} className="shrink-0" />}
           title={t("toolbar.currentBranch")}
@@ -287,8 +316,37 @@ export function BranchDropdown({
             if (!value) setAction(null)
           }}>
           <div className="branches-container">
-            <div className="branches-container-panel">
-              {error ? (
+            {renderPullRequests && (
+              <Tabs value={selectedTab} onValueChange={value => setTab(value)}>
+                <TabsList variant="line" className="w-full shrink-0">
+                  <TabsTrigger value="branches" id="branches-tab">
+                    {t("desktopUI.branches")}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="pullRequests"
+                    id="pull-requests-tab"
+                    className="pull-request-tab"
+                    // Desktop TabBar allowDragOverSwitching：拖着提交经过页签就切过去
+                    onDragEnter={event => {
+                      if (repo && canDropCommits(event.dataTransfer, repo)) setTab("pullRequests")
+                    }}>
+                    {t("tabs.pr")}
+                    {pullRequestCount > 0 && <span className="count">{pullRequestCount}</span>}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
+            <div
+              className="branches-container-panel"
+              role="tabpanel"
+              aria-labelledby={selectedTab === "branches" ? "branches-tab" : "pull-requests-tab"}>
+              {selectedTab === "pullRequests" && renderPullRequests ? (
+                renderPullRequests({
+                  close,
+                  isOnDefaultBranch: !!branches?.defaultBranch && branches.defaultBranch.name === branch,
+                  onCreateBranch: () => void showCreateDialog()
+                })
+              ) : error ? (
                 <p className="no-branches">{error}</p>
               ) : branches === null ? null : (
                 <BranchList

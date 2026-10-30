@@ -787,11 +787,12 @@ test("fork pull requests list the parent and check out the source through the na
         payload: "show-prs"
       })
     })
-    await page.locator('button:has-text("Fork PR fixture")').waitFor({ state: "visible" })
+    // Desktop：PR 列表在分支下拉的「Pull Requests」页签里，点一行就检出
+    await page.locator('.pull-request-item:has-text("Fork PR fixture")').waitFor({ state: "visible" })
     const targets = await page.evaluate(() => window.__requestTargets)
     assert.ok(targets.length > 0)
     assert.ok(targets.every(r => r.owner === "org" && r.name === "upstream"))
-    await page.locator('button:has-text("Check out")').click()
+    await page.locator('.pull-request-item:has-text("Fork PR fixture")').click()
     await expect.poll(() => git("branch", "--show-current")).toBe("pr/17")
     assert.equal(git("rev-parse", "HEAD"), forkHead)
     assert.equal(git("rev-parse", previousBranch), previousHead)
@@ -813,16 +814,22 @@ test("fork pull requests list the parent and check out the source through the na
       if (!row) throw new Error("Missing draggable history row")
       window.__commitDrag = new DataTransfer()
       row.dispatchEvent(new DragEvent("dragstart", { bubbles: true, dataTransfer: window.__commitDrag }))
-      const tab = [...document.querySelectorAll('[role="tab"]')].find(tab => tab.textContent?.includes("Pull requests"))
-      if (!tab) throw new Error("Missing requests tab")
-      tab.dispatchEvent(new DragEvent("dragenter", { bubbles: true, dataTransfer: window.__commitDrag }))
+      // Desktop：拖着提交经过分支按钮展开下拉，经过「Pull Requests」页签切过去
+      const button = document.querySelector(".branch-button")
+      if (!button) throw new Error("Missing branch button")
+      button.dispatchEvent(new DragEvent("dragenter", { bubbles: true, dataTransfer: window.__commitDrag }))
     })
-    await page.locator('button:has-text("Fork PR fixture")').waitFor({ state: "visible" })
+    await page.locator("#pull-requests-tab").waitFor({ state: "visible" })
     await page.evaluate(() => {
-      const title = [...document.querySelectorAll("button")].find(button =>
-        button.textContent?.includes("Fork PR fixture")
+      document
+        .querySelector("#pull-requests-tab")!
+        .dispatchEvent(new DragEvent("dragenter", { bubbles: true, dataTransfer: window.__commitDrag }))
+    })
+    await page.locator('.pull-request-item:has-text("Fork PR fixture")').waitFor({ state: "visible" })
+    await page.evaluate(() => {
+      const row = [...document.querySelectorAll(".pull-request-item")].find(row =>
+        row.textContent?.includes("Fork PR fixture")
       )
-      const row = title?.closest('[data-slot="context-menu-trigger"]')
       if (!row) throw new Error("Missing request drop target")
       row.dispatchEvent(
         new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: window.__commitDrag })

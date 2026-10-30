@@ -223,15 +223,21 @@ export function SplitDiff({
   }, [diff, split])
   // 不换行时整张 diff 一起横向滚动：行组撑到已渲染行里最宽的那行，短行的底色才能跟着铺满。
   // 虚拟列表只渲染可见行，往下滚出现更长的行时再变宽；换文件或切回换行时重来。
-  const [contentWidth, setContentWidth] = useState(0)
-  useEffect(() => setContentWidth(0), [diff, wrap, split])
+  // 测量结果跟着这份布局走：换文件、切换行或并排时旧宽度作废，按新内容重新量
+  const layoutKey = useMemo(() => ({ diff, wrap, split }), [diff, wrap, split])
+  const [measured, setMeasured] = useState<{ key: object; width: number } | null>(null)
+  const contentWidth = measured?.key === layoutKey ? measured.width : 0
+  const visibleRange = virtual.getVirtualItems().map(item => item.index).join(",")
   useLayoutEffect(() => {
-    if (wrap || !parent.current) return
+    if (layoutKey.wrap || !parent.current) return
     let widest = 0
     for (const row of parent.current.querySelectorAll<HTMLElement>(".side-by-side-diff > [role=row] > .row"))
       widest = Math.max(widest, row.scrollWidth)
-    if (widest > contentWidth) setContentWidth(widest)
-  })
+    setMeasured(previous => {
+      const width = Math.max(previous?.key === layoutKey ? previous.width : 0, widest)
+      return previous?.key === layoutKey && previous.width === width ? previous : { key: layoutKey, width }
+    })
+  }, [layoutKey, visibleRange])
   // wrap changes invalidate measured row heights.
   useEffect(() => {
     virtual.measure()

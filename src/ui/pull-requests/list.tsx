@@ -1,25 +1,24 @@
 import {
-  CheckCircleIcon,
-  ClockIcon,
+  CheckCircleFillIcon,
+  DotFillIcon,
   GitPullRequestDraftIcon,
   GitPullRequestIcon,
-  LinkExternalIcon,
   SkipIcon,
   SyncIcon,
   XCircleFillIcon
 } from "@primer/octicons-react"
 import { openUrl } from "@tauri-apps/plugin-opener"
+import type { TFunction } from "i18next"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePullRequestsStore } from "@/features/pull-requests/store"
 import { canDropCommits, takeCommitDrag } from "@/lib/commit-drag"
 import type { IFilterListItem } from "@/lib/filter-list"
 import { formatDate } from "@/lib/format-date"
-import { ipc } from "@/lib/ipc"
 import type { PullRequest, Remote } from "@/models/app-state"
 import { getPreferAbsoluteDates } from "@/models/formatting-preferences"
-import { Badge } from "@/ui/base/badge"
-import { Button, Button as StandardButton } from "@/ui/base/button"
+import { Button } from "@/ui/base/button"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -27,263 +26,193 @@ import {
   ContextMenuItem,
   ContextMenuTrigger
 } from "@/ui/base/context-menu"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/ui/base/empty"
-import { Input } from "@/ui/base/input"
 import { Spinner } from "@/ui/base/spinner"
+import { NoPullRequests } from "@/ui/branches/no-pull-requests"
 import { HighlightText } from "@/ui/desktop/highlight-text"
 import { SectionFilterList } from "@/ui/desktop/section-filter-list"
+import { TooltippedContent } from "@/ui/desktop/tooltipped-content"
 import { formatRelative } from "@/upstream/lib/format-relative"
-import { match } from "@/upstream/lib/fuzzy-find"
 
 import { NativeChecks } from "../check-runs/native-checks"
 
-interface RequestItem extends IFilterListItem {
-  request: PullRequest
+interface IPullRequestListItem extends IFilterListItem {
+  readonly id: string
+  readonly text: ReadonlyArray<string>
+  readonly pullRequest: PullRequest
 }
 
-/** 开放的 PR / MR。
+/** Desktop pull-request-list.tsx RowHeight */
+export const RowHeight = 47
+
+/** Desktop getSubtitle：`#12 opened 2 days ago by bear`（草稿再加「• Draft」） */
+function getSubtitle(pr: PullRequest, t: TFunction) {
+  const created = pr.createdAt ? new Date(pr.createdAt) : null
+  const dateText =
+    created && Number.isFinite(created.getTime())
+      ? getPreferAbsoluteDates()
+        ? formatDate(created)
+        : formatRelative(created.getTime() - Date.now())
+      : null
+  const subtitle = dateText
+    ? `#${pr.number} ${t("pr.opened", { date: dateText, author: pr.author })}`
+    : `#${pr.number} ${pr.author}`
+  return pr.draft ? `${subtitle} • ${t("pr.draft")}` : subtitle
+}
+
+/** 开放的 PR / MR，分支下拉的「Pull Requests」页签。
  *
- * 两家的字段名不同（PR vs MR、number vs iid、CI 状态藏的位置也不一样），
- * 在 Rust 那侧已经统一成一套，这里只管画。
- *
- * 「切到这条分支」是最常用的动作——看 PR 多半是为了在本地跑一下。 */
+ * 结构与样式照 Desktop 的 pull-request-list.tsx / pull-request-list-item.tsx：筛选行带刷新按钮，
+ * 分组头「Pull requests in owner/name」，每行图标、标题、副标题、CI 状态；点一行检出，
+ * 把提交拖到一行上 cherry-pick。GitHub 与 GitLab 的字段差异在 Rust 侧统一，这里只管画。
+ * CI 状态图标可点开检查项（原版的 CI 详情入口在分支按钮的徽章上，本项目放在这里）。 */
 export function PullRequests({
   repo,
-  onCherryPick,
   remote,
+  isOnDefaultBranch,
+  onCherryPick,
   onCheckout,
-  onCreate
+  onCreate,
+  onCreateBranch
 }: {
   repo?: string
-  onCherryPick?: (request: PullRequest, target: Remote, shas: string[]) => void
   remote: Remote | null
+  isOnDefaultBranch: boolean
+  onCherryPick?: (request: PullRequest, target: Remote, shas: string[]) => void
   onCheckout: (request: PullRequest, target: Remote) => void
   onCreate: () => void
+  onCreateBranch: () => void
 }) {
   const { t } = useTranslation()
-  const [list, setList] = useState<PullRequest[]>([])
-  const [target, setTarget] = useState<Remote | null>(null)
-  const [busy, setBusy] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { list, target, loading, error, revalidate, refresh } = usePullRequestsStore()
+  // 选中仓库时已经预先取过（页签上的数量）；打开页签先显示已有的，同时重新取一次
+  useEffect(() => revalidate(remote), [revalidate, remote])
+
+  const [filterText, setFilterText] = useState("")
   // 展开哪条 PR 的检查项。一次只展开一条——同时摊开几十个 job 没人看得过来
   const [inspecting, setInspecting] = useState<{ url: string; anchor: HTMLElement } | null>(null)
-
-  const [query, setQuery] = useState("")
-  const shown = query.trim()
-    ? match(query.trim(), list, pr => [pr.title, `#${pr.number} ${pr.author}`]).map(result => result.item)
-    : list
+  const inspectedRequest = list.find(pr => pr.url === inspecting?.url)
+  const [selected, setSelected] = useState<IPullRequestListItem | null>(null)
 
   const groups = useMemo(
     () => [
       {
         identifier: "pull-requests",
-        showHeader: false,
-        items: list.map(request => ({
-          id: request.url,
-          text: [request.title, `#${request.number} ${request.author}`],
-          request
-        }))
+        items: list.map(pr => ({ id: pr.url, text: [pr.title, getSubtitle(pr, t)], pullRequest: pr }))
       }
     ],
-    [list]
+    [list, t]
   )
-  const [selected, setSelected] = useState<RequestItem | null>(null)
-  const inspectedRequest = list.find(pr => pr.url === inspecting?.url)
+  const repositoryName = target ? `${target.owner}/${target.name}` : remote ? `${remote.owner}/${remote.name}` : ""
 
-  const [revision, setRevision] = useState(0)
-  // revision explicitly triggers a fresh request from the refresh button.
-  useEffect(() => {
-    let live = true
-    setSelected(null)
-    setList([])
-    setTarget(null)
-    setInspecting(null)
-    setError(null)
-    if (!remote) {
-      setBusy(false)
-      return
-    }
-    setBusy(true)
-    ipc
-      .pullRequestRepository(remote.host, remote.owner, remote.name)
-      .then(target => {
-        if (!live) return []
-        setTarget(target)
-        return ipc.pullRequests(target.host, target.owner, target.name, true)
-      })
-      .then(value => {
-        if (live) setList(value)
-      })
-      .catch((e: unknown) => {
-        if (live) setError(String(e))
-      })
-      .finally(() => {
-        if (live) setBusy(false)
-      })
-    return () => {
-      live = false
-    }
-  }, [remote, revision])
-
-  if (busy) {
+  if (loading && list.length === 0 && !error) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center">
         <Spinner />
       </div>
     )
   }
 
-  // 侧栏只有 250px 宽：单行紧凑，搜索框占满剩余宽度，刷新是图标按钮，页签已经写了「Pull requests」不再重复标题
-  const header = (
-    <div className="flex h-9 shrink-0 items-center gap-1.5 border-b px-2">
-      <Input
-        className="h-7 min-w-0 flex-1 text-xs"
-        value={query}
-        onChange={event => setQuery(event.currentTarget.value)}
-        placeholder={t("pr.search")}
-        aria-label={t("pr.search")}
-      />
-      <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-        {shown.length}/{list.length}
-      </span>
-      <Button
-        size="icon-xs"
-        variant="ghost"
-        disabled={!remote}
-        title={t("inbox.refresh")}
-        aria-label={t("inbox.refresh")}
-        onClick={() => setRevision(value => value + 1)}>
-        <SyncIcon size={14} />
-      </Button>
-      <Button size="xs" disabled={!remote} onClick={onCreate}>
-        {t("pr.newPr")}
-      </Button>
-    </div>
-  )
-
-  if (!remote || list.length === 0) {
-    return (
-      <div className="flex min-h-0 flex-1 flex-col">
-        {header}
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>{t(error ? "pr.loadFailed" : "pr.empty")}</EmptyTitle>
-            <EmptyDescription>{error ?? t("pr.emptyHint")}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      {header}
-      <SectionFilterList<RequestItem>
+    <>
+      <SectionFilterList<IPullRequestListItem>
+        // 行里有 CI 按钮：用 list/listitem，listbox 的 option 里不能再嵌可交互元素
         listRole="list"
-        className="native-pull-request-list min-h-0 flex-1"
-        rowHeight={47}
+        className="pull-request-list"
+        rowHeight={RowHeight}
         groups={groups}
-        filterText={query}
-        hideFilterRow
         selectedItem={selected}
         onSelectionChanged={setSelected}
-        onItemClick={item => target && onCheckout(item.request, target)}
-        getItemAriaLabel={item => `#${item.request.number} ${item.request.title}`}
-        getGroupAriaLabel={() => t("pr.title")}
+        filterText={filterText}
+        onFilterTextChanged={setFilterText}
+        placeholderText={t("desktopUI.filter")}
         invalidationProps={list}
-        renderNoItems={() => (
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>{t("pr.noMatches")}</EmptyTitle>
-            </EmptyHeader>
-          </Empty>
+        onItemClick={item => target && onCheckout(item.pullRequest, target)}
+        getItemAriaLabel={item => `#${item.pullRequest.number} ${item.pullRequest.title}`}
+        getGroupAriaLabel={() => t("pr.pullRequestsIn", { repository: repositoryName })}
+        renderGroupHeader={() => (
+          <div className="filter-list-group-header">{t("pr.pullRequestsIn", { repository: repositoryName })}</div>
         )}
+        renderPostFilter={() => (
+          <Button
+            variant="outline"
+            size="icon-sm"
+            disabled={loading || !remote}
+            onClick={refresh}
+            aria-label={t("pr.refreshPullRequests")}
+            title={t("pr.refreshPullRequests")}>
+            <SyncIcon size={16} className={loading ? "animate-spin" : undefined} />
+          </Button>
+        )}
+        renderNoItems={() =>
+          error ? (
+            <div className="no-pull-requests">
+              <div className="title">{t("pr.loadFailed")}</div>
+              <div className="call-to-action">{error}</div>
+            </div>
+          ) : (
+            <NoPullRequests
+              isSearch={filterText.length > 0}
+              isLoadingPullRequests={loading}
+              repositoryName={repositoryName}
+              isOnDefaultBranch={isOnDefaultBranch}
+              onCreateBranch={onCreateBranch}
+              onCreatePullRequest={onCreate}
+            />
+          )
+        }
         renderItem={(item, matches) => {
-          const pr = item.request
-          const created = pr.createdAt ? new Date(pr.createdAt) : null
-          const dateText =
-            created && Number.isFinite(created.getTime())
-              ? getPreferAbsoluteDates()
-                ? formatDate(created)
-                : formatRelative(created.getTime() - Date.now())
-              : null
+          const pr = item.pullRequest
+          const subtitle = getSubtitle(pr, t)
           return (
             <ContextMenu>
               <ContextMenuTrigger
+                className={`pull-request-item ${pr.draft ? "draft" : "open"}`}
                 onDragOver={event => {
                   if (!repo || !target || !onCherryPick || !canDropCommits(event.dataTransfer, repo)) return
                   event.preventDefault()
                   event.dataTransfer.dropEffect = "copy"
-                  event.currentTarget.dataset.dropTarget = "true"
+                  event.currentTarget.classList.add("drop-target")
                 }}
-                onDragLeave={event => {
-                  delete event.currentTarget.dataset.dropTarget
-                }}
+                onDragLeave={event => event.currentTarget.classList.remove("drop-target")}
                 onDrop={event => {
-                  delete event.currentTarget.dataset.dropTarget
+                  event.currentTarget.classList.remove("drop-target")
                   if (!repo || !target || !onCherryPick) return
                   const shas = takeCommitDrag(event.dataTransfer, repo)
                   if (!shas) return
                   event.preventDefault()
                   event.stopPropagation()
                   onCherryPick(pr, target, shas)
-                }}
-                className="hover:bg-accent/50 data-[drop-target=true]:bg-accent flex h-full min-w-0 flex-1 items-center gap-3 px-3">
-                {pr.draft ? (
-                  <GitPullRequestDraftIcon size={16} className="text-muted-foreground shrink-0" />
-                ) : (
-                  <GitPullRequestIcon size={16} className="text-status-new shrink-0" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <StandardButton
-                    variant="ghost"
-                    type="button"
-                    onKeyDown={event => event.stopPropagation()}
-                    onClick={event => {
-                      event.stopPropagation()
-                      void openUrl(pr.url)
-                    }}
-                    className="flex h-auto max-w-full items-center gap-1 p-0 text-sm font-medium hover:underline">
-                    <span className="truncate">
-                      <HighlightText text={pr.title} highlight={matches.title} />
-                    </span>
-                    {pr.draft && <Badge variant="secondary">{t("pr.draft")}</Badge>}
-                    <LinkExternalIcon size={12} className="text-muted-foreground shrink-0" />
-                  </StandardButton>
-                  <div className="text-muted-foreground flex items-center gap-2 text-[11px]">
-                    <span className="shrink-0">#{pr.number}</span>
-                    <span
-                      className="truncate"
-                      title={dateText ? t("pr.opened", { date: dateText, author: pr.author }) : pr.author}>
-                      {dateText ? t("pr.opened", { date: dateText, author: pr.author }) : pr.author}
-                    </span>
-                    <Checks state={pr.checks} />
-                    {pr.checks && remote && pr.headSha && (
-                      <StandardButton
-                        variant="ghost"
-                        type="button"
-                        className="h-auto shrink-0 p-0 underline-offset-2 hover:underline"
-                        onClick={event => {
-                          event.stopPropagation()
-                          setInspecting(
-                            inspecting?.url === pr.url ? null : { url: pr.url, anchor: event.currentTarget }
-                          )
-                        }}>
-                        {t("pr.checksDetail")}
-                      </StandardButton>
-                    )}
-                  </div>
+                }}>
+                <div>
+                  {pr.draft ? (
+                    <GitPullRequestDraftIcon size={16} className="icon" />
+                  ) : (
+                    <GitPullRequestIcon size={16} className="icon" />
+                  )}
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!target}
-                  onClick={event => {
-                    event.stopPropagation()
-                    if (target) onCheckout(pr, target)
-                  }}>
-                  {t("pr.checkout")}
-                </Button>
+                <div className="info">
+                  <TooltippedContent tagName="div" className="title" tooltip={pr.title} onlyWhenOverflowed={true}>
+                    <HighlightText text={pr.title} highlight={matches.title} />
+                  </TooltippedContent>
+                  <TooltippedContent tagName="div" className="subtitle" tooltip={subtitle} onlyWhenOverflowed={true}>
+                    <HighlightText text={subtitle} highlight={matches.subtitle} />
+                  </TooltippedContent>
+                </div>
+                <div className="ci-status-container">
+                  {pr.checks && pr.headSha && (
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={t("pr.checksDetail")}
+                      title={t("pr.checksDetail")}
+                      onClick={event => {
+                        event.stopPropagation()
+                        setInspecting(inspecting?.url === pr.url ? null : { url: pr.url, anchor: event.currentTarget })
+                      }}>
+                      <CIStatusIcon state={pr.checks} />
+                    </Button>
+                  )}
+                </div>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 <ContextMenuGroup>
@@ -309,18 +238,16 @@ export function PullRequests({
           onClose={() => setInspecting(null)}
         />
       )}
-    </div>
+    </>
   )
 }
 
-/** CI 状态。用图标而不是文字：一屏十几条 PR 时，颜色和形状比读字快。 */
-function Checks({ state }: { state: string | null }) {
-  if (!state) return null
-  if (state === "success") return <CheckCircleIcon size={12} className="text-status-new shrink-0" />
-  if (state === "failure" || state === "timed_out")
-    return <XCircleFillIcon size={12} className="text-destructive shrink-0" />
-  // skipped / cancelled 这类既不算成功也不算失败，用中性色
-  if (state === "skipped" || state === "cancelled")
-    return <SkipIcon size={12} className="text-muted-foreground shrink-0" />
-  return <ClockIcon size={12} className="text-status-modified shrink-0" />
+/** Desktop ci-status.tsx 的图标与 _ci-status.scss 的颜色：成功绿勾、失败红叉、进行中黄点、跳过/取消灰色。 */
+function CIStatusIcon({ state }: { state: string }) {
+  if (state === "success") return <CheckCircleFillIcon size={16} className="ci-status ci-status-success" />
+  if (state === "failure" || state === "timed_out" || state === "action_required")
+    return <XCircleFillIcon size={16} className="ci-status ci-status-failure" />
+  if (state === "skipped" || state === "cancelled" || state === "neutral" || state === "stale")
+    return <SkipIcon size={16} className="ci-status ci-status-skipped" />
+  return <DotFillIcon size={16} className="ci-status ci-status-pending" />
 }

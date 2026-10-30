@@ -1,4 +1,4 @@
-import { listen } from "@tauri-apps/api/event"
+import { emit, listen } from "@tauri-apps/api/event"
 import { confirm, open } from "@tauri-apps/plugin-dialog"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react"
@@ -10,12 +10,12 @@ import { activeRepository, useAppStateStore } from "@/features/app-state/store"
 import { type FileState, useChangesStore } from "@/features/changes/store"
 import { selectDialogBlocking, useDialogsStore } from "@/features/dialogs/store"
 import { useHistoryStore } from "@/features/history/store"
+import { usePullRequestsStore } from "@/features/pull-requests/store"
 import { useRepositoryIndicatorsStore } from "@/features/repository-indicators/store"
 import { useRepositoryStore } from "@/features/repository/store"
 import { useWorkspaceStore } from "@/features/workspace/store"
 import { accountRemoteFor } from "@/lib/account-host"
 import { BranchWorkflowError, checkoutWithStash, cherryPickToBranch, pushWithRecovery } from "@/lib/branch-workflows"
-import { canDropCommits } from "@/lib/commit-drag"
 import { getGlobalConfigValue, getRemoteHEAD } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import i18n from "@/lib/i18n"
@@ -229,6 +229,11 @@ export function App() {
     const known = state?.accountHosts ?? []
     return Object.fromEntries(Object.entries(rawRemotes).map(([path, r]) => [path, r && accountRemoteFor(r, known)]))
   }, [rawRemotes, state?.accountHosts])
+
+  // Desktop 选中仓库时就加载开放的 PR（分支下拉页签上的数量）；换远端时中断上一次请求
+  const selectedRemote = repo ? (remotes[repo] ?? null) : null
+  useEffect(() => usePullRequestsStore.getState().load(selectedRemote), [selectedRemote])
+  const pullRequestCount = usePullRequestsStore(s => s.list.length)
 
   const repoHosts = useMemo(
     () => [...new Set(Object.values(remotes).flatMap(r => (r ? [r.host] : [])))].toSorted(),
@@ -862,9 +867,7 @@ export function App() {
       case "show-history":
         patch({ selectedTab: "history" })
         break
-      case "show-prs":
-        patch({ selectedTab: "pr" })
-        break
+      // show-prs：分支下拉自己监听，打开「Pull Requests」页签
       case "discover":
         navigate(routes.discover())
         break
@@ -946,7 +949,8 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) =>
       handleShortcut(e, {
-        onTab: tab => patch({ selectedTab: tab }),
+        // ⌘3 原先切到侧栏的 PR 页签；PR 列表搬进分支下拉后，改为打开下拉的「Pull Requests」页签
+        onTab: tab => (tab === "pr" ? void emit("menu", "show-prs") : patch({ selectedTab: tab })),
         onFocusRepoSearch: () => document.querySelector<HTMLInputElement>(".rail-filter input")?.focus(),
         onOpenBranches: () => document.querySelector<HTMLElement>('[data-slot="popover-trigger"]')?.click(),
         onFocusSummary: () =>
@@ -1265,6 +1269,68 @@ export function App() {
                   patch({ repositories: [path, ...state.repositories.filter(r => r !== path)] })
                   navigate(routes.repo(path))
                 }}
+                // Desktop 把 PR 列表放在分支下拉的「Pull Requests」页签里；只有托管远端才有
+                pullRequestCount={pullRequestCount}
+                renderPullRequests={
+                  remotes[repo ?? ""]
+                    ? ({ close, isOnDefaultBranch, onCreateBranch }) => (
+                        <PullRequests
+                          repo={repo}
+                          onCherryPick={(request, remote, shas) => {
+                            void run(async () => {
+                              const source = await ipc.pullRequestSource(
+                                remote.host,
+                                remote.owner,
+                                remote.name,
+                                request.number
+                              )
+                              try {
+                                await cherryPickToPullRequest(
+                                  repo,
+                                  source,
+                                  shas,
+                                  {
+                                    ...ipc,
+                                    cherryPick: (path, commits) => ipc.cherryPick(path, commits, showProgress)
+                                  },
+                                  (name, current) => ask(t("branch.stashConfirm", { name, current })),
+                                  source.kind === "gitlab" ? "mr" : "pr"
+                                )
+                              } finally {
+                                close()
+                              }
+                            })
+                          }}
+                          remote={remotes[repo ?? ""] ?? null}
+                          isOnDefaultBranch={isOnDefaultBranch}
+                          onCreateBranch={onCreateBranch}
+                          onCheckout={(request, remote) => {
+                            if (!remote || busy) return
+                            close()
+                            void run(async () => {
+                              const source = await ipc.pullRequestSource(
+                                remote.host,
+                                remote.owner,
+                                remote.name,
+                                request.number
+                              )
+                              const branch = await findPullRequestBranch(
+                                repo,
+                                source,
+                                ipc,
+                                source.kind === "gitlab" ? "mr" : "pr"
+                              )
+                              await checkoutWithStash(repo, branch, ipc, promptStashAndSwitch)
+                            })
+                          }}
+                          onCreate={() => {
+                            close()
+                            setCreatingPr(true)
+                          }}
+                        />
+                      )
+                    : undefined
+                }
               />
 
               {(error || diffError) && <InlineError error={(error ?? diffError)!} />}
@@ -1276,7 +1342,8 @@ export function App() {
                 sidebar={
                   <div className="repository-sidebar">
                     <Tabs
-                      value={state.selectedTab}
+                      // 旧版本存下的 "pr" 页签已不存在
+                      value={state.selectedTab === "pr" ? "changes" : state.selectedTab}
                       onValueChange={v => patch({ selectedTab: v })}
                       className="flex min-h-0 flex-1 flex-col gap-0">
                       <TabsList variant="line" className="w-full shrink-0">
@@ -1289,13 +1356,6 @@ export function App() {
                           )}
                         </TabsTrigger>
                         <TabsTrigger value="history">{t("tabs.history")}</TabsTrigger>
-                        <TabsTrigger
-                          value="pr"
-                          onDragEnter={event => {
-                            if (!busy && canDropCommits(event.dataTransfer, repo)) patch({ selectedTab: "pr" })
-                          }}>
-                          {t("tabs.pr")}
-                        </TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="changes" className="panel">
@@ -1422,57 +1482,6 @@ export function App() {
                               })) ?? false
                             )
                           }}
-                        />
-                      </TabsContent>
-
-                      <TabsContent value="pr" className="panel">
-                        <PullRequests
-                          repo={repo}
-                          onCherryPick={(request, remote, shas) => {
-                            void run(async () => {
-                              const source = await ipc.pullRequestSource(
-                                remote.host,
-                                remote.owner,
-                                remote.name,
-                                request.number
-                              )
-                              try {
-                                await cherryPickToPullRequest(
-                                  repo,
-                                  source,
-                                  shas,
-                                  {
-                                    ...ipc,
-                                    cherryPick: (path, commits) => ipc.cherryPick(path, commits, showProgress)
-                                  },
-                                  (name, current) => ask(t("branch.stashConfirm", { name, current })),
-                                  source.kind === "gitlab" ? "mr" : "pr"
-                                )
-                              } finally {
-                                patch({ selectedTab: "changes" })
-                              }
-                            })
-                          }}
-                          remote={remotes[repo ?? ""] ?? null}
-                          onCheckout={(request, remote) => {
-                            if (!remote || busy) return
-                            void run(async () => {
-                              const source = await ipc.pullRequestSource(
-                                remote.host,
-                                remote.owner,
-                                remote.name,
-                                request.number
-                              )
-                              const branch = await findPullRequestBranch(
-                                repo,
-                                source,
-                                ipc,
-                                source.kind === "gitlab" ? "mr" : "pr"
-                              )
-                              await checkoutWithStash(repo, branch, ipc, promptStashAndSwitch)
-                            })
-                          }}
-                          onCreate={() => setCreatingPr(true)}
                         />
                       </TabsContent>
 

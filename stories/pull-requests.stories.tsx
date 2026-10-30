@@ -7,6 +7,7 @@ import { APICheckConclusion, APICheckStatus } from "../src/lib/api"
 import { canDropCommits, endCommitDrag, startCommitDrag } from "../src/lib/commit-drag"
 import i18n from "../src/lib/i18n"
 import type { CheckRun, PullRequest } from "../src/models/app-state"
+import { usePullRequestsStore } from "../src/features/pull-requests/store"
 import { Button } from "../src/ui/base/button"
 import { PullRequests } from "../src/ui/pull-requests/list"
 import { pending, unavailable } from "./fixtures"
@@ -46,17 +47,25 @@ const handlers = {
   check_rerun_eligibility: () => [12],
   rerun_check: () => undefined
 }
+const group = i18n.t("pr.pullRequestsIn", { repository: "group/sub/project" })
 const meta = {
   title: "Collaboration/PR and MR list",
   component: PullRequests,
   tags: ["desktop-window"],
-  beforeEach: withNativeFixtures(handlers),
+  // 列表数据在 store 里，跨故事会留着；每个故事从未加载开始
+  beforeEach: [
+    () => usePullRequestsStore.setState({ remote: null, target: null, list: [], loading: false, error: null }),
+    withNativeFixtures(handlers)
+  ],
   afterEach: assertNativeFixtures,
-  args: { remote, onCheckout: fn(), onCreate: fn() },
+  args: { remote, isOnDefaultBranch: false, onCheckout: fn(), onCreate: fn(), onCreateBranch: fn() },
   decorators: [
     Story => (
-      <div className="flex h-96 flex-col">
-        <Story />
+      // 分支下拉里的样子：365px 宽的 branches-container
+      <div className="branches-container h-96" style={{ width: 365 }}>
+        <div className="branches-container-panel">
+          <Story />
+        </div>
       </div>
     )
   ]
@@ -79,7 +88,7 @@ export const DropCommits: Story = {
     startCommitDrag(data, "/fixture", shas)
     await expect(canDropCommits(data, "/fixture")).toBe(true)
     row.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: data }))
-    await expect(row).toHaveAttribute("data-drop-target", "true")
+    await expect(row).toHaveClass("drop-target")
     row.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data }))
     await expect(args.onCherryPick).toHaveBeenCalledWith(request, remote, shas)
     row.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data }))
@@ -93,20 +102,19 @@ export const DropCommits: Story = {
 export const FilterAndCheckout: Story = {
   play: async ({ canvas, args }) => {
     await canvas.findByText(request.title)
-    await userEvent.type(canvas.getByRole("textbox", { name: i18n.t("pr.search") }), "nested")
+    await expect(canvas.getByText(i18n.t("pr.pullRequestsIn", { repository: "group/sub/project" }))).toBeVisible()
+    await userEvent.type(canvas.getByPlaceholderText(i18n.t("desktopUI.filter")), "nested")
     await expect(canvas.queryByText("Documentation")).not.toBeInTheDocument()
-    await userEvent.click(canvas.getByRole("button", { name: i18n.t("pr.checkout") }))
+    // Desktop：点一行就检出
+    await userEvent.click(canvas.getByText(request.title))
     await expect(args.onCheckout).toHaveBeenCalledWith(request, remote)
-    await userEvent.click(canvas.getByRole("button", { name: i18n.t("pr.newPr") }))
-    await expect(args.onCreate).toHaveBeenCalledTimes(1)
   }
 }
 export const ReviewOnPlatform: Story = {
   play: async ({ canvas, args }) => {
-    const title = await canvas.findByRole("button", { name: request.title })
-    title.focus()
-    await expect(title).toHaveFocus()
-    await userEvent.keyboard("{Enter}")
+    const row = (await canvas.findByText(request.title)).closest('[data-slot="context-menu-trigger"]')!
+    row.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }))
+    await userEvent.click(await within(document.body).findByRole("menuitem", { name: i18n.t("pr.viewOnline") }))
     await waitFor(() =>
       expect(nativeCall).toHaveBeenCalledWith("plugin:opener|open_url", expect.objectContaining({ url: request.url }))
     )
@@ -138,7 +146,13 @@ export const ConfirmRetryFailedCI: Story = {
     )
   }
 }
-export const Empty: Story = { beforeEach: withNativeFixtures({ ...handlers, pull_requests: () => [] }) }
+export const Empty: Story = {
+  beforeEach: withNativeFixtures({ ...handlers, pull_requests: () => [] }),
+  play: async ({ canvas, args }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "create a pull request" }))
+    await expect(args.onCreate).toHaveBeenCalledTimes(1)
+  }
+}
 export const NoRemote: Story = { args: { remote: null } }
 export const Loading: Story = { beforeEach: withNativeFixtures({ ...handlers, pull_requests: pending }) }
 export const RetryLoadingFailure: Story = {
@@ -148,7 +162,7 @@ export const RetryLoadingFailure: Story = {
   },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText(/Preview service unavailable/)).toBeVisible()
-    await userEvent.click(canvas.getByRole("button", { name: i18n.t("inbox.refresh") }))
+    await userEvent.click(canvas.getByRole("button", { name: i18n.t("pr.refreshPullRequests") }))
     await expect(await canvas.findByText(request.title)).toBeVisible()
   }
 }
@@ -181,7 +195,7 @@ export const IgnoreOldRepositoryLookup: Story = {
     oldRepository.resolve(remote)
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
     await expect(nativeCall).not.toHaveBeenCalledWith("pull_requests", expect.objectContaining({ name: remote.name }))
-    await userEvent.click(canvas.getAllByRole("button", { name: i18n.t("pr.checkout") })[0])
+    await userEvent.click(canvas.getAllByText(request.title)[0])
     await expect(args.onCheckout).toHaveBeenCalledWith(request, nextRemote)
   }
 }
@@ -290,15 +304,15 @@ export const RerunFailureIsRetryable: Story = {
 export const NoSearchResults: Story = {
   play: async ({ canvas }) => {
     await canvas.findByText(request.title)
-    await userEvent.type(canvas.getByRole("textbox", { name: i18n.t("pr.search") }), "no-such-request")
-    await expect(canvas.getByText(i18n.t("pr.noMatches"))).toBeInTheDocument()
+    await userEvent.type(canvas.getByPlaceholderText(i18n.t("desktopUI.filter")), "no-such-request")
+    await expect(canvas.getByText(i18n.t("desktopUI.cantFindThatPullRequest"))).toBeInTheDocument()
     await expect(canvas.queryByRole("listitem")).not.toBeInTheDocument()
   }
 }
 
 export const KeyboardCheckout: Story = {
   play: async ({ canvas, args }) => {
-    const row = await canvas.findByRole("listitem", { name: `#42 ${request.title}, ${i18n.t("pr.title")}` })
+    const row = await canvas.findByRole("listitem", { name: `#42 ${request.title}, ${group}` })
     row.focus()
     await userEvent.keyboard("{Enter}")
     await expect(args.onCheckout).toHaveBeenCalledWith(request, remote)
@@ -317,11 +331,11 @@ export const LargeList: Story = {
       }))
   }),
   play: async ({ canvas, args }) => {
-    await canvas.findByRole("listitem", { name: `#1 Request 1, ${i18n.t("pr.title")}` })
+    await canvas.findByRole("listitem", { name: `#1 Request 1, ${group}` })
     // The production Desktop list must virtualize rather than render 2000 rows.
     await expect(canvas.getAllByRole("listitem").length).toBeLessThan(40)
-    await userEvent.type(canvas.getByRole("textbox", { name: i18n.t("pr.search") }), "Request 2000")
-    const row = await canvas.findByRole("listitem", { name: `#2000 Request 2000, ${i18n.t("pr.title")}` })
+    await userEvent.type(canvas.getByPlaceholderText(i18n.t("desktopUI.filter")), "Request 2000")
+    const row = await canvas.findByRole("listitem", { name: `#2000 Request 2000, ${group}` })
     row.focus()
     await userEvent.keyboard("{Enter}")
     await expect(args.onCheckout).toHaveBeenCalledWith(expect.objectContaining({ number: 2000 }), remote)
@@ -330,7 +344,7 @@ export const LargeList: Story = {
 
 export const ContextMenuOpensPlatform: Story = {
   play: async ({ canvas, args }) => {
-    const row = await canvas.findByRole("listitem", { name: `#42 ${request.title}, ${i18n.t("pr.title")}` })
+    const row = await canvas.findByRole("listitem", { name: `#42 ${request.title}, ${group}` })
     await userEvent.pointer({ target: row.querySelector("[data-slot=context-menu-trigger]")!, keys: "[MouseRight]" })
     await userEvent.click(await within(document.body).findByRole("menuitem", { name: i18n.t("pr.viewOnline") }))
     await waitFor(() =>
