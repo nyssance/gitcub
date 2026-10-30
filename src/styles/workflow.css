@@ -1,0 +1,137 @@
+/* Layout for Git-specific content; base controls own their appearance. */
+.autocompletion-item :is(.emoji, .issue, .branch, .user) {
+  @apply flex size-full min-w-0 items-center gap-2;
+}
+.autocompletion-item :is(.title, .username, .name) {
+  @apply truncate;
+}
+.autocompletion-item :is(.number, .name, .description) {
+  @apply text-muted-foreground;
+}
+.autocompletion-item mark {
+  @apply bg-transparent font-semibold text-inherit;
+}
+.autocompletion-item .icon {
+  @apply size-4 shrink-0;
+}
+.autocompletion-item .avatar {
+  @apply size-5 shrink-0 rounded-full;
+}
+.author-input-component .autocompletion-container {
+  @apply min-w-24 flex-1;
+}
+.author-input-component .handle.focused {
+  @apply outline-ring outline-2;
+}
+/* 提交框尺寸照 Desktop `app/styles/ui/changes/_commit-message.scss`：
+   四周 10px；摘要行头像与输入框间 5px、下方 10px；描述框 with-action-bar 时最小 80px
+   （窗口矮于 500px 时 10px）；提交按钮上方 10px；进度行上方 5px。
+   底色和边线不搬：侧栏保留原生透明材质（AGENTS.md 界面布局），上方已有 Separator。
+   输入框、按钮本身是 shadcn 基础控件，高度不改。 */
+.commit-message-component {
+  padding: 10px;
+}
+.commit-message-component .summary {
+  column-gap: 5px;
+  margin-bottom: 10px;
+}
+.commit-message-component .action-bar {
+  scrollbar-width: thin;
+}
+.commit-message-component .commit-button {
+  margin-top: 10px;
+  max-width: 100%;
+}
+.commit-message-component .commit-progress {
+  margin-top: 5px;
+}
+/* 协作者输入：原版 textboxish 外观（边框、圆角、左右 5px 内边距）。原版把它贴在描述框底下；
+   这里 shadcn Textarea 自带边框、操作栏在框外，所以独立成一行，与上方留 10px。 */
+.commit-message-component .author-input-component {
+  margin-top: 10px;
+  min-height: 2.25rem;
+  padding: 0 5px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+}
+.commit-message-component .author-input-component.focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+/* 提交警告：Desktop `app/styles/ui/changes/_commit-warning.scss` 一比一。
+   原版用图标底色盖住横线；侧栏透明没有底色可盖，改成横线分左右两段夹住图标，视觉相同。 */
+.commit-warning-component {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.commit-warning-component .warning-message {
+  margin-bottom: 0;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+.commit-warning-component .warning-message strong {
+  color: var(--foreground);
+  word-wrap: break-word;
+}
+.commit-warning-component .warning-icon-container {
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+.commit-warning-component .warning-icon-container::before,
+.commit-warning-component .warning-icon-container::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+.commit-warning-component .warning-icon-container .octicon {
+  flex-shrink: 0;
+  margin: 0 5px;
+  height: 16px;
+  width: 16px;
+}
+.commit-warning-component .error-icon {
+  color: var(--commit-warning-error); /* Desktop --commit-message-icon-error-color = red-600 */
+}
+.commit-warning-component .warning-icon {
+  color: var(--commit-warning-warning); /* Desktop --commit-message-icon-warning-color = yellow-800 */
+}
+.commit-warning-component .information-icon {
+  color: var(--commit-warning-information); /* Desktop --dialog-information-color = blue-400 */
+}
+/* 原版 `.hidden-changes-warning`：黄色提示底、上下 1px 边线、图标文件警告色 */
+.hidden-changes-warning {
+  background-color: var(--file-warning-background);
+  border-color: var(--file-warning-border);
+}
+.hidden-changes-warning svg {
+  color: var(--file-warning-foreground);
+}
+.hidden-changes-warning .link-button-component {
+  display: inline;
+}
+.ref-name-text-box {
+  @apply w-full;
+}
+.ref-name-text-box .warning-helper-text {
+  @apply mt-2 flex;
+}
+.diff-search {
+  @apply bg-popover absolute top-0 right-2 flex items-center gap-2 rounded-b-md border p-2 shadow-md;
+}
+.sign-in-form-inputs {
+  @apply flex min-w-0 flex-col gap-4;
+}
+#configure-git-user {
+  @apply flex flex-col gap-4;
+}
+.commit-list-example {
+  @apply flex flex-col gap-2 text-sm;
+}
+.commit-list-example .header {
+  @apply text-muted-foreground;
+}

@@ -1,0 +1,11 @@
+# Preserve byte-for-byte upstream sources and fixtures used by hash checks.
+tests/conformance/fixtures/** -text -whitespace
+tests/conformance/upstream/** -text -whitespace
+src/upstream/** -text -whitespace
+src-tauri/native/** -text -whitespace
+public/desktop/** -text -whitespace
+public/static/** -text -whitespace
+
+# Git object fixtures are compressed binary data, even when heuristic detection
+# happens to consider a short object textual.
+tests/conformance/fixtures/**/_git/objects/** binary

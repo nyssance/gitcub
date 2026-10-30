@@ -1,0 +1,8 @@
+@import url("x.css");
+:root { --main: #ff0000; }
+@media (min-width: 600px) and (max-width: 900px) {
+  a.cls#id[href^="http"]:not(:hover)::after { color: var(--main) !important; width: calc(100% - 2px); }
+}
+/* block
+   comment */
+@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }

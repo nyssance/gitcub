@@ -1,0 +1,863 @@
+{
+  "upstreamCommit": "bebc062caafcf818993b9f53397b976d33484231",
+  "pathMapping": "Paths below retain the original audit paths relative to src/ui. For relocated files, resolve ui/<path without extension> through tests/conformance/desktop-ui-paths.json; mapping values are relative to src. The refactor preserves implementation text apart from imports and re-exports.",
+  "scope": "153 TSX files with matching paths under src/ui and Vendor/desktop/app/src/ui. This is a source comparison, not visual or behavioral certification. Different-path replacements such as image.tsx and split-diff.tsx need separate review.",
+  "method": "Bun transpile TSX, remove import declarations, normalize whitespace, compare implementation text. Matching output does not verify dependencies, CSS, props supplied by callers, types, or platform behavior.",
+  "matchingImplementationText": [
+    "banners/branch-already-up-to-date-banner.tsx",
+    "banners/cherry-pick-undone.tsx",
+    "banners/success-banner.tsx",
+    "dialog/error.tsx",
+    "dialog/is-top-most.tsx",
+    "dialog/success.tsx",
+    "donut.tsx",
+    "lib/errors.tsx",
+    "lib/focus-container.tsx",
+    "lib/horizontal-rule.tsx",
+    "lib/ref.tsx",
+    "lib/vertical-segmented-control/segmented-item.tsx",
+    "suggested-actions/suggested-action.tsx"
+  ],
+  "differentImplementationText": [
+    "about/about.tsx",
+    "accessibility/aria-live-container.tsx",
+    "account-picker.tsx",
+    "add-repository/add-existing-repository.tsx",
+    "app-theme.tsx",
+    "app.tsx",
+    "autocompletion/autocompleting-text-input.tsx",
+    "autocompletion/emoji-autocompletion-provider.tsx",
+    "autocompletion/issues-autocompletion-provider.tsx",
+    "autocompletion/user-autocompletion-provider.tsx",
+    "banners/banner.tsx",
+    "branches/branch-list-item.tsx",
+    "branches/ci-status.tsx",
+    "branches/no-branches.tsx",
+    "branches/no-pull-requests.tsx",
+    "changes/changed-file.tsx",
+    "changes/commit-message-avatar.tsx",
+    "changes/commit-message.tsx",
+    "changes/commit-warning.tsx",
+    "changes/files-changed-badge.tsx",
+    "changes/multiple-selection.tsx",
+    "changes/sidebar.tsx",
+    "check-runs/ci-check-run-actions-job-step-item.tsx",
+    "check-runs/ci-check-run-actions-job-step-list.tsx",
+    "check-runs/ci-check-run-no-steps.tsx",
+    "cli-installed/cli-installed.tsx",
+    "clone-repository/clone-generic-repository.tsx",
+    "clone-repository/clone-github-repository.tsx",
+    "clone-repository/clone-repository.tsx",
+    "clone-repository/cloneable-repository-filter-list.tsx",
+    "copy-button.tsx",
+    "create-branch/create-branch-dialog.tsx",
+    "dialog/content.tsx",
+    "dialog/default-dialog-footer.tsx",
+    "dialog/dialog.tsx",
+    "dialog/footer.tsx",
+    "dialog/header.tsx",
+    "dialog/ok-cancel-button-group.tsx",
+    "diff/diff-helpers.tsx",
+    "diff/side-by-side-diff-row.tsx",
+    "diff/whitespace-hint-popover.tsx",
+    "history/commit-list-item.tsx",
+    "history/file-list.tsx",
+    "installing-update/installing-update.tsx",
+    "invalidated-token/invalidated-token.tsx",
+    "keyboard-shortcut/keyboard-shortcut.tsx",
+    "lib/access-text.tsx",
+    "lib/action-status-icon.tsx",
+    "lib/authentication-form.tsx",
+    "lib/author-input/author-handle.tsx",
+    "lib/author-input/author-input.tsx",
+    "lib/avatar-stack.tsx",
+    "lib/avatar.tsx",
+    "lib/branch-name-rule-validation.tsx",
+    "lib/branch-name-warnings.tsx",
+    "lib/button.tsx",
+    "lib/call-to-action.tsx",
+    "lib/checkbox.tsx",
+    "lib/commit-attribution.tsx",
+    "lib/config-lock-file-exists.tsx",
+    "lib/configure-git-user.tsx",
+    "lib/draggable.tsx",
+    "lib/enterprise-server-confirmation.tsx",
+    "lib/enterprise-server-entry.tsx",
+    "lib/form.tsx",
+    "lib/git-email-not-found-warning.tsx",
+    "lib/highlight-text.tsx",
+    "lib/input-description/input-caption.tsx",
+    "lib/input-description/input-description.tsx",
+    "lib/input-description/input-error.tsx",
+    "lib/input-description/input-warning.tsx",
+    "lib/link-button.tsx",
+    "lib/list/list-item-insertion-overlay.tsx",
+    "lib/list/list-row.tsx",
+    "lib/list/list.tsx",
+    "lib/list/section-list.tsx",
+    "lib/loading.tsx",
+    "lib/password-text-box.tsx",
+    "lib/path-label.tsx",
+    "lib/path-text.tsx",
+    "lib/popover-dropdown.tsx",
+    "lib/popover.tsx",
+    "lib/radio-button.tsx",
+    "lib/radio-group.tsx",
+    "lib/ref-name-text-box.tsx",
+    "lib/rich-text.tsx",
+    "lib/row.tsx",
+    "lib/section-filter-list.tsx",
+    "lib/select.tsx",
+    "lib/sign-in.tsx",
+    "lib/text-area.tsx",
+    "lib/text-box.tsx",
+    "lib/toggle-button.tsx",
+    "lib/toggletipped-content.tsx",
+    "lib/tooltip.tsx",
+    "lib/tooltipped-content.tsx",
+    "lib/vertical-segmented-control/vertical-segmented-control.tsx",
+    "missing-repository.tsx",
+    "no-repositories/no-repositories-view.tsx",
+    "octicons/octicon.tsx",
+    "preferences/accounts.tsx",
+    "preferences/appearance.tsx",
+    "preferences/preferences.tsx",
+    "preferences/snapshot-card.tsx",
+    "preferences/test-token-expiration-dialog.tsx",
+    "relative-time.tsx",
+    "repositories-list/repository-list-item.tsx",
+    "repository-rules/repo-rules-failure-list.tsx",
+    "repository-rules/repo-ruleset-link.tsx",
+    "repository-rules/repo-rulesets-for-branch-link.tsx",
+    "repository-settings/fork-contribution-target-description.tsx",
+    "repository-settings/no-remote.tsx",
+    "sign-in/sign-in.tsx",
+    "suggested-actions/suggested-action-group.tsx",
+    "tab-bar-item.tsx",
+    "terminal.tsx",
+    "toolbar/branch-dropdown.tsx",
+    "toolbar/push-pull-button.tsx",
+    "toolbar/toolbar.tsx",
+    "tutorial/done.tsx",
+    "tutorial/tutorial-step-instruction.tsx",
+    "tutorial/welcome.tsx",
+    "ui-view.tsx",
+    "welcome/configure-git.tsx",
+    "welcome/sign-in-enterprise.tsx",
+    "welcome/start.tsx",
+    "welcome/welcome.tsx",
+    "window/title-bar.tsx",
+    "window/window-controls.tsx",
+    "worktrees/delete-worktree-dialog.tsx",
+    "worktrees/delete-worktree-failed-dialog.tsx",
+    "worktrees/worktree-list-item.tsx"
+  ],
+  "confirmedCorrections": [
+    "Diff subtree restores Desktop inherited box-sizing without changing shadcn globals.",
+    "Line number horizontal padding restored to 5px, expansion spacing to 10px, selection radius to 6px.",
+    "Diff uses its own border token and distinct selected border instead of shadcn border or selection fill.",
+    "Diff monospace font stack restored including emoji fallbacks.",
+    "84 original compiled diff rules restored from the installed official Desktop 3.6.7; variable names scoped to avoid shadcn collisions.",
+    "Restored original light/dark selection, hover, insertion, deletion and gutter palettes.",
+    "Restored missing word-level added/deleted highlight rules and original Octicon reset."
+  ],
+  "verification": {
+    "test": ".storybook/desktop-layout.spec.ts",
+    "baseline": "tests/conformance/fixtures/desktop-ui-styles/source.json",
+    "scope": "Production DOM under local CSS versus the same DOM under original upstream CSS, with installed official Desktop 3.6.7 theme values. Widths, heights, padding, box-sizing, border widths/colors, radii, fonts, fills and foregrounds in five unified/split states and both themes.",
+    "limitations": "Does not prove original DOM, all interactions, native WebKit rendering or other components are identical."
+  },
+  "remainingReview": [
+    "Diff renderer DOM/events and virtualization versus original SideBySideDiff, beyond the stylesheet measurements.",
+    "Image comparison, submodule content, file/history lists, completion, branch and commit business compositions.",
+    "153 matching source paths include intentional shadcn and Tauri adapters. Keep those explicit; do not label them unmodified original components."
+  ],
+  "validation": {
+    "initialFullStorybook": "1389 passed before restoring the complete official color palette. Not a pass claim for the final palette.",
+    "finalStyleComparison": "11 cases: source hash verification plus light/dark geometry, colors, fonts, word highlights and hover parity. See .storybook/desktop-layout.spec.ts.",
+    "officialPaletteAccessibility": "Existing axe checks fail for white on #2188ff (3.48:1), white on #79b8ff (2.07:1), and #f6f8fa on #22863a (4.34:1), below 4.5:1. Preserved official colors as explicitly requested; no accessibility checks disabled.",
+    "typecheck": "passed",
+    "lint": "passed",
+    "rust": "cargo check --locked --workspace --all-targets passed",
+    "paletteStorybookRun": {
+      "tests": 219,
+      "passed": 102,
+      "failedAtThatRun": 117,
+      "note": "This run exposed inherited border defaults and official-palette contrast failures. Border defaults were then corrected and the dedicated comparison suite rerun; the accessibility failures remain enabled and unresolved."
+    },
+    "refactorStorybookRun": {
+      "tests": 1395,
+      "passed": 1287,
+      "failed": 108,
+      "note": "Before image interaction changes; all failures were official diff palette color-contrast violations. No rules disabled."
+    },
+    "nativeWorkflowRun": {
+      "suite": "tests/conformance/macos-workflows.test.ts",
+      "driver": "tauri-hasgard, packaged macOS app with isolated data and local repositories",
+      "passed": 18,
+      "failed": 0,
+      "limitations": "Local native workflows plus separately recorded GitHub live acceptance; GitLab live acceptance blocked by missing credentials."
+    },
+    "productionPerformance": {
+      "test": "src-tauri/tests/support/perf.rs, included by src/main.rs under cfg(test)",
+      "fixture": "2000 files, 50 commits; dirty state has 100 modified and 100 untracked files",
+      "localDebugMilliseconds": {
+        "cleanStatus": 34,
+        "history": 7,
+        "dirtyStatus": 33
+      },
+      "limitations": "Single local debug run; no Electron comparison, memory baseline or cross-machine performance claim."
+    },
+    "nativeHostMemory": {
+      "scope": "Native application host RSS; excludes WebKit renderer/GPU. Observational baseline, not a leak or total-memory certification.",
+      "samples": [
+        {
+          "stage": "before-100000-line-diff",
+          "rssKiB": 154288,
+          "at": "2026-10-21T03:59:51.253Z"
+        },
+        {
+          "stage": "after-100000-line-diff-scroll",
+          "rssKiB": 160640,
+          "at": "2026-10-21T03:59:52.105Z"
+        }
+      ]
+    },
+    "liveGitHub": {
+      "repository": "nyssance/gitcub",
+      "at": "2026-10-21T03:50:07.316Z",
+      "completed": [
+        "native account lookup against GitHub",
+        "native HTTPS private repository clone",
+        "native stage, commit and authenticated push",
+        "native fetch/pull and upstream tracking",
+        "native pull request creation",
+        "native failed CI workflow retry",
+        "GitHub independently confirms retry success"
+      ],
+      "cleanup": {
+        "pullClosed": true,
+        "branchDeleted": true,
+        "credentialRemoved": true
+      },
+      "pullRequest": "https://github.com/nyssance/gitcub/pull/2",
+      "retry": {
+        "id": 39540789059,
+        "kind": "githubWorkflow"
+      }
+    },
+    "liveGitLab": {
+      "status": "passed 2026-10-27 via tests/macos/live-gitlab.ts",
+      "host": "self-hosted GitLab 18.9 CE; hostname supplied through GITCUB_LIVE_GITLAB_HOST, never recorded",
+      "credentialSource": "git credential fill at runtime, in memory only",
+      "scope": "Native account lookup, paginated project listing incl. subgroup project, private HTTPS clone, stage/commit/push, fetch/pull upstream tracking, merge request creation, failed CI job retry confirmed by the GitLab API; disposable branch and MR cleaned up. Report: test-results/live-gitlab/report.json (gitignored, host redacted)."
+    },
+    "desktopCredentialPromptFix": {
+      "source": "Desktop bebc062 auth.ts, generic-git-auth.ts and trampoline/find-account.ts",
+      "platform": "macOS only; other platforms retain existing helper/CLI discovery",
+      "behavior": [
+        "Exact endpoint and recorded username; read-only OS credential access.",
+        "No security subprocess; SecItemCopyMatching uses authentication interaction disabled.",
+        "Session cache merges concurrent requests and remembers denied/missing results.",
+        "Logout/token replacement clears cached Desktop secrets; explicit re-enable permits rediscovery.",
+        "Isolated Hasgard tests cannot read personal external credentials."
+      ],
+      "tests": {
+        "rustCredentialCases": 3,
+        "desktopImportCases": 9,
+        "settingsStorybookCases": 104,
+        "isolatedNativeMacOSCases": 18
+      },
+      "limitation": "A credential that requires new OS authorization is unavailable to automatic discovery; no permission dialog is opened and no OS access control is bypassed."
+    }
+  },
+  "imageInteractionReview": {
+    "upstreamCommit": "bebc062caafcf818993b9f53397b976d33484231",
+    "sources": [
+      "app/src/ui/diff/image-diffs/modified-image-diff.tsx",
+      "app/src/ui/diff/image-diffs/swipe.tsx",
+      "app/src/ui/diff/image-diffs/onion-skin.tsx",
+      "app/src/ui/diff/image-diffs/sizing.ts"
+    ],
+    "corrections": [
+      "Swipe initializes at 0%, onion skin at 1%; both use 0.1 percentage-point steps and reset when changing mode.",
+      "Swipe clips both revisions so transparent current pixels do not reveal the previous revision.",
+      "Mode selection uses shadcn ToggleGroup; slider accessible names reach the actual input.",
+      "Reuse the unchanged upstream getAspectFitSize/getMaxFitSize functions; fit each revision without upscaling and size the overlay to both revisions.",
+      "Observe available content dimensions on resize; handle image load errors and reset intrinsic dimensions/error state on a new image pair without base64 React keys."
+    ],
+    "projectRegression": "stories/image-diff.stories.tsx: ComparisonModes and SliderEndpointsAndModeReset. These are new project regressions derived from source, not transplanted upstream tests.",
+    "remaining": "Original image DOM/style parity, pixel-level difference blending and complete image-format coverage remain unverified.",
+    "validation": {
+      "storybook": "88 image comparison/loading cases passed across both themes, locales and viewport sizes, including unlike dimensions, resize, load failure/recovery and slider endpoints.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "clippy": "cargo clippy --locked --workspace --all-targets -- -D warnings passed",
+      "nativeWebKit": "18 macOS workflows passed, including real binary PNG revisions of 1200x300 and 300x1200 through native Git image loading and all overlay modes."
+    },
+    "sizingSnapshotSha256": "65f1d8e51a530f0a08347af38c71462eb6d7fd5818ca0259a0f91908c8491a2f"
+  },
+  "hostingReliabilityReview": {
+    "date": "2026-10-21",
+    "scope": "Project-owned regressions, not transplanted Desktop cases or live GitLab certification.",
+    "changes": [
+      "Use one credential snapshot for provider identification and repository, PR/MR, Issue, fork, CI retry and branch-policy operations; no second helper discovery within the operation.",
+      "Remote repository optional description/language fields no longer silently remove repositories; malformed required identity fails the complete list explicitly.",
+      "Preserve subgroup namespaces, custom ports, platform privacy/fork metadata and bounded star counts.",
+      "GET/POST failures preserve status and Retry-After, including empty/HTML proxy responses; JSON write error details remain available.",
+      "API redirects reject cross-origin and user-info destinations; retain same-origin redirects and server-provided keyset pagination URLs."
+    ],
+    "validation": {
+      "rust": "190 passed, 0 failed, 0 skipped",
+      "typecheck": "passed",
+      "lint": "passed",
+      "clippy": "passed",
+      "nativeMacOS": "18 isolated workflows passed against the rebuilt application, 0 skipped"
+    },
+    "reference": "https://docs.gitlab.com/api/rest/#pagination",
+    "limitations": "No personal keychain reads or live GitLab writes performed. This does not certify all upstream behaviors or world-best quality."
+  },
+  "ciComponentPort": {
+    "upstreamCommit": "bebc062caafcf818993b9f53397b976d33484231",
+    "sources": {
+      "app/src/ui/check-runs/ci-check-run-popover.tsx": "a43a9ef851ff3e65c3048372effef35b9f4055aac53cab91fb83f523e2652569",
+      "app/src/ui/check-runs/ci-check-run-list.tsx": "2f8e6121ed8647684c441dbc2f73332a072e7ca0a201e00b38e78956b0c94654",
+      "app/src/ui/check-runs/ci-check-run-list-item.tsx": "126fd77d14c660ccd9ba626ad34c095d62142cd79e4d6cb9d329fe22f9967af3",
+      "app/src/ui/check-runs/ci-check-run-step-list-header.tsx": "e029fbafa924109f2043f44c960f5f0746df5c33749b216712d860770d18efd3",
+      "app/src/ui/check-runs/ci-check-run-rerun-dialog.tsx": "64e28e31f25baff627fa778a6ff0a875c45f4c11ccbeefe38ce4e36047b1a125",
+      "app/src/ui/check-runs/ci-check-re-run-button.tsx": "9fbcdcf5fb1a09f4993de2e0bbc4a815f567eed7504b24a4e78ffcdc793891d6"
+    },
+    "implementation": "Replace PullRequests ChecksPanel with the Desktop popover/list/item/step-header/rerun-dialog ports. Both hosts use NativeChecks and the same components; native-checks-dispatcher is the only renderer provider adapter.",
+    "preserved": [
+      "440px anchored popover; original workflow grouping helper and completion summary/donut",
+      "Automatically expand first failed job; preserve user expansion; keyboard focus container",
+      "Failed/all rerun menu, confirmation, eligible and ineligible lists, single Actions job rerun",
+      "Native GitHub suite eligibility: rerequestable, completed, younger than 30 days; non-Actions suites use rerequest endpoint",
+      "GitLab jobs use their own read-only eligibility query, without fabricating Actions steps",
+      "Step duration, first failed step navigation and browser log links"
+    ],
+    "explicitAdaptations": [
+      "User requested ReUI steps: @reui/stepper, base-vega; moved generated primitive to src/ui/reui. Corrected registry hook dependency warnings without disabling lint.",
+      "Existing shadcn/Base UI popover/button/dialog/menu replace Electron primitives; provider requests go through Rust IPC.",
+      "Native CSS nesting and CI-prefixed spacing variables avoid overriding Tailwind spacing. Secondary/failure text uses accessible theme colors; no claim of pixel-identical colors.",
+      "Chinese labels and platform-neutral browser links; ARIA controls case and summary heading hierarchy corrected.",
+      "Eligibility/retry errors remain visible and retryable; empty eligibility and duplicate submits never trigger retry."
+    ],
+    "validation": {
+      "storybook": "130 passed: 128 CI/PR cases across 2 themes, 2 locales and 2 viewport sizes, plus 2 dimension/Escape/screenshot cases. No accessibility rules disabled.",
+      "upstream": "desktop/ci-checks-test.ts: 4 original grouping cases passed",
+      "rust": "191 passed, 0 failed, 0 skipped",
+      "nativeMacOS": "18 isolated native workflows passed; these do not execute real CI",
+      "screenshots": "test-results/storybook/ci-layout-Desktop-CI-popover-dimensions-and-ReUI-steps-{light,dark}/desktop-ci-{light,dark}.png reviewed",
+      "typecheck": "passed",
+      "lint": "passed, no warnings",
+      "clippy": "passed with -D warnings"
+    },
+    "boundaries": "No live PR/MR creation or CI trigger performed. Original business components are ported with the documented platform/primitive/ReUI adaptations; this is not full upstream DOM pixel certification."
+  },
+  "completionPass20261021": {
+    "upstreamCommit": "bebc062caafcf818993b9f53397b976d33484231",
+    "sources": {
+      "app/src/ui/branches/pull-request-list.tsx": "b3e0c1e1a268c361ed66584d9bfbd5c0289d5d551f461b4686c6473ffb509a09",
+      "app/src/ui/lib/section-filter-list.tsx": "6f40f3871c528875b9baf5a9e131c655537fd96b4116e594107390b86bc02aab",
+      "app/src/ui/lib/list/section-list.tsx": "e531d11fba637712ae3efd377f7f786f7f00c87c1fe642ae68fcda9e2e23eef5",
+      "app/styles/ui/_list.scss": "1ff4438bcbc4a0a1530c100cd5b9311cf97d4eb0f965f61f98d994b00f23bf3d",
+      "app/src/ui/check-runs/ci-check-run-list.tsx": "2f8e6121ed8647684c441dbc2f73332a072e7ca0a201e00b38e78956b0c94654"
+    },
+    "implemented": [
+      "GitHub Commit Status requests removed by explicit user decision; GitHub summaries and details now use Checks API only. GitLab native status endpoints remain.",
+      "Windows Desktop generic Git credentials: exact keytar service/account target, UTF-8 blob, read-only CredReadW/CredFree; reuse session serialization, negative caching, logout and metadata account matching.",
+      "Windows CI now runs the isolated credential-store fixture: creates its own unique test entry, checks Unicode and wrong-account/missing-entry behavior, then deletes only that entry.",
+      "PR/MR lists use the existing Desktop SectionFilterList and SectionList virtualization, 47px row height, fuzzy title highlights, keyboard checkout, no-match state and draft icon. Both providers share the same component. Created-at fields are supplied by both Rust providers; the subtitle follows Desktop date formatting preferences and context menus open the hosting website.",
+      "Lists with independent row buttons use list/listitem semantics; browse-mode children remain exposed. Non-grid roles no longer receive grid-only ARIA attributes. Row keyboard activation and nested action activation are separate.",
+      "CI polling refreshes workflow groups, job membership and steps even when status is unchanged; preserves manual expansion and clears removed expanded jobs."
+    ],
+    "adaptations": [
+      "PR/MR action buttons, standard controls and compact toolbar remain GitCub composition. Original list behavior, row height, date helpers, draft icon and platform context action are reused/adapted; full cherry-pick drag/drop and new-worktree context actions are not claimed as ported.",
+      "CI list lifecycle correction is a project regression beyond the pinned original implementation; original grouping helpers and original tests are preserved.",
+      "No real PR/MR or CI writes, no personal Desktop secret reads; isolated native tests only.",
+      "Fixed interactive-row focus stealing, portal/menu click bubbling into checkout, right-click activation, and selected-row secondary text contrast without changing default Desktop listbox behavior."
+    ],
+    "validation": {
+      "rust": "191 unit tests passed, 0 skipped",
+      "upstream": "12 tests passed across desktop/ci-checks-test.ts, desktop/section-list-test.ts, desktop/section-list-selection-test.ts and desktop/ui/section-list-scroll-test.ts",
+      "nativeMacOS": "18 isolated workflows passed against rebuilt application; includes 100000-line diff virtualization and reaching the final line",
+      "windows": "New reader FFI wrapper and Windows fixture type-checked with x86_64-pc-windows-msvc in an isolated harness. Native C implementation and OS-store execution still require Windows CI; not claimed as executed on macOS.",
+      "windowsStoreReference": "https://github.com/atom/node-keytar/blob/v7.8.0/src/keytar_win.cc",
+      "frontend": "TS7 typecheck and Bun lint passed; manual Bun/Rust formatting completed",
+      "rustLint": "Clippy workspace/all-targets passed with -D warnings",
+      "storybookFull": "1493 executed: 1385 passed, 108 failed, no skips. All 108 failures are inherited diff palette color-contrast violations. Later PR-only refinements are covered by the dedicated PR/CI rerun.",
+      "transientFailure": "One Rust run failed while Git created a temporary object in the performance fixture (Invalid argument); an unchanged-assertion rerun passed all 191 tests.",
+      "storybookChanged": "132 passed, 0 failures: shared PR/MR list and CI refresh across 2 themes, 2 locales, 2 viewports; 4 layout/screenshot cases. Includes 2000-item virtualization, keyboard row activation, keyboard browser action, context-menu browser action, 47px bounded rows, single-row toolbar, and CI membership/step refresh.",
+      "screenshots": "Light/dark pr-list screenshots and CI popover screenshots reviewed. Original complete PR pixel parity is not claimed."
+    },
+    "remaining": [
+      "Original diff palette fails color contrast. Preserve explicit original-color requirement; do not disable a11y rules or claim the full visual suite passes.",
+      "At that pass PR drag/drop was unported. See macOSRequestDrag20261021 for the subsequent production drag workflow and validation; Desktop mouse-drag presentation, multi-commit undo popup and optional new-worktree context action are not claimed as ported.",
+      "Windows OS-store execution, full application Windows build and long-duration/cross-platform performance certification remain unverified."
+    ]
+  },
+  "macOSRequestDrag20261021": {
+    "upstreamCommit": "bebc062caafcf818993b9f53397b976d33484231",
+    "sources": [
+      "app/src/ui/branches/pull-request-list.tsx:onDropOntoPullRequest",
+      "app/src/ui/dispatcher/dispatcher.ts:startCherryPickWithPullRequest/startCherryPickWithBranch/cherryPick",
+      "app/src/lib/stores/app-store.ts:orderCommitsByHistory/_checkForUncommittedChanges"
+    ],
+    "implemented": [
+      "Production history commits can be dragged over the requests tab and dropped on a PR/MR; both providers use the same repository-scoped session and Rust cherry-pick path.",
+      "Selected commits are applied oldest-first; external, cross-repository, cancelled and consumed payloads are rejected.",
+      "Current target branch is a no-op; detached HEAD and unfinished operations are rejected. Dirty work requires stash confirmation. Checkout rejection prevents cherry-picking on the source branch.",
+      "Existing PR checkout stash recovery no longer re-enters the operation lock and silently skips checkout.",
+      "Fixed four remaining references to the removed macOS version variable in the existing local Wry patch, keeping the macOS 26 minimum."
+    ],
+    "adaptations": [
+      "The production history list retains its existing HTML5 drag transport and reorder behavior; this is not a verbatim port of Desktop mouse-based Draggable or its multi-commit undo popup.",
+      "Source provenance records source behavior, not transplanted upstream tests. New assertions are GitCub integration regressions.",
+      "Native WebKit coverage dispatches DOM DragEvents; physical pointer/OS drag delivery is not certified by these assertions."
+    ],
+    "validation": {
+      "storybook": "208 PR/MR and history component checks passed, including new drag selection/drop cases across themes, locales and widths.",
+      "git": "8 workflow-navigation tests passed against the production Rust bridge; GitHub and GitLab fork cases cover ordered multi-commit cherry-pick, cancellation, stash, checkout failure and current-target no-op.",
+      "rust": "191 unit tests passed; Clippy all targets with hasgard-testing passed.",
+      "frontend": "TS7 typecheck and Bun lint passed; manual Bun/Rust formatting completed.",
+      "nativeMacOS": "18 isolated workflows passed against the final rebuilt macOS application. The request case dispatches drag events across tabs, confirms stash, checks the request branch and cherry-picked file, preserves the source HEAD and verifies uncommitted file contents in the stash tree."
+    }
+  },
+  "macOSWorkflowSafety20261021": {
+    "upstreamCommit": "bebc062caafcf818993b9f53397b976d33484231",
+    "sources": [
+      "app/src/ui/dispatcher/error-handlers.ts:pushNeedsPullHandler",
+      "app/src/ui/dispatcher/dispatcher.ts:cherryPick",
+      "app/src/lib/stores/app-store.ts:_checkForUncommittedChanges"
+    ],
+    "implemented": [
+      "Push, checkout, clone, commit and amend enter one operation lock; confirmation and recovery stay inside that operation instead of being silently skipped by nested locking.",
+      "Non-fast-forward recovery pulls the actual tracking remote and retries the push once. Protected branches, permission errors and hook rejection never implicitly offer force-push.",
+      "History cherry-pick and request drops share stash/cancel protection, detached/unfinished-operation checks and checkout-before-cherry-pick sequencing. Request resolution rechecks the current branch after network work.",
+      "Old repository refreshes and operation errors cannot overwrite the newly selected repository. Repository changes clear old status, stash, comparison and history state.",
+      "Failed or refused amendments preserve amendment mode and the draft.",
+      "Force confirmation is bound to the branch observed before the prompt; cancelling performs no transport, and an external checkout invalidates confirmation.",
+      "Operation errors and diff-loading errors are separate: background refresh no longer clears Git failures. New guard messages are localized in English and Chinese."
+    ],
+    "adaptations": [
+      "New workflow tests are project regressions, not transplanted upstream tests. Existing upstream cases and assertions are not modified.",
+      "IPC exposes native Git errors as strings, so recovery classifies the existing non-fast-forward/overwritten-file messages.",
+      "Local Git transport tests use isolated bare repositories. Native UI recovery tests intercept only the relevant transport IPC; no hosted repository writes are performed."
+    ],
+    "validation": {
+      "targetedGit": "22 final workflow tests passed, including a real divergent push/pull/retry through Rust preserving both histories, force confirmation cancellation and branch-change guards.",
+      "rust": "191 unit tests and all-targets Clippy passed.",
+      "nativeMacOS": "21 isolated workflows passed against the final rebuilt macOS application. Includes push/pull/retry UI, finishing an old repository operation after selection changes, rejected amendments retaining drafts/errors and preventing concurrent push, and request drag/stash/cherry-pick.",
+      "frontend": "Final TS7 typecheck and Bun lint passed; manual Bun formatting completed. No Rust implementation changed in this pass.",
+      "fullConformance": "2381 tests passed, 0 failed, 0 skipped (610 Node test suites), before the final amendment/error-notification and localized-guard refinements. Those final refinements were then covered by the 22 workflow and 21 native tests above."
+    }
+  },
+  "copilotRemoval20261021": {
+    "reason": "User explicitly removed Copilot; no SDK, worker, AI UI or build chain remains.",
+    "removedComponents": [
+      "copilot/copilot-disclaimer.tsx",
+      "preferences/copilot-model-selection-info.tsx",
+      "generate-commit-message/generate-commit-message-override-warning.tsx",
+      "lib/copilot-model-picker.tsx",
+      "preferences/copilot-custom-providers-dialog.tsx",
+      "preferences/copilot-user-settings.tsx",
+      "preferences/copilot.tsx",
+      "preferences/test-copilot-snapshot-card-dialog.tsx"
+    ],
+    "preserved": "GitHub commit authors/bot identity and serialized account compatibility metadata; no Copilot service requests."
+  },
+  "uiScreenAudit20261029": {
+    "date": "2026-10-29",
+    "upstreamCommit": "c3a5c51ea7bccd98f0d32dd2f6db531296d8215d",
+    "scope": "One-to-one audit of four screens against Desktop: Changes (list + commit form), History (list + commit details), commit form warning states, Settings › Accounts / Git.",
+    "method": "Debug macOS bundle built from the pre-fix UI launched on the secondary display through tauri-hasgard against a local fixture repository; rendered geometry and computed styles measured with getComputedStyle/getBoundingClientRect (test-results/ui-audit/before-measurements.json, screenshots before-0*.png). After the fixes the same components were measured in the built Storybook under Chromium (after-storybook-measurements*.json, after-0*.png) because the native bundle could not be rebuilt while another session held package.json/bun.lock/Cargo.lock.",
+    "harnessLimitations": [
+      "Base UI dropdown menus do not open from hasgard clicks or dispatched pointer events on the secondary display, and native key injection times out, so the amend notice was measured in Storybook only.",
+      "With the app window on the secondary display CSS transitions do not progress: transitioned colors and Base UI tab panels (both panels stacked) look wrong in the harness screenshots; not reproduced interactively, not verified.",
+      "No native after-screenshots: rebuilding was not allowed while the dependency upgrade was in progress."
+    ],
+    "differences": [
+      {
+        "screen": "changes",
+        "element": "file row height",
+        "desktop": "app/src/ui/changes/filter-changes-list.tsx:85 RowHeight = 29; app/styles/ui/_file-list.scss:11 .list-item border-bottom 1px",
+        "gitcub": "src/ui/changes/file-list.tsx rowHeight 28 → 29; src/ui/changes/changed-file.tsx Item h-7 → h-[29px] border-b-border",
+        "measured": "before 28px no visible border; after 29px, border-bottom 1px oklch(0.922)",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "changes",
+        "element": "file row inner layout",
+        "desktop": "app/styles/ui/_file-list.scss:26-40 .file padding 0 10px, .checkbox-component width 20px; _path-label.scss margin-right 5px, .rename-arrow margin 0 5px; status octicon 16px",
+        "gitcub": "changed-file.tsx: gap-2 (8px) between every part, checkbox 14px without 20px slot, rename arrow 12px opacity-60 → ItemMedia w-5, title mr-[5px], arrow 16px mx-[5px], gap-0",
+        "measured": "after: checkbox slot x=26 w=20, title starts x=46, title margin-right 5px, status svg 16px at right edge",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "changes",
+        "element": "file row truncation",
+        "desktop": "app/src/ui/lib/path-label.tsx:44 rename segments availableWidth/2 - 10 each; path-text ellipsis",
+        "gitcub": "ItemTitle keeps shadcn w-fit so long paths and renamed pairs overflowed under the status icon (before-01-changes.png rows 2 and 4) → w-full min-w-0, rename segments flex-1 basis-0",
+        "measured": "after: title width bounded (912px in a 968px row), text-overflow ellipsis on each segment",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "changes",
+        "element": "file row font",
+        "desktop": "_globals.scss body 12px / line-height 1.5",
+        "gitcub": "Item text-xs (12px / 16px) → leading-normal (18px); row text 12px",
+        "measured": "after fontSize 12px lineHeight 18px",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "changes",
+        "element": "status icon in selected row",
+        "desktop": "app/styles/ui/_file-list.scss:17-21 focus-within selected rows use ambient text color instead of status colors",
+        "gitcub": "icon kept status color on the selected row → [&_svg]:text-current when selected",
+        "measured": "after selected svg color oklch(0.985) (= primary-foreground); unselected rgb(176,136,0)",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "changes",
+        "element": "conflicted icon color",
+        "desktop": "app/styles/_variables.scss --color-conflicted = orange-800 #c24e00 (dark: orange #f66a0a)",
+        "gitcub": "status-icon.tsx used text-destructive → new token --status-conflicted #c24e00 / #f66a0a",
+        "measured": "token added in src/styles/globals.css",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "changes",
+        "element": "row checkbox focusability",
+        "desktop": "app/src/ui/changes/changed-file.tsx:103 tabIndex=-1, rows own focus and Space toggles",
+        "gitcub": "Base UI Checkbox was tab-reachable → tabIndex -1; List keyboard row click already toggles inclusion",
+        "measured": "n/a",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "changes",
+        "element": "dirname color",
+        "desktop": "_path-text.scss .dirname var(--text-secondary-color) gray-500 #6a737d",
+        "gitcub": "Path uses text-muted-foreground oklch(0.556) and opacity-70 when selected",
+        "measured": "muted-foreground oklch(0.556 0 0)",
+        "verdict": "deliberate",
+        "note": "Shared shadcn zinc palette for text tokens (globals.css); only status colors and diff palette keep Desktop values. AGENTS.md: base palette is shadcn, business state colors keep Desktop tokens."
+      },
+      {
+        "screen": "changes",
+        "element": "selected row colors",
+        "desktop": "app/styles/ui/_list.scss:84-103 .list-item.selected = --box-selected-background-color #ebeef1 / --box-selected-text-color gray-900, .list-focus-container.focus-within .list-item.selected = --box-selected-active-background-color blue #0366d6 / white, :hover = --list-item-hover-background-color gray-100; dark theme _dark.scss:109-145 gray-700 / gray-100, blue / white, hover gray-800; _file-list.scss:17-21 status octicons keep status colors unless focus-within + selected; history/_commit-list.scss:17-28,53-65,176-183 badge colors per state",
+        "gitcub": "src/styles/globals.css --list-selected / --list-selected-foreground / --list-selected-active / --list-selected-active-foreground / --list-hover / --list-badge* tokens (light + dark) next to the status tokens; src/styles/desktop.css .desktop-list-row[data-selected], :is(.list-focus-container.focus-within, .desktop-list:focus-within) rules; applied in src/ui/changes/changed-file.tsx, src/ui/history/file-list.tsx, src/ui/history/sidebar.tsx (rows, compare sections, ref/stash badges). PR list and sidebar untouched (shadcn accent).",
+        "measured": "selected without focus: background #ebeef1, text #24292e, dirname same color (--muted-foreground overridden like Desktop --text-secondary-color); with focus-within: #0366d6 / #ffffff and status svg currentColor; hover #f6f8fa",
+        "verdict": "fixed",
+        "note": "User decision 2026-10-29: the three business lists take the Desktop two-state selection; PR/MR list keeps --accent."
+      },
+      {
+        "screen": "changes",
+        "element": "header (filter + check-all)",
+        "desktop": "_changes-list.scss:118-170 two rows: filter button+textbox (25px) then check-all with label 'N changed files', padding 5px 10px, background box-alt, border-bottom",
+        "gitcub": "single 40px row: checkbox, filter input, 'shown/total', filter menu button; no background",
+        "measured": "toolbar 40px, padding 0 10px, border-bottom 1px",
+        "verdict": "deliberate",
+        "note": "AGENTS.md 界面布局: compact single-row toolbars, no decorative backgrounds; sidebar keeps native transparent material."
+      },
+      {
+        "screen": "changes",
+        "element": "filter button active badge",
+        "desktop": "_changes-list.scss:160-186 .filter-button.active blue dot badge",
+        "gitcub": "shadcn ghost/secondary variant when filters active",
+        "measured": "n/a",
+        "verdict": "deliberate",
+        "note": "Base control stays shadcn (AGENTS.md)."
+      },
+      {
+        "screen": "changes",
+        "element": "no-match / no-changes blank slates",
+        "desktop": "app/src/ui/changes/no-changes.tsx (NoChanges: header + SuggestedActionGroup primary = renderViewStashAction() || renderRemoteAction() [publish repository / publish branch / pull / push / create PR], normal group = open in external editor, show in file manager, view on GitHub; labels, shortcuts and enabled flags from the app menu via buildMenuItemInfoMap); ui/suggested-actions/*.tsx; _changes-interstitial.scss (padding 40px, content max 600px, h1 32px light, image 73x70), _suggested-action.scss / _suggested-action-group.scss (20px padding, joined cards, radius 6px, primary blue-000 / blue-200), _globals.scss kbd; repository-view.tsx renders it when the working directory has no files. .no-changes-filtered stays the shadcn Empty",
+        "gitcub": "src/ui/changes/no-changes.tsx (one-to-one port with i18n strings under noChanges.*; appMenu built from the same native menu template through menuFromElectronMenu(snapshotMenu()) in src/lib/menu/use-native-menu.ts; actions run the menu item's click through native-menu.ts executeMenuItemById like Desktop main-process-proxy); src/ui/suggested-actions/menu-backed-suggested-action.tsx; src/lib/no-changes-suggestions.ts (remoteSuggestion / primarySuggestion / desktopStashForBranch); CSS ported into src/styles/desktop.css with --suggested-action-* tokens in globals.css; app.tsx renders it in the content pane when status.changes is empty",
+        "measured": "conformance tests/conformance/no-changes-suggestions.test.ts (state order, stash precedence, Desktop stash matching); Storybook changes-no-changes--* stories cover create PR / push / pull / publish branch / publish repository / view stash / GitLab wording",
+        "verdict": "fixed (partially)",
+        "note": "Omitted: the Preview / Create PR DropdownSuggestedAction (GitCub has no DropdownSelectButton nor the pullRequestSuggestedNextAction preference; a single Create action backs the create-pull-request menu item), the stash file count in 'You have N changes in progress' (stash entries carry no file list; the count is left out), tags-to-push in the push suggestion (not in state, Desktop tagsToPush), suggestedStep* metrics, and the 'is external editor available' check (GitCub's open_in_editor always has a fallback, so the action is always offered). Labels come from the translated native menu, so zh-CN shows the translated button text."
+      },
+      {
+        "screen": "changes",
+        "element": "row context menu",
+        "desktop": "app/src/ui/changes/filter-changes-list.tsx:576-837 getDefaultContextMenu / getRebaseContextMenu / onItemContextMenu: Discard Changes… (or Discard N Selected Changes…), separator, Ignore File (Add to .gitignore) [disabled for .gitignore], Ignore Folder submenu (/a/b, /a), Ignore N Selected Files, Ignore All .ext Files (max 5), [Include / Exclude Selected Files, Copy Paths / Copy Relative Paths] or [Copy File Path / Copy Relative File Path], Reveal in Finder, Open in <editor>, Open with Default Program (deleted files disable the last three; Windows restricts .cmd/.exe/.bat/.sh); rebase conflicts: discard only for untracked, copy + reveal/open; labels ui/lib/context-menu.ts",
+        "gitcub": "src/lib/changes-context-menu.ts builds the same entries (pure model, actions injected); src/ui/changes/changed-file.tsx renders them with shadcn ContextMenu (+ ContextMenuSub for the folder submenu) and keeps the GitLens Blame / Show file history items at the end; actions: existing discard confirm dialog, append_ignore_files / append_ignore_rules commands (gitignore.rs ports appendIgnoreFile / appendIgnoreRule) via new ipc wrappers + repository refresh, navigator.clipboard, shell.showItemInFolder, ipc.openInEditor, shell.openPath; editor label shared with the native menu (useNativeMenu returns editorName); rebaseConflict = status.operation === 'rebase'",
+        "measured": "conformance tests/conformance/changes-context-menu.test.ts (order, labels, enabled flags, actions, five-extension cap, Windows paths and restricted extensions, rebase menu); Storybook changes-file-list story asserts the Desktop order",
+        "verdict": "fixed",
+        "note": "Labels use the macOS title-case strings from Desktop in en (sentence-case variants not reproduced); 'is committing' suppression not ported (GitCub disables the list while an operation runs)."
+      },
+      {
+        "screen": "commit form",
+        "element": "container spacing",
+        "desktop": "_commit-message.scss:4-13 padding 10px, border-top, background box-alt; .summary-field margin-bottom 10px, column-gap 5px; .commit-button margin-top 10px; .commit-progress margin-top 5px",
+        "gitcub": "p-3 gap-2 utilities (12px / 8px) → src/styles/workflow.css ports the Desktop values; background and border-top not ported",
+        "measured": "after padding 10px; summary column-gap 5px margin-bottom 10px; warnings margin-top 5px",
+        "verdict": "fixed",
+        "note": "Background/border-top: sidebar keeps native transparent material and a Separator already sits above the form (deliberate)."
+      },
+      {
+        "screen": "commit form",
+        "element": "description min-height",
+        "desktop": "_commit-message.scss:208-216 .with-action-bar textarea min-height 80px (10px below 500px window height)",
+        "gitcub": "workflow.css min-h-24 rule was dead (utilities layer beat the components layer); measured 64px → min-height 80px !important with the max-height 500px media query",
+        "measured": "before 64px; after rule 80px",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "commit form",
+        "element": "commit button text overflow",
+        "desktop": "_commit-message.scss:338-350 .commit-button max-width 100% + ellipsis",
+        "gitcub": "shadcn Button is inline-flex, text could not ellipsize → text wrapped in a min-w-0 truncate span",
+        "measured": "n/a",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "commit form",
+        "element": "summary input / description / avatar / action-bar / commit button sizing",
+        "desktop": "textboxish 25px inputs, 25px avatar, 18x17 action buttons with 13px svg, 25px blue primary button",
+        "gitcub": "shadcn Input h-9 (36px), avatar button 36px, ghost icon-sm 32px buttons with 16px svg, primary Button h-9",
+        "measured": "summary input 36px, avatar 36px, action button 32px, commit button 36px",
+        "verdict": "deliberate",
+        "note": "Base controls stay shadcn/Base UI (AGENTS.md); avatar follows the input height like Desktop (avatar = --text-field-height)."
+      },
+      {
+        "screen": "commit form",
+        "element": "description box + action bar",
+        "desktop": "_commit-message.scss:218-280 one bordered container holds textarea and action bar; focus ring on the container",
+        "gitcub": "shadcn Textarea keeps its own border; action bar sits below, outside the border",
+        "measured": "n/a",
+        "verdict": "deliberate",
+        "note": "Textarea is a base control; container illusion not reproduced."
+      },
+      {
+        "screen": "commit form",
+        "element": "co-author input",
+        "desktop": "_author-input.scss textboxish box attached under the description (no top radius, border-top 0)",
+        "gitcub": "had no box at all → workflow.css gives it the textboxish border/radius/padding and 10px top margin; not attached because the action bar is outside the textarea",
+        "measured": "n/a",
+        "verdict": "fixed (adapted)"
+      },
+      {
+        "screen": "commit form",
+        "element": "summary length hint placement",
+        "desktop": "_commit-message.scss:84-101 absolutely positioned 16px hint inside the input (padding-right 20px)",
+        "gitcub": "separate shadcn ghost button after the input (38px wide)",
+        "measured": "before 38x36px",
+        "verdict": "deliberate",
+        "note": "Tooltip trigger stays a shadcn button."
+      },
+      {
+        "screen": "commit form",
+        "element": "commit error presentation",
+        "desktop": "Desktop raises a popup dialog (dispatcher error handlers)",
+        "gitcub": "InlineError Alert above the form",
+        "measured": "n/a",
+        "verdict": "deliberate",
+        "note": "Existing project decision (src/ui/shared/inline-error.tsx)."
+      },
+      {
+        "screen": "commit warnings",
+        "element": "CommitWarning styles",
+        "desktop": "app/styles/ui/changes/_commit-warning.scss: column flex, margin-top 5px, centered secondary text with strong in text color, 20px icon row with a horizontal rule behind the icon; icon colors yellow-800 / red-600 / blue-400",
+        "gitcub": "no CSS existed for .commit-warning-component (icon and text rendered as plain inline content) → ported to workflow.css; rule drawn as ::before/::after segments because the transparent sidebar has no background to mask the line",
+        "measured": "after: warning margin-top 5px, icon row 20px, icon 16px with 5px margins, message centered oklch(0.556), strong oklch(0.145); icon colors rgb(33,136,255) / rgb(176,136,0) / rgb(203,36,49)",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "commit warnings",
+        "element": "link inside warning text",
+        "desktop": "_button.scss .link-button-component inherits font size/weight",
+        "gitcub": "LinkButton rendered shadcn link variant at 14px/500 inside 12px text → inherits font-size, weight and line-height",
+        "measured": "before 14px/500; after 12px/400",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "commit warnings",
+        "element": "link color",
+        "desktop": "_variables.scss --link-button-color lighten(#0366d6, 5%)",
+        "gitcub": "shadcn link variant text-primary (zinc)",
+        "measured": "oklch(0.205)",
+        "verdict": "deliberate",
+        "note": "Base control palette."
+      },
+      {
+        "screen": "commit warnings",
+        "element": "hidden-changes warning banner",
+        "desktop": "filter-changes-list.tsx:1412 .hidden-changes-warning (yellow-100 background, 1px yellow borders, alert icon, 'Hidden changes will be committed.' + 'Adjust the filters…' link) shown above the commit form",
+        "gitcub": "banner was missing; only the confirm dialog on commit existed → src/ui/changes/sidebar.tsx renders the banner with Desktop tokens; link clears the filters",
+        "measured": "after: padding 5px 10px, background rgb(255,245,177), borders rgba(219,171,9,0.4), 12px text",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "commit warnings",
+        "element": "protected branch / no write access / repo rules",
+        "desktop": "commit-message.tsx renderBranchProtectionsRepoRulesCommitWarning",
+        "gitcub": "same ported code path; styled by the CommitWarning port",
+        "measured": "n/a",
+        "verdict": "fixed (via CommitWarning CSS)"
+      },
+      {
+        "screen": "history",
+        "element": "commit row height / padding",
+        "desktop": "history/commit-list.tsx:33 RowHeight 50; _commit-list.scss:103-110 padding-left 10px, padding-right 15px, border-bottom",
+        "gitcub": "ROW 54, px-3 → ROW 50, pl-2.5 pr-[15px]",
+        "measured": "after 50px, padding 10px / 15px",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "history",
+        "element": "commit summary weight / byline spacing / separator",
+        "desktop": "_commit-list.scss:119-128 .summary semibold; .description margin-top 3px; commit-list-item.tsx renderRelativeTime ' • '",
+        "gitcub": "ItemTitle font-medium, gap-0.5, '·' → font-semibold, gap-[3px], '•'",
+        "measured": "after summary 600, content gap 3px",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "history",
+        "element": "empty summary",
+        "desktop": "commit-list-item.tsx:139 'Empty commit message' in secondary color",
+        "gitcub": "raw empty string → history.emptySummary in muted color",
+        "measured": "n/a",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "history",
+        "element": "avatar / byline size",
+        "desktop": "_avatar-stack.scss --small 16px; _commit-list.scss byline 11px",
+        "gitcub": "16px avatar, 11px description",
+        "measured": "matches",
+        "verdict": "no difference"
+      },
+      {
+        "screen": "history",
+        "element": "tag / branch indicators",
+        "desktop": "_commit-list.scss .commit-indicators right side: first tag + more stub, 16px, radius 6px, padding 0 5px, badge gray-200",
+        "gitcub": "GitLens graph refs on the left of the summary (branches, tags, HEAD) 10px text, radius 4px, padding 0 4px, bg accent",
+        "measured": "ref badge h16 w32 font 10px",
+        "verdict": "deliberate",
+        "note": "User decision 2026-10-27: commit graph with GitLens graph.refs semantics replaces Desktop tag indicators."
+      },
+      {
+        "screen": "history",
+        "element": "unpushed indicator (↑ badge)",
+        "desktop": "app/src/ui/history/commit-list-item.tsx:181-196 renderUnpushedIndicator (arrowUp octicon in .unpushed-indicator); commit-list.tsx:270-300 showUnpushedIndicator = (isLocal || unpushedTags) && !isLocalRepository, localCommitSHAs from git-store.ts:608-630 loadLocalCommits (branch.upstream: getCommits(upstream..branch) at 618-622; no upstream: getCommits('HEAD', CommitBatchSize, skip, ['--not', '--remotes']) at 624-629), refreshed per repository refresh by app-store.ts:4356-4361 refreshChangesSection and 4374-4376 refreshHistorySection, paged further by _loadNextCommitBatch app-store.ts:1977-1984; title commit-list.tsx:357; _commit-list.scss:140-183 .commit-indicators (right-aligned, 16px, margin-left 10px, max-width 50%) / .unpushed-indicator (radius 8px, padding 0 5px, badge colors per selection state)",
+        "gitcub": "src/lib/unpushed-commits.ts isUnpushedCommit(sha, headIndex, status, localCommits): remote present; with upstream HEAD-history index < status.ahead (existing ahead/behind data, no process per row); without upstream membership in the `HEAD --not --remotes` SHA set that src/ui/app.tsx fetches once per repository refresh (reloadKey) through ipc.localCommits -> commit_details -> history.rs revision_tips/limited_walk (in-process gix, GRAPH_BATCH page, next page fetched with loadMoreGraph like Desktop _loadNextCommitBatch); src/ui/history/sidebar.tsx UnpushedIndicator rendered after the row content and in compare sections, pushStatus + localCommits props fed from app.tsx; title history.unpushed; conformance test tests/conformance/unpushed-indicator.test.ts",
+        "measured": "n/a (Storybook history-window--long-paths renders the badge on the two newest rows)",
+        "verdict": "fixed (partially)",
+        "note": "Not ported: Desktop also marks commits whose tags are unpushed (tagsToPush, commit-list.tsx getUnpushedTags); GitCub has no tagsToPush in state (tag indicators replaced by the commit graph per the 2026-10-27 decision), so tag-only rows show no badge. The no-upstream case (HEAD --not --remotes) is ported."
+      },
+      {
+        "screen": "history",
+        "element": "short SHA in row byline",
+        "desktop": "not shown by Desktop",
+        "gitcub": "removed: src/ui/history/sidebar.tsx no longer appends shortSha to the byline (main list and compare sections); the SHA stays in the commit summary pane and the Copy SHA context menu item",
+        "measured": "absent",
+        "verdict": "fixed",
+        "note": "AGENTS.md: no features Desktop lacks; commit-list-item.tsx renders avatar, author and relative time only."
+      },
+      {
+        "screen": "history",
+        "element": "commit summary pane",
+        "desktop": "_expandable-commit-summary.scss: title 14px/600 line-height 16px padding 10px; description monospace 11px pre-wrap; meta 11px: avatar+author, git-commit icon + short sha + copy, +added/-deleted, tag icon + tags",
+        "gitcub": "px-3 py-2.5, body 12px sans muted, meta 'author · date · sha' → p-2.5, title leading-4, body font-mono 11px pre-wrap, meta avatar+author, GitCommitIcon+sha, TagIcon+tags, date kept at the end",
+        "measured": "after: padding 10px, title 14px/600/16px, body 11px mono pre-wrap, meta 11px with 16px avatar",
+        "verdict": "fixed",
+        "note": "Copy-SHA button not added; date is a GitCub addition kept. Lines added/deleted: see the 'commit summary line counts' entry."
+      },
+      {
+        "screen": "history",
+        "element": "commit summary line counts",
+        "desktop": "app/src/ui/history/expandable-commit-summary.tsx:541-567 renderLinesChanged: +linesAdded / -linesDeleted from changesetData (lib/git/log.ts:284-341 parseRawLogWithNumstat sums --numstat per file, '-' for binary counts as 0), hidden when both are 0 or several commits are selected; _expandable-commit-summary.scss:117-129 .lines-added --color-new, .lines-deleted --color-deleted, 5px right padding",
+        "gitcub": "src-tauri/src/history.rs CommitFile gains lines_added / lines_deleted (Option, None for binary) parsed from the numstat segment; the in-process path (rename.rs commit_log_bytes: gix tree diff + xdiff numstat, same bytes as git log --raw --numstat -z) now carries the counts and gives way to git when numstat cannot match (xdiff settings, diff.orderFile, diff attributes, >16 MiB); src/lib/commit-line-counts.ts changesetLineCounts / showsLineCounts; src/ui/history/commit-summary.tsx renders +N (text-status-new) -M (text-status-deleted) after the SHA",
+        "measured": "Rust: history::tests::提交文件行数_与_git_show_numstat_一致 compares every file's counts (text, rename with modifications, binary '-', mode-only 0/0) on both paths against git show --numstat -z; existing in-process vs git JSON comparison now includes the counts; conformance tests/conformance/commit-line-counts.test.ts",
+        "verdict": "fixed",
+        "note": "Only the collapsed form (+N / -M) exists; GitCub has no expanded summary state. Non-unix hosts always use the git path for commit files (attribute checks are unix-only)."
+      },
+      {
+        "screen": "history",
+        "element": "commit file list header",
+        "desktop": "_commit-details.scss .file-list-header height 30px, line-height 30px, padding 0 10px, centered, background box-alt, border-bottom/right",
+        "gitcub": "px-3 py-1.5 11px muted left → h-[30px] leading-[30px] px-2.5 text-xs text-center; no background",
+        "measured": "after 30px centered 12px",
+        "verdict": "fixed",
+        "note": "Background not ported (no decorative surfaces)."
+      },
+      {
+        "screen": "history",
+        "element": "commit file rows",
+        "desktop": "history/file-list.tsx:77 rowHeight 29; _file-list.scss .file padding 0 10px, border-bottom; octicon ambient color when selected",
+        "gitcub": "28px rows px-3 → 29px, px-2.5, border-b-border, shared Path component, icon text-current when selected",
+        "measured": "after 29px rows, 10px padding, title margin-right 5px",
+        "verdict": "fixed"
+      },
+      {
+        "screen": "history",
+        "element": "diff header",
+        "desktop": "_diff.scss:906-931 .header padding 5px 10px, background box-alt, border-bottom diff-border, PathLabel (sans, dirname secondary) + diff options + status octicon",
+        "gitcub": "h-9 px-3 mono path, hunk count, controls → px-2.5, Path (sans 12px, dirname muted), status icon at the right (DiffView status prop fed from app.tsx)",
+        "measured": "after padding 0 10px, path 12px sans",
+        "verdict": "fixed",
+        "note": "Hunk count is a GitCub addition (kept); height 36px vs Desktop 35px because the diff option buttons are shadcn h-8; background not ported."
+      },
+      {
+        "screen": "settings › accounts",
+        "element": "dialog shell",
+        "desktop": "_preferences.scss / _dialog.scss: vertical TabBar + h2 sections, 20px content padding, 12px text",
+        "gitcub": "shadcn Dialog with vertical shadcn Tabs (alwith-desktop AuxWindowShell layout), 16px panel padding, SettingRow 14px title / 12px description",
+        "measured": "dialog 768x560, panel padding 16px, row 56px",
+        "verdict": "deliberate",
+        "note": "AGENTS.md: base controls and layout stay shadcn / alwith-desktop."
+      },
+      {
+        "screen": "settings › accounts",
+        "element": "account rows",
+        "desktop": "app/src/ui/preferences/accounts.tsx:67-107 renderAccount: Avatar + .user-info (dotcom: .name semibold + .login '@login'; enterprise: '@login (name)' + endpoint), Sign Out button; _preferences.scss:75-103 .user-info-container gap 10px, avatar 34px (32px + border), .name margin -2px 0",
+        "gitcub": "src-tauri/src/account.rs Account gains name / avatar_url from the same /user response (no extra request); src/ui/preferences/preferences.tsx AccountIdentity: shadcn Avatar (32px + border pseudo) + name semibold (-2px margins) + @login for github.com, '@login (name)' + instance address for other hosts, credential source as a muted third line; row keeps the per-instance layout, token field, Sign in / Sign out / Re-enable buttons",
+        "measured": "n/a (Storybook settings-navigation--accounts renders the signed-out rows; signed-in rows need account data)",
+        "verdict": "fixed (partially)",
+        "note": "Kept GitCub's per-instance rows, token field and OAuth client row (GitLab / self-hosted support); Desktop's CallToAction sign-in blocks and provider h2 headings are not reproduced (deliberate dialog shell)."
+      },
+      {
+        "screen": "settings › accounts",
+        "element": "token field",
+        "desktop": "not in Desktop (browser OAuth only)",
+        "gitcub": "password Input h-8 w-56 for hosts without a built-in OAuth client",
+        "measured": "32x224",
+        "verdict": "deliberate",
+        "note": "Project feature for GitLab and self-hosted instances."
+      },
+      {
+        "screen": "settings › git",
+        "element": "name / email form",
+        "desktop": "app/src/ui/preferences/git.tsx:154-208 Author / Default branch / Hooks tabs; renderDefaultBranchSetting: h2 'Default branch name for new repositories', RefNameTextBox (sanitized ref name, 'Will be saved as …' warning), description paragraph; lib/helpers/default-branch.ts getDefaultBranch = init.defaultBranch ?? main, setDefaultBranch writes the global config; add-repository/create-repository.tsx:268 initGitRepository honors it",
+        "gitcub": "src/ui/preferences/preferences.tsx GitTab (global mode): SettingRow prefs.defaultBranch with a shadcn Input (h-8 w-56), value from getGlobalConfigValue('init.defaultBranch') ?? 'main', sanitizedRefName + prefs.defaultBranchWarning when the sanitized value differs, saved on blur through setGlobalConfigValue (src/lib/desktop-git.ts, git config --global); src/ui/app.tsx newRepo passes the configured default branch to init_repo instead of a hard-coded main",
+        "measured": "n/a (Storybook settings-navigation--git-identity renders the row with the fixture's null config = main)",
+        "verdict": "fixed (partially)",
+        "note": "Skipped: Hooks tab (Git hook environment loading does not exist in GitCub), the commit-list example preview and the 'edit your global Git config file' link (GitCub keeps the prefs.globalOnly hint); input sizing stays shadcn (deliberate). Author sub-tab structure not reproduced: name / email / default branch are three SettingRows."
+      },
+      {
+        "screen": "global",
+        "element": "base font size",
+        "desktop": "app/styles/_variables.scss:85 --font-size 12px; _globals.scss:54-55 body font-size var(--font-size), line-height 1.5",
+        "gitcub": "src/styles/globals.css body font-size 12px / line-height 1.5; redundant text-xs removed only on plain business containers that now inherit 12px (history file-list header, hidden-changes warning, history empty / error / compare-empty text, content-pane placeholders in app.tsx). Rows inside shadcn Item keep their explicit text-xs because Item sets text-sm; shadcn base controls keep their own sizes.",
+        "measured": "Storybook specs (history-layout, desktop-layout) re-run after the change; base controls set explicit text sizes (button/input/tabs/dialog text-sm, tooltip text-xs) so nothing in src/ui/base changes size",
+        "verdict": "fixed",
+        "note": "User decision 2026-10-29: body text 12px like Desktop; shadcn controls unchanged."
+      }
+    ],
+    "otherFindings": [
+      "Commit graph ordering with identical commit timestamps: a fixture whose eight commits shared one second rendered 'Add file 5, Change b, Add file 4, Initial commit, Add file 3' (not topological); distinct timestamps order correctly. Not part of the UI audit; needs a graph-engine fix with a tie-breaking test."
+    ],
+    "validation": {
+      "rust": "cargo test --locked --bins -- --test-threads=2: 399 passed, 0 failed, 4 ignored (includes the new history::tests::提交文件行数_与_git_show_numstat_一致); cargo clippy --all-targets --features hasgard-testing -D warnings: clean",
+      "conformance": "bun tests/conformance/run.ts --no-native: 2353 pass, 0 fail, 1 skip (was 2351 / 0 / 1; +2 from unpushed-indicator no-upstream cases)",
+      "storybook": "history-layout.spec.ts + desktop-layout.spec.ts: 13 passed; storybook.spec.ts for changes-no-changes / changes-file-list / history-* / settings-navigation stories: 424 passed (light + dark, en + zh-CN, compact + wide, axe)",
+      "lint": "bun lint, bun ts7-lint: no problems",
+      "typecheck": "bun check tsconfig.json / tsconfig.tools.json: no type errors",
+      "notes": "Native app and hasgard suites not run (worktree agent rules); Storybook ran on port 6017 because 6007 was held by another session. The primary suggestion card's secondary text uses gray-600 instead of Desktop's gray-500 (4.4:1 fails axe on blue-000)."
+    },
+    "userDecisions20261029": "User decided to port all seven 'needs user decision' items one-to-one with Desktop: selected row colors, no-changes blankslate, changes row context menu, history unpushed marker (and removal of the short SHA), commit summary line counts, Settings accounts rows + default branch, 12px body text. Each entry above records what was ported and what was omitted."
+  }
+}

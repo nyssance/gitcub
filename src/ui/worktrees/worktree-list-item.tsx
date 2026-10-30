@@ -1,0 +1,55 @@
+// Desktop MIT port; platform imports adapted to Tauri.
+
+import classNames from "classnames"
+import * as React from "react"
+
+import { enableAccessibleListToolTips } from "../../lib/desktop-features"
+import { getWorktreeDescription, getWorktreeDisplayName, type WorktreeEntry } from "../../models/worktree"
+import type { IMatches } from "../../upstream/lib/fuzzy-find"
+import { HighlightText } from "../desktop/highlight-text"
+import { TooltippedContent } from "../desktop/tooltipped-content"
+import { Octicon } from "../octicons"
+import * as octicons from "../octicons/octicons.generated"
+
+interface IWorktreeListItemProps {
+  readonly worktree: WorktreeEntry
+  readonly isCurrentWorktree: boolean
+  readonly matches: IMatches
+}
+
+export class WorktreeListItem extends React.Component<IWorktreeListItemProps> {
+  public render() {
+    const { worktree, isCurrentWorktree, matches } = this.props
+    const name = getWorktreeDisplayName(worktree)
+    const description = getWorktreeDescription(worktree)
+    const isMissing = worktree.isPrunable
+    const icon = isCurrentWorktree ? octicons.check : isMissing ? octicons.alert : octicons.fileDirectory
+    const className = classNames("worktrees-list-item", {
+      "current-worktree": isCurrentWorktree,
+      "missing-worktree": isMissing
+    })
+
+    return (
+      <div className={className}>
+        <Octicon className="icon" symbol={icon} />
+        <TooltippedContent
+          className="name"
+          tooltip={name}
+          onlyWhenOverflowed={true}
+          tagName="div"
+          disabled={enableAccessibleListToolTips()}>
+          <HighlightText text={name} highlight={matches.title} />
+        </TooltippedContent>
+        {isMissing && <div className="missing-indicator">(missing)</div>}
+        <TooltippedContent
+          className="description"
+          tooltip={worktree.branch ?? worktree.head}
+          onlyWhenOverflowed={true}
+          tagName="div"
+          disabled={enableAccessibleListToolTips()}>
+          {description}
+        </TooltippedContent>
+      </div>
+    )
+  }
+}

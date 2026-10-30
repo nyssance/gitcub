@@ -1,0 +1,41 @@
+# Native Bun formatter/linter; requires Bun Canary with fmt and lint support.
+[fmt]
+printWidth = 120
+semi = false
+trailingComma = "none"
+bracketSameLine = true
+arrowParens = "avoid"
+sortImports = true
+ignorePatterns = [
+  "**/*.svg",
+  "src-tauri/gen",
+  "src-tauri/resources",
+  "src/upstream",
+  "src/ui/base",
+  "src/ui/reui",
+  "**/*.md",
+  "**/*.html",
+  "package.json",
+  "tests/conformance/upstream",
+  "tests/conformance/fixtures",
+  "Vendor/**",
+  "src-tauri/patches/**",
+  ".claude/**"
+]
+
+[fmt.sortTailwindcss]
+preserveWhitespace = true
+
+# Original upstream sources, test snapshots and repository fixtures.
+[lint]
+ignorePatterns = [
+  "src/upstream/**",
+  "src/ui/base/**",
+  "src/ui/reui/**",
+  "tests/conformance/upstream/**",
+  "tests/conformance/fixtures/**",
+  ".claude/**"
+]
+
+[run]
+bun = true

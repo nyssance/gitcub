@@ -1,0 +1,78 @@
+[package]
+name = "gitcub"
+version = "0.1.1"
+edition = "2024"
+license = "AGPL-3.0"
+repository = "https://github.com/nyssance/gitcub"
+description = "GitCub — a fast, multilingual Git client for GitHub and GitLab."
+
+[features]
+hasgard-testing = ["dep:tauri-plugin-hasgard"]
+
+[build-dependencies]
+cc = "1"
+tauri-build = { version = "3.0.0-alpha.4", features = [] }
+
+[dependencies]
+alwith-module-store = "0.1"
+atlas-tauri = "0.1"
+# 图片 diff 要把图片内容交给 webview，走 data: URL 最省事
+base64 = "0.23"
+getrandom = "0.4"
+regex = "1"
+gix = { version = "0.90", features = ["sha256"] }
+keyring = { version = "4", features = ["apple-native-keyring-store", "linux-keyutils-keyring-store"] }
+log = "0.4"
+chrono = "0.4"
+# 文件监听：别的程序（编辑器、构建、另一个终端里的 git）改了工作区时，
+# 界面不该等到窗口被点一下才更新
+notify = "8"
+# 账号信息与 OAuth 需要 HTTPS；用 rustls 避免依赖系统 OpenSSL
+reqwest = { version = "0.13", default-features = false, features = [
+  "json",
+  "form",
+  "rustls",
+  "charset",
+  "http2",
+  "gzip",
+  "brotli"
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["sync", "macros", "rt"] }
+tauri = { version = "3.0.0-alpha.5", features = ["unstable"] }
+tauri-runtime-wry = "3.0.0-alpha.5"
+tauri-plugin-dialog = "3.0.0-alpha.4"
+tauri-plugin-hasgard = { version = "0.6", optional = true }
+tauri-plugin-log = "3.0.0-alpha.3"
+tauri-plugin-opener = "3.0.0-alpha.3"
+tauri-plugin-os = "3.0.0-alpha.3"
+tauri-plugin-updater = { version = "3.0.0-alpha.3", default-features = false, features = ["rustls-tls", "zip"] }
+# 丢弃改动时把文件挪进废纸篓而不是直接删 —— 原版就是这么做的，
+# 未跟踪文件不在 git 里，删了就真没了
+trash = "5"
+
+tempfile = "3"
+chromium-storage-indexeddb-core = "0.2"
+chromium-storage-localstorage-core = "0.2"
+leveldb-core = "0.1"
+crc32c = "0.6"
+blob-decoder = { version = "0.2", default-features = false }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+window-vibrancy = "0.8"
+winreg = "0.56"
+windows = { version = "0.62", features = [
+  "Foundation",
+  "Data_Xml_Dom",
+  "UI_Notifications",
+  "Win32_Security_Credentials"
+] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+kqueue = "1"
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSEvent", "NSTouch", "NSView", "NSWindow"] }

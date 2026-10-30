@@ -1,0 +1,461 @@
+/* 从 GitHub Desktop 移植的布局规则（MIT License, github.com/desktop/desktop）。
+ *
+ * 来源文件：
+ *   app/styles/ui/_repository.scss
+ *   app/styles/ui/_list.scss
+ *   app/styles/ui/_tab-bar.scss
+ *   app/styles/ui/changes/_changes-list.scss
+ *
+ * 原样照搬而不是自己拼 Tailwind：这些规则里有几处不显眼但必需的组合，
+ * 比如 .panel 同时要 height:100% + flex:1 1 auto + min-height:0，
+ * 少写 height:100% 滚动就会失效。SCSS 变量已换成本项目的 token。 */
+
+/* —— #repository ———————————————————————————————————————————— */
+.repository {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+}
+
+.repository-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Desktop 原文是 overflow-y:auto —— 因为它的 .list 外面套 AutoSizer，
+ * 量出像素高度后永远不会溢出 .panel，所以 .panel 自己滚不滚都无所谓。
+ * 我们没有那一层：.panel 一旦是滚动容器，子元素就被允许撑开，
+ * 结果变成整个侧栏（含提交框）一起滚。改成 hidden，由内部列表滚。 */
+.repository-sidebar .panel {
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* —— .changes-list-container ———————————————————————————————— */
+.changes-list-container {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* —— .list ————————————————————————————————————————————————— */
+.list {
+  flex-grow: 1;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Desktop 的 .list 是 overflow:hidden —— 因为真正滚动的是它内部
+ * react-virtualized 的 Grid。我们没有那一层，所以需要一个自己滚动的容器。
+ * 同样放在无层级作用域，免得和 Tailwind 工具类互相压制。 */
+.list-scroller {
+  flex: 1 1 auto;
+  min-height: 0; /* 不能写 height:100%：那会按父元素高度撑开而不是收缩 */
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* —— .changes-interstitial / .suggested-action ——————————————————————————
+ * Desktop app/styles/ui/changes/_changes-interstitial.scss 与 ui/suggested-actions/_suggested-action*.scss：
+ * 没有本地改动时内容区的空白页。四周 40px（--spacing-quad）、内容最宽 600px；标题 32px light；
+ * 图 73×70 贴底；建议卡片 20px 内边距、上下相连、首尾圆角 6px，首要建议蓝底蓝边；
+ * 标题 12px semibold、说明 12px、发现方式次级色，kbd 照 _globals.scss。按钮是 shadcn 基础控件，不改尺寸。 */
+.changes-interstitial {
+  padding: 40px;
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.changes-interstitial .interstitial-header {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 20px;
+}
+.changes-interstitial .interstitial-header .text {
+  flex-grow: 1;
+  margin-right: 20px;
+}
+.changes-interstitial .interstitial-header h1 {
+  padding: 0;
+  margin: 0;
+  font-size: 32px;
+  font-weight: 300;
+}
+.changes-interstitial .interstitial-header p {
+  margin: 0;
+}
+.changes-interstitial .blankslate-image {
+  flex: 0;
+  height: 70px;
+  width: 73px;
+  min-width: 70px;
+  min-height: 73px;
+  align-self: flex-end;
+}
+.changes-interstitial .content {
+  width: 100%;
+  max-width: 600px;
+}
+@media screen and (max-width: 640px) {
+  .changes-interstitial {
+    padding: 20px;
+  }
+}
+@media screen and (max-width: 550px) {
+  .changes-interstitial .interstitial-header .blankslate-image {
+    display: none;
+  }
+}
+
+.suggested-action-group {
+  display: flex;
+  flex-direction: column;
+}
+.suggested-action-group.primary {
+  margin-bottom: 10px;
+}
+.suggested-action {
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.suggested-action:first-child {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.suggested-action:last-child {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.suggested-action.primary {
+  background: var(--suggested-action-primary);
+  border-color: var(--suggested-action-primary-border);
+}
+.suggested-action .text-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-right: 20px;
+}
+.suggested-action .image-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+.suggested-action .image-wrapper .octicon {
+  height: 100%;
+  width: 100%;
+  color: var(--suggested-action-icon);
+}
+.suggested-action h2 {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.suggested-action p.description {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.suggested-action p.discoverability {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.suggested-action p.discoverability kbd {
+  color: var(--foreground);
+}
+.suggested-action.primary p.discoverability {
+  color: var(--suggested-action-primary-muted);
+}
+.suggested-action > button {
+  flex-shrink: 0;
+}
+@media screen and (max-width: 768px) {
+  .suggested-action {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .suggested-action .text-wrapper {
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+}
+
+/* Desktop _globals.scss kbd */
+.suggested-action kbd {
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: inline-block;
+  padding: 1px 2px;
+  line-height: 1;
+  min-height: 16px;
+  font-family: var(--font-sans);
+  text-align: center;
+  min-width: 1.5em;
+}
+.suggested-action kbd:not(:last-child) {
+  margin-right: 2px;
+}
+
+/* —— .list-item.selected / .list-focus-container.focus-within ——————————
+ * Desktop _list.scss：选中行无焦点时用 --box-selected-*（浅灰底、正文色），列表内有焦点时用
+ * --box-selected-active-*（蓝底白字），次级色跟着换成同色；悬停 --list-item-hover-background-color
+ * 后写、同权重，所以无焦点的选中行悬停时显示悬停色，和原版一样。
+ * 只用于改动列表、历史列表和提交文件列表；PR 列表和侧栏仍是 shadcn accent。
+ * Desktop 的 List 由 FocusContainer 在 JS 里加 .focus-within；历史列表是自家的虚拟滚动容器，
+ * 用同义的 :focus-within。 */
+.desktop-list-row[data-selected] {
+  --muted-foreground: var(--list-selected-foreground);
+  color: var(--list-selected-foreground);
+  background: var(--list-selected);
+}
+.desktop-list-row:hover {
+  background: var(--list-hover);
+}
+:is(.list-focus-container.focus-within, .desktop-list:focus-within) .desktop-list-row[data-selected] {
+  --muted-foreground: var(--list-selected-active-foreground);
+  color: var(--list-selected-active-foreground);
+  background: var(--list-selected-active);
+}
+/* _file-list.scss：状态图标只在「有焦点且选中」时用正文色，其余时候保留状态色 */
+:is(.list-focus-container.focus-within, .desktop-list:focus-within) .desktop-list-row[data-selected] svg {
+  color: currentColor;
+}
+/* _commit-list.scss .tag-name / .unpushed-indicator：徽章底色按普通、选中、焦点选中三档 */
+.desktop-list-row .list-badge {
+  background: var(--list-badge);
+  color: var(--list-badge-foreground);
+}
+.desktop-list-row[data-selected] .list-badge {
+  background: var(--list-selected-badge);
+  color: var(--list-selected-badge-foreground);
+}
+:is(.list-focus-container.focus-within, .desktop-list:focus-within) .desktop-list-row[data-selected] .list-badge {
+  background: var(--list-selected-active-badge);
+  color: var(--list-selected-active-badge-foreground);
+}
+
+/* —— 语法高亮 ————————————————————————————————————————————————
+ * Lezer 的 classHighlighter 产出 `tok-*` 类，这里映射到原版的 --syntax-* 色。
+ * token 来自对**两侧完整文件**分别做的词法分析（lib/highlighter），
+ * 不是把统一 diff 喂给解析器——那样删除行和新增行相邻，token 会被切错。 */
+.side-by-side-diff-container .cm-tok-keyword,
+.side-by-side-diff-container .cm-tok-modifier,
+.side-by-side-diff-container .cm-tok-controlKeyword,
+.side-by-side-diff-container .cm-tok-operatorKeyword {
+  color: var(--syntax-keyword);
+}
+
+.side-by-side-diff-container .cm-tok-string,
+.side-by-side-diff-container .cm-tok-string2,
+.side-by-side-diff-container .cm-tok-special {
+  color: var(--syntax-string);
+}
+
+.side-by-side-diff-container .cm-tok-comment,
+.side-by-side-diff-container .cm-tok-lineComment,
+.side-by-side-diff-container .cm-tok-blockComment,
+.side-by-side-diff-container .cm-tok-docComment {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+.side-by-side-diff-container .cm-tok-number,
+.side-by-side-diff-container .cm-tok-atom,
+.side-by-side-diff-container .cm-tok-bool,
+.side-by-side-diff-container .cm-tok-literal,
+.side-by-side-diff-container .cm-tok-null {
+  color: var(--syntax-atom);
+}
+
+.side-by-side-diff-container .cm-tok-macroName {
+  color: var(--syntax-variable);
+}
+
+.side-by-side-diff-container .cm-tok-typeName,
+.side-by-side-diff-container .cm-tok-className,
+.side-by-side-diff-container .cm-tok-namespace {
+  color: var(--syntax-type);
+}
+
+.side-by-side-diff-container .cm-tok-tagName,
+.side-by-side-diff-container .cm-tok-angleBracket {
+  color: var(--syntax-tag);
+}
+
+.side-by-side-diff-container .cm-tok-attributeName,
+.side-by-side-diff-container .cm-tok-propertyName {
+  color: var(--syntax-attribute);
+}
+
+.side-by-side-diff-container .cm-tok-variableName {
+  color: var(--syntax-alt-variable);
+}
+
+/* 函数/方法定义是紫色（原版 --syntax-variable-color）。
+   Lezer 给的是 `tok-variableName tok-definition` 两个类，
+   必须用复合选择器，否则会被上面单类的 tok-variableName 盖掉。 */
+.side-by-side-diff-container .cm-tok-variableName.cm-tok-definition,
+.side-by-side-diff-container .cm-tok-variableName.cm-tok-function,
+.side-by-side-diff-container .cm-tok-function.cm-tok-definition {
+  color: var(--syntax-variable);
+}
+
+.side-by-side-diff-container .cm-tok-link,
+.side-by-side-diff-container .cm-tok-url {
+  color: var(--syntax-link);
+}
+
+.side-by-side-diff-container .cm-tok-heading {
+  color: var(--syntax-header);
+}
+
+.side-by-side-diff-container .cm-tok-quote {
+  color: var(--syntax-quote);
+}
+
+/* —— 标题栏 ——————————————————————————————————————————————————
+ * 结构来自原版 _title-bar.scss。
+ * macOS: --darwin-title-bar-height: 22px（红绿灯浮在上面）
+ * Windows: --win32-title-bar-height: 28px（自绘图标 + 按钮） */
+#title-bar {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--title-bar-height);
+  background: var(--toolbar);
+  position: relative;
+}
+
+/* 高度定义在 :root 上，不在 #title-bar 上 —— 原版也是挂在 #desktop-app-chrome
+   的 .platform-darwin / .platform-win32 上的。挂在标题栏自己身上时，
+   内容区那句 calc(100vh - var(--title-bar-height)) 取不到值，
+   整页就比窗口高出一个标题栏（实测提交按钮被切在窗口外）。 */
+:root {
+  --title-bar-height: 22px; /* 原版 --darwin-title-bar-height */
+}
+
+:root[data-platform="windows"] {
+  --title-bar-height: 28px; /* 原版 --win32-title-bar-height */
+}
+
+/* frame:false 之后系统的缩放边框没了，自己补 —— 原版 .resize-handle */
+#title-bar .resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#title-bar .resize-handle.top {
+  width: 100%;
+  height: 3px;
+}
+
+#title-bar .resize-handle.left {
+  width: 3px;
+  height: var(--title-bar-height);
+}
+
+.window-controls {
+  margin-left: auto;
+  display: flex;
+  height: 100%;
+}
+
+.window-control {
+  width: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--toolbar-foreground);
+}
+
+.window-control svg path {
+  fill: currentColor;
+}
+
+.window-control:hover {
+  background: var(--toolbar-hover);
+}
+
+.window-control.close:hover {
+  background: #e81123; /* Windows 关闭按钮的标准红 */
+  color: #fff;
+}
+
+/* —— 侧栏毛玻璃 ————————————————————————————————————————————
+ * 窗口整体开了 Effect::Sidebar（macOS）/ Mica（Windows），效果作用在整窗，
+ * 分区靠这里：侧栏透明让材质透出来，右侧内容区盖不透明底色。
+ * 这也是 Finder / Mail / Xcode 的做法。
+ * 注意：GitHub Desktop 本身没有毛玻璃（它是 backgroundColor: '#fff'），
+ * 这一条来自 alwith-desktop 与 Codex 客户端。 */
+:root {
+  --title-bar-height: 22px;
+}
+
+/* 透出原生材质的只有最左边那条仓库栏；右边（工具栏 + 更改栏 + diff）
+   必须不透明，否则整窗都糊。 */
+.repository-content {
+  background: var(--background);
+}
+
+/* Split diff uses the same wrap preference as the unified editor. */
+.diff-container .side-by-side-diff-container .row .content {
+  white-space: var(--split-white-space, pre-wrap);
+}
+
+/* Desktop SectionFilterList requires a bounded flex container for AutoSizer.
+   PR/MR rows retain the upstream pull-request-list.tsx RowHeight of 47px. */
+.native-pull-request-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.native-pull-request-list .filter-list-container {
+  flex: 1;
+  min-height: 0;
+}
+.native-pull-request-list .list-item,
+.native-pull-request-list .list-item-content-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+.native-pull-request-list .list-item.selected {
+  --muted-foreground: var(--accent-foreground);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}

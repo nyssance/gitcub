@@ -1,0 +1,234 @@
+# 照 ALwith U 的发布流程：手动运行只出未签名的安装包当工件；推 v* 标签则签名、公证、
+# 生成更新器元数据并在公开仓 nyssance/releases 建草稿 Release `gitcub-v*`（源码仓保持私有），
+# 人工检查发布后再把 latest.json 覆盖到固定的 `gitcub-latest` Release，更新器只读那里。
+# 出 macOS（Apple Silicon，签名公证）和 Windows x64（NSIS 安装包，没有代码签名证书，SmartScreen 会提示未知发布者）。
+# 两个平台串行构建：tauri-action 往同一个 Release 的 latest.json 合并平台条目，并行会互相覆盖。
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_latest:
+        description: 已发布的版本标签（如 v0.1.1）：把它的 latest.json 覆盖到 gitcub-latest
+        required: false
+        type: string
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  test-bundle:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_latest == ''
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-26
+            target: aarch64-apple-darwin
+            git: darwin-arm64
+            bundles: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            git: win32-x64
+            bundles: --bundles nsis
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+      - run: bun install --frozen-lockfile
+      - name: 下载随包分发的 git
+        run: bun scripts/fetch-git.ts ${{ matrix.git }}
+      - uses: tauri-apps/tauri-action@v1
+        with:
+          tauriScript: bun tauri
+          args: --target ${{ matrix.target }} ${{ matrix.bundles }}
+          uploadWorkflowArtifacts: true
+          workflowArtifactNamePattern: gitcub-[version]-[platform]-[arch]-[bundle]
+
+  release-preflight:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      release_id: ${{ steps.prepare-release.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+      - name: 标签与版本号一致
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: >-
+          bun -e 'const version = (await Bun.file("src-tauri/tauri.conf.json").json()).version;
+          const tag = process.env.RELEASE_TAG;
+          if (tag !== `v${version}`) throw new Error(`Release tag ${tag} does not match tauri.conf.json version v${version}`)'
+      - name: 签名与公证密钥齐全
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: >-
+          bun -e 'const required = ["APPLE_CERTIFICATE", "APPLE_CERTIFICATE_PASSWORD",
+          "APPLE_SIGNING_IDENTITY", "APPLE_ID", "APPLE_PASSWORD", "APPLE_TEAM_ID",
+          "TAURI_SIGNING_PRIVATE_KEY", "TAURI_SIGNING_PRIVATE_KEY_PASSWORD", "RELEASE_TOKEN"];
+          const missing = required.filter(name => !process.env[name]);
+          if (missing.length) throw new Error(`Missing release secrets: ${missing.join(", ")}`)'
+      - name: 准备公开仓的草稿 Release
+        id: prepare-release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          RELEASE_TAG: gitcub-${{ github.ref_name }}
+          RELEASE_REPO: nyssance/releases
+        run: |
+          set -euo pipefail
+          releases=$(gh api --paginate "repos/$RELEASE_REPO/releases" |
+            jq -s --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)]')
+          count=$(jq 'length' <<< "$releases")
+          if [ "$count" -eq 0 ]; then
+            release_id=$(gh api --method POST "repos/$RELEASE_REPO/releases" \
+              -f tag_name="$RELEASE_TAG" -f target_commitish=main -f name="GitCub ${RELEASE_TAG#gitcub-}" \
+              -F draft=true --jq '.id')
+          elif [ "$count" -eq 1 ]; then
+            release_id=$(jq -er '.[0] | if .draft then .id else error("Release is already published") end' <<< "$releases")
+          else
+            echo "Multiple releases exist for $RELEASE_TAG" >&2
+            exit 1
+          fi
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: release-preflight
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - os: macos-26
+            target: aarch64-apple-darwin
+            git: darwin-arm64
+            bundles: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            git: win32-x64
+            bundles: --bundles nsis
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+      - run: bun install --frozen-lockfile
+      - name: 下载随包分发的 git
+        run: bun scripts/fetch-git.ts ${{ matrix.git }}
+      - name: 导入 Apple 签名证书
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: bash scripts/macos-signing.sh setup
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tauriScript: bun tauri
+          owner: nyssance
+          repo: releases
+          tagName: gitcub-${{ github.ref_name }}
+          releaseId: ${{ needs.release-preflight.outputs.release_id }}
+          releaseName: GitCub ${{ github.ref_name }}
+          releaseDraft: true
+          releaseAssetNamePattern: gitcub_[version]_[platform]_[arch][ext]
+          args: --target ${{ matrix.target }} ${{ matrix.bundles }}
+      - name: 公证并盖章 DMG
+        if: runner.os == 'macOS'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          RELEASE_TAG: gitcub-${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          dmg=$(ls src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg)
+          xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "$dmg"
+          cp "$dmg" "gitcub_${GITHUB_REF_NAME#v}_macos_aarch64.dmg"
+          gh release upload "$RELEASE_TAG" "gitcub_${GITHUB_REF_NAME#v}_macos_aarch64.dmg" --repo nyssance/releases --clobber
+      - name: 清理签名钥匙串
+        if: always() && env.GITCUB_SIGNING_DIR != ''
+        shell: bash
+        run: bash scripts/macos-signing.sh cleanup
+
+  # 发布草稿后手动运行：把该版本的 latest.json 覆盖到固定的 gitcub-latest Release，更新器才看到新版本。
+  publish-latest:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_latest != ''
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 复制 latest.json 到 gitcub-latest
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VERSION_TAG: gitcub-${{ inputs.publish_latest }}
+        run: |
+          set -euo pipefail
+          gh release download "$VERSION_TAG" --repo nyssance/releases --pattern latest.json
+          # 草稿期上传的清单里是 API 资源地址，更新器不带 Accept 头下不到；按资源列表换成发布后的直链
+          gh api --paginate "repos/nyssance/releases/releases/tags/$VERSION_TAG" --jq '.assets[] | [.url, .name] | @tsv' > assets.tsv
+          python3 - "$VERSION_TAG" <<'PY'
+          import json, sys
+          tag = sys.argv[1]
+          names = dict(line.rstrip("\n").split("\t") for line in open("assets.tsv") if line.strip())
+          manifest = json.load(open("latest.json"))
+          for key, platform in manifest["platforms"].items():
+              url = platform["url"]
+              name = names.get(url) or url.rsplit("/", 1)[-1]
+              if name not in names.values():
+                  raise SystemExit(f"{key}: {url} 不在 {tag} 的资源里")
+              platform["url"] = f"https://github.com/nyssance/releases/releases/download/{tag}/{name}"
+          json.dump(manifest, open("latest.json", "w"), indent=2)
+          PY
+          gh release upload "$VERSION_TAG" latest.json --repo nyssance/releases --clobber
+          gh release view gitcub-latest --repo nyssance/releases >/dev/null 2>&1 ||
+            gh release create gitcub-latest --repo nyssance/releases --title "GitCub 更新清单" --notes "应用内更新器读取的 latest.json，始终指向最新发布版本。" --latest=false
+          gh release upload gitcub-latest latest.json --repo nyssance/releases --clobber

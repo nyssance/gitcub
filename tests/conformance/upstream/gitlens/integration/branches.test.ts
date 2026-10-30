@@ -1,0 +1,736 @@
+import * as assert from 'assert';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import type { Server } from 'node:http';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import * as sinon from 'sinon';
+import { BranchError } from '@gitlens/git/errors.js';
+import type { GitResult, GitRunOptions } from '@gitlens/git/run.types.js';
+import { GitError } from '../../../exec/git.js';
+import type { TestRepo } from './helpers.js';
+import {
+	addCommit,
+	checkout,
+	cloneTestRepo,
+	createBranch,
+	createBranchAt,
+	createTestRepo,
+	getHeadSha,
+} from './helpers.js';
+
+suite('BranchesSubProvider', () => {
+	let repo: TestRepo;
+
+	suiteSetup(() => {
+		repo = createTestRepo();
+		// Create some branches
+		createBranch(repo.path, 'feature/test-1');
+		createBranch(repo.path, 'feature/test-2');
+		addCommit(repo.path, 'file1.txt', 'content', 'Second commit');
+		createBranch(repo.path, 'feature/test-3');
+	});
+
+	suiteTeardown(() => {
+		repo.cleanup();
+	});
+
+	test('getBranches returns all branches', async () => {
+		const result = await repo.provider.branches.getBranches(repo.path);
+		assert.ok(result.values.length >= 4, `Expected at least 4 branches, got ${result.values.length}`);
+
+		const names = result.values.map(b => b.name);
+		assert.ok(names.includes('main'), 'Should include main');
+		assert.ok(names.includes('feature/test-1'), 'Should include feature/test-1');
+		assert.ok(names.includes('feature/test-2'), 'Should include feature/test-2');
+		assert.ok(names.includes('feature/test-3'), 'Should include feature/test-3');
+	});
+
+	test('getBranches identifies current branch', async () => {
+		const result = await repo.provider.branches.getBranches(repo.path);
+		const current = result.values.find(b => b.current);
+		assert.ok(current, 'Should have a current branch');
+		assert.strictEqual(current.name, 'main');
+	});
+
+	test('getBranch returns a specific branch', async () => {
+		const branch = await repo.provider.branches.getBranch(repo.path, 'feature/test-1');
+		assert.ok(branch, 'Should find feature/test-1');
+		assert.strictEqual(branch.name, 'feature/test-1');
+	});
+
+	test('getBranch returns undefined for nonexistent branch', async () => {
+		const branch = await repo.provider.branches.getBranch(repo.path, 'nonexistent');
+		assert.strictEqual(branch, undefined);
+	});
+
+	test('getBranches supports filtering', async () => {
+		const result = await repo.provider.branches.getBranches(repo.path, {
+			filter: b => b.name.startsWith('feature/'),
+		});
+		assert.ok(result.values.length >= 3, `Expected at least 3 feature branches, got ${result.values.length}`);
+		for (const b of result.values) {
+			assert.ok(b.name.startsWith('feature/'), `Branch ${b.name} should start with feature/`);
+		}
+	});
+});
+
+suite('BranchesSubProvider.getBranchMergedStatus caching', () => {
+	let repo: TestRepo;
+
+	suiteSetup(() => {
+		repo = createTestRepo();
+		// `feature` never moves past the initial commit, so it's trivially an ancestor of every
+		// later `main` commit — `merge-base --is-ancestor` succeeds on the very first check.
+		createBranch(repo.path, 'feature');
+		addCommit(repo.path, 'file1.txt', 'content', 'Second commit');
+	});
+
+	suiteTeardown(() => {
+		repo.cleanup();
+	});
+
+	function countMergeBaseCalls(spy: sinon.SinonSpy): number {
+		return spy.getCalls().filter(c => c.args[1] === 'merge-base' && c.args[2] === '--is-ancestor').length;
+	}
+
+	test('same tips are served from cache; a tip advance recomputes', async () => {
+		const runSpy = sinon.spy(repo.provider.git, 'run');
+		try {
+			const feature = await repo.provider.branches.getBranch(repo.path, 'feature');
+			const main = await repo.provider.branches.getBranch(repo.path, 'main');
+			assert.ok(feature && main);
+
+			const first = await repo.provider.branches.getBranchMergedStatus(repo.path, feature, main);
+			assert.strictEqual(first.merged, true);
+			assert.strictEqual(countMergeBaseCalls(runSpy), 1, 'first call should compute');
+
+			// Same tips (as if an unrelated branch elsewhere had gained a commit) — cache hit.
+			const second = await repo.provider.branches.getBranchMergedStatus(repo.path, feature, main);
+			assert.strictEqual(second.merged, true);
+			assert.strictEqual(countMergeBaseCalls(runSpy), 1, 'repeat call with the same tips should be cached');
+
+			// Advance main's tip — new key, so it recomputes. The test harness bypasses GitLens's
+			// change hooks, so force the (unrelated) branches cache to refresh and pick up the move.
+			addCommit(repo.path, 'file2.txt', 'more content', 'Third commit');
+			repo.provider.cache.clearCaches(repo.path, 'branches');
+			const mainAdvanced = await repo.provider.branches.getBranch(repo.path, 'main');
+			assert.ok(mainAdvanced && mainAdvanced.sha !== main.sha);
+
+			const third = await repo.provider.branches.getBranchMergedStatus(repo.path, feature, mainAdvanced);
+			assert.strictEqual(third.merged, true);
+			assert.strictEqual(countMergeBaseCalls(runSpy), 2, 'a tip advance should bust the cache and recompute');
+		} finally {
+			runSpy.restore();
+		}
+	});
+});
+
+suite('BranchesSubProvider — default branch caching', () => {
+	let origin: TestRepo;
+	let clone: TestRepo;
+
+	suiteSetup(() => {
+		origin = createTestRepo();
+		addCommit(origin.path, 'f.txt', 'x', 'seed');
+		clone = cloneTestRepo(origin.path);
+		// A fresh clone has `refs/remotes/origin/HEAD`; drop it so the local-only lookup starts as a miss,
+		// which is the state that used to get cached forever.
+		execFileSync('git', ['remote', 'set-head', 'origin', '--delete'], { cwd: clone.path, stdio: 'pipe' });
+	});
+
+	suiteTeardown(() => {
+		clone.cleanup();
+		origin.cleanup();
+	});
+
+	test('a local miss is cached, so repeated lookups spawn once', async () => {
+		// `symbolic-ref` on an absent `refs/remotes/<remote>/HEAD` exits FATAL, not empty, and matches no
+		// `GitWarnings` entry — so it reaches the factory's catch. That is still an answer, and the common
+		// one; invalidating it there meant every caller re-probed and the cache bought nothing. The sibling
+		// test can't catch that: it only asserts a later networked lookup sees a newly created symref.
+		const spy = sinon.spy(clone.provider.git, 'run');
+		try {
+			const first = await clone.provider.branches.getDefaultBranchName(clone.path, 'origin', { local: true });
+			const second = await clone.provider.branches.getDefaultBranchName(clone.path, 'origin', { local: true });
+
+			assert.strictEqual(first, undefined);
+			assert.strictEqual(second, undefined);
+
+			const spawns = spy
+				.getCalls()
+				.filter(c => c.args.includes('symbolic-ref') && c.args.includes(`refs/remotes/origin/HEAD`)).length;
+			assert.strictEqual(spawns, 1, 'the cached miss must not re-spawn `symbolic-ref`');
+		} finally {
+			spy.restore();
+		}
+	});
+
+	test('a cached local miss does not survive the networked path creating the symref', async () => {
+		const local = await clone.provider.branches.getDefaultBranchName(clone.path, 'origin', { local: true });
+		assert.strictEqual(local, undefined, 'no local symref yet, so the local-only lookup must miss');
+
+		// The networked lookup runs `git remote set-head -a`, which creates the symref the local variant
+		// was told didn't exist. Without an explicit eviction that miss stays cached — and a consumer of
+		// this package that never wires up a file watcher has nothing else to repair it.
+		const networked = await clone.provider.branches.getDefaultBranchName(clone.path, 'origin');
+		assert.ok(networked, 'the networked lookup should resolve a default branch');
+
+		const after = await clone.provider.branches.getDefaultBranchName(clone.path, 'origin', { local: true });
+		assert.strictEqual(after, networked, 'the local lookup must now see the symref the networked path created');
+	});
+});
+
+suite('BranchesSubProvider.setRemoteHeadIfMissing — never prompts', () => {
+	let server: Server;
+	let dir: string;
+	let marker: string;
+	let repo: TestRepo;
+
+	suiteSetup(async () => {
+		// Challenges every request, so git has to ask for credentials to get any further.
+		server = createServer((_req, res) => {
+			res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="x"' });
+			res.end();
+		});
+		await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+
+		dir = mkdtempSync(join(tmpdir(), 'gitlens-askpass-'));
+		marker = join(dir, 'prompted');
+		const script = join(dir, 'askpass.sh');
+		writeFileSync(script, `#!/bin/sh\necho prompted > "${marker}"\necho secret\n`, { mode: 0o755 });
+
+		repo = createTestRepo({
+			gitOptions: {
+				env: {
+					GIT_ASKPASS: script,
+					// Keep a developer's credential helpers and askpass config out of the way.
+					GIT_CONFIG_GLOBAL: process.platform === 'win32' ? 'NUL' : '/dev/null',
+					GIT_CONFIG_NOSYSTEM: '1',
+				},
+			},
+		});
+		const { port } = server.address() as AddressInfo;
+		execFileSync('git', ['remote', 'add', 'origin', `http://127.0.0.1:${port}/repo.git`], {
+			cwd: repo.path,
+			stdio: 'pipe',
+		});
+	});
+
+	suiteTeardown(async () => {
+		repo.cleanup();
+		await new Promise<void>(resolve => {
+			server.close(() => resolve());
+			server.closeAllConnections();
+		});
+		rmSync(dir, { recursive: true, force: true });
+	});
+
+	setup(() => {
+		rmSync(marker, { force: true });
+	});
+
+	// Runs first on purpose: a failed lookup must not be cached, or the control below would be served its
+	// answer instead of prompting.
+	test('cannot prompt for credentials', async () => {
+		const start = Date.now();
+		await assert.rejects(repo.provider.branches.setRemoteHeadIfMissing(repo.path, 'origin'));
+
+		assert.ok(Date.now() - start < 8000, 'should fail fast rather than wait out the timeout');
+		assert.strictEqual(existsSync(marker), false, 'the askpass program must not be invoked');
+	});
+
+	test('control: an interactive lookup does invoke the askpass program', async () => {
+		const name = await repo.provider.branches.getDefaultBranchName(repo.path, 'origin');
+
+		assert.strictEqual(name, undefined);
+		assert.strictEqual(existsSync(marker), true, 'the askpass program should have been invoked');
+	});
+});
+
+suite('BranchesSubProvider — partial batch delete', () => {
+	let repo: TestRepo;
+
+	setup(() => {
+		repo = createTestRepo();
+		addCommit(repo.path, 'f.txt', 'x', 'seed');
+	});
+
+	teardown(() => {
+		repo.cleanup();
+	});
+
+	test('a branch sharing a name with a tag is not mistaken for deleted', async () => {
+		// `shared-name` is UNMERGED, so `git branch -d` refuses it while deleting `doomed` — that partial
+		// failure is what runs the survivor probe, and `shared-name` must be in the probed set for the
+		// collision to matter. `%(refname:short)` disambiguates it as `heads/shared-name`, which wouldn't
+		// match the requested name and would read a live branch as deleted.
+		createBranch(repo.path, 'doomed');
+		createBranch(repo.path, 'shared-name', { checkout: true });
+		addCommit(repo.path, 'u.txt', 'y', 'unmerged');
+		execFileSync('git', ['checkout', 'main'], { cwd: repo.path, stdio: 'pipe' });
+		execFileSync('git', ['tag', 'shared-name'], { cwd: repo.path, stdio: 'pipe' });
+
+		await repo.provider.config.setGkConfig(repo.path, 'branch.shared-name.gk-merge-base', 'origin/keep-me');
+		await repo.provider.config.setGkConfig(repo.path, 'branch.shared-name.gk-disposition', 'starred');
+
+		await assert.rejects(repo.provider.branches.deleteLocalBranch(repo.path, ['doomed', 'shared-name']));
+
+		assert.strictEqual(
+			await repo.provider.config.getGkConfig(repo.path, 'branch.shared-name.gk-merge-base'),
+			'origin/keep-me',
+			'a live branch colliding with a tag must keep its metadata',
+		);
+		assert.strictEqual(
+			await repo.provider.config.getGkConfig(repo.path, 'branch.shared-name.gk-disposition'),
+			'starred',
+			'and its user-owned values',
+		);
+	});
+
+	test('a failed survivor probe deletes nothing', async () => {
+		createBranch(repo.path, 'survivor', { checkout: true });
+		addCommit(repo.path, 'u2.txt', 'y', 'unmerged');
+		execFileSync('git', ['checkout', 'main'], { cwd: repo.path, stdio: 'pipe' });
+		await repo.provider.config.setGkConfig(repo.path, 'branch.survivor.gk-merge-base', 'origin/keep-me');
+
+		// The probe must RESOLVE a failure (what `errors: 'ignore'` actually does) rather than reject —
+		// a rejection is already caught. An empty stdout is indistinguishable from "nothing survived",
+		// which would wipe every probed name.
+		//
+		// Stub the failure with NO exit code, which is what a spawn failure or queue rejection actually
+		// produces — an `exitCode: 1` stub would exercise a git-ran-and-said-no result instead, which the
+		// exit-code half of the guard already covers on its own.
+		const real = repo.provider.git.run.bind(repo.provider.git);
+		const stub = sinon
+			.stub(repo.provider.git, 'run')
+			.callsFake(async (options: GitRunOptions, ...args: readonly (string | undefined)[]) => {
+				if (!args.includes('for-each-ref')) return real(options, ...args);
+
+				const failed: GitResult = {
+					stdout: '',
+					stderr: undefined,
+					completion: { status: 'failed', reason: 'unstarted', error: new Error('probe never ran') },
+				};
+				return failed;
+			});
+		try {
+			await assert.rejects(repo.provider.branches.deleteLocalBranch(repo.path, ['survivor']));
+		} finally {
+			stub.restore();
+		}
+
+		assert.strictEqual(
+			await repo.provider.config.getGkConfig(repo.path, 'branch.survivor.gk-merge-base'),
+			'origin/keep-me',
+			'a failed probe must not be read as "everything was deleted"',
+		);
+	});
+
+	test('cleans persisted metadata for the branches a partial delete did remove', async () => {
+		createBranch(repo.path, 'gone-1');
+		createBranch(repo.path, 'gone-2');
+		// An unmerged branch makes `git branch -d` refuse that one while still deleting the others.
+		createBranch(repo.path, 'kept', { checkout: true });
+		addCommit(repo.path, 'g.txt', 'y', 'unmerged');
+		execFileSync('git', ['checkout', 'main'], { cwd: repo.path, stdio: 'pipe' });
+
+		for (const b of ['gone-1', 'gone-2', 'kept']) {
+			await repo.provider.config.setGkConfig(repo.path, `branch.${b}.gk-merge-base`, `origin/${b}-base`);
+		}
+
+		await assert.rejects(repo.provider.branches.deleteLocalBranch(repo.path, ['gone-1', 'kept', 'gone-2']));
+
+		const read = (b: string) => repo.provider.config.getGkConfig(repo.path, `branch.${b}.gk-merge-base`);
+		assert.strictEqual(await read('gone-1'), undefined, 'a branch that was deleted must not keep metadata');
+		assert.strictEqual(await read('gone-2'), undefined, 'a branch that was deleted must not keep metadata');
+		assert.strictEqual(await read('kept'), 'origin/kept-base', 'a branch that survived must keep its metadata');
+	});
+
+	test('fires the change hooks for the branches a partial delete did remove', async () => {
+		// The success path's `heads`/cache notifications live after the `git branch -d` await, so a
+		// partial failure skips them even though branches went — leaving consumers to a filesystem
+		// watcher that never fires for a packed ref.
+		const onReset = sinon.spy();
+		const onChanged = sinon.spy();
+		const hookedRepo = createTestRepo({
+			hooks: { cache: { onReset: onReset }, repository: { onChanged: onChanged } },
+		});
+		try {
+			addCommit(hookedRepo.path, 'f.txt', 'x', 'seed');
+			createBranch(hookedRepo.path, 'gone');
+			createBranch(hookedRepo.path, 'kept', { checkout: true });
+			addCommit(hookedRepo.path, 'g.txt', 'y', 'unmerged');
+			execFileSync('git', ['checkout', 'main'], { cwd: hookedRepo.path, stdio: 'pipe' });
+
+			await assert.rejects(hookedRepo.provider.branches.deleteLocalBranch(hookedRepo.path, ['gone', 'kept']));
+
+			// Naming only the branch that went: the watcher takes a report of a named ref for the write's own echo
+			assert.deepStrictEqual(
+				onChanged.lastCall?.args,
+				[hookedRepo.path, ['config', 'heads'], ['refs/heads/gone'], { configConfinedToRefs: true }],
+				'a partial delete that removed a branch must fire the heads change, naming only that branch',
+			);
+			assert.ok(onReset.calledWith(hookedRepo.path, 'branches'), 'and reset the branches cache');
+		} finally {
+			hookedRepo.cleanup();
+		}
+	});
+
+	test('fires no change hooks when a delete removed nothing', async () => {
+		const onReset = sinon.spy();
+		const onChanged = sinon.spy();
+		const hookedRepo = createTestRepo({
+			hooks: { cache: { onReset: onReset }, repository: { onChanged: onChanged } },
+		});
+		try {
+			addCommit(hookedRepo.path, 'f.txt', 'x', 'seed');
+			createBranch(hookedRepo.path, 'kept', { checkout: true });
+			addCommit(hookedRepo.path, 'u.txt', 'y', 'unmerged');
+			execFileSync('git', ['checkout', 'main'], { cwd: hookedRepo.path, stdio: 'pipe' });
+
+			await assert.rejects(hookedRepo.provider.branches.deleteLocalBranch(hookedRepo.path, ['kept']));
+
+			assert.strictEqual(onChanged.called, false, 'nothing was deleted, so no change may be announced');
+			assert.strictEqual(onReset.called, false, 'and no cache reset');
+		} finally {
+			hookedRepo.cleanup();
+		}
+	});
+});
+
+suite('BranchesSubProvider — config-writing writes announce config', () => {
+	test('setUpstreamBranch and setConfig announce config', async () => {
+		const onChanged = sinon.spy();
+		const hookedRepo = createTestRepo({ hooks: { repository: { onChanged: onChanged } } });
+		try {
+			addCommit(hookedRepo.path, 'f.txt', 'x', 'seed');
+			execFileSync('git', ['config', 'branch.main.remote', '.'], { cwd: hookedRepo.path, stdio: 'pipe' });
+			execFileSync('git', ['config', 'branch.main.merge', 'refs/heads/main'], {
+				cwd: hookedRepo.path,
+				stdio: 'pipe',
+			});
+			onChanged.resetHistory();
+
+			await hookedRepo.provider.branches.setUpstreamBranch(hookedRepo.path, 'main', undefined);
+			// The upstream is the branch's own config section, so it names the branch and confines the change to it
+			assert.deepStrictEqual(onChanged.lastCall.args, [
+				hookedRepo.path,
+				['config', 'heads'],
+				['refs/heads/main'],
+				{ configConfinedToRefs: true },
+			]);
+
+			onChanged.resetHistory();
+			await hookedRepo.provider.config.setConfig(hookedRepo.path, 'user.name', 'Someone');
+			assert.ok(onChanged.calledWith(hookedRepo.path, ['config']));
+		} finally {
+			hookedRepo.cleanup();
+		}
+	});
+
+	test('createBranch announces config, confined to the branch, only from a remote-tracking start point; createWorktree never announces it', async () => {
+		const onChanged = sinon.spy();
+		const hookedRepo = createTestRepo({ hooks: { repository: { onChanged: onChanged } } });
+		const worktrees: string[] = [];
+		try {
+			execFileSync('git', ['update-ref', 'refs/remotes/origin/main', 'HEAD'], {
+				cwd: hookedRepo.path,
+				stdio: 'pipe',
+			});
+			const { branches } = hookedRepo.provider;
+
+			await branches.createBranch(hookedRepo.path, 'from-remote', 'origin/main');
+			assert.deepStrictEqual(onChanged.lastCall.args, [
+				hookedRepo.path,
+				['config', 'heads'],
+				['refs/heads/from-remote'],
+				{ configConfinedToRefs: true },
+			]);
+
+			await branches.createBranch(hookedRepo.path, 'from-remote-untracked', 'origin/main', { noTracking: true });
+			assert.deepStrictEqual(onChanged.lastCall.args, [
+				hookedRepo.path,
+				['heads'],
+				['refs/heads/from-remote-untracked'],
+			]);
+
+			await branches.createBranch(hookedRepo.path, 'from-local', 'main');
+			assert.deepStrictEqual(onChanged.lastCall.args, [hookedRepo.path, ['heads'], ['refs/heads/from-local']]);
+
+			const remoteWorktree = `${hookedRepo.path}-wt-remote`;
+			worktrees.push(remoteWorktree);
+			const onReset = sinon.spy(hookedRepo.provider.cache, 'evictCaches');
+			await hookedRepo.provider.worktrees.createWorktree(hookedRepo.path, remoteWorktree, {
+				createBranch: 'wt-remote',
+				commitish: 'refs/remotes/origin/main',
+			});
+			// Git may write repository-wide keys beside the tracking, so the write leaves `config` to the watcher's report
+			// of the file, and only evicts what it cached of it
+			assert.deepStrictEqual(onChanged.lastCall.args, [
+				hookedRepo.path,
+				['worktrees', 'worktreeHead', 'heads'],
+				['refs/heads/wt-remote'],
+			]);
+			assert.ok(onReset.calledWith(hookedRepo.path, 'branches', 'config', 'worktrees'));
+			onReset.restore();
+
+			const localWorktree = `${hookedRepo.path}-wt-local`;
+			worktrees.push(localWorktree);
+			await hookedRepo.provider.worktrees.createWorktree(hookedRepo.path, localWorktree, {
+				createBranch: 'wt-local',
+			});
+			assert.deepStrictEqual(onChanged.lastCall.args, [
+				hookedRepo.path,
+				['worktrees', 'worktreeHead', 'heads'],
+				['refs/heads/wt-local'],
+			]);
+		} finally {
+			hookedRepo.cleanup();
+			for (const path of worktrees) {
+				rmSync(path, { recursive: true, force: true });
+			}
+		}
+	});
+
+	test('renameBranch and deleteLocalBranch name the refs they move', async () => {
+		const onChanged = sinon.spy();
+		const hookedRepo = createTestRepo({ hooks: { repository: { onChanged: onChanged } } });
+		try {
+			createBranch(hookedRepo.path, 'old-name');
+			createBranch(hookedRepo.path, 'other');
+			const { branches } = hookedRepo.provider;
+
+			await branches.renameBranch(hookedRepo.path, 'old-name', 'new-name');
+			assert.deepStrictEqual(onChanged.lastCall.args, [
+				hookedRepo.path,
+				['config', 'heads'],
+				['refs/heads/old-name', 'refs/heads/new-name'],
+				{ configConfinedToRefs: true },
+			]);
+
+			await branches.deleteLocalBranch(hookedRepo.path, ['new-name', 'other'], { force: true });
+			assert.deepStrictEqual(onChanged.lastCall.args, [
+				hookedRepo.path,
+				['config', 'heads'],
+				['refs/heads/new-name', 'refs/heads/other'],
+				{ configConfinedToRefs: true },
+			]);
+		} finally {
+			hookedRepo.cleanup();
+		}
+	});
+});
+
+suite('BranchesSubProvider — branch identity bookkeeping (end to end)', () => {
+	let repo: TestRepo;
+
+	setup(() => {
+		repo = createTestRepo();
+		addCommit(repo.path, 'f.txt', 'x', 'seed');
+	});
+
+	teardown(() => {
+		repo.cleanup();
+	});
+
+	const setBase = (ref: string, v: string) =>
+		repo.provider.config.setGkConfig(repo.path, `branch.${ref}.gk-merge-base`, v);
+	const readBase = (ref: string) => repo.provider.config.getGkConfig(repo.path, `branch.${ref}.gk-merge-base`);
+
+	test('renameBranch carries the stored base across to the new name', async () => {
+		createBranch(repo.path, 'old-name');
+		await setBase('old-name', 'origin/its-base');
+
+		await repo.provider.branches.renameBranch(repo.path, 'old-name', 'new-name');
+
+		assert.strictEqual(await readBase('new-name'), 'origin/its-base', 'the base must follow the branch');
+		assert.strictEqual(await readBase('old-name'), undefined, 'the old name must not retain it');
+	});
+
+	test('createBranch leaves a predecessor’s metadata alone', async () => {
+		// Simulates a branch deleted outside GitLens: its persisted base is still on disk under that name.
+		// Metadata is dropped when GitLens DELETES a branch, never on creation — creation would have to guess
+		// that a reused name means a different branch, and the only signal for that guess (a `refs/heads/*`
+		// create event) also fires on ordinary commits, since git rewrites a loose ref via `<name>.lock` +
+		// rename. Guessing there destroyed a live branch's base on every commit. The accepted cost is this:
+		// a branch reusing a name deleted outside GitLens inherits the orphaned section.
+		await setBase('reborn', 'origin/DEAD-PREDECESSOR');
+
+		await repo.provider.branches.createBranch(repo.path, 'reborn', 'main');
+
+		assert.strictEqual(
+			await readBase('reborn'),
+			'origin/DEAD-PREDECESSOR',
+			'creation must not touch persisted metadata',
+		);
+	});
+
+	test('deleteLocalBranch drops the deleted branch’s stored base', async () => {
+		createBranch(repo.path, 'doomed');
+		await setBase('doomed', 'origin/doomed-base');
+
+		await repo.provider.branches.deleteLocalBranch(repo.path, 'doomed');
+
+		assert.strictEqual(await readBase('doomed'), undefined);
+	});
+
+	test('deleteLocalBranch classifies an unmerged branch as notFullyMerged', async () => {
+		// The delete wizard keys its force-delete offer off this reason — an unclassified error would
+		// surface as a generic failure instead of the "delete anyway?" prompt.
+		createBranch(repo.path, 'unmerged', { checkout: true });
+		addCommit(repo.path, 'u.txt', 'y', 'unmerged');
+		execFileSync('git', ['checkout', 'main'], { cwd: repo.path, stdio: 'pipe' });
+
+		// assert.rejects doesn't surface the rejection value, so catch it manually.
+		let ex: unknown;
+		try {
+			await repo.provider.branches.deleteLocalBranch(repo.path, 'unmerged');
+		} catch (err) {
+			ex = err;
+		}
+		assert.ok(BranchError.is(ex), 'expected a BranchError');
+		if (!BranchError.is(ex)) return;
+
+		assert.strictEqual(ex.details.reason, 'notFullyMerged');
+	});
+
+	test('deleteRemoteBranch classifies a missing remote ref as noRemoteReference', async () => {
+		// `git push -d` against a ref that doesn't exist on the remote fails with git's "unable to delete
+		// '<name>': remote ref does not exist" — that must map to an actionable reason, not 'other'.
+		const real = repo.provider.git.run.bind(repo.provider.git);
+		const stub = sinon
+			.stub(repo.provider.git, 'run')
+			.callsFake(async (options: GitRunOptions, ...args: readonly (string | undefined)[]) => {
+				if (!args.includes('-d')) return real(options, ...args);
+
+				throw new GitError(
+					new Error(
+						"error: unable to delete 'gone': remote ref does not exist\nerror: failed to push some refs to 'origin'",
+					),
+				);
+			});
+		try {
+			let ex: unknown;
+			try {
+				await repo.provider.branches.deleteRemoteBranch(repo.path, 'gone', 'origin');
+			} catch (err) {
+				ex = err;
+			}
+			assert.ok(BranchError.is(ex), 'expected a BranchError');
+			if (!BranchError.is(ex)) return;
+
+			assert.strictEqual(ex.details.reason, 'noRemoteReference');
+		} finally {
+			stub.restore();
+		}
+	});
+});
+
+suite('BranchesSubProvider.getBranch — force bypasses the cache', () => {
+	let repo: TestRepo;
+
+	setup(() => {
+		repo = createTestRepo();
+	});
+
+	teardown(() => {
+		repo.cleanup();
+	});
+
+	test('a named branch: unforced stays stale after an external move; force sees the fresh sha and stores it', async () => {
+		createBranch(repo.path, 'moved-branch');
+		const oldSha = getHeadSha(repo.path);
+
+		const warmed = await repo.provider.branches.getBranch(repo.path, 'moved-branch');
+		assert.strictEqual(warmed?.sha, oldSha);
+
+		addCommit(repo.path, 'file-force.txt', 'content', 'Move target commit');
+		const newSha = getHeadSha(repo.path);
+		// Moves the (non-current) branch's ref outside the provider.
+		execFileSync('git', ['update-ref', 'refs/heads/moved-branch', newSha], { cwd: repo.path, stdio: 'pipe' });
+
+		const stale = await repo.provider.branches.getBranch(repo.path, 'moved-branch');
+		assert.strictEqual(stale?.sha, oldSha, 'an unforced read must still answer from the cache');
+
+		const forced = await repo.provider.branches.getBranch(repo.path, 'moved-branch', { force: true });
+		assert.strictEqual(forced?.sha, newSha, 'a forced read must see the external move');
+
+		const afterForce = await repo.provider.branches.getBranch(repo.path, 'moved-branch');
+		assert.strictEqual(afterForce?.sha, newSha, 'the forced answer must be stored for later unforced reads');
+	});
+
+	test('the current branch: unforced stays stale after an external move; force sees the fresh sha and stores it', async () => {
+		const oldSha = getHeadSha(repo.path);
+
+		const warmed = await repo.provider.branches.getBranch(repo.path);
+		assert.strictEqual(warmed?.name, 'main');
+		assert.strictEqual(warmed?.sha, oldSha);
+
+		// Advances the checked-out branch outside the provider.
+		addCommit(repo.path, 'file-force-current.txt', 'content', 'Advance current branch');
+		const newSha = getHeadSha(repo.path);
+		assert.notStrictEqual(newSha, oldSha);
+
+		const stale = await repo.provider.branches.getBranch(repo.path);
+		assert.strictEqual(stale?.sha, oldSha, 'an unforced read must still answer from the cache');
+
+		const forced = await repo.provider.branches.getBranch(repo.path, undefined, { force: true });
+		assert.strictEqual(forced?.sha, newSha, 'a forced read must see the external move');
+
+		const afterForce = await repo.provider.branches.getBranch(repo.path);
+		assert.strictEqual(afterForce?.sha, newSha, 'the forced answer must be stored for later unforced reads');
+	});
+});
+
+suite('BranchesSubProvider.getBaseBranchName — reflog fallback', () => {
+	let repo: TestRepo;
+
+	suiteSetup(() => {
+		repo = createTestRepo();
+	});
+
+	suiteTeardown(async () => {
+		// `getBaseBranchName` self-writes its answer into gk-config `void` (fire-and-forget, by design —
+		// see the comment on it) — give that a turn to finish before disposing the provider under it.
+		await new Promise(resolve => setTimeout(resolve, 50));
+		repo.cleanup();
+	});
+
+	test('a branch created from an explicit start-point resolves that branch as its base', async () => {
+		createBranchAt(repo.path, 'from-branch', 'main');
+
+		const base = await repo.provider.branches.getBaseBranchName(repo.path, 'from-branch');
+		assert.strictEqual(base, 'main');
+	});
+
+	test('a branch created via `checkout -b` (from HEAD) resolves the branch HEAD moved from as its base', async () => {
+		createBranch(repo.path, 'from-checkout', { checkout: true });
+		try {
+			const base = await repo.provider.branches.getBaseBranchName(repo.path, 'from-checkout');
+			assert.strictEqual(base, 'main');
+		} finally {
+			checkout(repo.path, 'main');
+		}
+	});
+
+	test('a ref git cannot resolve has no base, and that answer is kept rather than re-read', async () => {
+		// Unborn, or deleted since it was listed: git reports a bad revision, which answers "no base"
+		// as surely as an empty reflog does
+		const reflog = sinon.spy(repo.provider.refs, 'getReflogEntries');
+		try {
+			const base = await repo.provider.branches.getBaseBranchName(repo.path, 'vanished-branch');
+			assert.strictEqual(base, undefined);
+			const reads = reflog.callCount;
+			assert.ok(reads > 0, 'sanity: the base was looked for in the reflog');
+
+			const again = await repo.provider.branches.getBaseBranchName(repo.path, 'vanished-branch');
+			assert.strictEqual(again, undefined);
+			assert.strictEqual(reflog.callCount, reads, 'a second lookup must not re-run the reflog');
+		} finally {
+			reflog.restore();
+		}
+	});
+});

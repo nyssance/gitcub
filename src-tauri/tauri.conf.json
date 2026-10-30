@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/3.0.0-alpha.3",
+  "productName": "GitCub",
+  "version": "0.1.1",
+  "identifier": "day.dreamer.gitcub",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "bun dev",
+    "beforeBuildCommand": "bun run build",
+    "beforeBundleCommand": "bun scripts/sign-bundled-git.ts"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "GitCub",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "dragDropEnabled": true,
+        "label": "main",
+        "transparent": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "macOS": {
+      "minimumSystemVersion": "26.0",
+      "entitlements": "entitlements.plist",
+      "hardenedRuntime": true
+    },
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "resources/git/": "git/"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJGNjVGNTJGOUI1NDYwRjQKUldUMFlGU2JML1ZsTDVLYUFJY2pVaVk3bTAwdWpMTzJham1wYnk0TkVQZmdOMDdRcEwzMHpwenYK",
+      "endpoints": [
+        "https://github.com/nyssance/releases/releases/download/gitcub-latest/latest.json"
+      ],
+      "requireSignedVersion": true
+    }
+  }
+}

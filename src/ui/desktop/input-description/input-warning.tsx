@@ -1,0 +1,19 @@
+// Desktop MIT port; platform imports adapted to Tauri.
+import * as React from "react"
+
+import { type IBaseInputDescriptionProps, InputDescription, InputDescriptionType } from "./input-description"
+
+/**
+ * An Warning component with app-standard styles for warnings to be used with inputs.
+ *
+ * Provide `children` elements to render as the content for the error element.
+ */
+export class InputWarning extends React.Component<React.PropsWithChildren<IBaseInputDescriptionProps>> {
+  public render() {
+    return (
+      <InputDescription inputDescriptionType={InputDescriptionType.Warning} {...this.props}>
+        {this.props.children}
+      </InputDescription>
+    )
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/desktop/desktop",
+  "commit": "bebc062caafcf818993b9f53397b976d33484231",
+  "files": {
+    "app/styles/ui/_side-by-side-diff.scss": "d75bed84f927dffb64c89ae49ac9f8addf02c232ebf614db68053a1750c50268",
+    "app/styles/_variables.scss": "28e7dfe1c5464ebd948efdbad489b58026337196efb9aa29ba2b126d193b52e8",
+    "app/styles/ui/_app.scss": "8700afd529f907bb6cf0be6bcdbb7e4b336f8091fba1100e9cc2f4a32a207680",
+    "app/styles/ui/_octicons.scss": "efc71b9651bb632717024cedc666f2508945addee178493be257d2c22d4649ce",
+    "app/styles/ui/_diff.scss": "90a8e31c0ddf5af529e2273d5d78a12702011ebad9700a7516c7c509b6e573c3"
+  },
+  "compiledReference": {
+    "application": "GitHub Desktop",
+    "version": "3.6.7",
+    "asset": "Contents/Resources/app/renderer.css",
+    "sha256": "5682d2319c280bf81d94405f5f93c821fa209fbc1f37fd4a59cbc9c9a6d9c605",
+    "scope": "Diff rules excluding the shadcn search composition, and diff theme dependencies. Extracted from the installed official application."
+  }
+}

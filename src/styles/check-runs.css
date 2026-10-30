@@ -1,0 +1,457 @@
+/* Desktop bebc062 check-runs SCSS: native CSS nesting, scoped theme aliases.
+   Steps intentionally use ReUI at the user's request. Base controls remain shadcn. */
+.desktop-ci-popover,
+#rerun-check-runs {
+  --ci-spacing: 10px;
+  --ci-spacing-half: 5px;
+  --ci-spacing-third: calc(10px / 3);
+  --ci-spacing-double: 20px;
+  --ci-border-radius: 6px;
+  --ci-font-size-md: 14px;
+  --ci-font-size-sm: 11px;
+  --ci-font-weight-semibold: 600;
+  --background-color: var(--popover);
+  --box-alt-background-color: #f6f8fa;
+  --muted-foreground: #626b75;
+  --text-secondary-color: var(--muted-foreground);
+  --base-border: 1px solid var(--border);
+  --box-border-color: var(--border);
+  --box-skeleton-background-color: var(--border);
+  --box-selected-background-color: var(--accent);
+  --box-selected-active-background-color: var(--primary);
+  --box-selected-active-text-color: var(--primary-foreground);
+  --secondary-button-hover-border-color: var(--border);
+  --list-sticky-header-top-level-z-index: 2;
+  --list-sticky-header-second-level-z-index: 1;
+}
+.desktop-ci-popover.popover-component {
+  padding: 0;
+  gap: 0;
+}
+.desktop-ci-popover {
+  &.popover-component {
+    width: 440px;
+
+    .popover-content {
+      padding: 0px;
+    }
+
+    .popover-tip-background {
+      border-right-color: var(--box-alt-background-color);
+    }
+  }
+
+  .ci-check-run-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+  }
+
+  .ci-check-run-list-header {
+    background-color: var(--box-alt-background-color);
+    border-bottom: var(--base-border);
+    display: flex;
+    font-size: var(--ci-font-size-md);
+    padding: var(--ci-spacing);
+    border-top-left-radius: var(--ci-border-radius);
+    border-top-right-radius: var(--ci-border-radius);
+
+    .ci-check-run-list-title-container {
+      flex: 1;
+      align-items: center;
+
+      .title {
+        font-weight: var(--ci-font-weight-semibold);
+        font-size: var(--ci-font-size-md);
+        margin: 0;
+
+        .failure {
+          color: var(--status-deleted);
+        }
+
+        .pending {
+          color: var(--status-modified);
+        }
+      }
+
+      .check-run-list-summary {
+        color: var(--text-secondary-color);
+        font-weight: var(--text-secondary-color);
+        font-size: var(--ci-font-size-sm);
+      }
+    }
+
+    .completeness-indicator {
+      margin-right: var(--ci-spacing);
+
+      .octicon,
+      .donut {
+        display: block;
+        margin-top: var(--ci-spacing-half);
+        margin-bottom: var(--ci-spacing-half);
+        margin-right: auto;
+        margin-left: auto;
+        width: 30px;
+        height: 30px;
+      }
+
+      .completeness-indicator-success,
+      .completeness-indicator-error {
+        background-color: var(--background-color);
+        border-radius: 50%;
+      }
+
+      .completeness-indicator-success {
+        color: var(--status-new);
+      }
+
+      .completeness-indicator-error {
+        color: var(--status-deleted);
+      }
+
+      .donut {
+        > .error,
+        > .cancelled,
+        > .action_required,
+        > .timed_out,
+        > .failure {
+          fill: var(--destructive);
+        }
+
+        > .expected,
+        > .queued,
+        > .in_progress,
+        > .waiting,
+        > .requested,
+        > .pending {
+          fill: var(--status-modified);
+        }
+
+        > .success {
+          fill: var(--status-new);
+        }
+
+        > .neutral,
+        > .stale,
+        > .skipped {
+          fill: var(--muted-foreground);
+        }
+      }
+    }
+  }
+
+  .ci-check-run-list-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-padding-top: 35px;
+  }
+
+  .loading-check-runs {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--ci-spacing);
+    padding-bottom: var(--ci-spacing-double);
+
+    .blankslate-image {
+      width: 100%;
+      min-width: auto;
+    }
+
+    .title {
+      font-weight: var(--ci-font-weight-semibold);
+    }
+
+    .call-to-action {
+      font-size: var(--ci-font-size-sm);
+    }
+  }
+}
+
+.ci-check-run-list {
+  max-height: 70vh;
+
+  :first-child {
+    &.ci-check-run-list-group {
+      :first-child {
+        &.ci-check-run-list-group-header {
+          &.condensed {
+            padding-top: 0;
+          }
+        }
+      }
+    }
+  }
+
+  .ci-check-run-list-group {
+    h2 {
+      margin: 0;
+      font-size: inherit;
+      font-weight: inherit;
+    }
+  }
+
+  .ci-check-run-list-group-header {
+    position: sticky;
+    top: 0;
+    padding: var(--ci-spacing-half) var(--ci-spacing);
+    background-color: var(--background-color);
+    border-bottom: var(--base-border);
+    filter: brightness(98%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    z-index: var(--list-sticky-header-top-level-z-index);
+
+    &.condensed {
+      font-weight: var(--ci-font-weight-semibold);
+      background-color: inherit;
+      border-bottom: none;
+      padding: var(--ci-spacing-half);
+    }
+  }
+}
+
+.ci-check-list-item {
+  display: flex;
+  width: 100%;
+  border: none;
+  border-bottom: var(--base-border);
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--background-color);
+
+  &.condensed {
+    border-bottom: none;
+    align-items: center;
+    justify-content: center;
+
+    .ci-check-status-symbol {
+      padding: var(--ci-spacing-third);
+      display: flex;
+      margin: 0;
+    }
+  }
+
+  &.sticky {
+    position: sticky;
+    background-color: var(--background-color);
+    top: 29px;
+    z-index: var(--list-sticky-header-second-level-z-index);
+
+    &:focus-visible,
+    &:hover {
+      background-color: var(--background-color);
+    }
+  }
+
+  .job-step-toggled-indicator {
+    color: var(--text-secondary-color);
+    margin-right: var(--ci-spacing-half);
+  }
+
+  .ci-check-status-symbol {
+    margin: calc(var(--ci-spacing) * 1.5) 0;
+  }
+
+  .ci-check-list-item-detail {
+    flex: 1;
+    margin: auto var(--ci-spacing);
+    overflow-x: hidden;
+  }
+
+  .ci-check-name {
+    font-weight: var(--ci-font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: inherit;
+    margin: 0;
+  }
+
+  .ci-check-description {
+    color: var(--text-secondary-color);
+    font-weight: var(--text-secondary-color);
+    font-size: var(--ci-font-size-sm);
+    line-height: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+
+    width: 250px;
+    height: 12px;
+  }
+
+  &.button-component {
+    height: 100%;
+    border-radius: unset;
+    text-align: unset;
+
+    &:focus {
+      outline-offset: 0px;
+    }
+
+    &:hover,
+    &:focus-visible,
+    &:not([aria-disabled="true"]):hover {
+      border-color: var(--box-border-color);
+      background: var(--box-selected-background-color);
+    }
+
+    &.selected {
+      background: var(--box-selected-background-color);
+
+      &:focus {
+        color: var(--box-selected-active-text-color);
+        background: var(--box-selected-active-background-color);
+
+        .ci-check-description {
+          color: var(--box-selected-active-text-color);
+        }
+      }
+    }
+  }
+}
+
+.ci-steps-container {
+  background-color: var(--box-alt-background-color);
+  padding: var(--ci-spacing);
+  border-bottom: var(--base-border);
+
+  &.no-steps {
+    height: 150px;
+  }
+}
+
+.ci-check-run-steps-header {
+  display: flex;
+  justify-content: end;
+  border-bottom: 1px solid var(--box-skeleton-background-color);
+
+  .ci-step-summary {
+    flex-grow: 1;
+    font-weight: var(--ci-font-weight-semibold);
+    margin-bottom: 3px;
+    color: var(--text-secondary-color);
+  }
+
+  .button-component {
+    border: 1px solid var(--box-alt-background-color);
+    background: inherit;
+    height: 100%;
+    text-align: unset;
+    margin-bottom: 2px;
+
+    padding: var(--ci-spacing-half);
+    color: var(--text-secondary-color);
+
+    &:focus {
+      outline-offset: 0px;
+      border: 1px solid var(--secondary-button-hover-border-color);
+    }
+
+    &:hover,
+    &:focus-visible,
+    &:not([aria-disabled="true"]):hover {
+      border: 1px solid var(--secondary-button-hover-border-color);
+      background: var(--box-selected-background-color);
+    }
+  }
+}
+
+.ci-check-run-no-steps {
+  display: flex;
+  padding: var(--ci-spacing-double);
+  align-items: center;
+  height: 100%;
+
+  img {
+    height: 125%;
+    margin-left: var(--ci-spacing-double);
+    flex: 1;
+  }
+
+  .button-component {
+    margin-top: var(--ci-spacing);
+    display: flex;
+    align-items: center;
+  }
+}
+
+#rerun-check-runs {
+  max-width: 500px;
+
+  .dialog-content {
+    overflow: auto;
+  }
+
+  .check-run-rerun-list {
+    margin: var(--ci-spacing) 0px;
+    border: var(--base-border);
+    border-radius: var(--ci-border-radius);
+    max-height: 300px;
+    padding: var(--ci-spacing);
+    overflow: auto;
+
+    .ci-check-run-list-group-header {
+      &:not(.condensed) {
+        padding-left: 15px;
+      }
+    }
+  }
+
+  .non-re-run-info {
+    display: flex;
+
+    .octicon {
+      margin: 0px var(--ci-spacing-half);
+    }
+  }
+
+  .loading-rerun-checks {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 100px;
+
+    .blankslate-image {
+      width: 100%;
+      min-width: auto;
+    }
+
+    .title {
+      font-weight: var(--ci-font-weight-semibold);
+    }
+
+    .call-to-action {
+      font-size: var(--ci-font-size-sm);
+    }
+  }
+}
+
+/* Base UI portals have no ancestral wrapper; scope the original business selectors here. */
+.desktop-ci-popover .ci-check-list-item {
+  justify-content: initial;
+  white-space: normal;
+  padding: 0 10px;
+}
+.desktop-ci-popover .ci-check-run-job-steps-list {
+  gap: 0;
+}
+.desktop-ci-popover .ci-check-run-job-step {
+  width: 100%;
+  scroll-margin-top: 72px;
+}
+
+.dark .desktop-ci-popover,
+.dark #rerun-check-runs {
+  --muted-foreground: #959da5;
+  --text-secondary-color: var(--muted-foreground);
+  --box-alt-background-color: #282d33;
+}
+.desktop-ci-popover .job-step-duration {
+  color: var(--text-secondary-color);
+}

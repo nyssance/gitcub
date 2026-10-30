@@ -1,0 +1,366 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss";
+@import "./scrollbars.css";
+@import "./desktop.css" layer(components);
+@import "./diff.css" layer(components);
+@import "./workflow.css" layer(components);
+@import "./check-runs.css" layer(components);
+
+@custom-variant dark (&:is(.dark *));
+
+/* shadcn 生成的组件写的是 `data-horizontal:` / `data-vertical:`，
+   而 @base-ui/react 1.8 渲染出来的属性是 `data-orientation="horizontal"` ——
+   不声明这两个变体，Separator 的 h-px 永远不生效（实测高度 0，线看不见）。
+   shadcn 原版不改，补在这里。 */
+@custom-variant data-horizontal (&:is([data-horizontal], [data-orientation="horizontal"]));
+@custom-variant data-vertical (&:is([data-vertical], [data-orientation="vertical"]));
+
+/* Shared shadcn zinc palette. Git status and diff highlighting have domain tokens. */
+
+:root {
+  --radius: 0.625rem; /* shadcn radius; Desktop diff owns its original 6px radius. */
+
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: #ffffff;
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
+
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /* Toolbars use the same semantic palette as the content. */
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  --toolbar: var(--background);
+  --toolbar-foreground: var(--foreground);
+  --toolbar-muted: var(--muted-foreground);
+  --toolbar-border: var(--border);
+  --toolbar-hover: var(--accent);
+
+  /* 文件状态标记 */
+  --status-new: #22863a;
+  --status-modified: #b08800;
+  --status-deleted: #cb2431;
+  --status-renamed: #0366d6;
+  --status-conflicted: #c24e00; /* Desktop --color-conflicted = orange-800 */
+  /* 改动列表、历史列表、提交文件列表的选中行 —— Desktop _variables.scss
+     --box-selected-* / --list-item-hover-background-color / --list-item-*-badge-* */
+  --list-selected: #ebeef1;
+  --list-selected-foreground: #24292e; /* gray-900 */
+  --list-selected-active: #0366d6; /* blue */
+  --list-selected-active-foreground: #ffffff;
+  --list-hover: #f6f8fa; /* gray-100 */
+  --list-badge: #e1e4e8; /* gray-200 */
+  --list-badge-foreground: #2f363d; /* gray-800 */
+  --list-selected-badge: #d1d5da; /* gray-300 */
+  --list-selected-badge-foreground: #24292e; /* gray-900 */
+  --list-selected-active-badge: #ffffff;
+  --list-selected-active-badge-foreground: #24292e; /* gray-900 */
+  /* 「没有本地改动」空白页的首要建议 —— Desktop _variables.scss --primary-suggested-action-* */
+  --suggested-action-primary: #f1f8ff; /* blue-000 */
+  --suggested-action-primary-border: #c8e1ff; /* blue-200 */
+  --suggested-action-icon: #2188ff; /* blue-400 */
+  /* 蓝底上的次级文字：Desktop 的 gray-500 只有 4.4:1，取 gray-600 过 4.5:1 的对比度门槛 */
+  --suggested-action-primary-muted: #586069;
+  /* 提交警告与「筛选藏起了待提交文件」提示 —— Desktop _variables.scss */
+  --commit-warning-error: #cb2431; /* red-600 */
+  --commit-warning-warning: #b08800; /* yellow-800 */
+  --commit-warning-information: #2188ff; /* blue-400 */
+  --file-warning-background: #fff5b1; /* yellow-100 */
+  --file-warning-foreground: #b08800; /* darken(yellow-700, 10%) */
+  --file-warning-border: rgba(219, 171, 9, 0.4); /* rgba(yellow-700, 0.4) */
+
+  /* diff —— 取值全部来自 Desktop 的 _variables.scss */
+  --diff-add: #eaffef; /* darken(green-000, 2%) */
+  --diff-add-gutter: #d5f9de; /* darken(green-100, 3%) */
+  --diff-add-inner: #acf2bd; /* 词级高亮 */
+  --diff-add-foreground: #24292e;
+  --diff-del: #ffeef0; /* red-000 */
+  --diff-del-gutter: #ffdce0; /* red-100 */
+  --diff-del-inner: #fdb8c0; /* 词级高亮 */
+  --diff-del-foreground: #24292e;
+  --diff-hunk: #f1f8ff; /* blue-000 */
+  --diff-hunk-gutter: #dbedff; /* blue-100 */
+  --diff-hunk-foreground: #586069; /* gray-600 */
+  /* 语法高亮 —— 取值来自 Desktop 的 _variables.scss */
+  --syntax-variable: #6f42c1;
+  --syntax-alt-variable: #24292e;
+  --syntax-keyword: #d73a49;
+  --syntax-atom: #005cc5;
+  --syntax-string: #032f62;
+  --syntax-qualifier: #6f42c1;
+  --syntax-type: #d73a49;
+  --syntax-comment: #6a737d; /* gray-500 */
+  --syntax-tag: #22863a;
+  --syntax-attribute: #6f42c1;
+  --syntax-link: #032f62;
+  --syntax-header: #0000ff;
+  --syntax-quote: #1a7e31;
+
+  --diff-selected: #0366d6; /* blue-400 */
+  --diff-selected-foreground: #ffffff;
+  --diff-gutter: #ffffff; /* --diff-gutter-background-color = var(--background-color) */
+  --diff-border: #e1e4e8; /* --diff-border-color = gray-200 */
+  --diff-selected-border: #005cc5; /* blue-600 */
+  --diff-empty-hunk-handle: #d1d5da; /* gray-300 */
+  --diff-line-number: #444d56; /* gray-700 */
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: #ffffff;
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+
+  --toolbar: var(--background);
+  --toolbar-foreground: var(--foreground);
+  --toolbar-muted: var(--muted-foreground);
+  --toolbar-border: var(--border);
+  --toolbar-hover: var(--accent);
+
+  --status-new: #85e89d;
+  --status-modified: #ffdf5d;
+  --status-deleted: #f97583;
+  --status-renamed: #79b8ff;
+  --status-conflicted: #f66a0a; /* Desktop dark --color-conflicted = orange */
+  --list-selected: #444d56; /* gray-700 */
+  --list-selected-foreground: #f6f8fa; /* gray-100 = --text-color */
+  --list-selected-active: #0366d6; /* blue */
+  --list-selected-active-foreground: #ffffff;
+  --list-hover: #2f363d; /* gray-800 */
+  --list-badge: #586069; /* gray-600 */
+  --list-badge-foreground: #f6f8fa; /* --text-color */
+  --list-selected-badge: #6a737d; /* gray-500 */
+  --list-selected-badge-foreground: #ffffff;
+  --list-selected-active-badge: #ffffff;
+  --list-selected-active-badge-foreground: #24292e; /* gray-900 */
+  --suggested-action-primary: #032f62; /* blue-900 */
+  --suggested-action-primary-border: #044289; /* blue-700 */
+  --suggested-action-icon: #2188ff; /* blue-400 */
+  --suggested-action-primary-muted: var(--muted-foreground);
+  --commit-warning-error: #ea4a5a; /* Desktop dark --input-icon-error-color = red-400 */
+  --commit-warning-warning: #f9c513; /* yellow-600 */
+  --commit-warning-information: #2188ff; /* blue-400 */
+  --file-warning-background: rgba(115, 92, 15, 0.4); /* rgba(yellow-900, 0.4) */
+  --file-warning-foreground: #dbab09; /* yellow-700 */
+  --file-warning-border: rgba(176, 136, 0, 0.4); /* rgba(yellow-800, 0.4) */
+
+  --diff-add: #1b2a20;
+  --diff-add-gutter: #223a2a;
+  --diff-add-inner: #2f5d3c;
+  --diff-add-foreground: #f6f8fa;
+  --diff-del: #2b1b1e;
+  --diff-del-gutter: #3d2226;
+  --diff-del-inner: #6b2b33;
+  --diff-del-foreground: #f6f8fa;
+  --diff-hunk: #1c2733;
+  --diff-hunk-gutter: #22303f;
+  --diff-hunk-foreground: #959da5;
+  /* 暗色语法高亮 —— Desktop themes/_dark.scss */
+  --syntax-variable: #b392f0; /* purple-300 */
+  --syntax-alt-variable: #79b8ff; /* blue-300 */
+  --syntax-keyword: #f97583; /* red-300 */
+  --syntax-atom: #79b8ff;
+  --syntax-string: #ffab70; /* orange-300 */
+  --syntax-qualifier: #b392f0;
+  --syntax-type: #f97583;
+  --syntax-comment: #959da5; /* gray-400 */
+  --syntax-tag: #34d058; /* green-400 */
+  --syntax-attribute: #b392f0;
+  --syntax-link: #79b8ff;
+  --syntax-header: #f97583;
+  --syntax-quote: #34d058;
+
+  --diff-selected: #0366d6;
+  --diff-selected-foreground: #ffffff;
+  --diff-gutter: #1f2428; /* darken(gray-900, 3%) */
+  --diff-border: #2f363d; /* gray-800 */
+  --diff-selected-border: #005cc5;
+  --diff-empty-hunk-handle: #444d56; /* gray-700 */
+  --diff-line-number: #9da5ad;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-toolbar: var(--toolbar);
+  --color-toolbar-foreground: var(--toolbar-foreground);
+  --color-toolbar-muted: var(--toolbar-muted);
+  --color-toolbar-border: var(--toolbar-border);
+  --color-toolbar-hover: var(--toolbar-hover);
+
+  --color-status-new: var(--status-new);
+  --color-status-modified: var(--status-modified);
+  --color-status-deleted: var(--status-deleted);
+  --color-status-renamed: var(--status-renamed);
+  --color-status-conflicted: var(--status-conflicted);
+  --color-list-selected: var(--list-selected);
+  --color-list-selected-foreground: var(--list-selected-foreground);
+  --color-list-selected-active: var(--list-selected-active);
+  --color-list-selected-active-foreground: var(--list-selected-active-foreground);
+  --color-list-hover: var(--list-hover);
+  --color-list-badge: var(--list-badge);
+  --color-list-badge-foreground: var(--list-badge-foreground);
+  --color-list-selected-badge: var(--list-selected-badge);
+  --color-list-selected-badge-foreground: var(--list-selected-badge-foreground);
+  --color-list-selected-active-badge: var(--list-selected-active-badge);
+  --color-list-selected-active-badge-foreground: var(--list-selected-active-badge-foreground);
+
+  --color-diff-add: var(--diff-add);
+  --color-diff-add-gutter: var(--diff-add-gutter);
+  --color-diff-add-inner: var(--diff-add-inner);
+  --color-diff-del-inner: var(--diff-del-inner);
+  --color-diff-hunk: var(--diff-hunk);
+  --color-diff-hunk-gutter: var(--diff-hunk-gutter);
+  --color-diff-hunk-foreground: var(--diff-hunk-foreground);
+  --color-diff-add-foreground: var(--diff-add-foreground);
+  --color-diff-del: var(--diff-del);
+  --color-diff-del-gutter: var(--diff-del-gutter);
+  --color-diff-del-foreground: var(--diff-del-foreground);
+  --color-diff-selected: var(--diff-selected);
+  --color-diff-selected-foreground: var(--diff-selected-foreground);
+  --color-diff-gutter: var(--diff-gutter);
+  --color-diff-border: var(--diff-border);
+  --color-diff-line-number: var(--diff-line-number);
+
+  /* Desktop: system-ui + SFMono。中文 fallback 是额外加的——
+     不显式指定的话 Windows 上中文会掉到宋体，很难看。 */
+  --font-sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  --font-mono: SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+}
+
+/* 1:1 来自 Desktop 的 _globals.scss：
+     html, body { height:100%; width:100%; margin:0; padding:0; overflow:hidden }
+   少了 height:100% 的话整棵树没有高度约束，每一层都按内容撑开，
+   任何 flex:1 / height:100% 都失效——底下所有滚动容器都不会滚。 */
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Desktop 的挂载点是 body 的直接子元素并铺满；我们用 #root。
+   整列 flex：标题栏是不缩的第一项，内容区 flex:1 吃掉剩下的高度。
+   不能让内容区自己去算 calc(100vh - 标题栏) —— resizable 组件带内联
+   height:100%，会压过任何类名，算出来还是整屏高、整页往下溢出一个标题栏。 */
+#root,
+#desktop-app-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+html {
+  /* macOS 上绝对定位的 foldout 要靠它在窗口缩放时铺满 */
+  position: relative;
+}
+
+/* 照 alwith-u 的 index.css：html 和 body 都要透明，原生材质才透得上来
+   （只清 body 不够）。分区靠 .repository-sidebar 透明 + .repository-content
+   不透明 —— 见 desktop.css。
+   注意 GitHub Desktop 本身是 backgroundColor:'#fff' 不透明，
+   毛玻璃这条来自 alwith-u / alwith-desktop。 */
+html,
+body {
+  background: transparent;
+}
+
+/* Desktop _globals.scss body：font-size var(--font-size) = 12px（_variables.scss:85）、line-height 1.5。
+   业务区域（列表行、提交框、摘要、设置说明）继承这个值；shadcn 基础控件自带 text-sm 等尺寸，不受影响。 */
+body {
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Welcome has no repository content pane to provide an opaque surface. */
+#welcome {
+  background: var(--background);
+  color: var(--foreground);
+  isolation: isolate;
+  min-height: 0;
+  overflow: hidden;
+}

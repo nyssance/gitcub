@@ -1,0 +1,7224 @@
+{
+  "Dockerfile": null,
+  "crlf.js": {
+    "0": {
+      "0": {
+        "length": 4,
+        "token": "tok-comment"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 5,
+        "token": "tok-comment"
+      },
+      "6": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-number"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "8": {
+        "length": 2,
+        "token": "tok-string2"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 3,
+        "token": "tok-string2"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 5,
+        "token": "tok-variableName"
+      },
+      "6": {
+        "length": 4,
+        "token": "tok-comment"
+      }
+    }
+  },
+  "crlf.yaml": {
+    "0": {
+      "0": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 4,
+        "token": "tok-propertyName tok-definition"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.css": {
+    "0": {
+      "0": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 3,
+        "token": "tok-atom"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 7,
+        "token": "tok-string"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "1": {
+        "length": 4,
+        "token": "tok-className"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 7,
+        "token": "tok-literal"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "22": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "26": {
+        "length": 3,
+        "token": "tok-operator"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "31": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "45": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "47": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "2": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "4": {
+        "length": 3,
+        "token": "tok-className"
+      },
+      "7": {
+        "length": 3,
+        "token": "tok-labelName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "11": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "15": {
+        "length": 2,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 3,
+        "token": "tok-className"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "38": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "46": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "53": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "56": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "57": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "63": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "65": {
+        "length": 10,
+        "token": "tok-keyword"
+      },
+      "75": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "77": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "82": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "84": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "88": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "89": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "92": {
+        "length": 1,
+        "token": "tok-keyword"
+      },
+      "94": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "96": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "97": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "99": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "100": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "102": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 8,
+        "token": "tok-comment"
+      }
+    },
+    "6": {
+      "0": {
+        "length": 13,
+        "token": "tok-comment"
+      }
+    },
+    "7": {
+      "0": {
+        "length": 10,
+        "token": "tok-keyword"
+      },
+      "11": {
+        "length": 4,
+        "token": "tok-labelName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "18": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "44": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "47": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "56": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "65": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "67": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "74": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "77": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "80": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "82": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "84": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.htm": {
+    "0": {
+      "0": {
+        "length": 15,
+        "token": "tok-meta"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "1": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "6": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "11": {
+        "length": 4,
+        "token": "tok-string"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "3": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "10": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "18": {
+        "length": 7,
+        "token": "tok-string"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 5,
+        "token": "tok-string"
+      },
+      "26": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "28": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "33": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "5": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "6": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "13": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 4,
+        "token": "tok-literal"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "26": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "36": {
+        "length": 4,
+        "token": "tok-atom"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "7": {
+      "7": {
+        "length": 1,
+        "token": "tok-className"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "20": {
+        "length": 6,
+        "token": "tok-className"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "38": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "8": {
+      "4": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "6": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "9": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 8,
+        "token": "tok-string"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "6": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "24": {
+        "length": 8,
+        "token": "tok-string"
+      }
+    },
+    "11": {
+      "6": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "22": {
+        "length": 6,
+        "token": "tok-comment"
+      }
+    },
+    "12": {
+      "6": {
+        "length": 8,
+        "token": "tok-variableName"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "15": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "32": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 3,
+        "token": "tok-string2"
+      },
+      "40": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-string2"
+      },
+      "45": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "4": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "6": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 17,
+        "token": "tok-string"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "35": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "53": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "54": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "56": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "62": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "15": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 18,
+        "token": "tok-string"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "38": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "45": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "47": {
+        "length": 4,
+        "token": "tok-bool"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "53": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "57": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "59": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "60": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "62": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "68": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "16": {
+      "2": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "17": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "3": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "17": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 5,
+        "token": "tok-variableName"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "32": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "38": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "39": {
+        "length": 10,
+        "token": "tok-propertyName"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 3,
+        "token": "tok-atom"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "55": {
+        "length": 5,
+        "token": "tok-string"
+      },
+      "60": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "61": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "63": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "70": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "72": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "73": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "75": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "76": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "18": {
+      "4": {
+        "length": 16,
+        "token": "tok-comment"
+      }
+    },
+    "19": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "7": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "13": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "17": {
+        "length": 2,
+        "token": "tok-propertyName"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "28": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "30": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "20": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "26": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "21": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "22": {
+      "2": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "23": {
+      "0": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "2": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.html": {
+    "0": {
+      "0": {
+        "length": 15,
+        "token": "tok-meta"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "1": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "6": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "11": {
+        "length": 4,
+        "token": "tok-string"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "3": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "10": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "18": {
+        "length": 7,
+        "token": "tok-string"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 5,
+        "token": "tok-string"
+      },
+      "26": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "28": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "33": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "5": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "6": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "13": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 4,
+        "token": "tok-literal"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "26": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "36": {
+        "length": 4,
+        "token": "tok-atom"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "7": {
+      "7": {
+        "length": 1,
+        "token": "tok-className"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "20": {
+        "length": 6,
+        "token": "tok-className"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "38": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "8": {
+      "4": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "6": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "9": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 8,
+        "token": "tok-string"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "6": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "24": {
+        "length": 8,
+        "token": "tok-string"
+      }
+    },
+    "11": {
+      "6": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "22": {
+        "length": 6,
+        "token": "tok-comment"
+      }
+    },
+    "12": {
+      "6": {
+        "length": 8,
+        "token": "tok-variableName"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "15": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "32": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 3,
+        "token": "tok-string2"
+      },
+      "40": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-string2"
+      },
+      "45": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "4": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "6": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 17,
+        "token": "tok-string"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "35": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "53": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "54": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "56": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "62": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "15": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 18,
+        "token": "tok-string"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "38": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "45": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "47": {
+        "length": 4,
+        "token": "tok-bool"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "53": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "57": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "59": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "60": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "62": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "68": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "16": {
+      "2": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "17": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "3": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "17": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 5,
+        "token": "tok-variableName"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "32": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "38": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "39": {
+        "length": 10,
+        "token": "tok-propertyName"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 3,
+        "token": "tok-atom"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "55": {
+        "length": 5,
+        "token": "tok-string"
+      },
+      "60": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "61": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "63": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "70": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "72": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "73": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "75": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "76": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "18": {
+      "4": {
+        "length": 16,
+        "token": "tok-comment"
+      }
+    },
+    "19": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "7": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "13": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "17": {
+        "length": 2,
+        "token": "tok-propertyName"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "28": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "30": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "20": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "26": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "21": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "22": {
+      "2": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "23": {
+      "0": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "2": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.js": {
+    "0": {
+      "0": {
+        "length": 15,
+        "token": "tok-comment"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 8,
+        "token": "tok-variableName tok-definition"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 18,
+        "token": "tok-string"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 16,
+        "token": "tok-comment"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 20,
+        "token": "tok-comment"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "22": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "26": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "34": {
+        "length": 9,
+        "token": "tok-string"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "45": {
+        "length": 3,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "52": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "2": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-number"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "19": {
+        "length": 5,
+        "token": "tok-number"
+      }
+    },
+    "7": {
+      "2": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "6": {
+        "length": 2,
+        "token": "tok-variableName tok-definition"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "11": {
+        "length": 7,
+        "token": "tok-string2"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 3,
+        "token": "tok-variableName tok-definition"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "26": {
+        "length": 7,
+        "token": "tok-string2"
+      },
+      "33": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 0,
+        "token": "tok-string2"
+      }
+    },
+    "8": {
+      "0": {
+        "length": 5,
+        "token": "tok-string2"
+      },
+      "5": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "12": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-string2"
+      }
+    },
+    "9": {
+      "2": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 3,
+        "token": "tok-className"
+      },
+      "12": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "20": {
+        "length": 3,
+        "token": "tok-variableName"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "4": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "11": {
+        "length": 2,
+        "token": "tok-propertyName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-number"
+      }
+    },
+    "11": {
+      "4": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "21": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "26": {
+        "length": 2,
+        "token": "tok-propertyName"
+      },
+      "29": {
+        "length": 2,
+        "token": "tok-operator"
+      },
+      "32": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "12": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "2": {
+        "length": 5,
+        "token": "tok-labelName"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "22": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "31": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "33": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "39": {
+        "length": 3,
+        "token": "tok-operator"
+      },
+      "43": {
+        "length": 9,
+        "token": "tok-variableName"
+      },
+      "52": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "54": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "60": {
+        "length": 5,
+        "token": "tok-labelName"
+      },
+      "66": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "2": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "9": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 8,
+        "token": "tok-variableName"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "32": {
+        "length": 8,
+        "token": "tok-propertyName tok-definition"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "50": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "15": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.json": {
+    "0": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "1": {
+      "2": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "2": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 6,
+        "token": "tok-number"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "2": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 4,
+        "token": "tok-bool"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 5,
+        "token": "tok-bool"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "23": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "2": {
+        "length": 8,
+        "token": "tok-propertyName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "22": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.jsonc": {
+    "0": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "1": {
+      "2": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "2": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 6,
+        "token": "tok-number"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "2": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 4,
+        "token": "tok-bool"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 5,
+        "token": "tok-bool"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "23": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "2": {
+        "length": 8,
+        "token": "tok-propertyName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "22": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.jsx": {
+    "0": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 3,
+        "token": "tok-variableName tok-definition"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "22": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "26": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "30": {
+        "length": 2,
+        "token": "tok-propertyName"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "33": {
+        "length": 5,
+        "token": "tok-string"
+      },
+      "38": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "45": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "46": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "47": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "50": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "53": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "56": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "57": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "62": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "65": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "66": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "67": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "68": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "69": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "70": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "71": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "72": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "73": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "75": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "79": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "80": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "81": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "82": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "84": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "87": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.md": {
+    "0": {
+      "0": {
+        "length": 1,
+        "token": "tok-heading tok-meta"
+      },
+      "1": {
+        "length": 6,
+        "token": "tok-heading"
+      }
+    },
+    "2": {
+      "5": {
+        "length": 1,
+        "token": "tok-emphasis tok-meta"
+      },
+      "6": {
+        "length": 8,
+        "token": "tok-emphasis"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-emphasis tok-meta"
+      },
+      "17": {
+        "length": 2,
+        "token": "tok-strong tok-meta"
+      },
+      "19": {
+        "length": 6,
+        "token": "tok-strong"
+      },
+      "25": {
+        "length": 2,
+        "token": "tok-strong tok-meta"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "55": {
+        "length": 4,
+        "token": "tok-link"
+      },
+      "59": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "60": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "61": {
+        "length": 19,
+        "token": "tok-link tok-url"
+      },
+      "80": {
+        "length": 1,
+        "token": "tok-link"
+      },
+      "81": {
+        "length": 3,
+        "token": "tok-link tok-string"
+      },
+      "84": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      }
+    },
+    "6": {
+      "2": {
+        "length": 2,
+        "token": "tok-meta"
+      }
+    },
+    "8": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 16,
+        "token": "tok-comment"
+      }
+    },
+    "10": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      },
+      "3": {
+        "length": 2,
+        "token": "tok-labelName"
+      }
+    },
+    "12": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "14": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "16": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "20": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "1": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "11": {
+        "length": 7,
+        "token": "tok-string"
+      },
+      "19": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "26": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "31": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "33": {
+        "length": 3,
+        "token": "tok-atom"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "21": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "3": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "19": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "21": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "22": {
+      "0": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "2": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "28": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      }
+    },
+    "29": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "2": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-link"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      }
+    }
+  },
+  "sample.mdx": {
+    "0": {
+      "0": {
+        "length": 1,
+        "token": "tok-heading tok-meta"
+      },
+      "1": {
+        "length": 6,
+        "token": "tok-heading"
+      }
+    },
+    "2": {
+      "5": {
+        "length": 1,
+        "token": "tok-emphasis tok-meta"
+      },
+      "6": {
+        "length": 8,
+        "token": "tok-emphasis"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-emphasis tok-meta"
+      },
+      "17": {
+        "length": 2,
+        "token": "tok-strong tok-meta"
+      },
+      "19": {
+        "length": 6,
+        "token": "tok-strong"
+      },
+      "25": {
+        "length": 2,
+        "token": "tok-strong tok-meta"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "55": {
+        "length": 4,
+        "token": "tok-link"
+      },
+      "59": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "60": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "61": {
+        "length": 19,
+        "token": "tok-link tok-url"
+      },
+      "80": {
+        "length": 1,
+        "token": "tok-link"
+      },
+      "81": {
+        "length": 3,
+        "token": "tok-link tok-string"
+      },
+      "84": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      }
+    },
+    "6": {
+      "2": {
+        "length": 2,
+        "token": "tok-meta"
+      }
+    },
+    "8": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 16,
+        "token": "tok-comment"
+      }
+    },
+    "10": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      },
+      "3": {
+        "length": 2,
+        "token": "tok-labelName"
+      }
+    },
+    "12": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "14": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "16": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "20": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "1": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "11": {
+        "length": 7,
+        "token": "tok-string"
+      },
+      "19": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "26": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "31": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "33": {
+        "length": 3,
+        "token": "tok-atom"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-string"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "21": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "3": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "19": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "21": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "22": {
+      "0": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "2": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "28": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      }
+    },
+    "29": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "2": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-link"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-link tok-meta"
+      }
+    }
+  },
+  "sample.mjs": {
+    "0": {
+      "0": {
+        "length": 15,
+        "token": "tok-comment"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 8,
+        "token": "tok-variableName tok-definition"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 18,
+        "token": "tok-string"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 16,
+        "token": "tok-comment"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 20,
+        "token": "tok-comment"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "22": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "26": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "34": {
+        "length": 9,
+        "token": "tok-string"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "45": {
+        "length": 3,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "52": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "2": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-number"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "19": {
+        "length": 5,
+        "token": "tok-number"
+      }
+    },
+    "7": {
+      "2": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "6": {
+        "length": 2,
+        "token": "tok-variableName tok-definition"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "11": {
+        "length": 7,
+        "token": "tok-string2"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 3,
+        "token": "tok-variableName tok-definition"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "26": {
+        "length": 7,
+        "token": "tok-string2"
+      },
+      "33": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 0,
+        "token": "tok-string2"
+      }
+    },
+    "8": {
+      "0": {
+        "length": 5,
+        "token": "tok-string2"
+      },
+      "5": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "12": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-string2"
+      }
+    },
+    "9": {
+      "2": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 3,
+        "token": "tok-className"
+      },
+      "12": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "20": {
+        "length": 3,
+        "token": "tok-variableName"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "4": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "11": {
+        "length": 2,
+        "token": "tok-propertyName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-number"
+      }
+    },
+    "11": {
+      "4": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "21": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "26": {
+        "length": 2,
+        "token": "tok-propertyName"
+      },
+      "29": {
+        "length": 2,
+        "token": "tok-operator"
+      },
+      "32": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "12": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "2": {
+        "length": 5,
+        "token": "tok-labelName"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "22": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "31": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "33": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "39": {
+        "length": 3,
+        "token": "tok-operator"
+      },
+      "43": {
+        "length": 9,
+        "token": "tok-variableName"
+      },
+      "52": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "54": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "60": {
+        "length": 5,
+        "token": "tok-labelName"
+      },
+      "66": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "2": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "9": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 8,
+        "token": "tok-variableName"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "32": {
+        "length": 8,
+        "token": "tok-propertyName tok-definition"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "50": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "15": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.mts": {
+    "0": {
+      "0": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "21": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "28": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "38": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "48": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "58": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "9": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 4,
+        "token": "tok-className"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "23": {
+        "length": 10,
+        "token": "tok-keyword"
+      },
+      "34": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "46": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "57": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "58": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "64": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "65": {
+        "length": 8,
+        "token": "tok-propertyName"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "74": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "75": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "76": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "78": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "87": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "89": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "91": {
+        "length": 9,
+        "token": "tok-keyword"
+      },
+      "101": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "110": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "114": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "116": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "123": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "126": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "132": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "26": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "36": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "53": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "56": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "58": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "60": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "63": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "64": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "66": {
+        "length": 2,
+        "token": "tok-operator"
+      },
+      "69": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "75": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "81": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "85": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "90": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "91": {
+        "length": 5,
+        "token": "tok-string2"
+      },
+      "96": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "98": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "99": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "100": {
+        "length": 1,
+        "token": "tok-string2"
+      },
+      "101": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "103": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.py": {
+    "0": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 2,
+        "token": "tok-variableName"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "5": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "12": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "19": {
+        "length": 8,
+        "token": "tok-variableName"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "1": {
+        "length": 9,
+        "token": "tok-variableName"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "6": {
+        "length": 3,
+        "token": "tok-className"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "5": {
+      "4": {
+        "length": 12,
+        "token": "tok-string"
+      }
+    },
+    "6": {
+      "0": {
+        "length": 21,
+        "token": "tok-string"
+      }
+    },
+    "7": {
+      "4": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "7": {
+        "length": 3,
+        "token": "tok-variableName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-number"
+      }
+    },
+    "9": {
+      "4": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "10": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "14": {
+        "length": 3,
+        "token": "tok-variableName tok-definition"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "18": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "22": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "31": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "33": {
+        "length": 2,
+        "token": "tok-variableName"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "40": {
+        "length": 8,
+        "token": "tok-variableName"
+      },
+      "48": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 3,
+        "token": "tok-variableName"
+      },
+      "52": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "8": {
+        "length": 9,
+        "token": "tok-comment"
+      }
+    },
+    "11": {
+      "8": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "12": {
+        "length": 6,
+        "token": "tok-string2"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-propertyName"
+      },
+      "25": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "28": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "31": {
+        "length": 1,
+        "token": "tok-string2"
+      },
+      "33": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "35": {
+        "length": 8,
+        "token": "tok-string"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "46": {
+        "length": 8,
+        "token": "tok-string"
+      }
+    },
+    "12": {
+      "8": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "13": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "16": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "20": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "25": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "29": {
+        "length": 4,
+        "token": "tok-number"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "36": {
+        "length": 5,
+        "token": "tok-number"
+      },
+      "42": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "45": {
+        "length": 4,
+        "token": "tok-bool"
+      }
+    },
+    "13": {
+      "12": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "18": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "23": {
+        "length": 5,
+        "token": "tok-variableName"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "8": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-variableName"
+      }
+    },
+    "15": {
+      "8": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "20": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "23": {
+        "length": 3,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-variableName"
+      }
+    }
+  },
+  "sample.rs": {
+    "0": {
+      "0": {
+        "length": 14,
+        "token": "tok-comment"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "4": {
+        "length": 3,
+        "token": "tok-namespace"
+      },
+      "7": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 11,
+        "token": "tok-namespace"
+      },
+      "20": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "22": {
+        "length": 7,
+        "token": "tok-variableName tok-definition"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "1": {
+        "length": 1,
+        "token": "tok-meta tok-punctuation"
+      },
+      "2": {
+        "length": 6,
+        "token": "tok-meta tok-variableName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-meta tok-punctuation"
+      },
+      "9": {
+        "length": 5,
+        "token": "tok-meta tok-variableName"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-meta tok-punctuation"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-meta"
+      },
+      "16": {
+        "length": 5,
+        "token": "tok-meta tok-variableName"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-meta tok-punctuation"
+      },
+      "22": {
+        "length": 1,
+        "token": "tok-meta tok-punctuation"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "4": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "11": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "17": {
+        "length": 2,
+        "token": "tok-variableName2"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "24": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-propertyName"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "38": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "45": {
+        "length": 2,
+        "token": "tok-variableName2"
+      },
+      "48": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "52": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "0": {
+        "length": 15,
+        "token": "tok-comment"
+      }
+    },
+    "7": {
+      "0": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "5": {
+        "length": 2,
+        "token": "tok-variableName2"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "19": {
+        "length": 3,
+        "token": "tok-namespace"
+      },
+      "22": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 3,
+        "token": "tok-namespace"
+      },
+      "27": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "36": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "42": {
+        "length": 2,
+        "token": "tok-variableName2"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "46": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "8": {
+      "4": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "11": {
+        "length": 3,
+        "token": "tok-variableName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "21": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "28": {
+        "length": 2,
+        "token": "tok-variableName2"
+      },
+      "31": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "46": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "53": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "56": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "61": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "63": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "9": {
+      "4": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "13": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "22": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "31": {
+        "length": 6,
+        "token": "tok-macroName"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-macroName"
+      },
+      "38": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 9,
+        "token": "tok-string"
+      },
+      "48": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "50": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "55": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "56": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "58": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "63": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "67": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "69": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "12": {
+      "0": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "3": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "4": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "15": {
+        "length": 7,
+        "token": "tok-typeName"
+      },
+      "23": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "26": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "28": {
+        "length": 3,
+        "token": "tok-typeName"
+      },
+      "33": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "35": {
+        "length": 7,
+        "token": "tok-namespace"
+      },
+      "42": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 3,
+        "token": "tok-variableName"
+      },
+      "47": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "4": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "6": {
+        "length": 6,
+        "token": "tok-propertyName"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "13": {
+        "length": 5,
+        "token": "tok-number"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 6,
+        "token": "tok-number"
+      },
+      "26": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "15": {
+      "4": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "12": {
+        "length": 17,
+        "token": "tok-string2"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "16": {
+      "4": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "12": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "17": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "25": {
+        "length": 4,
+        "token": "tok-string"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "17": {
+      "4": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "12": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 4,
+        "token": "tok-number"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "31": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "33": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "41": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "45": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 7,
+        "token": "tok-macroName"
+      },
+      "55": {
+        "length": 1,
+        "token": "tok-macroName"
+      },
+      "56": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "57": {
+        "length": 13,
+        "token": "tok-string"
+      },
+      "70": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "71": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-keyword"
+      },
+      "75": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "78": {
+        "length": 11,
+        "token": "tok-macroName"
+      },
+      "89": {
+        "length": 1,
+        "token": "tok-macroName"
+      },
+      "90": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "91": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "93": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "18": {
+      "4": {
+        "length": 8,
+        "token": "tok-comment"
+      }
+    },
+    "19": {
+      "0": {
+        "length": 17,
+        "token": "tok-comment"
+      }
+    },
+    "20": {
+      "4": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "11": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "21": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.scss": {
+    "0": {
+      "0": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 3,
+        "token": "tok-atom"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 7,
+        "token": "tok-string"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "1": {
+        "length": 4,
+        "token": "tok-className"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 7,
+        "token": "tok-literal"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "22": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "26": {
+        "length": 3,
+        "token": "tok-operator"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "31": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "45": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "47": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "2": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "4": {
+        "length": 3,
+        "token": "tok-className"
+      },
+      "7": {
+        "length": 3,
+        "token": "tok-labelName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "11": {
+        "length": 4,
+        "token": "tok-propertyName"
+      },
+      "15": {
+        "length": 2,
+        "token": "tok-operator"
+      },
+      "17": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 3,
+        "token": "tok-className"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "38": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "46": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "53": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "56": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "57": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "63": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "65": {
+        "length": 10,
+        "token": "tok-keyword"
+      },
+      "75": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "77": {
+        "length": 5,
+        "token": "tok-propertyName"
+      },
+      "82": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "84": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "88": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "89": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "92": {
+        "length": 1,
+        "token": "tok-keyword"
+      },
+      "94": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "96": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "97": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "99": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "100": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "102": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 8,
+        "token": "tok-comment"
+      }
+    },
+    "6": {
+      "0": {
+        "length": 13,
+        "token": "tok-comment"
+      }
+    },
+    "7": {
+      "0": {
+        "length": 10,
+        "token": "tok-keyword"
+      },
+      "11": {
+        "length": 4,
+        "token": "tok-labelName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "18": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "44": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "47": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "54": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "56": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "65": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "67": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "74": {
+        "length": 3,
+        "token": "tok-number"
+      },
+      "77": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "80": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "82": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "84": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.ts": {
+    "0": {
+      "0": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 3,
+        "token": "tok-string"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "21": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "28": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "38": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "42": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "48": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "49": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "58": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "9": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 4,
+        "token": "tok-className"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "23": {
+        "length": 10,
+        "token": "tok-keyword"
+      },
+      "34": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "46": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "57": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "58": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "64": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "65": {
+        "length": 8,
+        "token": "tok-propertyName"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "74": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "75": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "76": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "78": {
+        "length": 8,
+        "token": "tok-typeName"
+      },
+      "87": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "89": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "91": {
+        "length": 9,
+        "token": "tok-keyword"
+      },
+      "101": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "110": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "114": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "116": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "123": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "126": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "132": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "15": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "26": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "29": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "30": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "36": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "53": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "56": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "58": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "60": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "63": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "64": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "66": {
+        "length": 2,
+        "token": "tok-operator"
+      },
+      "69": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "75": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "81": {
+        "length": 3,
+        "token": "tok-keyword"
+      },
+      "85": {
+        "length": 5,
+        "token": "tok-className"
+      },
+      "90": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "91": {
+        "length": 5,
+        "token": "tok-string2"
+      },
+      "96": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "98": {
+        "length": 1,
+        "token": "tok-variableName"
+      },
+      "99": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "100": {
+        "length": 1,
+        "token": "tok-string2"
+      },
+      "101": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "103": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.tsx": {
+    "0": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "14": {
+        "length": 2,
+        "token": "tok-variableName tok-definition"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "24": {
+        "length": 7,
+        "token": "tok-string"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 9,
+        "token": "tok-keyword"
+      },
+      "10": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "18": {
+        "length": 7,
+        "token": "tok-keyword"
+      },
+      "26": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "33": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "41": {
+        "length": 5,
+        "token": "tok-propertyName tok-definition"
+      },
+      "46": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 8,
+        "token": "tok-keyword"
+      },
+      "57": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "58": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "59": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "60": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "62": {
+        "length": 6,
+        "token": "tok-propertyName tok-definition"
+      },
+      "69": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "71": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "72": {
+        "length": 1,
+        "token": "tok-variableName tok-definition"
+      },
+      "73": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "75": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "76": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "78": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "81": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "86": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "5": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "14": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 6,
+        "token": "tok-typeName"
+      },
+      "22": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 4,
+        "token": "tok-keyword"
+      },
+      "5": {
+        "length": 4,
+        "token": "tok-typeName"
+      },
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-propertyName"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-propertyName"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "0": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "7": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "13": {
+        "length": 4,
+        "token": "tok-variableName tok-definition"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "22": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "30": {
+        "length": 2,
+        "token": "tok-propertyName tok-definition"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "34": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "37": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "44": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "46": {
+        "length": 5,
+        "token": "tok-variableName tok-definition"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "53": {
+        "length": 6,
+        "token": "tok-variableName tok-definition"
+      },
+      "60": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "61": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "63": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "66": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "7": {
+      "2": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "8": {
+        "length": 5,
+        "token": "tok-variableName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 5,
+        "token": "tok-variableName"
+      },
+      "21": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "22": {
+        "length": 1,
+        "token": "tok-number"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "28": {
+        "length": 7,
+        "token": "tok-typeName"
+      },
+      "36": {
+        "length": 2,
+        "token": "tok-keyword"
+      },
+      "39": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "41": {
+        "length": 2,
+        "token": "tok-propertyName tok-definition"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "45": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "48": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "50": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "52": {
+        "length": 9,
+        "token": "tok-typeName"
+      }
+    },
+    "8": {
+      "2": {
+        "length": 6,
+        "token": "tok-keyword"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "9": {
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "18": {
+        "length": 6,
+        "token": "tok-string"
+      },
+      "25": {
+        "length": 9,
+        "token": "tok-propertyName"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "35": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 4,
+        "token": "tok-variableName"
+      },
+      "40": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "41": {
+        "length": 1,
+        "token": "tok-propertyName"
+      },
+      "42": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "43": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 5,
+        "token": "tok-variableName"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "13": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "17": {
+        "length": 2,
+        "token": "tok-variableName tok-definition"
+      },
+      "20": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "23": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "11": {
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 3,
+        "token": "tok-propertyName"
+      },
+      "15": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "17": {
+        "length": 2,
+        "token": "tok-variableName"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "20": {
+        "length": 2,
+        "token": "tok-propertyName"
+      },
+      "22": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 7,
+        "token": "tok-propertyName"
+      },
+      "31": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "32": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "33": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "34": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "36": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "39": {
+        "length": 6,
+        "token": "tok-variableName"
+      },
+      "47": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "48": {
+        "length": 2,
+        "token": "tok-variableName"
+      },
+      "50": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "51": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "52": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "12": {
+      "10": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "11": {
+        "length": 2,
+        "token": "tok-variableName"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-operator"
+      },
+      "14": {
+        "length": 2,
+        "token": "tok-propertyName"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "18": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "25": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "27": {
+        "length": 1,
+        "token": "tok-typeName"
+      },
+      "28": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "8": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "15": {
+      "4": {
+        "length": 2,
+        "token": "tok-punctuation"
+      },
+      "6": {
+        "length": 2,
+        "token": "tok-typeName"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "16": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "17": {
+      "0": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    }
+  },
+  "sample.txt": null,
+  "sample.yaml": {
+    "0": {
+      "0": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "6": {
+        "length": 3,
+        "token": "tok-string"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 9,
+        "token": "tok-comment"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 8,
+        "token": "tok-propertyName tok-definition"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 8,
+        "token": "tok-string"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 6,
+        "token": "tok-propertyName tok-definition"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "0": {
+        "length": 4,
+        "token": "tok-propertyName tok-definition"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "7": {
+      "0": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "8": {
+      "0": {
+        "length": 4,
+        "token": "tok-propertyName tok-definition"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "9": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 7,
+        "token": "tok-labelName"
+      }
+    },
+    "11": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 7,
+        "token": "tok-labelName"
+      }
+    },
+    "12": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "0": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "0": {
+        "length": 5,
+        "token": "tok-propertyName tok-definition"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-string2"
+      }
+    },
+    "17": {
+      "0": {
+        "length": 6,
+        "token": "tok-propertyName tok-definition"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 2,
+        "token": "tok-string2"
+      }
+    },
+    "20": {
+      "0": {
+        "length": 4,
+        "token": "tok-propertyName tok-definition"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "21": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    }
+  },
+  "sample.yml": {
+    "0": {
+      "0": {
+        "length": 5,
+        "token": "tok-keyword"
+      },
+      "6": {
+        "length": 3,
+        "token": "tok-string"
+      }
+    },
+    "1": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    },
+    "2": {
+      "0": {
+        "length": 9,
+        "token": "tok-comment"
+      }
+    },
+    "3": {
+      "0": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "4": {
+      "0": {
+        "length": 8,
+        "token": "tok-propertyName tok-definition"
+      },
+      "8": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "10": {
+        "length": 8,
+        "token": "tok-string"
+      }
+    },
+    "5": {
+      "0": {
+        "length": 6,
+        "token": "tok-propertyName tok-definition"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "6": {
+      "0": {
+        "length": 4,
+        "token": "tok-propertyName tok-definition"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "7": {
+      "0": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "8": {
+      "0": {
+        "length": 4,
+        "token": "tok-propertyName tok-definition"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "9": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "10": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 7,
+        "token": "tok-labelName"
+      }
+    },
+    "11": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 7,
+        "token": "tok-labelName"
+      }
+    },
+    "12": {
+      "2": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "9": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "12": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "16": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "13": {
+      "0": {
+        "length": 3,
+        "token": "tok-propertyName tok-definition"
+      },
+      "3": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "5": {
+        "length": 5,
+        "token": "tok-typeName"
+      },
+      "11": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "13": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "14": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "17": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "19": {
+        "length": 1,
+        "token": "tok-propertyName tok-definition"
+      },
+      "20": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "24": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "14": {
+      "0": {
+        "length": 5,
+        "token": "tok-propertyName tok-definition"
+      },
+      "5": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "7": {
+        "length": 1,
+        "token": "tok-string2"
+      }
+    },
+    "17": {
+      "0": {
+        "length": 6,
+        "token": "tok-propertyName tok-definition"
+      },
+      "6": {
+        "length": 1,
+        "token": "tok-punctuation"
+      },
+      "8": {
+        "length": 2,
+        "token": "tok-string2"
+      }
+    },
+    "20": {
+      "0": {
+        "length": 4,
+        "token": "tok-propertyName tok-definition"
+      },
+      "4": {
+        "length": 1,
+        "token": "tok-punctuation"
+      }
+    },
+    "21": {
+      "0": {
+        "length": 3,
+        "token": "tok-meta"
+      }
+    }
+  }
+}

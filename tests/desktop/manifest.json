@@ -1,0 +1,2654 @@
+{
+  "repository": "https://github.com/desktop/desktop",
+  "commit": "c3a5c51ea7bccd98f0d32dd2f6db531296d8215d",
+  "note": "File inventory, not a test coverage percentage. ported means the complete original file is connected to the executable runner; pending/partial/stale fail the completeness gate. Execution results and platform limits are recorded separately.",
+  "files": {
+    "app/test/e2e/app-launch.e2e.ts": {
+      "sha256": "f87b3317b19b77ecac2a41af90e73df8ce2bb744c0ff333f5f24857b11016691",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/e2e/app-launch-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged; Playwright/Electron transport replaced with Hasgard against the real production frontend and Tauri app in an isolated data directory. Tauri update manifest replaces Squirrel feed. All 10 original E2E cases execute against the packaged app. Suspended downloads do not validate installation success."
+      }
+    },
+    "app/test/unit/account-token-lifecycle-test.ts": {
+      "sha256": "5cbb3739fdfec775554a00a0b8e30e18ec6cb1160e72e912af49f80f65f273ec",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/account-token-lifecycle-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "移除 fetchUserCopilotInfo mock；会话、令牌及凭据断言完整保留。"
+      }
+    },
+    "app/test/unit/accounts-store-test.ts": {
+      "sha256": "5dbb0e3533a1b7dd1be497a5347420644a9d4bb73df5b3fba2a49f9931456873",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/accounts-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/ahead-behind-store-test.ts": {
+      "sha256": "83db771dd86af51a2ac0e61abec9b4c7d7d16602b9a01b42ad636d8971a4c114",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ahead-behind-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/api-error-handling-test.ts": {
+      "sha256": "28a4afc02d21c1d950bc79e7740ce7160e184b178a7c0b74c285d63da2138903",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/api-error-handling-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/api-test.ts": {
+      "sha256": "0e1925a0af2ef041fcfda3e38695ba762416bc5e75527bdbed1747094f92a138",
+      "status": "partial",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/api-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite. Copilot removal: excludes getDiffChangesCommitMessage payment-error case / getEnforcedRuleDescriptions prompt-only cases respectively; no full-file compatibility claim. getHTMLURL cases (9a47fa5cf) run against the WHATWG URL global since the project removed the legacy url polyfill; the window-undefined case runs unchanged."
+      },
+      "exclusion": "Copilot-only cases intentionally removed with the feature; all remaining assertions retained."
+    },
+    "app/test/unit/app-store-test-harness-test.ts": {
+      "sha256": "d8e54c249c67b77b8f62fcf1c1459facc8ff3209a0550e7078940ac4035a4363",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/app-store-test-harness-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/authenticated-image-filter-test.ts": {
+      "sha256": "622adf1ab20e52c51617a5fa0e23feee04b63250103c4c0307b837c29dd9321d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/authenticated-image-filter-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original unchanged assertions against complete production filter/resolver/handler; Electron type contracts replaced with typed message-port transport. Headless tests exercise injected transport, not a running native WebView."
+      }
+    },
+    "app/test/unit/authenticated-image-token-handler-test.ts": {
+      "sha256": "674451672373673c8552bfd098d218a9ec176a32d30699dfcc196ebcc363bc5a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/authenticated-image-token-handler-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original unchanged assertions against complete production filter/resolver/handler; Electron type contracts replaced with typed message-port transport. Headless tests exercise injected transport, not a running native WebView."
+      }
+    },
+    "app/test/unit/authenticated-image-token-resolver-test.ts": {
+      "sha256": "67e8f29c1d9aee2b1a46d2e1eaa89ab33331387b5daedf1c959dee0c76d82a6b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/authenticated-image-token-resolver-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original unchanged assertions against complete production filter/resolver/handler; Electron type contracts replaced with typed message-port transport. Headless tests exercise injected transport, not a running native WebView."
+      }
+    },
+    "app/test/unit/branch-pruner-test.ts": {
+      "sha256": "e2e61e674fb06b60e4d37a466ed6d9d29f375936df5f349c35dce130970f4489",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/branch-pruner-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/bytes-test.ts": {
+      "sha256": "73215c75ac3ecfeb9c9f250df377c401d22158c3a44bfdbfc5c21bef30d12c8c",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/bytes-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; production TypeScript bodies unchanged, imports adapted. Browser storage from jsdom as upstream. Not Rust coverage."
+      }
+    },
+    "app/test/unit/ci-checks-test.ts": {
+      "sha256": "37d47baa35dc585bce562cd44116ec97f1858c53de7ec5d188883f3c1295665f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ci-checks-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/clone-path-safety-test.ts": {
+      "sha256": "618534a811a960b221ae7d6b1426d749cd2bfc20f7d3a74028c0d1bb725786b6",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/clone-path-safety-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/cloning-repositories-store-test.ts": {
+      "sha256": "76d4579528c29e552350f13b9d6d42bdfdb64defdf01ef55927b99d598d2f2e9",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/cloning-repositories-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/cloning-repository-test.ts": {
+      "sha256": "9b76589568b629a74a097dfdf1b3fc2005db96b8f44b9ef5214b8af958f2ddb6",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/cloning-repository-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/commit-identity-test.ts": {
+      "sha256": "e4b7e942f3b7351af694fd26ea6988d4bc3e1af96cfdc73e9b1c4f1cdfab44d9",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/commit-identity-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/copilot-app-test.ts": {
+      "sha256": "07c102133d45acee1ff5dd30d32a502b2d2be1f788f484ddb17eb7b8528abefa",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-app-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-byok-test.ts": {
+      "sha256": "c9a2c2b12b63fe9a9724645a970ab9285703e156a8469bfa05ebd647a371b47e",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-byok-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-commit-message-prompt-test.ts": {
+      "sha256": "807577127829b988f0a986312235326f7bee455c0ed5320181066d46a1bb1357",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-commit-message-prompt-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-commit-message-test.ts": {
+      "sha256": "902c3d96892cddc54316b14412a27f0b8d95fda45f388f4a5da3c08076eb2646",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-commit-message-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-conflict-context-test.ts": {
+      "sha256": "b387979c6edc0f0af19e6bf879678a8d101acc83e3c28ea0aea44a6853d77a67",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-context-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-conflict-resolution-error-test.ts": {
+      "sha256": "ca5a25e8cb8d813585caff6420a7614346061d3ee09fb9cda7856135300a866a",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-resolution-error-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-conflict-resolution-model-test.ts": {
+      "sha256": "f327cd4bdad7144e53bf04b9d38028e70fa83be01b5c2aa8992f5f3dbb4a4bdd",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-resolution-model-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-conflict-resolution-test.ts": {
+      "sha256": "378d7fbf3bf94f0dec4d66f83d99dfbeefed4a94e471ae6cce22b261ee7d1ec4",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-resolution-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-error-test.ts": {
+      "sha256": "145897dcc3090c88ca7af464d737c26dae5dec6c7624405796d092f1d4e7f221",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-error-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-in-memory-session-fs-provider-test.ts": {
+      "sha256": "a91606455343348bc37c5ead1877f8ef33deca2d03865c0b1ec1438dc0693246",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-in-memory-session-fs-provider-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-resolution-helpers-test.ts": {
+      "sha256": "2df5a97a8ecaab89001bf02bb949acea926065ce90758d21f14daeb51c43bd8e",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-resolution-helpers-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-sdk-auth-test.ts": {
+      "sha256": "56f0a5e9a3ff9d893568dd49a1a927269114c01d8a417fff71142d75266864f6",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/copilot-sdk-auth-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/create-branch-test.ts": {
+      "sha256": "c67818cf6d75816c96d99635040f8414a44d1fa92f6dce22ec3710411d5fbf1d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/create-branch-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/credential-sessions-test.ts": {
+      "sha256": "0baf0d6fb37c16f927ddd588e16d63a6a046eeb9b66acb53ece3a4cc663c07ab",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/credential-sessions-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/cygwin-test.ts": {
+      "sha256": "f08d3e5380749d99120022a7199d250177db604f29af44b81ed03d74c74ee130",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/cygwin-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original Cygwin assertions unchanged; Rust production launch plan forwarded to the original mocked child_process.spawn. The original /bin/sh execution validates literal metacharacter paths and missing directories."
+      }
+    },
+    "app/test/unit/database-migration-test.ts": {
+      "sha256": "f2ded2a2ee1b6f551c35817c8f18c778d1d15a4eb7e37b2ae407326b6faba836",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/database-migration-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User removed Dexie/IndexedDB on 2026-10-26; Desktop databases now use the Rust named JSON store (src-tauri/crates/store), which has no schema-version migration. Retained snapshot is provenance only; store behaviour is covered by the ported store suites."
+      },
+      "exclusion": "User removed Dexie/IndexedDB on 2026-10-26; Desktop databases now use the Rust named JSON store (src-tauri/crates/store), which has no schema-version migration. Retained snapshot is provenance only; store behaviour is covered by the ported store suites."
+    },
+    "app/test/unit/dds-converter-test.ts": {
+      "sha256": "922ee716c64c2bb9dd1a31cbc519d2c2976ae9e4efcb951bd12a49a9a6994232",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/dds-converter-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/desktop-console-transport-test.ts": {
+      "sha256": "a7943930caa7da84da8eaaff5be3fd59341e05a8b3c0df9562aa604c933b2ec3",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/desktop-console-transport-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged; Winston Writable/EventEmitter API shape forwards console error classification and daily file writes/retention to production Rust desktop_log. Original mock clock passed at the time boundary."
+      }
+    },
+    "app/test/unit/desktop-file-transport-test.ts": {
+      "sha256": "54cee6b032d13b6c3758a8259bc435cccd7df8f55b4913b498799ffd65303fb3",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/desktop-file-transport-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged; Winston Writable/EventEmitter API shape forwards console error classification and daily file writes/retention to production Rust desktop_log. Original mock clock passed at the time boundary."
+      }
+    },
+    "app/test/unit/diff-parser-test.ts": {
+      "sha256": "f3e40f731e855ee3dae2040d1cc53c213aa30aad2fd1a3fd4becbf2aacba16cd",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/diff-parser-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始测试文件逐字节保留，仅重定向导入。Rust JSON 桥调用生产模块；文本 diff 测试调用现有生产 TypeScript。测试环境适配见 tests/conformance/README.md。"
+      }
+    },
+    "app/test/unit/email-test.ts": {
+      "sha256": "0eff9ed1f167f98845efd8f21bca75f126d572a683694f886a76275e8431c053",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/email-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/endpoint-capabilities-test.ts": {
+      "sha256": "4e60c9d9987759f4aaa1b5bd2ed2e8db4a1a11fe099f8f166b1201aedf8f77a8",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/endpoint-capabilities-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/enterprise-validate-url-test.ts": {
+      "sha256": "45149c4bec4c07ba5fcebbbaf4fe38b9ca9fd4bc7622bff8e53a255f8ef2f8ff",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/enterprise-validate-url-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/enum-test.ts": {
+      "sha256": "e45cfb460ff241fcefc1a021713b74a7bde3d758bc93125f919590af078431d9",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/enum-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/fatal-error-test.ts": {
+      "sha256": "bf8b0308c02c7773b1a0a6316a916ffce7febb4bce15a208a4bcc57e8b632ed2",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/fatal-error-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/file-system-test.ts": {
+      "sha256": "943e63814744cf311a0931ae5061304ac524a3f8325be1b407c2378ad40322ce",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/file-system-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/filter-changes-logic-test.ts": {
+      "sha256": "da95235f1c194daf5be24118cf4c13824fb94eb4d302fccbf6fe814907430077",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/filter-changes-logic-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged, production TypeScript desktop-filter-changes.ts copied from Desktop with only type imports adapted. Status/diff models are actual production upstream modules. These are frontend behavior tests, not Rust coverage. Sidebar uses filter functions and hidden-commit detection; search text is applied before predicate as documented upstream."
+      }
+    },
+    "app/test/unit/find-account-test.ts": {
+      "sha256": "ae596de79918d9aa2b279a4c02049281b4ea73f9353edea78ccb0a3374fe58e3",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/find-account-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/find-forked-remotes-to-prune-test.ts": {
+      "sha256": "e0a737c077ec1fd2f9eb8d8c18dbe43e5f7a36530dc15a930bcf6bf55e0b21ea",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/find-forked-remotes-to-prune-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/find-upstream-remote-test.ts": {
+      "sha256": "77bcad49295f315339e09e0499cf75c8e97491064c8dbd0310d30b34aba8a122",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/find-upstream-remote-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/format-commit-message-test.ts": {
+      "sha256": "a79a0e542e892fc039c5e18f9fd0e5710d64fbc9f015985c120e2a97a44092b8",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/format-commit-message-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched suite against production Rust via shape-only adapter; Original suite passed."
+      }
+    },
+    "app/test/unit/format-duration-test.ts": {
+      "sha256": "b79a5fdcaa476ed2e20cbb7e7296fece38a30735aacebe62ce0f5da52c0d652a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/format-duration-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/format-number-test.ts": {
+      "sha256": "afd62af6d47a466302d1e888693691c778375e91c485adea915e3ef097922919",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/format-number-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; production TypeScript bodies unchanged, imports adapted. Browser storage from jsdom as upstream. Not Rust coverage."
+      }
+    },
+    "app/test/unit/format-test.ts": {
+      "sha256": "9074c7428b7c86fcb2d6b1602252b61c3439f3381a67c5722a59a06dc494a52f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/format-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/fuzzy-find-test.ts": {
+      "sha256": "02b5c84c27dfc407379e75fc73168ecc3e16771265d6c72d3814d43ae194856e",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/fuzzy-find-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/get-file-hash-test.ts": {
+      "sha256": "587988c64ca07b971a2791f3ad41c3161a9624efa4620cec028553d050760f28",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/get-file-hash-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged; native Rust file utilities via JSON shape adapter. Hash algorithms sha1/sha256; platform conditional cases remain platform-specific. Original suite passed on macOS; conditional Windows cases require Windows CI."
+      }
+    },
+    "app/test/unit/get-shell-env-test.ts": {
+      "sha256": "5f7f40b6f31048fc771a7f1749bf6a19780b4cef4d7a7c35808236f0b012ff78",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/get-shell-env-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test unchanged; production TypeScript shell selection, quoting and marker parser call Rust process execution with empty environment and upstream compiled printenvz C helper. Host default shell exercised; Windows shell variants require Windows CI."
+      }
+    },
+    "app/test/unit/git-config-isolation-test.ts": {
+      "sha256": "ce3bdcd29642a37e5700bfac395607147a64fe426fd4267b77a3e62e83413a1a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/git-config-isolation-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; full Desktop GitStore and cache with production Rust Git/IO and original fixture helpers. Pending execution."
+      }
+    },
+    "app/test/unit/git-info-test.ts": {
+      "sha256": "93441897056dbcd6817ba3c48152ccc3a7eec8feb9cd836cb514bab3e8db6bdb",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/git-info-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/git-store-cache-test.ts": {
+      "sha256": "a25a1a593496dee6c9a6cef8ef3bd6f9fdb3967799c1626ce11176ede5a69756",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/git-store-cache-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; full Desktop GitStore and cache with production Rust Git/IO and original fixture helpers. Pending execution."
+      }
+    },
+    "app/test/unit/git-store-test.ts": {
+      "sha256": "e2c28751a5271d81fe3e6c78106dc1d2c576d1e07c923ad380ee47fcbe328d05",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/git-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; full Desktop GitStore and cache with production Rust Git/IO and original fixture helpers. Pending execution."
+      }
+    },
+    "app/test/unit/git/add-test.ts": {
+      "sha256": "748adab7a4f8e203a1aa2db6767fadf1ad9c3080c07677a295f0dfa250f5b7be",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/add-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/apply-test.ts": {
+      "sha256": "b82bb0b28aabcf92f6b47f8d136627c5a41254a8c0436d0ab0aee9f2b8c079ad",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/apply-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/branch-test.ts": {
+      "sha256": "67874b74c95e4f5be0fa8103f1aa1928860806dbb5e4f6af02c853e59896b638",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/branch-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Rust production branch/ops/status functions; The production GitStore supplies tip/cache events through Rust Git reads; coverage is limited to the original cases. All original cases executed without skips."
+      }
+    },
+    "app/test/unit/git/checkout-test.ts": {
+      "sha256": "e1a72a3c6b2c2d5363f69cd76e1474e967cd869c8fff70bac473d4c78209bf31",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/checkout-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Rust production branch/ops/status functions; The production GitStore supplies tip/cache events through Rust Git reads; coverage is limited to the original cases. All original cases executed without skips."
+      }
+    },
+    "app/test/unit/git/cherry-pick-test.ts": {
+      "sha256": "4e8f9a2256cb9702d3318bcd3f086420f8968b4e9c7704c5d51c054ce68b1033",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/cherry-pick-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/clone-test.ts": {
+      "sha256": "943eb231cf381887684439b98ebdfd3079c6c653edfdee6ca10a5711f9aa9b84",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/clone-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/commit-test.ts": {
+      "sha256": "8f4ac1309715bee4525d702da0cce96b1743c11ddaf5a4f022803d03a21d3019",
+      "status": "ported",
+      "rust_tests": [
+        {
+          "rust": "commit_empty_repository",
+          "upstream": "can commit for empty repository",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "commit_preserves_commentary",
+          "upstream": "commit does not strip commentary by default",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "commit_allows_empty_when_requested",
+          "upstream": "creates an empty commit when allowEmpty is true",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "commit_rejects_empty_by_default",
+          "upstream": "fails to create an empty commit when allowEmpty is not set",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "commit_staged_new_file_then_deleted",
+          "upstream": "can commit when staged new file is then deleted",
+          "adaptation": "Legacy native regression covers the named scenario using real Git and filesystem results. The complete original file, including return-value assertions, is separately executed through its registered runner."
+        },
+        {
+          "rust": "commit_staged_delete_with_untracked_file",
+          "upstream": "can commit when a delete is staged and the untracked file exists",
+          "adaptation": "Legacy native regression covers the named scenario using real Git and filesystem results. The complete original file, including return-value assertions, is separately executed through its registered runner."
+        },
+        {
+          "rust": "commit_file_deleted_in_index_stays_deleted",
+          "upstream": "file is deleted in index",
+          "adaptation": "Legacy native regression covers the named scenario using real Git and filesystem results. The complete original file, including return-value assertions, is separately executed through its registered runner."
+        }
+      ],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/commit-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/config-test.ts": {
+      "sha256": "de819bbb933e169f4b79460196c8b26c28e15d4444a1e08d3a6dc4ce365f6562",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/config-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Repository/config/revert/history calls use Rust production modules. Helpers provide isolated Git config and original test-repo bytes; HOME overrides are represented by GIT_CONFIG_GLOBAL in the test child only. Platform constants and __dirname supplied by runner."
+      }
+    },
+    "app/test/unit/git/core-test.ts": {
+      "sha256": "753440d6da49dfc54d13bbca8e2fdf110f1f88e0112aa4ab97303e82b8eafa55",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/core-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/git/create-tail-stream-test.ts": {
+      "sha256": "b363fa82298f34a9619657dbcbadda30675247f9378f1ea265edd8882db4a553",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/create-tail-stream-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/git/create-terminal-stream-test.ts": {
+      "sha256": "b985ef9182ff9b6890a961cc8c845162cf9b65404c1dc707d3e4d792fdcb289b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/create-terminal-stream-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/git/credential-test.ts": {
+      "sha256": "6b048f4b383bde201c946fa8eb594e9d9b163b4328409209a13749f3af25fef9",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/credential-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/git/description-test.ts": {
+      "sha256": "267820570228ca858c43af7c826345fde0a117b6f8591f5e85418bf0d24ab7c1",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/description-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/diff-check-test.ts": {
+      "sha256": "8f93fef85c5beee9f9a29f3becfe725b594fe002eaa9ddb7eabcca7493e5e628",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/diff-check-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Rust production branch/ops/status functions; The production GitStore supplies tip/cache events through Rust Git reads; coverage is limited to the original cases. All original cases executed without skips."
+      }
+    },
+    "app/test/unit/git/diff-resolution-test.ts": {
+      "sha256": "6e699f09aab525b6d286962593fc57bcaec552eb6c5be5f77c48b0c08ddec2ca",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/diff-resolution-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/diff-stage-test.ts": {
+      "sha256": "aaa95c17c306d0a109044f0e514f1fcac0d2f6adbf6015c64efa32179827ebd8",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/diff-stage-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/diff-test.ts": {
+      "sha256": "ad80e783fe5554a88abeff4af19e4a575ceaf77742b9c4114d0cfeecd0fbd7f5",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/diff-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/environment-test.ts": {
+      "sha256": "02ff474d3d57ebfc7862f97aabd4445159f445cd1eb49e1a227f3da2aa09cd3a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/git/environment-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/git/fetch-test.ts": {
+      "sha256": "60e5e6048cdeeff3a8e07d4030beaea132131fee489c6f822a41dd787983adf2",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/fetch-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/for-each-ref-test.ts": {
+      "sha256": "b462108ed1f9f79eee23ba733e6c1dc12d1c10574858ff98eabf919b3127d886",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/for-each-ref-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests against Rust production branch listing and tracking comparison. All original cases executed without skips."
+      }
+    },
+    "app/test/unit/git/format-patch-test.ts": {
+      "sha256": "4159f1ef490f58544074c3f5a18fd8e683b3814853b7e48ca9bcb9c8b2d46bd9",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/format-patch-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/git-attributes-test.ts": {
+      "sha256": "bfd5516b40d779b60ef514479433dd6ed3058363dc41ba1dfcfb7f062139e302",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/git-attributes-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/gitignore-test.ts": {
+      "sha256": "f5e3bf0c70bf14dffc97662af356bf58aba3e7b2d698bae1e206e225fa549be3",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/gitignore-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始测试文件逐字节保留，仅重定向导入。Rust JSON 桥调用生产模块；文本 diff 测试调用现有生产 TypeScript。测试环境适配见 tests/conformance/README.md。"
+      }
+    },
+    "app/test/unit/git/init-test.ts": {
+      "sha256": "84655835576d33bda481745271af0f128e9bbcfa360445aa5d6db0228d2e1734",
+      "status": "ported",
+      "rust_tests": [
+        {
+          "rust": "init_creates_repository",
+          "upstream": "creates a new git repository",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "init_sets_default_branch",
+          "upstream": "creates a repository with a default branch",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        }
+      ],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/init-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始测试文件逐字节保留，仅重定向导入。Rust JSON 桥调用生产模块；文本 diff 测试调用现有生产 TypeScript。测试环境适配见 tests/conformance/README.md。"
+      }
+    },
+    "app/test/unit/git/lfs-test.ts": {
+      "sha256": "39072b5d532b415351ddbf9a1e4d0cc01406abe144fb9d080c344d443ba7fe81",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/lfs-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/log-revision-exclusions-test.ts": {
+      "sha256": "e89f1f59b69f53cce81bf556256e32ec3fa7302d2b668595f7bfc947782f0c6a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/log-revision-exclusions-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests against production history::query used by comparison; preserves exclusion toggles, dash-leading refs and pagination. All original cases executed without skips."
+      }
+    },
+    "app/test/unit/git/log-test.ts": {
+      "sha256": "1ced39d12aebe0b6f3f165c01c5fedc331adc1fe94d2a974ce14fedc447f0162",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/log-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/merge-test.ts": {
+      "sha256": "ea6096ec4b03b324ad3f679612b9956e655fabdfd9965176d444e4d03bd2e654",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/merge-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Rust production branch/ops/status functions; The production GitStore supplies tip/cache events through Rust Git reads; coverage is limited to the original cases. All original cases executed without skips."
+      }
+    },
+    "app/test/unit/git/multi-operation-terminal-output-test.ts": {
+      "sha256": "29f19185992751cf064a7bfee3def97cbaf2946662f509b4a8c854fabb8a592e",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/multi-operation-terminal-output-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/git/pull/ahead-and-behind-test.ts": {
+      "sha256": "78b04498010e2e8f3f9fbdf7b35afb6a0f94deee4e59d94f947440fbcfe82697",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/pull/ahead-and-behind-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged; production net::pull respects pull.ff and pull.rebase, recursively updates submodules, and refuses leading-dash remote names. All original assertions passed."
+      }
+    },
+    "app/test/unit/git/pull/only-ahead-test.ts": {
+      "sha256": "31faba46d73805bb886652b153e983f9ff31b76d866ed75f3acb74d8591c29e6",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/pull/only-ahead-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged; production net::pull respects pull.ff and pull.rebase, recursively updates submodules, and refuses leading-dash remote names. All original assertions passed."
+      }
+    },
+    "app/test/unit/git/pull/only-behind-test.ts": {
+      "sha256": "003ec764e1ed4852ac09319c52e1fae0beb8fecbc12266ebd678b5514a358178",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/pull/only-behind-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged; production net::pull respects pull.ff and pull.rebase, recursively updates submodules, and refuses leading-dash remote names. All original assertions passed."
+      }
+    },
+    "app/test/unit/git/pull/pull-test.ts": {
+      "sha256": "bad72a4e5b60fddfcf65c3aecd6510daae865382f02f8961fc1add788a099011",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/pull/pull-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged; production net::pull respects pull.ff and pull.rebase, recursively updates submodules, and refuses leading-dash remote names. All original assertions passed."
+      }
+    },
+    "app/test/unit/git/push-terminal-chunk-test.ts": {
+      "sha256": "e0c0fa79853c4f90080f965232dfdb6bfdbf375303445f0a52ff077c7fe8db6f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/push-terminal-chunk-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/git/push-test.ts": {
+      "sha256": "4f4bc5ffc0c7d16d37b013d5153216b07842d7d368d27a77be0682c599a7a061",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/push-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/rebase-full-test.ts": {
+      "sha256": "c7aeef3bca3415dfbcf571c2ffebfc3da69117198ca055cb4a5330da076f227b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/rebase-full-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/rebase/detect-conflict-test.ts": {
+      "sha256": "04f6e27092fe7a5d87851849aaa78ee202d71069b3c554efcf1b14056be31d4d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/rebase/detect-conflict-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/rebase/progress-test.ts": {
+      "sha256": "382e59b3f631c3c9482732d51833fbccb98e36e05ae6e2be1cfd0d5c3b28a50b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/rebase/progress-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/ref-test.ts": {
+      "sha256": "2ed7dd98ad0743ba7e0ca9d0b52fb0135a9dbfa9fb0e03595839de3929465930",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ref-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Rust production branch/ops/status functions; The production GitStore supplies tip/cache events through Rust Git reads; coverage is limited to the original cases. All original cases executed without skips."
+      }
+    },
+    "app/test/unit/git/reflog-test.ts": {
+      "sha256": "bf088af3f3afb952ad1e0cf4ec03aab6f2b98724cd99cd990a24125b27222307",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/reflog-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/refreshable-credentials-test.ts": {
+      "sha256": "a66137493d9ce8ce884b840743c538be4491f071c0043ab21200961c4f5a2998",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/git/refreshable-credentials-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Unchanged original concurrent refresh test: real Git smart HTTP push via the original compiled C credential trampoline, Rust TCP service, production AccountsStore credential leases and token renewal. Electron helper build path replaced by the same C program built by Cargo."
+      }
+    },
+    "app/test/unit/git/remote-discovery-test.ts": {
+      "sha256": "f8be2ac106919612b7f7c9a2ce77f43f251f08a10d7676e94b1d93e7aac1daf2",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/remote-discovery-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始测试文件逐字节保留，仅重定向导入。Rust JSON 桥调用生产模块；文本 diff 测试调用现有生产 TypeScript。测试环境适配见 tests/conformance/README.md。"
+      }
+    },
+    "app/test/unit/git/remote-management-test.ts": {
+      "sha256": "2cc9201667edfb6e46e646dd90ffe24cb5da42541a94629c872f32dc583cbc66",
+      "status": "ported",
+      "rust_tests": [
+        {
+          "rust": "remote_add_treats_names_and_urls_literally",
+          "upstream": "adds ${name} with URL ${url} literally",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "remote_add_rejects_duplicate_without_changing_url",
+          "upstream": "rejects duplicate remote names",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "remote_set_url_treats_arguments_literally",
+          "upstream": "sets ${name} to URL ${url} literally",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "remote_set_url_rejects_missing_remote",
+          "upstream": "rejects missing remote ${name}",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "remote_remove_keeps_other_remotes",
+          "upstream": "removes ${name} without changing other remotes",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        },
+        {
+          "rust": "remote_remove_ignores_missing_remote",
+          "upstream": "ignores missing remote ${name}",
+          "adaptation": "调用 GitCub 生产 API；结果用 Git/文件系统独立检查。Rust 的返回类型不同，不宣称原版全部对象断言等价。"
+        }
+      ],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/remote-management-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始测试文件逐字节保留，仅重定向导入。Rust JSON 桥调用生产模块；文本 diff 测试调用现有生产 TypeScript。测试环境适配见 tests/conformance/README.md。"
+      }
+    },
+    "app/test/unit/git/remote-operations-test.ts": {
+      "sha256": "fa4230d9223836ce3dcd82d05839a11ee9fc93470e67c7b355f437275d79b61f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/remote-operations-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/git/remote-test.ts": {
+      "sha256": "f277f789243f0f00a23e07dc561d23da6ab5978b95bdb5494b89356800621ac4",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/remote-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/reorder-test.ts": {
+      "sha256": "0b4b0afe651bb533e67b0cbbb95d8633eb4335489472761bbecc2c94a592b1e8",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/reorder-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged, including conflict/resume and invalid targets. Calls production Rust interactive, ops, status, history. Bridge maps Rust Result plus actual conflict state to Desktop RebaseResult; fixtures use Git solely to create commits. HEAD-only getCommit/getCommits adaptation rejects other revisions."
+      }
+    },
+    "app/test/unit/git/reset-test.ts": {
+      "sha256": "5b1793c160d996d3e768409965de1309439d2bc2ad230b3e7e385498b7b373b7",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/reset-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Both original cases executed unchanged, including upstream it.skip: the harness explicitly enables resets discarded staged file; assertions are not modified."
+      }
+    },
+    "app/test/unit/git/rev-parse-test.ts": {
+      "sha256": "51c378abbd017b54b91908a29aef2cb04cb9de5d2158984a25cfd623ffb364be",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/rev-parse-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Repository/config/revert/history calls use Rust production modules. Helpers provide isolated Git config and original test-repo bytes; HOME overrides are represented by GIT_CONFIG_GLOBAL in the test child only. Platform constants and __dirname supplied by runner."
+      }
+    },
+    "app/test/unit/git/revert-test.ts": {
+      "sha256": "7cfcceed6914bdd7f95228c91293ee7c8e7fb062cce9e5657c8d2760cebee01b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/revert-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Repository/config/revert/history calls use Rust production modules. Helpers provide isolated Git config and original test-repo bytes; HOME overrides are represented by GIT_CONFIG_GLOBAL in the test child only. Platform constants and __dirname supplied by runner."
+      }
+    },
+    "app/test/unit/git/revision-consumers-test.ts": {
+      "sha256": "dc554cf280459197755c05ee2c6ce541f1c3d4ab2e8e1d10f512959419c35fe1",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/revision-consumers-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+      }
+    },
+    "app/test/unit/git/squash-test.ts": {
+      "sha256": "b84d3ccc595bd6bebc8ac6744d61af691c92683f43f74b0ba9ac5db6022d6c25",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/squash-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged, including conflict/resume and invalid targets. Calls production Rust interactive, ops, status, history. Bridge maps Rust Result plus actual conflict state to Desktop RebaseResult; fixtures use Git solely to create commits. HEAD-only getCommit/getCommits adaptation rejects other revisions."
+      }
+    },
+    "app/test/unit/git/stash-test.ts": {
+      "sha256": "6b60b83297afbd43d35c44b7336dc739dea54a227ea415b9893e11763085ad22",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stash-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/status-test.ts": {
+      "sha256": "db70b9baa6a3c21ea27399c77bc891d537ca80c5ba851b9dfd14761b4c7b124e",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/status-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/submodule-test.ts": {
+      "sha256": "881dabdd4277967ce27356bb7e42180f2ad9c58113e09cd923988ce6f0981df8",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/submodule-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/tag-test.ts": {
+      "sha256": "9f5e8dce22a31106fca4808117996801305e6dc7eaac4a9c57a8e37183e52745",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/tag-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/git/worktree-move-test.ts": {
+      "sha256": "fe047bd0d84aa03713a5c55e2d0975e07fea35a2acb718a5e31ed5d068912354",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/worktree-move-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged. Rust production ops::move_worktree_command resolves the main worktree via `git worktree list` and builds `git worktree move -- old new`; the adapter runs that command through the suite's wrapped dugite transport, so the recorded cwd is the Rust-chosen main worktree path. The production runner ops::move_worktree (same cwd/args, blocking Git runner) is covered by the mirrored Rust test 移动工作树不在被移动的目录里运行. Bun rebinds every importer of a mocked module, so the suite's own dugite import (fixtures) and the production transport (git-process.ts) are separate modules via the runner's mocks map."
+      }
+    },
+    "app/test/unit/git/worktree-test.ts": {
+      "sha256": "9239c83f8c6334ced72ef3f3f2a6cd9961d59209915942b322013d79985bb1c0",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/worktree-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
+      }
+    },
+    "app/test/unit/group-branches-test.ts": {
+      "sha256": "e3d543aa887c73e91602bc90dded8de4361ec68d58431011fa34d1f5c10cb340",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/group-branches-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/http-test.ts": {
+      "sha256": "814b3bbd14011b5ac347ddde69f69030a56eb58d3c98c2c8714d52e92dc48149",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/http-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/identifier-rules-test.ts": {
+      "sha256": "42e7f085512ed02b09d6f8fcf9eea2533c85c538f072e554751ec1799b8d5481",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/identifier-rules-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/ipc-contract-test.ts": {
+      "sha256": "4976352d5f38a7f8705d606fe5413182f91c549a8b0f2db7f9d6b3347769e3cd",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ipc-contract-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original channel union assertions are type-checked by the project TypeScript compiler before executing the four runtime tests. Full request and response signatures retained, Electron certificate/dialog data types adapted to native serializable types. Transport coverage is tracked separately; this suite only verifies the contract."
+      }
+    },
+    "app/test/unit/is-application-bundle-test.ts": {
+      "sha256": "eaf0078e35b179b9e83d32ec94adaeef7054c542f505d34735694c1c484f32b4",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/is-application-bundle-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged; native Rust file utilities via JSON shape adapter. Hash algorithms sha1/sha256; platform conditional cases remain platform-specific. Original suite passed on macOS; conditional Windows cases require Windows CI."
+      }
+    },
+    "app/test/unit/is-record-test.ts": {
+      "sha256": "8ac3980159f4f3bf1a496e0ea1b0c2be4d888318f83a9db1d80d5376d5970a1d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/is-record-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/list-selection-test.ts": {
+      "sha256": "399f57f21c0d1107a682e7af0d5ecd9dfaecacb1de3c17b6e3e1dcac585f5327",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/list-selection-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/local-storage-test.ts": {
+      "sha256": "4b02ae9ade6446ebe4072c815f51a3f25cbbd20463bbeac0be8b7f65467f460f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/local-storage-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/main-process-proxy-test.ts": {
+      "sha256": "c0e96d245a495b11da2ac52efa23b94472747fcb95e9f1814d8db142d57764ca",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/main-process-proxy-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original folder-classification and confirmation assertions unchanged against production flow. Default filesystem, Spotlight, confirmation and reveal operations use native Tauri boundaries."
+      }
+    },
+    "app/test/unit/main-process/menu-test.ts": {
+      "sha256": "432f455915be1a372553f72358556ed9c54d810e15e0da8a50d9d14a3ce1c0fb",
+      "status": "partial",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/main-process/menu-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "排除 Copilot handoff 专用断言；保留菜单快捷键与外部编辑器断言。"
+      },
+      "exclusion": "2026-10-21 用户要求移除 Copilot；仅排除 Copilot handoff/session 用例，保留所有普通菜单、编辑器与 Git 凭据断言。"
+    },
+    "app/test/unit/main-process/spell-checker-menu-test.ts": {
+      "sha256": "e66a89f0870edfe9bdcfda0865fe5d6d252dbdd0ce4e645ac75b0955cb967c0c",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/main-process/spell-checker-menu-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Exact original pure spellchecker language-option builder and original language fixture. Native spellchecking remains owned by the WebView; these four tests verify menu language decisions, not OS dictionaries."
+      }
+    },
+    "app/test/unit/mock-api-test.ts": {
+      "sha256": "7c4341e4966be90b118582970f6a3ff4fa9938324faba674faf01bcfe959feff",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/mock-api-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/model-type-guards-test.ts": {
+      "sha256": "8543e92ec2bea25815feae36dd8dd99aeb1bc6a3a5f8aba17ce01ef39f900aa6",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/model-type-guards-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/multi-commit-operation-test.ts": {
+      "sha256": "cf24baaa50ca22bd68ce2f145e8077ab54103a58e24f5f237d2db561e6b2f447",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/multi-commit-operation-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test source and assertions unchanged; production TypeScript flow with Rust native process/filesystem boundary. Platform-conditional discovery cases run for the current OS."
+      }
+    },
+    "app/test/unit/name-of-test.ts": {
+      "sha256": "bc96d564761c4ba8db28f80bdf2c67f27a655ddc6f003b4e3f47f209bd6bb4d7",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/name-of-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/native-notifications-test.ts": {
+      "sha256": "c64f1b9b1337f16fb53ee764392590b014297d1a841617faf9438ce785e26dbf",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/native-notifications-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Production notification policy and native submission wrapper over Tauri IPC; macOS manager copied unchanged from Desktop. Windows initialization assertion executes on every host against the Rust guard; actual Windows toast display requires Windows validation."
+      }
+    },
+    "app/test/unit/native-notifications-windows-test.ts": {
+      "sha256": "e98f524c8bc4f817c7929b8973b304f83d47efccdabdbfa35dc04e4791382457",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/native-notifications-windows-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Production notification policy and native submission wrapper over Tauri IPC; macOS manager copied unchanged from Desktop. Windows initialization assertion executes on every host against the Rust guard; actual Windows toast display requires Windows validation."
+      }
+    },
+    "app/test/unit/notification-permission-test.ts": {
+      "sha256": "189812250b7eefc5d868d27613782cd52084a25860c6c8c50a7761c7456ca312",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/notification-permission-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Production notification policy and native submission wrapper over Tauri IPC; macOS manager copied unchanged from Desktop. Windows initialization assertion executes on every host against the Rust guard; actual Windows toast display requires Windows validation."
+      }
+    },
+    "app/test/unit/notifications-store-test.ts": {
+      "sha256": "103177c13084f385dbfd2ff4f7ee1aa63e400dc91f11b7ac28e321a26c2e50b5",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/notifications-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; complete production Desktop store and native transport boundaries. StatsStore requires explicit telemetry transport; original collector URLs supplied only by the test constructor. Usage AST helper source path adapted to standard Tauri layout, original example JSON unchanged."
+      }
+    },
+    "app/test/unit/oauth-authentication-test.ts": {
+      "sha256": "d675ce0ac4f54c2cdb89d73c8b14dee364508ee654bfb7a150e8a5617433e30f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/oauth-authentication-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "删除 Copilot GraphQL 请求后总请求数由 5 改为 4；所有 OAuth 安全与去重断言保留。9a47fa5cf 新增的 Central 灰度用例原样执行：fetch 由原版用例 mock，GUID 经 Rust stats 存储桥读取，取消/重开时不打开过期浏览器的断言不变。"
+      }
+    },
+    "app/test/unit/oauth-token-test.ts": {
+      "sha256": "269169cb1dacf029a2f7374836c19955164843b47c6f25c740bb6ca72e964cdb",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/oauth-token-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/octicon-test.ts": {
+      "sha256": "c76a4246493ef937dfbd7116e1f89e078c9305a3ad86b03f132450a77351cd5a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/octicon-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/offset-from-test.ts": {
+      "sha256": "9de354cce6d0767d69a5557a92af7b721e22eb8f4e44d311362bd5dbb4861cae",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/offset-from-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/open-file-test.ts": {
+      "sha256": "2196b9130fe992f096da34e40cab7d01ae09b9fac4049576951b034ba636719b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/open-file-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test source and assertions unchanged; production TypeScript flow with Rust native process/filesystem boundary. Platform-conditional discovery cases run for the current OS."
+      }
+    },
+    "app/test/unit/parse-app-url-test.ts": {
+      "sha256": "91547b24df250d241d2e290013e8c21641412972b486a7c894882fbbabaa5dfa",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/parse-app-url-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/parse-files-to-be-overwritten-test.ts": {
+      "sha256": "b941d95efe74c10fd82f8bdce2be3aa0e5124b9c9b3eb4c1d9e0c5b889bbb164",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/parse-files-to-be-overwritten-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/parse-pac-string-test.ts": {
+      "sha256": "8ab1afa91dfa09995ec7abd34e7b9daa5df1ad22aaf05ea72552b79d0172235b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/parse-pac-string-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/patch-formatter-test.ts": {
+      "sha256": "5247aedd36ff43e23285d0141f40ddf570806ebbb6cc56df5677fc9f290c878f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/patch-formatter-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始测试文件逐字节保留，仅重定向导入。Rust JSON 桥调用生产模块；文本 diff 测试调用现有生产 TypeScript。测试环境适配见 tests/conformance/README.md。"
+      }
+    },
+    "app/test/unit/path-test.ts": {
+      "sha256": "3dc46a96407674761ee6248b8d8d1ace0ec06ef5f7405626f8b0d15131836592",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/path-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original tests unchanged; native Rust file utilities via JSON shape adapter. Hash algorithms sha1/sha256; platform conditional cases remain platform-specific. Original suite passed on macOS; conditional Windows cases require Windows CI."
+      }
+    },
+    "app/test/unit/path-text-test.ts": {
+      "sha256": "ea6c9793202aea875ba2a7bb4460836afd4c0d69a18932b99ee73e9ae8cf8f5d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/path-text-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/popup-manager-test.ts": {
+      "sha256": "84b1d01567ba862138f99f82109de0e2c19f7ca5b9a3b210c68f9c7223e3e48c",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/popup-manager-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test snapshot unchanged; production implementation. React 19 props/types and ESLint 10 flat config adapted; ESLint suggestion counts additionally asserted. jsdom focus-trap uses supported displayCheck=none without bypassing focus handling."
+      }
+    },
+    "app/test/unit/progress/clone-test.ts": {
+      "sha256": "73d6901e82e86fc4a4754f8a1f89a2b2f509acccab026d56e2c0ae11aaa01283",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/progress/clone-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Unchanged original assertions against production Rust progress parsers; class state crosses JSON unchanged. Original suite passed."
+      }
+    },
+    "app/test/unit/progress/git-test.ts": {
+      "sha256": "d5f38952f55c005fb3be73e599857715e3242fd9ac35be758d595d177ea70947",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/progress/git-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Unchanged original assertions against production Rust progress parsers; class state crosses JSON unchanged. Original suite passed."
+      }
+    },
+    "app/test/unit/progress/lfs-test.ts": {
+      "sha256": "12493d3e532c9a8e1b7c29f6f894471b3422f29d79042feed5293a435c60ed60",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/progress/lfs-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Unchanged original assertions against production Rust progress parsers; class state crosses JSON unchanged. Original suite passed."
+      }
+    },
+    "app/test/unit/promise-test.ts": {
+      "sha256": "a357888e28c7663abd4cb3088b7a530671b4e7f70e4f2f6cc72a6d465e000664",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/promise-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/promise-with-timeout-test.ts": {
+      "sha256": "71228d76171d864e42cb440f6f8740b782b810c943807a398a8cb1ae2da1a397",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/promise-with-timeout-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/pull-request-refs-test.ts": {
+      "sha256": "077ce51ac384d1ee8327a99f51f350c383e75b679d5918fb67e1b210e8cb6857",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/pull-request-refs-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/refresh-token-consumers-test.ts": {
+      "sha256": "7461b2f56cbc54e35892fd033fe3bb38fcca35548480e5ad7397d8a93e61dc07",
+      "status": "partial",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/refresh-token-consumers-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "排除 Copilot session 凭据套件；保留完整 Git 凭据续期套件。"
+      },
+      "exclusion": "2026-10-21 用户要求移除 Copilot；仅排除 Copilot handoff/session 用例，保留所有普通菜单、编辑器与 Git 凭据断言。"
+    },
+    "app/test/unit/release-notes-test.ts": {
+      "sha256": "e946580273cd793a6a2b65e08a52c6814589b82c244d31fd8f8389d05ac5a3cb",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/release-notes-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/remote-parsing-test.ts": {
+      "sha256": "2bd806d544e4c5c4c427eb6ede58231fd65dfd2d7e42ecd7fc92116d938a25b8",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/remote-parsing-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/remove-remote-prefix-test.ts": {
+      "sha256": "8a9feacde085fe998f93bd7835153599c7865318341df5548d9e8e41f1d6550a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/remove-remote-prefix-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/repo-rules-test.ts": {
+      "sha256": "ae31405dc3fc76b23f44a10f51f3d02e995f0aded3d62f6ba243d12d2d121f14",
+      "status": "partial",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repo-rules-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite. Copilot removal: excludes getDiffChangesCommitMessage payment-error case / getEnforcedRuleDescriptions prompt-only cases respectively; no full-file compatibility claim."
+      },
+      "exclusion": "Copilot-only cases intentionally removed with the feature; all remaining assertions retained."
+    },
+    "app/test/unit/repositories-clone-grouping-test.ts": {
+      "sha256": "aa28a3f2df2b57b0e70184c8c426022fcdc21b2a7e78397fc68b174fa3759c1a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repositories-clone-grouping-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/repositories-database-test.ts": {
+      "sha256": "8924e081948c4c0981a970b63e47de98484f9d3fbe7a5e467e6bfe544461fa72",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repositories-database-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User removed Dexie/IndexedDB on 2026-10-26; Desktop databases now use the Rust named JSON store (src-tauri/crates/store), which has no schema-version migration. Retained snapshot is provenance only; store behaviour is covered by the ported store suites."
+      },
+      "exclusion": "User removed Dexie/IndexedDB on 2026-10-26; Desktop databases now use the Rust named JSON store (src-tauri/crates/store), which has no schema-version migration. Retained snapshot is provenance only; store behaviour is covered by the ported store suites."
+    },
+    "app/test/unit/repositories-list-grouping-test.ts": {
+      "sha256": "5ce2ac1c0696cdf1210e1b8efc1eae36e662b1a4bf801a88a24c6e0d5db9acef",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repositories-list-grouping-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/repositories-store-test.ts": {
+      "sha256": "8869373ea9f62e4dadc16d78b78068ea37a17c3ec23991f9d165331a915bb6d7",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repositories-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/repository-matching-test.ts": {
+      "sha256": "5dc3e40eec8688d9fb3f64100369abde8581309900201b2e31ffe59d5e22362e",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repository-matching-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/repository-state-cache-test.ts": {
+      "sha256": "5e5f01772de66f453de967ea8c7d0ed3b61ece9c5df3d7893b615a7976f3d090",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repository-state-cache-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/repository-test.ts": {
+      "sha256": "b823837faf1e2c2fe47451ba50bf79fd2ca74e583fd98a41112812fb58325710",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/repository-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/round-test.ts": {
+      "sha256": "9723cedd5b7d8727bf0d1be21b84f13db089cba0f4b0160526cb8eca6057e37d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/round-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/sanitize-ref-name-test.ts": {
+      "sha256": "ce21ba54895e7ba5d35461240f1a9127ffa5f2a8cc511fb8edc7d0513d51d5f1",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/sanitize-ref-name-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/sanitized-repository-name-test.ts": {
+      "sha256": "5a31fa37c7441a825720b590d3a7f5101e50e6c41f77b2daa1d76e433077c575",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/sanitized-repository-name-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/script/version-test.ts": {
+      "sha256": "53672ba6f0f3c2ebdfba1b486af36c37304c47f985b5c3244488b6ee7f325225",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/script/version-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/section-list-selection-test.ts": {
+      "sha256": "80ac9d0168a3d38f1d3c6b0fe682cf38987277abfb7414b1b1ac3afdfe2cd079",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/section-list-selection-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/section-list-test.ts": {
+      "sha256": "b4fe702baca638b2acb826f82fae1c625bcfbfd8a17e7b474090d50aebfa96da",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/section-list-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/short-lived-token-rollout-test.ts": {
+      "sha256": "077ba1c7a7b5ceebd285339bee964c57e4eb23a67517272362b6452d3243f622",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/short-lived-token-rollout-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged. feature-flag → src/lib/desktop-features.ts; the suite's __DEV__/__RELEASE_CHANNEL__ reassignments are mirrored into the build-environment live bindings by the test boundary (tests/conformance/build-environment.ts); ui/lib/app-proxy getVersion → src/lib/app-version.ts (package.json version); the get-renderer-guid module mock runs through Bun mock.module. All 25 original cases execute."
+      }
+    },
+    "app/test/unit/show-notification-test.ts": {
+      "sha256": "46eefe3d79c62eb0c87f52ba8a6bbe01823a1a5e444bd9cc674c8f6a8af40402",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/show-notification-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged. Production notification policy and native submission wrapper over Tauri IPC; macOS manager copied unchanged from Desktop. Windows initialization assertion executes on every host against the Rust guard; actual Windows toast display requires Windows validation."
+      }
+    },
+    "app/test/unit/sign-in-store-test.ts": {
+      "sha256": "85d6dc284465eeeb29e6069bb52d52ae57c2c9867cf3cff5e67cf5b191c2406f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/sign-in-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/squashed-commit-description-test.ts": {
+      "sha256": "685cb2fb45b62ec3643502daea95accf7b375c9602b0251cd144f8b5ccd8016f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/squashed-commit-description-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/squirrel-error-parser-test.ts": {
+      "sha256": "0ec261081475604acea9c7693c60582c06d7dc366df065e512ee20c2b259af65",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/squirrel-error-parser-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/ssh-test.ts": {
+      "sha256": "ac9920b02779f285a52ac815de06b323dc597bc1f0c9ccc27c786e36e1e17b52",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ssh-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/stats-store-test.ts": {
+      "sha256": "9715d7d6ba81ad4d2c976151cb2470e12be99bde3eb07665792e09d1609158ce",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stats-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; complete production Desktop store and native transport boundaries. StatsStore requires explicit telemetry transport; original collector URLs supplied only by the test constructor. Usage AST helper source path adapted to standard Tauri layout, original example JSON unchanged."
+      }
+    },
+    "app/test/unit/status-parser-test.ts": {
+      "sha256": "59b282b3a4a7537e73880da8fe72eba2c744f631ed08fc3899d0f54c35256d58",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/status-parser-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/status-utils-test.ts": {
+      "sha256": "8849ac86f9e47767bb9d34592c7ff73addccdf6ba69664dafafa499675346c33",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/status-utils-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/stores/app-store-indicators-test.ts": {
+      "sha256": "4f54e8d3b88d3faee1cc0fcb6812021c18476ae67c094fb2568e35c07722747b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/app-store-indicators-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions and mocks unchanged against the production AppStore account/indicator method closure and real AccountsStore, StatsStore, CopilotStore and repository caches. React owns unrelated window/navigation workflows; this is not coverage of the entire upstream AppStore."
+      }
+    },
+    "app/test/unit/stores/app-store-token-refresh-stats-test.ts": {
+      "sha256": "622aeea4535c924e9819f562f009238327d65ff13ffe17fb44a23d669d339700",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/app-store-token-refresh-stats-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions and mocks unchanged against the production AppStore account/indicator method closure and real AccountsStore, StatsStore, CopilotStore and repository caches. React owns unrelated window/navigation workflows; this is not coverage of the entire upstream AppStore."
+      }
+    },
+    "app/test/unit/stores/copilot-store-credentials-test.ts": {
+      "sha256": "16b383879277dd3703b949529939095a0045e7b6e68d43020418316f776cccda",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/copilot-store-credentials-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/stores/copilot-store-test.ts": {
+      "sha256": "bdf542802ef86b2f2d0feb91147175268340efa8a1e973e9ec28dafd934a8ed8",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/copilot-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/stores/github-user-store-test.ts": {
+      "sha256": "585a0ee75ba45647c2c3e9b6042396e8e85710671571f6562daee9ffd1dfc838",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/github-user-store-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/stores/updates/update-changed-files-test.ts": {
+      "sha256": "a95d44b04fea5a0769dd55f0e89dc4c9e46303e426141f36fd476dc93a6038fe",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/updates/update-changed-files-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/stores/updates/update-conflict-state-test.ts": {
+      "sha256": "5202e4dd2c072b76847356a73d47f619faa49996da891cc4fb71a4d1e0bfb0a4",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/updates/update-conflict-state-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/stores/updates/update-remote-url-test.ts": {
+      "sha256": "aa7b377a11a069d0441dcd2c2806273aa66d5eb3ee2b18a5dca2fa5240cbac1b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/stores/updates/update-remote-url-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; full Desktop GitStore and cache with production Rust Git/IO and original fixture helpers. Pending execution."
+      }
+    },
+    "app/test/unit/tailer-test.ts": {
+      "sha256": "ec5577166d4fc7c5e081fc318cdffca4fe8d6db25899045a4a81913c98f53396",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/tailer-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original state machine and tailByLine unchanged. Original deterministic fs mocks run at native-file-streams boundary; production Rust notify and bounded range reads additionally verified separately. No assertions removed."
+      }
+    },
+    "app/test/unit/text-diff-expansion-test.ts": {
+      "sha256": "73efc24458d59f10c632413ad7bc90393faafbb5b871a3272e32d666d0f75410",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/text-diff-expansion-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始测试文件逐字节保留，仅重定向导入。Rust JSON 桥调用生产模块；文本 diff 测试调用现有生产 TypeScript。测试环境适配见 tests/conformance/README.md。"
+      }
+    },
+    "app/test/unit/text-token-parser-test.ts": {
+      "sha256": "57fc01d0aab33a678f1a365e91d6f8227142173a93efe7c67c67ab21e5ceffe9",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/text-token-parser-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/truncate-with-ellipsis-test.ts": {
+      "sha256": "681656e977fbfb563214dea656e0f112f1a66d592d4b5849b2c78a023a3c0bf0",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/truncate-with-ellipsis-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/ui/appearance-test.tsx": {
+      "sha256": "350a7d9c439ea3c8674ffffa51a37c9bc0fa5499ae179d6b364f3bac34d58651",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/appearance-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/aria-live-container-test.tsx": {
+      "sha256": "71a4ea3f63d7fcb08ae10758a3bfac80feeea5e348d42ab318632b46aacc0f09",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/aria-live-container-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/banner-surfaces-test.tsx": {
+      "sha256": "399cc63f678b6e0ee6f6f472bb537b126fcf78ff33f787bfc23f478ef31fa572",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/banner-surfaces-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/branch-empty-states-test.tsx": {
+      "sha256": "6400e6559f6a44ca300dec75f3558c0cdc0c11b96e9b33badc4a7201559a2215",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/branch-empty-states-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/branch-list-item-test.tsx": {
+      "sha256": "740d5231da6701f6f398b2b7d1a3088303c85bdea32cfa035317dfa6eab57534",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/branch-list-item-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/ci-status-test.tsx": {
+      "sha256": "c2e408cced3a5ae31766460280f3563f534d779f075f39362f0e6c8b8b0da6f0",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/ci-status-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/clone-repository-test.tsx": {
+      "sha256": "03edfe174cf69d1328e039971cdbb9f245861a2880c33b6cfb1dfbf2e35108bb",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/clone-repository-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original 11 assertions unchanged against full production clone dialog and Rust read_directory. React 19 batching adaptation: derive URL after initial-path commit and check stale validation paths inside functional state update. Tauri native dialogs replace Electron IPC."
+      }
+    },
+    "app/test/unit/ui/commit-message-test.tsx": {
+      "sha256": "a658f385065dd7b6686baa8ffcd5b68d01f391efd86a3fc30cb3430bfc10cb06",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/commit-message-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/ui/commit-message-warning-dialogs-test.tsx": {
+      "sha256": "166879003859a1b24678638d0aa2376713a3098e64139f8eccb525f3b10dffad",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/commit-message-warning-dialogs-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21; generation dialogs removed. Snapshot retained as provenance only."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21; generation dialogs removed. Snapshot retained as provenance only."
+    },
+    "app/test/unit/ui/component-primitives-test.tsx": {
+      "sha256": "95332cf1db3dca5a6521ae37ae23ea1d53a157a3f516512d6a30eed58617d413",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/component-primitives-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/control-primitives-test.tsx": {
+      "sha256": "a95e59e30d597ecf0277af718e12b12f22ab3d207f85ccfd3aa67c6da389eeaa",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/control-primitives-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/copilot-custom-providers-dialog-test.tsx": {
+      "sha256": "49c2280137200989a89c4e09f8caf3491b4af89f90ed77100101558c68fd0393",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/copilot-custom-providers-dialog-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/ui/copilot-preferences-test.tsx": {
+      "sha256": "c05884ca715766c2a97ad662756c51a0c49977c2ae29b2d7bc276596004b6658",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/copilot-preferences-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/ui/copy-button-test.tsx": {
+      "sha256": "d08294496947e53da61a30afa9866306f02980775321d0c4ef479863a408ae4d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/copy-button-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/delete-worktree-dialogs-test.tsx": {
+      "sha256": "914b7a928928bee05e833f34b9f81da492757e075b6a0c5aaf245e9a5a80638c",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/delete-worktree-dialogs-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/dialog-action-wrappers-test.tsx": {
+      "sha256": "261ce01c42f6a17623d681c2fc8c7e9e55fca2991d6514f7c9ec22bfda01466d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/dialog-action-wrappers-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/dialog-and-input-description-test.tsx": {
+      "sha256": "ef799b7308d484a8c804aa0aec0cf7e41430cbebf033cab69d432fe2733b129d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/dialog-and-input-description-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/dialog-composition-and-toggle-test.tsx": {
+      "sha256": "8f57a727b04aca5d8172dee56857e74b820b6d0e1e669e1702dc97d7aa12b004",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/dialog-composition-and-toggle-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/dialog-focus-test.tsx": {
+      "sha256": "bd6278c578265a697275041a2283ddd15da24f75b10b4a8232da897962db476f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/dialog-focus-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/email-attribution-warning-test.tsx": {
+      "sha256": "1cacd95c1ea47883908ea8d38cc07bdf6c9cb0598a058e6480edf21c4ce30ce1",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/email-attribution-warning-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/helper-side-effect-surfaces-test.tsx": {
+      "sha256": "4ebf0d84f23958806bd5d3ddee1c9a793a018afe1ae4357957499b7fa08787fd",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/helper-side-effect-surfaces-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions against production components and stores; React 19 types and Tauri platform imports adapted. Suites using mock.module preserve runtime module boundaries; native filesystem/IPC dependencies match original mocks."
+      }
+    },
+    "app/test/unit/ui/input-description-and-textarea-test.tsx": {
+      "sha256": "77bebe8701addd3229035f24305970af0f76cc5bb90105ed1ad40d587f2f040d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/input-description-and-textarea-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/invalidated-token-test.tsx": {
+      "sha256": "e919d6255d46fc66d978b9870aa0f763ec9a3a4457c28cbb50146fe7c09a96c2",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/invalidated-token-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/ui/issues-autocompletion-provider-test.tsx": {
+      "sha256": "0557894221bb2548b81d3efa044788785190e5817dfadc90bf78e9fdd3fd5cd4",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/issues-autocompletion-provider-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/layout-and-message-components-test.tsx": {
+      "sha256": "5884275fb57cc73e661dad78b3eec009ebafcc4da0fbb42eaddeba1a871c396d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/layout-and-message-components-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/password-text-box-test.tsx": {
+      "sha256": "760649d28f2040c9a491d5c58ad6b42a0058881b8cf5b47ab8431e293bf7596c",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/password-text-box-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/path-and-selection-surfaces-test.tsx": {
+      "sha256": "448fc06a064ecc03cf98049bd66053bb7403b16ca2a3dde89d52f3c4245a0375",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/path-and-selection-surfaces-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/path-text-and-link-button-test.tsx": {
+      "sha256": "02132fa0bda95e9f3ff1e78cf7f8aef7706d1a510ba37be326115bb37e2f8f30",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/path-text-and-link-button-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/relative-time-test.tsx": {
+      "sha256": "cd381339100b3492fbf02fdb286df8798a38f9a04e7c0ad700dacdb8f25f6888",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/relative-time-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/repository-directory-exceptions-test.tsx": {
+      "sha256": "476940e254a9721cf77b1daeeb06884d415315ff6a14fffc7268dc004ef53978",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/repository-directory-exceptions-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions against production components and stores; React 19 types and Tauri platform imports adapted. Suites using mock.module preserve runtime module boundaries; native filesystem/IPC dependencies match original mocks."
+      }
+    },
+    "app/test/unit/ui/repository-list-item-test.tsx": {
+      "sha256": "01118000f1fc847f9347a46cc188cd6cc634944c4acfa63144e46237c7ef4611",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/repository-list-item-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/rulesets-and-publish-surfaces-test.tsx": {
+      "sha256": "f7c5243083e7699fb3af39bbd19c77881fe35e67a5e1cb58b61be2674be02c96",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/rulesets-and-publish-surfaces-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/ui/section-list-scroll-test.tsx": {
+      "sha256": "37e973fc0b7bcd4c0a6ac872f1c3b868d752809cdacbaf84c3ed8e2b23a2bc32",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/section-list-scroll-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/ui/side-by-side-diff-row-test.tsx": {
+      "sha256": "e67eb61c863110753fba8a657316e17373a4bc17297ebb11ff54f21064ebd563",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/side-by-side-diff-row-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/ui/small-action-and-dialog-surfaces-test.tsx": {
+      "sha256": "6de32e17c2c74944a7d1dc7766f541084ab3c7f8e411ad9e022a0444b3490ac9",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/small-action-and-dialog-surfaces-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions unchanged against complete production UI components. React 19 types, static asset URLs and native IPC imports adapted."
+      }
+    },
+    "app/test/unit/ui/stash-and-switch-branch-dialog-test.tsx": {
+      "sha256": "b784194498d89609d5c1a29d6b790ca986ca22ee32ea1b52837fe2c86da03e2c",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/stash-and-switch-branch-dialog-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; Desktop-compat Dialog/OkCancelButtonGroup/VerticalSegmentedControl; strings through i18n with English equal to Desktop's macOS text; electron ipcRenderer stub provided by the Tauri IPC boundary; Dispatcher type mapped to the dialog contract."
+      }
+    },
+    "app/test/unit/ui/static-status-and-link-components-test.tsx": {
+      "sha256": "5c4973e6e17d009c46ee276b2abbbd48b484a9d2f4037dabf863988adf80cff7",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/static-status-and-link-components-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/structural-and-text-components-test.tsx": {
+      "sha256": "e33ee57608c942358e688d03139590bdb2df9beb7c95208c107b866453fc12cf",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/structural-and-text-components-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/tab-bar-item-test.tsx": {
+      "sha256": "ed7a9601282100ce165b5937b36514ae252ee6ba65a6bdff2d12f88498a3f394",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/tab-bar-item-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/tab-bar-test.tsx": {
+      "sha256": "278f203be62ba6534798e8358243c8bc33d1af016c4546041dab88ff54441ccb",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/tab-bar-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/test-copilot-snapshot-card-dialog-test.tsx": {
+      "sha256": "72206ba8bf8c028a716c6654df4a3f109b2d1fae5e07b5a28ab4dbde96228629",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/test-copilot-snapshot-card-dialog-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/ui/test-token-expiration-dialog-test.tsx": {
+      "sha256": "a68872ffb92520e6e6d29a6bd80ca24452f555281d32aee58ad3eb5b6fe52bab",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/test-token-expiration-dialog-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
+      }
+    },
+    "app/test/unit/ui/text-box-test.tsx": {
+      "sha256": "3e8d80e41cf16e8ffb42b9e9998861d36e74f6ed342e11a1ca72c93153e90039",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/text-box-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/tutorial-welcome-surfaces-test.tsx": {
+      "sha256": "ce587b316802ba55117374788334d164fee3b621fb0fca3c1c564119a94f318f",
+      "status": "partial",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/tutorial-welcome-surfaces-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "原始断言不变，仅排除「renders tutorial step instructions with step state, skip content, and toggle callbacks」：该用例要求 `<details>` 原生元素及其 `toggle` 事件，而本项目按规则用标准 shadcn Collapsible 实现 TutorialStepInstructions（design-adaptations.ts）。其余两项（欢迎定义与图片、完成聚焦与建议操作分发）保留。React 19 类型、静态资源 URL 与原生 IPC 导入已适配。"
+      },
+      "exclusion": "Base controls are standard shadcn/ui by the user's rule; the one case asserting a native <details> toggle event is excluded, the other assertions are retained."
+    },
+    "app/test/unit/ui/visual-helper-surfaces-test.tsx": {
+      "sha256": "a95cd72444c5dcfd2a9679aa07c10614a57eb320db78a0b61e59bc5721ef921e",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/visual-helper-surfaces-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/ui/welcome-and-sign-in-wrappers-test.tsx": {
+      "sha256": "59188da2838286c4d05452173bcddd2fa4f3f92c41b881e9f318c5c160a514fc",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/welcome-and-sign-in-wrappers-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions against production components and stores; React 19 types and Tauri platform imports adapted. Suites using mock.module preserve runtime module boundaries; native filesystem/IPC dependencies match original mocks."
+      }
+    },
+    "app/test/unit/ui/worktree-list-item-test.tsx": {
+      "sha256": "b6060da89cfb4da146d963c6110d0cee5f627623839bf5dd6c795507c1bbbd3f",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/worktree-list-item-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/unique-coauthors-as-authors-test.ts": {
+      "sha256": "e60521e1f369b04e874da76807efe30334e28fef3dfe24e0743c4a1ba1d2ff6b",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/unique-coauthors-as-authors-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/usage-data-test.ts": {
+      "sha256": "e303af2dd912643ba98ccbd623a6ead19dbc23d00802ed599b5a79bf9adf7269",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/usage-data-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged; complete production Desktop store and native transport boundaries. StatsStore requires explicit telemetry transport; original collector URLs supplied only by the test constructor. Usage AST helper source path adapted to standard Tauri layout, original example JSON unchanged."
+      }
+    },
+    "app/test/unit/welcome-test.ts": {
+      "sha256": "99fd92883f51e0423a09e88615ad1950c0582ce33dbd813190e671d9fa9a1143",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/welcome-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "app/test/unit/worktree-dropdown-test.ts": {
+      "sha256": "7432447a7cbb9f6d1499cb1c299ea5e0c7162af9fb5d128f29f47893e69ec8b6",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/worktree-dropdown-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
+      }
+    },
+    "app/test/unit/worktree-test.ts": {
+      "sha256": "7986292d43586abccc47f8dde86645b7306cea544494e4b89b6ded12105a778a",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/model-worktree-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/wrap-rich-text-commit-message-test.ts": {
+      "sha256": "e7dbc41e715e8368593aed57e99f773c090662198ea6cbecb124c1ac9c90eacb",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/wrap-rich-text-commit-message-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+      }
+    },
+    "app/test/unit/write-default-readme-test.ts": {
+      "sha256": "b6fabc856686df650fc4d6c0bdaacdd8fb5a5ea1615c09d77b31b9fcde26e7f3",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/write-default-readme-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Untouched suite against production Rust via shape-only adapter; Original suite passed."
+      }
+    },
+    "eslint-rules/tests/config-test.mjs": {
+      "sha256": "4fac17eeec46681645863da86e69a8a39a9dcaf70821adcfd0df98372e1224eb",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User explicitly removed ESLint tooling; not executed and not counted as compatible."
+    },
+    "eslint-rules/tests/insecure-random-test.mjs": {
+      "sha256": "5f0802b3383382195d307c7702e0fa02dbeb70f9c4f5f17db475380db4a3fa43",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User explicitly removed ESLint tooling; not executed and not counted as compatible."
+    },
+    "eslint-rules/tests/no-loosely-typed-webcontents-ipc-test.mjs": {
+      "sha256": "604d253d627561340e20bb863ce3f1bcba2b9ede04bc80934f93feef2e819df6",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User explicitly removed ESLint tooling; not executed and not counted as compatible."
+    },
+    "eslint-rules/tests/react-no-unbound-dispatcher-props-test.mjs": {
+      "sha256": "3342b51956f9b0f58281ffd1ec2be8c199f0fa2517f650c4a7cde18aaeab32b4",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User explicitly removed ESLint tooling; not executed and not counted as compatible."
+    },
+    "eslint-rules/tests/react-proper-lifecycle-methods-test.mjs": {
+      "sha256": "c46c9bb602c11c399b35e97de0d669d4ff2b2c153b4357be8e210124e5b718b1",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User explicitly removed ESLint tooling; not executed and not counted as compatible."
+    },
+    "eslint-rules/tests/react-readonly-props-and-state-test.mjs": {
+      "sha256": "4d1ad38923ad9eb0ff481fcfca490eb2bda367ef86302ade169c682a177118dc",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User explicitly removed ESLint tooling; not executed and not counted as compatible."
+    },
+    "script/changelog/test/parser-test.ts": {
+      "sha256": "259c9e136fc374d681cc22a4a6c192e5fbf32ebe0e323282cf072a75c0a7dd8d",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/script/changelog/parser-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
+      }
+    },
+    "script/copilot-test.ts": {
+      "sha256": "a722c468ffb24a7b0f1e2d2478334036c72393f3d6905bacc6d8c0c321c85256",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/script/copilot-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "script/native-module-build-test.ts": {
+      "sha256": "da4e4e59fd32ddf69aaae6cdd3247d48ed15235f4133ce670a03f673c6c29a5c",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/native-module-build-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original upstream package sources and tsconfigs copied byte-for-byte; original TypeScript compiler output assertions executed, including notification declarations. This verifies vendored ABI contracts, not Rust native module implementation behavior."
+      }
+    },
+    "script/webpack-copilot-timers-test.ts": {
+      "sha256": "d81b5712447f7e4193ca4b3711b2d9788e77f0c0ab324cba54d9cb2398ca23f7",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/script/webpack-copilot-timers-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "script/webpack-koffi-test.ts": {
+      "sha256": "688501a9d22add6e32070bd9f20d8cce1dfee02f0aad7bde4583394956cb3f5d",
+      "status": "excluded",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/webpack-koffi-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+      },
+      "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    }
+  },
+  "gitcub_regressions": [
+    "empty_repository_can_exclude_a_file"
+  ],
+  "support_sha256": "8dbc7a207ee1b46e0012ffffd4d3864092a97bcdded369bb88c3ed097d1a2a0b"
+}
