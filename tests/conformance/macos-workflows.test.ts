@@ -17,7 +17,7 @@ import { existsSync, readFileSync, realpathSync, rmSync, writeFileSync } from "n
 import { join } from "node:path"
 import { crc32, deflateSync } from "node:zlib"
 
-import { expect, type Page, recordNativeMemory, test } from "./e2e/fixtures.ts"
+import { expect, type Page, recordNativeMemory, skipWelcome, test } from "./e2e/fixtures.ts"
 import { smokeRepoPath } from "./upstream/desktop/e2e/test-helpers.ts"
 const git = (...args: string[]) => execFileSync("git", ["-C", smokeRepoPath, ...args], { encoding: "utf8" }).trim()
 
@@ -49,11 +49,7 @@ test("welcome opens the same GitHub/GitLab account settings and cancels cleanly"
   // Component navigation, alignment and keyboard assertions live in stories/preferences.stories.tsx.
   await page.keyboard.press("Escape")
   await page.locator('[role="dialog"]').waitFor({ state: "hidden" })
-  await page.locator("a.skip-button").click()
-  await page.locator('input[placeholder="Your Name"]').fill("GitCub macOS E2E")
-  await page.locator('input[placeholder="your-email@example.com"]').fill("macos@example.invalid")
-  await page.locator('button:has-text("Finish")').click()
-  await page.waitForSelector("#welcome", { state: "hidden", timeout: 15000 })
+  await skipWelcome(page, "GitCub macOS E2E", "macos@example.invalid")
 })
 
 test("remote branch selection creates a local tracking branch through the real UI", async ({ mainWindow: page }) => {

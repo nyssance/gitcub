@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url"
 import type { invoke as nativeInvoke } from "@tauri-apps/api/core"
 
 import type { RepoStatus } from "../../src/models/repo-status"
-import { expect, test } from "./e2e/fixtures.ts"
+import { expect, skipWelcome, test } from "./e2e/fixtures.ts"
 import { smokeRepoName } from "./upstream/desktop/e2e/test-helpers.ts"
 
 declare global {
@@ -84,11 +84,7 @@ test("a blocked status scan leaves native IPC and the WebView responsive", async
 })
 
 test("a partial-clone history fetch cannot block navigation or other native commands", async ({ mainWindow: page }) => {
-  await page.locator("a.skip-button").click()
-  await page.locator('input[placeholder="Your Name"]').fill("Responsiveness Test")
-  await page.locator('input[placeholder="your-email@example.com"]').fill("test@example.invalid")
-  await page.locator('button:has-text("Finish")').click()
-  await page.waitForSelector("#welcome", { state: "hidden", timeout: 15000 })
+  await skipWelcome(page, "Responsiveness Test", "test@example.invalid")
   const directory = mkdtempSync(join(tmpdir(), "gitcub-history-responsive-"))
   const source = join(directory, "source")
   const repo = join(directory, "partial")

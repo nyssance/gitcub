@@ -306,6 +306,23 @@ export async function dismissMoveToApplicationsDialog(page: Page) {
   const dialog = page.locator("#move-to-applications-folder")
   if (await dialog.isVisible()) await dialog.locator('button[type="submit"]').click()
 }
+/** 跳过登录离开欢迎流程。全局 git 已有 name 和 email 时欢迎流程直接结束，
+ *  没有时才进「配置 Git」，这里填入给定身份。前面的套件可能已写过全局身份，两种都要接受。 */
+export async function skipWelcome(page: Page, name: string, email: string) {
+  await page.locator("a.skip-button").click()
+  const input = page.locator('input[placeholder="Your Name"]')
+  const welcome = page.locator("#welcome")
+  await poll(
+    async () => (await input.isVisible()) || !(await welcome.isVisible()),
+    done => assert.ok(done, "welcome neither asked for a Git identity nor finished")
+  )
+  if (await input.isVisible()) {
+    await input.fill(name)
+    await page.locator('input[placeholder="your-email@example.com"]').fill(email)
+    await page.locator('button:has-text("Finish")').click()
+  }
+  await page.waitForSelector("#welcome", { state: "hidden", timeout: 15000 })
+}
 export function terminateWindowsUpdaterProcesses() {
   // Tauri's downloader belongs to the application; it never spawns Squirrel.
   assert.ok(app?.exitCode !== null || app.signalCode !== null, "Tauri updater process is still alive")
