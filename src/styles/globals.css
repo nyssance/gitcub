@@ -221,8 +221,10 @@
 
 /* 工作区浮板是 Desktop 的业务区域：底色、分隔线和次级文字用原版主题的值，
    不用 shadcn 的近黑底和半透明白线（_variables.scss / themes/_dark.scss 的
-   --background-color、--box-border-color、--text-secondary-color）。 */
-[data-floating-board="workspace"] {
+   --background-color、--box-border-color、--text-secondary-color）。
+   工具栏 foldout 挂在 body 下（弹层门户），用 data-desktop-palette 拿同一套值。 */
+[data-floating-board="workspace"],
+[data-desktop-palette] {
   /* 主按钮、勾选框：原版 --button-background = $blue */
   --primary: #0366d6;
   --primary-foreground: #ffffff;
@@ -231,7 +233,8 @@
   --border: #e1e4e8; /* gray-200 */
   --muted-foreground: #6a737d; /* gray-500 */
 }
-.dark [data-floating-board="workspace"] {
+.dark [data-floating-board="workspace"],
+.dark [data-desktop-palette] {
   --primary: #0366d6;
   --primary-foreground: #ffffff;
   --background: #24292e; /* gray-900 */

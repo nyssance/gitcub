@@ -886,6 +886,8 @@ export function App() {
           sidebarPanel.current.resize(
             sidebarPanel.current.getSize().inPixels + (payload === "increase-active-resizable-width" ? 5 : -5)
           )
+        // Desktop resizeActiveResizable：从焦点元素冒泡，工具栏按钮外的 Resizable 接住
+        else document.activeElement?.dispatchEvent(new CustomEvent(payload, { bubbles: true, cancelable: true }))
         break
       case "toggle-changes-filter":
         patch({ selectedTab: "changes" })

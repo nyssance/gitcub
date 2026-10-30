@@ -57,7 +57,11 @@ export function BranchDropdown({
   const [foldoutHeight, setFoldoutHeight] = useState(0)
   const measureFoldout = () => {
     // 留出 Base UI 定位器默认的 5px 碰撞边距（再多 1px 防取整），否则判定放不下、翻到按钮右侧
-    if (buttonRef.current) setFoldoutHeight(window.innerHeight - buttonRef.current.getBoundingClientRect().bottom - 6)
+    // 原版铺到窗口底边；这里工作区是浮板，铺到浮板底边，不伸出圆角外
+    const button = buttonRef.current
+    if (!button) return
+    const board = button.closest("[data-floating-board]")?.getBoundingClientRect().bottom ?? window.innerHeight
+    setFoldoutHeight(Math.min(board, window.innerHeight - 6) - button.getBoundingClientRect().bottom)
   }
   const [q, setQ] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -275,7 +279,8 @@ export function BranchDropdown({
           // Desktop branch-dropdown.tsx foldoutStyleOverrides：分支 foldout 最窄 365px；高度铺到窗口底部
           // （ToolbarDropdown 的 height:100%）。高度在打开时按按钮底边量好再给：先渲染再量会让定位器
           // 把一时放不下的面板翻到按钮右侧。
-          foldoutStyle={{ width: 365, height: foldoutHeight }}
+          // 左下角贴着浮板的圆角
+          foldoutStyle={{ width: 365, height: foldoutHeight, borderBottomLeftRadius: "var(--radius-xl)" }}
           onOpenChange={value => {
             if (value) measureFoldout()
             setOpen(value)

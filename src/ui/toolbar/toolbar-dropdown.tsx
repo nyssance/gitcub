@@ -81,7 +81,9 @@ export function ToolbarDropdown({
         alignOffset={0}
         // 宽度跟点击框一致：Base UI 把锚元素的尺寸挂成 --anchor-width
         style={{ width: "var(--anchor-width)", ...foldoutStyle }}
-        className="overflow-hidden rounded-none border-t-0 p-0">
+        // 原版 foldout 底色就是 --background-color，和工作区同一套配色
+        data-desktop-palette
+        className="bg-background overflow-hidden rounded-none border-t-0 p-0">
         {children}
       </PopoverContent>
     </Popover>
