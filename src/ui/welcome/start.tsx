@@ -49,7 +49,7 @@ export class Start extends React.Component<IStartProps, Record<string, never>> {
             <p>{i18n.t("welcome.browserRedirect")}</p>
           )}
 
-          <div className="welcome-main-buttons flex flex-col gap-2">
+          <div className="welcome-main-buttons flex flex-wrap items-center gap-x-4 gap-y-2">
             <Button
               type="submit"
               className="button-with-icon"
