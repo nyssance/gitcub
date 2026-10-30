@@ -309,6 +309,16 @@
     "forbidden": "当前账号没有权限执行此操作（HTTP 403）"
   },
   "prefs": {
+    "formatting": "格式",
+    "dateFormat": "日期格式",
+    "timeFormat": "时间格式",
+    "numberFormat": "数字格式",
+    "preferAbsoluteDatesOverRelative": "优先显示绝对日期而非相对时间",
+    "miscellaneous": "其他",
+    "diffTabSize": "diff 制表符宽度",
+    "tabSizeDefault": "{{size}}（默认）",
+    "underlineLinks": "链接加下划线",
+    "whenEnabledGitCubWillUnderlineLinks": "开启后，GitCub 会给提交信息、评论和其他文本里的链接加下划线，更容易分辨链接。",
     "integrations": "集成",
     "notifications": "通知",
     "prompts": "提示",

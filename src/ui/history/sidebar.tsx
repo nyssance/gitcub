@@ -5,10 +5,12 @@ import { CaseSensitive, CheckCheck, CircleHelp, Regex, SlidersHorizontal, WholeW
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePreferencesStore } from "@/features/preferences/store"
 import { avatarUrl } from "@/lib/avatar"
 import { endCommitDrag, startCommitDrag } from "@/lib/commit-drag"
 import { isCoAuthoredByTrailer, parseSingleUnfoldedTrailer } from "@/lib/commit-trailers"
 import { dateFnsLocale } from "@/lib/date-locales"
+import { formatDate } from "@/lib/format-date"
 import { ipc } from "@/lib/ipc"
 import { isUnpushedCommit, type LocalCommits, type PushStatus } from "@/lib/unpushed-commits"
 import { cn } from "@/lib/utils"
@@ -795,6 +797,8 @@ const commitAuthors = (commit: CommitInfo) => {
 function CommitByline({ commit }: { commit: CommitInfo }) {
   const { t } = useTranslation()
   const authors = commitAuthors(commit)
+  // Desktop commit-list-item renderRelativeTime：「外观 › 优先显示绝对日期」
+  const preferAbsoluteDates = usePreferencesStore(s => s.preferAbsoluteDates)
   return (
     <div className="flex min-w-0 items-center gap-1">
       <span className="flex shrink-0">
@@ -815,7 +819,7 @@ function CommitByline({ commit }: { commit: CommitInfo }) {
         {authors.length > 2
           ? t("history.peopleCount", { count: authors.length })
           : authors.map(author => author.name).join(", ")}
-        {` • ${relativeTime(commit.time)}`}
+        {` • ${preferAbsoluteDates ? formatDate(new Date(commit.time * 1000)) : relativeTime(commit.time)}`}
       </ItemDescription>
     </div>
   )

@@ -289,6 +289,14 @@ export function App() {
     return applyTheme(state.theme)
   }, [state?.theme, state])
 
+  // Desktop 在应用根节点设 underline-links 类与 tab-size；这里设在 html 上，弹层也算进去
+  const underlineLinks = usePreferencesStore(s => s.underlineLinks)
+  const tabSize = usePreferencesStore(s => s.tabSize)
+  useEffect(() => {
+    document.documentElement.classList.toggle("underline-links", underlineLinks)
+    document.documentElement.style.tabSize = String(tabSize)
+  }, [underlineLinks, tabSize])
+
   useEffect(() => {
     if (!state) return
     const want = state.language || (navigator.language.startsWith("zh") ? "zh-CN" : "en")

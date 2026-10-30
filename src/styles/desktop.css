@@ -460,3 +460,8 @@
     border: none;
   }
 }
+
+/* Desktop _type.scss：「无障碍 › 链接加下划线」在应用根节点加 underline-links */
+.underline-links a {
+  text-decoration: underline;
+}

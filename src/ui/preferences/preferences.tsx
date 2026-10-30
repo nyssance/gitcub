@@ -42,7 +42,13 @@ import { instanceFromURL } from "../../lib/account-host"
 import { validateURL } from "../../lib/enterprise-validate-url"
 import { Select } from "../desktop/select"
 import { AutolinkRules } from "./autolink-rules"
-import { AccessibilityTab, BackgroundUpdatesSettings, NotificationsTab, PromptsTab } from "./desktop-settings"
+import {
+  AccessibilityTab,
+  AppearanceFormatting,
+  BackgroundUpdatesSettings,
+  NotificationsTab,
+  PromptsTab
+} from "./desktop-settings"
 
 /** Settings use the project's shadcn/Base UI Dialog and vertical Tabs.
  * The navigation, active state, focus and panel relationships belong to Tabs. */
@@ -176,6 +182,7 @@ export function Preferences({
             </TabsContent>
             <TabsContent value="appearance" className="min-h-0 overflow-y-auto p-4">
               <AppearanceTab theme={state.theme} onChange={theme => onPatch({ theme })} />
+              <AppearanceFormatting />
             </TabsContent>
             <TabsContent value="notifications" className="min-h-0 overflow-y-auto p-4">
               <NotificationsTab />

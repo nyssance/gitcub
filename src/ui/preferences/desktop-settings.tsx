@@ -1,8 +1,19 @@
 import { useTranslation } from "react-i18next"
 
-import { type Prompt, usePreferencesStore } from "@/features/preferences/store"
+import { type Prompt, tabSizeDefault, usePreferencesStore } from "@/features/preferences/store"
+import { formatNumber } from "@/lib/format-number"
+import {
+  type DateFormat,
+  dateFormats,
+  numberFormatFromKey,
+  numberFormats,
+  numberFormatToKey,
+  type TimeFormat,
+  timeFormats
+} from "@/models/formatting-preferences"
 import { Checkbox } from "@/ui/base/checkbox"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/ui/base/field"
+import { NativeSelect, NativeSelectOption } from "@/ui/base/native-select"
 import { RadioGroup, RadioGroupItem } from "@/ui/base/radio-group"
 import { UncommittedChangesStrategy } from "@/upstream/models/uncommitted-changes-strategy"
 
@@ -147,14 +158,22 @@ export function BackgroundUpdatesSettings() {
   )
 }
 
-/** Desktop preferences/accessibility.tsx。「链接加下划线」只作用于沙箱 Markdown，本项目没有，不列。 */
+/** Desktop preferences/accessibility.tsx */
 export function AccessibilityTab() {
   const { t } = useTranslation()
   const checkMarks = usePreferencesStore(s => s.showDiffCheckMarks)
+  const underlineLinks = usePreferencesStore(s => s.underlineLinks)
   return (
     <FieldGroup className="px-4">
       <FieldSet>
         <FieldLegend>{t("prefs.accessibility")}</FieldLegend>
+        <CheckboxField
+          id="underline-links"
+          label={t("prefs.underlineLinks")}
+          description={t("prefs.whenEnabledGitCubWillUnderlineLinks")}
+          checked={underlineLinks}
+          onChange={usePreferencesStore.getState().setUnderlineLinks}
+        />
         <CheckboxField
           id="diff-check-marks"
           label={t("prefs.showCheckMarksInTheDiff")}
@@ -162,6 +181,101 @@ export function AccessibilityTab() {
           checked={checkMarks}
           onChange={usePreferencesStore.getState().setShowDiffCheckMarks}
         />
+      </FieldSet>
+    </FieldGroup>
+  )
+}
+
+const availableTabSizes: number[] = [1, 2, 3, 4, 5, 6, 8, 10, 12]
+
+/** Desktop preferences/appearance.tsx 的 Formatting 与 Miscellaneous。
+ *  「总是显示工作树列表」对应原版工具栏的工作树下拉，本项目没有，不列。 */
+export function AppearanceFormatting() {
+  const { t } = useTranslation()
+  const preferences = usePreferencesStore()
+  const select = (id: string, label: string, control: React.ReactNode) => (
+    <Field orientation="horizontal" className="justify-between">
+      <FieldLabel htmlFor={id} className="font-normal">
+        {label}
+      </FieldLabel>
+      {control}
+    </Field>
+  )
+  return (
+    <FieldGroup className="px-4">
+      <FieldSet>
+        <FieldLegend>{t("prefs.formatting")}</FieldLegend>
+        <FieldGroup className="gap-3">
+          {select(
+            "date-format",
+            t("prefs.dateFormat"),
+            <NativeSelect
+              id="date-format"
+              size="sm"
+              value={preferences.dateFormat}
+              onChange={event => preferences.setDateFormat(event.currentTarget.value as DateFormat)}>
+              {dateFormats.map(({ pattern, example }) => (
+                <NativeSelectOption key={pattern} value={pattern}>
+                  {example} ({pattern})
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          )}
+          {select(
+            "time-format",
+            t("prefs.timeFormat"),
+            <NativeSelect
+              id="time-format"
+              size="sm"
+              value={preferences.timeFormat}
+              onChange={event => preferences.setTimeFormat(event.currentTarget.value as TimeFormat)}>
+              {timeFormats.map(({ pattern, example }) => (
+                <NativeSelectOption key={pattern} value={pattern}>
+                  {example} ({pattern})
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          )}
+          {select(
+            "number-format",
+            t("prefs.numberFormat"),
+            <NativeSelect
+              id="number-format"
+              size="sm"
+              value={numberFormatToKey(preferences.numberFormat)}
+              onChange={event => preferences.setNumberFormat(numberFormatFromKey(event.currentTarget.value))}>
+              {numberFormats.map(format => (
+                <NativeSelectOption key={numberFormatToKey(format)} value={numberFormatToKey(format)}>
+                  {formatNumber(1234567.89, format)}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          )}
+          <CheckboxField
+            id="prefer-absolute-dates"
+            label={t("prefs.preferAbsoluteDatesOverRelative")}
+            checked={preferences.preferAbsoluteDates}
+            onChange={preferences.setPreferAbsoluteDates}
+          />
+        </FieldGroup>
+      </FieldSet>
+      <FieldSet>
+        <FieldLegend>{t("prefs.miscellaneous")}</FieldLegend>
+        {select(
+          "diff-tab-size",
+          t("prefs.diffTabSize"),
+          <NativeSelect
+            id="diff-tab-size"
+            size="sm"
+            value={String(preferences.tabSize)}
+            onChange={event => preferences.setTabSize(Number(event.currentTarget.value))}>
+            {availableTabSizes.map(n => (
+              <NativeSelectOption key={n} value={n}>
+                {n === tabSizeDefault ? t("prefs.tabSizeDefault", { size: n }) : n}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        )}
       </FieldSet>
     </FieldGroup>
   )

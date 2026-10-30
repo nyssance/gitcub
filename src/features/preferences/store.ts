@@ -1,7 +1,6 @@
 /**
  * Preferences Store —— 原版 Preferences 里存在 localStorage 的那些设置（提示、提交长度警告、
- * 未提交改动的处理方式、diff 勾选标记）。
- * 原版「链接加下划线」只作用于沙箱 Markdown（发布说明、PR 快速预览），本项目没有这类界面，不收。
+ * 未提交改动的处理方式、无障碍、diff 制表符宽度）。
  *
  * 键名与默认值照搬 Desktop app-store.ts（confirmRepoRemoval 等），从 Desktop 习惯迁过来的人
  * 不会对不上；每个 setter 对应原版 dispatcher.setXxxSetting，改了立即写回。
@@ -10,7 +9,20 @@ import { create } from "zustand"
 
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import { getNotificationsEnabled } from "@/lib/notifications/settings"
-import { getBoolean, getEnum, setBoolean } from "@/upstream/lib/local-storage"
+import {
+  type DateFormat,
+  getDateFormatPreference,
+  getNumberFormatPreference,
+  getPreferAbsoluteDates,
+  getTimeFormatPreference,
+  type INumberFormat,
+  setDateFormatPreference,
+  setNumberFormatPreference,
+  setPreferAbsoluteDates,
+  setTimeFormatPreference,
+  type TimeFormat
+} from "@/models/formatting-preferences"
+import { getBoolean, getEnum, getNumber, setBoolean, setNumber } from "@/upstream/lib/local-storage"
 import {
   defaultUncommittedChangesStrategy,
   UncommittedChangesStrategy
@@ -47,6 +59,9 @@ export type Prompt = keyof typeof PromptKeys
 const showCommitLengthWarningKey = "showCommitLengthWarning"
 const uncommittedChangesStrategyKey = "uncommittedChangesStrategyKind"
 const showDiffCheckMarksKey = "diff-check-marks-visible"
+const underlineLinksKey = "underline-links"
+const tabSizeKey = "tab-size"
+export const tabSizeDefault = 4
 const repositoryIndicatorsEnabledKey = "enable-repository-indicators"
 
 type Prompts = Record<Prompt, boolean>
@@ -55,6 +70,15 @@ interface PreferencesStore extends Prompts {
   showCommitLengthWarning: boolean
   uncommittedChangesStrategy: UncommittedChangesStrategy
   showDiffCheckMarks: boolean
+  /** 原版在应用根节点加 underline-links 类（_type.scss：.underline-links a 加下划线） */
+  underlineLinks: boolean
+  /** 原版设在应用根节点的 CSS tab-size */
+  tabSize: number
+  /** 原版「外观 › Formatting」：formatDate / formatNumber 每次调用时读 localStorage，这里只同步显示 */
+  dateFormat: DateFormat
+  timeFormat: TimeFormat
+  numberFormat: INumberFormat
+  preferAbsoluteDates: boolean
   /** 原版「高级 › 后台更新」：仓库列表的状态图标（AppStore 的 RepositoryIndicatorUpdater） */
   repositoryIndicatorsEnabled: boolean
   /** 原版「通知」：NotificationsStore 的高信号通知 */
@@ -63,6 +87,12 @@ interface PreferencesStore extends Prompts {
   setShowCommitLengthWarning: (value: boolean) => void
   setUncommittedChangesStrategy: (value: UncommittedChangesStrategy) => void
   setShowDiffCheckMarks: (value: boolean) => void
+  setUnderlineLinks: (value: boolean) => void
+  setTabSize: (value: number) => void
+  setDateFormat: (value: DateFormat) => void
+  setTimeFormat: (value: TimeFormat) => void
+  setNumberFormat: (value: INumberFormat) => void
+  setPreferAbsoluteDates: (value: boolean) => void
   setRepositoryIndicatorsEnabled: (value: boolean) => void
   setNotificationsEnabled: (value: boolean) => void
 }
@@ -83,6 +113,12 @@ export const usePreferencesStore = create<PreferencesStore>()(set => ({
   uncommittedChangesStrategy:
     getEnum(uncommittedChangesStrategyKey, UncommittedChangesStrategy) ?? defaultUncommittedChangesStrategy,
   showDiffCheckMarks: getBoolean(showDiffCheckMarksKey, true),
+  underlineLinks: getBoolean(underlineLinksKey, true),
+  tabSize: getNumber(tabSizeKey, tabSizeDefault),
+  dateFormat: getDateFormatPreference(),
+  timeFormat: getTimeFormatPreference(),
+  numberFormat: getNumberFormatPreference(),
+  preferAbsoluteDates: getPreferAbsoluteDates(),
   repositoryIndicatorsEnabled: getBoolean(repositoryIndicatorsEnabledKey, true),
   notificationsEnabled: getNotificationsEnabled(),
   setPrompt: (prompt, value) => {
@@ -100,6 +136,30 @@ export const usePreferencesStore = create<PreferencesStore>()(set => ({
   setShowDiffCheckMarks: value => {
     setBoolean(showDiffCheckMarksKey, value)
     set({ showDiffCheckMarks: value })
+  },
+  setUnderlineLinks: value => {
+    setBoolean(underlineLinksKey, value)
+    set({ underlineLinks: value })
+  },
+  setTabSize: value => {
+    setNumber(tabSizeKey, value)
+    set({ tabSize: value })
+  },
+  setDateFormat: value => {
+    setDateFormatPreference(value)
+    set({ dateFormat: value })
+  },
+  setTimeFormat: value => {
+    setTimeFormatPreference(value)
+    set({ timeFormat: value })
+  },
+  setNumberFormat: value => {
+    setNumberFormatPreference(value)
+    set({ numberFormat: value })
+  },
+  setPreferAbsoluteDates: value => {
+    setPreferAbsoluteDates(value)
+    set({ preferAbsoluteDates: value })
   },
   // 这两项由已移植的 store 自己落盘并启停后台任务，这里只同步显示
   setRepositoryIndicatorsEnabled: value => {

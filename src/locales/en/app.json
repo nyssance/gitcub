@@ -316,6 +316,16 @@
     "forbidden": "This account is not allowed to do that (HTTP 403)"
   },
   "prefs": {
+    "formatting": "Formatting",
+    "dateFormat": "Date Format",
+    "timeFormat": "Time Format",
+    "numberFormat": "Number Format",
+    "preferAbsoluteDatesOverRelative": "Prefer absolute dates over relative",
+    "miscellaneous": "Miscellaneous",
+    "diffTabSize": "Diff Tab Size",
+    "tabSizeDefault": "{{size}} (default)",
+    "underlineLinks": "Underline links",
+    "whenEnabledGitCubWillUnderlineLinks": "When enabled, GitCub will underline links in commit messages, comments, and other text fields. This can help make links easier to distinguish.",
     "integrations": "Integrations",
     "notifications": "Notifications",
     "prompts": "Prompts",
