@@ -65,9 +65,8 @@ export function PushPullButton({ status, disabled, busy, progress, onPush, onPul
       disabled={disabled || busy}
       onClick={config.on}
       className={cn(
-        // 原版 .toolbar-button.resizable：两格自己撑满整条工具栏，
-        // 不留一段没人要的深色空白（width 230 是它 resizable 之前的老值）
-        "border-toolbar-border flex h-full min-w-0 flex-1 items-center gap-2 border-r px-3 text-left",
+        // 原版 app-store defaultPushPullButtonWidth：230px，不撑满工具栏
+        "border-toolbar-border flex h-full w-[230px] min-w-0 shrink-0 items-center gap-2 border-r px-3 text-left",
         "text-toolbar-foreground hover:bg-toolbar-hover disabled:opacity-50"
       )}>
       <Icon size={16} className={cn("shrink-0", busy && "animate-spin")} />
