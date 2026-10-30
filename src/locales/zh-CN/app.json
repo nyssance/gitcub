@@ -402,7 +402,8 @@
   },
   "canvas": {
     "label": "工作区导航",
-    "workspace": "工作区"
+    "workspace": "工作区",
+    "overview": "缩略图总览"
   },
   "trending": {
     "back": "后退",

@@ -33,7 +33,9 @@ export function FloatingWorkspace({
     flickMinIndex: 1,
     direction: i18n.dir(),
     trackpadEnabled,
-    insetTop: 0
+    insetTop: 0,
+    pagination: { label: t("canvas.label"), overviewLabel: t("canvas.overview") },
+    overview: { label: t("canvas.overview") }
   })
   const settled = !state.moving
   useEffect(() => {

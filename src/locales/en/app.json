@@ -409,7 +409,8 @@
   },
   "canvas": {
     "label": "Workspace navigation",
-    "workspace": "Workspace"
+    "workspace": "Workspace",
+    "overview": "Overview"
   },
   "trending": {
     "back": "Back",
