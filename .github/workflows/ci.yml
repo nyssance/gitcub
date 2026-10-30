@@ -41,7 +41,7 @@ jobs:
         with:
           python-version: "3.15"
       - name: 安装原生 E2E 驱动
-        run: cargo install tauri-hasgard --version "^0.5" --locked
+        run: cargo install tauri-hasgard-cli --version "^0.6" --locked
       - name: 类型检查
         run: bun check --no-script -p tsconfig.json && bun check --no-script -p tsconfig.tools.json
       - name: Storybook 浏览器

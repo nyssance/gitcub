@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process"
 // a real application bundle, so cargo build alone is not an E2E build.
 const cli = spawnSync("tauri-hasgard", ["--version"], { stdio: "inherit" })
 if (cli.error || cli.status !== 0) {
-  throw new Error("Install the E2E driver with: cargo install tauri-hasgard --version '^0.5' --locked")
+  throw new Error("Install the E2E driver with: cargo install tauri-hasgard-cli --version '^0.6' --locked")
 }
 const build = spawnSync(
   "bun",

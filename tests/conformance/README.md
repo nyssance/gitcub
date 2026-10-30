@@ -44,7 +44,7 @@ Node's `registerHooks` is used only when explicitly selecting Node with
 `JS_TEST_RUNTIME=/absolute/path/to/node`. The test runner never requires a binary
 named `node` on PATH. Node execution requires version 24 or newer.
 Cargo, Bun, Git, Git LFS and Hasgard CLI are required for the complete suite
-(`cargo install tauri-hasgard --version "^0.5" --locked`); a Vendor checkout is not required.
+(`cargo install tauri-hasgard-cli --version "^0.6" --locked`); a Vendor checkout is not required.
 全套执行在 macOS 验证；Windows/Linux CI 作业是编译门禁。
 
 `bun check --no-script -p tsconfig.json && bun check --no-script -p tsconfig.tools.json` 使用 TS7 检查应用、构建脚本与项目自有测试。原版快照和仓库

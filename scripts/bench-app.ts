@@ -586,7 +586,7 @@ function summarize(samples: Sample[]) {
 if (process.platform !== "darwin") throw new Error("macOS is required")
 const options = parseArguments(process.argv.slice(2))
 if (Bun.spawnSync(["tauri-hasgard", "--version"]).exitCode !== 0)
-  throw new Error("Install the E2E driver with: cargo install tauri-hasgard --version '^0.6' --locked")
+  throw new Error("Install the E2E driver with: cargo install tauri-hasgard-cli --version '^0.6' --locked")
 // tauri-plugin-hasgard is a no-op outside debug builds, so the driven bundle is the one
 // `scripts/prepare-e2e.ts` makes: Rust debug profile with the `hasgard-testing` feature.
 const bundle = options.app ?? join(root, "src-tauri/target/debug/bundle/macos/GitCub.app")

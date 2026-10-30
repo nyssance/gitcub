@@ -223,7 +223,7 @@ cargo test --manifest-path src-tauri/Cargo.toml desktop_tests
 
 `bun run test:upstream` 直接运行保留原始断言的 Desktop / GitLens 测试快照，通过
 测试专用 JSON 桥调用 Rust 生产模块；UI/store 调用生产 TypeScript；E2E 操作真实 Tauri 应用。
-macOS 全套测试还需要 `cargo install tauri-hasgard --version "^0.5" --locked`。
+macOS 全套测试还需要 `cargo install tauri-hasgard-cli --version "^0.6" --locked`。
 执行与适配边界见 [原版测试说明](tests/conformance/README.md)。
 
 `fab check` 会运行清单回归检查、原版行为测试和全部 Rust 测试。普通测试通过只证明已实现的场景通过，
