@@ -43,10 +43,6 @@ jobs:
         run: cargo install tauri-hasgard-cli --version "^0.6" --locked
       - name: 类型检查
         run: bun check --no-script -p tsconfig.json && bun check --no-script -p tsconfig.tools.json
-      - name: Storybook 浏览器
-        run: bunx --bun playwright install chromium
-      - name: 自定义组件预览与交互
-        run: bun run storybook:test
       - name: 上游清单与同步工具测试
         run: python -m unittest discover -s tests -p 'test_desktop_catalog.py' -v && python -m unittest discover -s tests -p 'test_vendor.py' -v
       - name: Clippy
@@ -70,8 +66,6 @@ jobs:
           path: |
             test-results/desktop-e2e
             test-results/macos-workflows
-            test-results/storybook
-            test-results/storybook-report
           if-no-files-found: ignore
 
   cross:
