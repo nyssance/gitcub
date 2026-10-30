@@ -209,6 +209,11 @@ export function App() {
       const { status, runBackground } = useRepositoryStore.getState()
       if (repository.path !== activeRepository() || !status.remote) return
       const remote = status.remote
+      // Desktop 只给关联上 GitHub 的仓库后台 fetch；GitLab 是一等平台，已登录的 GitLab 远端同样 fetch
+      const { rawRemotes, accounts } = useAccountsStore.getState()
+      const hosted = rawRemotes[repository.path]
+      const gitlab = !!hosted && accounts[hosted.host]?.kind === "gitlab"
+      if (!repository.gitHubRepository && !gitlab) return
       await runBackground(() => ipc.fetch(repository.path, remote))
     }
     return () => {

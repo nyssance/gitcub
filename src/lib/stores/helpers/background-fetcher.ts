@@ -1,5 +1,5 @@
-import type { GitHubRepository } from "../../../models/github-repository"
 // Desktop MIT port; platform imports adapted to Tauri.
+import type { GitHubRepository } from "../../../models/github-repository"
 import type { Repository } from "../../../models/repository"
 import { fatalError } from "../../../upstream/lib/fatal-error"
 import { API, getAccountForEndpoint } from "../../api"
@@ -44,10 +44,9 @@ export class BackgroundFetcher {
       fatalError("Cannot start a background fetcher that has been stopped.")
     }
 
+    // GitCub: GitLab repositories have no GitHubRepository; they run on the default interval
+    // and the fetch callback decides whether the remote is hosted on a signed-in GitLab.
     const gitHubRepository = this.repository.gitHubRepository
-    if (!gitHubRepository) {
-      return
-    }
 
     if (withInitialSkew) {
       this.timeoutHandle = window.setTimeout(() => this.performAndScheduleFetch(gitHubRepository), skewInterval())
@@ -71,7 +70,7 @@ export class BackgroundFetcher {
   }
 
   /** Perform a fetch and schedule the next one. */
-  private async performAndScheduleFetch(repository: GitHubRepository): Promise<void> {
+  private async performAndScheduleFetch(repository: GitHubRepository | null): Promise<void> {
     if (this.stopped) {
       return
     }
@@ -106,7 +105,11 @@ export class BackgroundFetcher {
   }
 
   /** Get the allowed fetch interval from the server. */
-  private async getFetchInterval(repository: GitHubRepository): Promise<number> {
+  private async getFetchInterval(repository: GitHubRepository | null): Promise<number> {
+    if (!repository) {
+      return DefaultFetchInterval + skewInterval()
+    }
+
     const account = getAccountForEndpoint(await this.accountsStore.getAll(), repository.endpoint)
 
     let interval = DefaultFetchInterval

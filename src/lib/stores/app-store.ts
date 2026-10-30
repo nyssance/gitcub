@@ -138,10 +138,8 @@ export class AppStore extends BaseStore {
       )
     }
 
-    if (!repository.gitHubRepository) {
-      return
-    }
-
+    // GitCub: no early return without a GitHubRepository — GitLab remotes are background-fetched too;
+    // backgroundFetch skips repositories that are neither matched on GitHub nor hosted on a GitLab account.
     const fetcher = new BackgroundFetcher(
       repository,
       this.accountsStore,
