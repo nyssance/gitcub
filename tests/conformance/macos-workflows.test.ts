@@ -571,7 +571,8 @@ test("repository rail marks uncommitted changes in the selected repository", asy
   } finally {
     rmSync(file, { force: true })
   }
-  await dot.waitFor({ state: "hidden" })
+  // 前面的用例可能在冒烟仓库里留了改动：删掉临时文件后，圆点跟随仓库的实际状态
+  await dot.waitFor({ state: git("status", "--porcelain") ? "visible" : "hidden" })
 })
 
 async function clickRailRepository(page: Page, path: string) {
