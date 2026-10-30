@@ -413,6 +413,7 @@
     "gitlabMergeRequestDescription": "GitLab Merge Request !{{num}}"
   },
   "common": {
+    "justNow": "just now",
     "confirmTitle": "Confirm",
     "cancel": "Cancel",
     "confirm": "OK",

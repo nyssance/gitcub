@@ -406,6 +406,7 @@
     "gitlabMergeRequestDescription": "GitLab 合并请求 !{{num}}"
   },
   "common": {
+    "justNow": "刚刚",
     "confirmTitle": "确认",
     "cancel": "取消",
     "confirm": "确定",

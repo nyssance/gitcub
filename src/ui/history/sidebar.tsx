@@ -1,5 +1,6 @@
 import { ArrowUpIcon, GitCompareIcon, SearchIcon } from "@primer/octicons-react"
 import { useVirtualizer } from "@tanstack/react-virtual"
+import { formatDistanceToNowStrict } from "date-fns"
 import { CaseSensitive, CheckCheck, CircleHelp, Regex, SlidersHorizontal, WholeWord, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -7,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { avatarUrl } from "@/lib/avatar"
 import { endCommitDrag, startCommitDrag } from "@/lib/commit-drag"
 import { isCoAuthoredByTrailer, parseSingleUnfoldedTrailer } from "@/lib/commit-trailers"
+import { dateFnsLocale } from "@/lib/date-locales"
 import { ipc } from "@/lib/ipc"
 import { isUnpushedCommit, type LocalCommits, type PushStatus } from "@/lib/unpushed-commits"
 import { cn } from "@/lib/utils"
@@ -722,20 +724,7 @@ export function HistorySidebar({
 
 /** 相对时间。用 Intl.RelativeTimeFormat，按界面语言而不是系统语言。 */
 function relativeTime(unixSeconds: number): string {
-  const diff = unixSeconds * 1000 - Date.now()
-  const abs = Math.abs(diff)
-  const units: [Intl.RelativeTimeFormatUnit, number][] = [
-    ["year", 31536e6],
-    ["month", 2592e6],
-    ["day", 864e5],
-    ["hour", 36e5],
-    ["minute", 6e4]
-  ]
-  const fmt = new Intl.RelativeTimeFormat(i18n.language, { numeric: "auto" })
-  for (const [unit, ms] of units) {
-    if (abs >= ms) return fmt.format(Math.round(diff / ms), unit)
-  }
-  return fmt.format(0, "minute")
+  return formatDistanceToNowStrict(unixSeconds * 1000, { addSuffix: true, locale: dateFnsLocale(i18n.language) })
 }
 
 /** 对比视图里的一段：一个小标题 + 几行提交。

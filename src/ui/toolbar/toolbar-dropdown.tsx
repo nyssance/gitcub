@@ -73,6 +73,8 @@ export function ToolbarDropdown({
         {content}
       </PopoverTrigger>
       <PopoverContent
+        // 弹层是 dialog，要有可访问名：用格子的标题（「当前分支」）
+        aria-label={title}
         side="bottom"
         align="start"
         sideOffset={0}
