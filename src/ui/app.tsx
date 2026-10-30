@@ -45,6 +45,7 @@ import { Input } from "@/ui/base/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/base/tabs"
 import { TooltipProvider } from "@/ui/base/tooltip"
 import { Blame } from "@/ui/blame/blame"
+import { PullRequestBadge } from "@/ui/branches/pull-request-badge"
 import { Banner } from "@/ui/changes/banner"
 import { Conflicts } from "@/ui/changes/conflicts"
 import { NoChanges } from "@/ui/changes/no-changes"
@@ -234,6 +235,11 @@ export function App() {
   const selectedRemote = repo ? (remotes[repo] ?? null) : null
   useEffect(() => usePullRequestsStore.getState().load(selectedRemote), [selectedRemote])
   const pullRequestCount = usePullRequestsStore(s => s.list.length)
+  const pullRequestTarget = usePullRequestsStore(s => s.target)
+  // Desktop currentPullRequest：当前分支对应的开放 PR（按 PR 检出的分支叫 pr/<号>）
+  const currentPullRequest = usePullRequestsStore(s =>
+    status.branch ? s.list.find(pr => pr.head === status.branch || status.branch === `pr/${pr.number}`) : undefined
+  )
 
   const repoHosts = useMemo(
     () => [...new Set(Object.values(remotes).flatMap(r => (r ? [r.host] : [])))].toSorted(),
@@ -1271,6 +1277,10 @@ export function App() {
                 }}
                 // Desktop 把 PR 列表放在分支下拉的「Pull Requests」页签里；只有托管远端才有
                 pullRequestCount={pullRequestCount}
+                pullRequestBadge={
+                  currentPullRequest &&
+                  pullRequestTarget && <PullRequestBadge request={currentPullRequest} remote={pullRequestTarget} />
+                }
                 renderPullRequests={
                   remotes[repo ?? ""]
                     ? ({ close, isOnDefaultBranch, onCreateBranch }) => (

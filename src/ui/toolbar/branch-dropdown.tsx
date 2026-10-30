@@ -47,6 +47,8 @@ interface Props {
   }) => ReactNode
   /** 页签上的数量气泡（Desktop renderOpenPullRequestsBubble） */
   pullRequestCount?: number
+  /** 当前分支的 PR 徽章（Desktop renderPullRequestInfo） */
+  badge?: ReactNode
 }
 
 export function BranchDropdown({
@@ -61,13 +63,27 @@ export function BranchDropdown({
   onWorktrees,
   onOpenWorktree,
   renderPullRequests,
-  pullRequestCount = 0
+  pullRequestCount = 0,
+  badge
 }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   // Desktop BranchesTab：Branches / Pull Requests
   const [tab, setTab] = useState<"branches" | "pullRequests">("branches")
   const selectedTab = renderPullRequests ? tab : "branches"
+  // 徽章叠在按钮上（按钮里不能再嵌按钮），按它的实际宽度给文字让位
+  const badgeRef = useRef<HTMLDivElement>(null)
+  const [badgeWidth, setBadgeWidth] = useState(0)
+  useEffect(() => {
+    const element = badgeRef.current
+    if (!element) {
+      setBadgeWidth(0)
+      return
+    }
+    const observer = new ResizeObserver(() => setBadgeWidth(element.offsetWidth))
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [badge])
   const buttonRef = useRef<HTMLDivElement>(null)
   const [foldoutHeight, setFoldoutHeight] = useState(0)
   const measureFoldout = () => {
@@ -290,7 +306,7 @@ export function BranchDropdown({
     <>
       <div
         ref={buttonRef}
-        className="branch-button flex h-full min-w-0"
+        className="branch-button relative flex h-full min-w-0"
         // Desktop branch-dropdown onMouseEnter：拖着提交经过分支按钮就展开，好落到分支或 PR 上
         onDragEnter={event => {
           if (open || !repo || !canDropCommits(event.dataTransfer, repo)) return
@@ -308,6 +324,7 @@ export function BranchDropdown({
           // Desktop branch-dropdown.tsx foldoutStyleOverrides：分支 foldout 最窄 365px；高度铺到窗口底部
           // （ToolbarDropdown 的 height:100%）。高度在打开时按按钮底边量好再给：先渲染再量会让定位器
           // 把一时放不下的面板翻到按钮右侧。
+          reserveEnd={badge ? badgeWidth + 10 : 0}
           // 左下角贴着浮板的圆角
           foldoutStyle={{ width: 365, height: foldoutHeight, borderBottomLeftRadius: "var(--radius-xl)" }}
           onOpenChange={value => {
@@ -391,6 +408,12 @@ export function BranchDropdown({
             )}
           </div>
         </ToolbarDropdown>
+        {badge && (
+          // 原版徽章在文字右边、箭头左边：箭头 16px + 右内边距 12px + 间隙
+          <div ref={badgeRef} className="absolute top-1/2 right-[34px] -translate-y-1/2">
+            {badge}
+          </div>
+        )}
       </div>
       {createDialog && (
         <CreateBranch

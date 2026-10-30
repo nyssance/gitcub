@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
 
 import { assertNativeFixtures, withNativeFixtures } from "../.storybook/mocks/native"
+import { usePullRequestsStore } from "../src/features/pull-requests/store"
 import i18n from "../src/lib/i18n"
+import { PullRequestBadge } from "../src/ui/branches/pull-request-badge"
+import { PullRequests } from "../src/ui/pull-requests/list"
 import { BranchDropdown } from "../src/ui/toolbar/branch-dropdown"
 import { repo } from "./fixtures"
 
@@ -134,5 +137,55 @@ export const MergeIntoCurrent: Story = {
     await userEvent.click(page.getByText("codex/vendor-parity"))
     await expect(args.onMerge).toHaveBeenCalledWith("refs/heads/codex/vendor-parity", false)
     await expect(args.onCheckout).not.toHaveBeenCalled()
+  }
+}
+
+const prRemote = { host: "github.com", owner: "nyssance", name: "gitcub" }
+const prRequest = {
+  number: 17,
+  createdAt: "2026-10-01T12:00:00Z",
+  title: "Align toolbar with Desktop",
+  author: "bear",
+  head: "main",
+  base: "main",
+  headSha: "a".repeat(40),
+  draft: false,
+  url: "https://github.com/nyssance/gitcub/pull/17",
+  checks: "failure"
+}
+
+/** Desktop BranchesContainer 的「Pull Requests」页签与分支按钮上的 PR 徽章（#17 + CI 状态） */
+export const PullRequestsTab: Story = {
+  args: {
+    // 下拉宽度用原版默认 230px：徽章挤在文字右侧、箭头左侧
+    pullRequestCount: 1,
+    badge: <PullRequestBadge request={prRequest} remote={prRemote} />,
+    renderPullRequests: ({ close, isOnDefaultBranch, onCreateBranch }) => (
+      <PullRequests
+        remote={prRemote}
+        isOnDefaultBranch={isOnDefaultBranch}
+        onCheckout={close}
+        onCreate={close}
+        onCreateBranch={onCreateBranch}
+      />
+    )
+  },
+  beforeEach: [
+    () => usePullRequestsStore.setState({ remote: null, target: null, list: [], loading: false, error: null }),
+    withNativeFixtures({ ...handlers, pull_request_repository: () => prRemote, pull_requests: () => [prRequest] })
+  ],
+  decorators: [
+    Story => (
+      <div className="flex h-12" style={{ width: 230 }}>
+        <Story />
+      </div>
+    )
+  ],
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("button", { name: `#17 ${i18n.t("pr.checksDetail")}` })).toBeEnabled()
+    await userEvent.click(canvas.getByRole("button", { name: /main/ }))
+    const page = within(document.body)
+    await userEvent.click(await page.findByRole("tab", { name: new RegExp(i18n.t("tabs.pr")) }))
+    await expect(await page.findByText(prRequest.title)).toBeVisible()
   }
 }

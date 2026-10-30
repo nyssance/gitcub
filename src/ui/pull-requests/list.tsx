@@ -1,12 +1,4 @@
-import {
-  CheckCircleFillIcon,
-  DotFillIcon,
-  GitPullRequestDraftIcon,
-  GitPullRequestIcon,
-  SkipIcon,
-  SyncIcon,
-  XCircleFillIcon
-} from "@primer/octicons-react"
+import { GitPullRequestDraftIcon, GitPullRequestIcon, SyncIcon } from "@primer/octicons-react"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import type { TFunction } from "i18next"
 import { useEffect, useMemo, useState } from "react"
@@ -34,6 +26,7 @@ import { TooltippedContent } from "@/ui/desktop/tooltipped-content"
 import { formatRelative } from "@/upstream/lib/format-relative"
 
 import { NativeChecks } from "../check-runs/native-checks"
+import { CIStatusIcon } from "./ci-status-icon"
 
 interface IPullRequestListItem extends IFilterListItem {
   readonly id: string
@@ -240,14 +233,4 @@ export function PullRequests({
       )}
     </>
   )
-}
-
-/** Desktop ci-status.tsx 的图标与 _ci-status.scss 的颜色：成功绿勾、失败红叉、进行中黄点、跳过/取消灰色。 */
-function CIStatusIcon({ state }: { state: string }) {
-  if (state === "success") return <CheckCircleFillIcon size={16} className="ci-status ci-status-success" />
-  if (state === "failure" || state === "timed_out" || state === "action_required")
-    return <XCircleFillIcon size={16} className="ci-status ci-status-failure" />
-  if (state === "skipped" || state === "cancelled" || state === "neutral" || state === "stale")
-    return <SkipIcon size={16} className="ci-status ci-status-skipped" />
-  return <DotFillIcon size={16} className="ci-status ci-status-pending" />
 }

@@ -20,6 +20,8 @@ interface Props {
   onOpenChange?: (open: boolean) => void
   /** Desktop ToolbarDropdown foldoutStyleOverrides：覆盖默认的「与按钮同宽」 */
   foldoutStyle?: CSSProperties
+  /** 文字和箭头之间给按钮外叠放的元素（分支按钮的 PR 徽章）让出的宽度 */
+  reserveEnd?: number
 }
 
 /** 工具栏下拉：`图标 | 标题 / 值 | 箭头`，点击在下方展开 foldout。
@@ -35,7 +37,8 @@ export function ToolbarDropdown({
   children,
   open,
   onOpenChange,
-  foldoutStyle
+  foldoutStyle,
+  reserveEnd
 }: Props) {
   const content = (
     <>
@@ -44,6 +47,7 @@ export function ToolbarDropdown({
         <span className="text-toolbar-muted truncate text-[11px] font-normal">{title}</span>
         <span className="truncate text-xs font-semibold">{description}</span>
       </span>
+      {!!reserveEnd && <span aria-hidden className="shrink-0" style={{ width: reserveEnd }} />}
       {children && <ChevronDownIcon size={16} className="shrink-0" />}
     </>
   )

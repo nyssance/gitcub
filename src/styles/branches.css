@@ -325,3 +325,32 @@
 .no-pull-requests .call-to-action .link-button-component {
   display: unset;
 }
+
+/* _pull-request-badge.scss：分支按钮里的 PR 编号 + CI 状态 */
+.pr-badge {
+  --height: 22px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--height);
+  border-radius: 4px;
+  /* --toolbar-badge-background-color：gray-600 / 深色 gray-700 */
+  border: 1px solid #586069;
+  background: var(--toolbar);
+  padding: 5px;
+  font-size: inherit;
+  color: inherit;
+}
+.dark .pr-badge {
+  border-color: #444d56;
+}
+.pr-badge:not(:disabled):hover {
+  background-color: var(--toolbar-hover);
+}
+.pr-badge .number {
+  font-size: 11px;
+  line-height: var(--height);
+}
+.pr-badge .ci-status {
+  margin-left: 5px;
+}

@@ -1,4 +1,4 @@
-import { type ComponentProps, useEffect, useRef } from "react"
+import { type ComponentProps, type ReactNode, useEffect, useRef } from "react"
 
 import { useToolbarStore } from "@/features/toolbar/store"
 import type { RepoStatus } from "@/models/repo-status"
@@ -30,6 +30,7 @@ export function ToolbarRight(props: {
   onOpenWorktree: (path: string) => void
   renderPullRequests?: ComponentProps<typeof BranchDropdown>["renderPullRequests"]
   pullRequestCount?: number
+  pullRequestBadge?: ReactNode
 }) {
   const toolbar = useRef<HTMLDivElement>(null)
   const branchDropdownWidth = useToolbarStore(s => s.branchDropdownWidth)
@@ -66,6 +67,7 @@ export function ToolbarRight(props: {
           onOpenWorktree={props.onOpenWorktree}
           renderPullRequests={props.renderPullRequests}
           pullRequestCount={props.pullRequestCount}
+          badge={props.pullRequestBadge}
         />
       </Resizable>
       <Resizable
