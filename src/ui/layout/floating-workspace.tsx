@@ -1,5 +1,6 @@
 import "@nyssance/atlas/styles.css"
 import { connectTrackpad } from "@nyssance/atlas/dom"
+import { desktopDefaults } from "@nyssance/atlas/layout"
 import { useAtlas } from "@nyssance/atlas/react"
 import { tauriTrackpad } from "@nyssance/atlas/tauri"
 import { type ReactNode, useEffect, useRef } from "react"
@@ -34,7 +35,8 @@ export function FloatingWorkspace({
     direction: i18n.dir(),
     trackpadEnabled,
     insetTop: 0,
-    pagination: { label: t("canvas.label"), overviewLabel: t("canvas.overview") },
+    insetBottom: desktopDefaults.insetBottom,
+    pagination: { label: t("canvas.label") },
     overview: { label: t("canvas.overview") }
   })
   const settled = !state.moving
