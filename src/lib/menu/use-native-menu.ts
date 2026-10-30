@@ -7,6 +7,7 @@ import { type IMenu, menuFromElectronMenu } from "@/models/app-menu"
 import { Repository } from "@/models/repository"
 
 import { getRemoteHEAD } from "../desktop-git"
+import { contributesToParent, contributionRepository } from "../fork-contribution"
 import { ipc } from "../ipc"
 import { sameHostedRepository } from "../pull-request-checkout"
 import { buildDefaultMenuTemplate } from "./build-default-menu"
@@ -47,13 +48,17 @@ export function useNativeMenu(context: NativeMenuContext) {
     if (!repo) return
     void (async () => {
       const remotes = await ipc.remotes(repo)
-      const name = remotes.find(([name]) => name === "upstream")?.[0] ?? status.remote ?? remotes[0]?.[0]
+      // Desktop findContributionTargetDefaultBranch：只有为上游贡献时才用 upstream 的默认分支
+      const upstream = (await contributesToParent(repo))
+        ? remotes.find(([name]) => name === "upstream")?.[0]
+        : undefined
+      const name = upstream ?? status.remote ?? remotes[0]?.[0]
       if (name) {
         const branch = await getRemoteHEAD(new Repository(repo, -1, null, false), name)
         if (active) setDefaultBranch(branch ?? undefined)
       }
       if (remote && status.branch) {
-        const target = await ipc.pullRequestRepository(remote.host, remote.owner, remote.name)
+        const target = await contributionRepository(repo, remote)
         const prs = await ipc.pullRequests(target.host, target.owner, target.name, true)
         const details = (await ipc.branchDetails(repo, `refs/heads/${status.branch}`))[0]
         const head = details?.upstreamWithoutRemote ?? status.branch

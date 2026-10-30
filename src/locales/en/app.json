@@ -449,6 +449,7 @@
     "remote": "Remote",
     "ignoredFiles": "Ignored Files",
     "gitConfig": "Git Config",
+    "forkBehavior": "Fork Behavior",
     "primaryRemoteRepositoryUrl": "Primary Remote Repository ({{name}}) URL",
     "remoteUrl": "Remote URL",
     "otherRemotes": "Other remotes",
@@ -459,7 +460,14 @@
     "useALocalGitConfig": "Use a local Git config",
     "couldNotReadRootGitignore": "Could not read root .gitignore: {{error}}",
     "failedSettingTheRemoteUrl": "Failed setting the remote URL: {{error}}",
-    "failedSavingTheGitignoreFile": "Failed saving the .gitignore file: {{error}}"
+    "failedSavingTheGitignoreFile": "Failed saving the .gitignore file: {{error}}",
+    "illBeUsingThisFork": "I'll be using this fork…",
+    "toContributeToTheParentRepository": "To contribute to the parent repository",
+    "forMyOwnPurposes": "For my own purposes",
+    "pullRequestsTargetingWillBeShown": "Pull requests targeting <strong>{{name}}</strong> will be shown in the pull request list.",
+    "issuesWillBeCreatedIn": "Issues will be created in <strong>{{name}}</strong>.",
+    "viewOnWebWillOpen": "“View on {{platform}}” will open <strong>{{name}}</strong> in the browser.",
+    "newBranchesWillBeBasedOn": "New branches will be based on <strong>{{name}}</strong>'s default branch."
   },
   "unknownAuthors": {
     "title": "Unknown Co-Authors",

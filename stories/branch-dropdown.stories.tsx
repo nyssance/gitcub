@@ -171,7 +171,8 @@ export const PullRequestsTab: Story = {
     )
   },
   beforeEach: [
-    () => usePullRequestsStore.setState({ remote: null, target: null, list: [], loading: false, error: null }),
+    () =>
+      usePullRequestsStore.setState({ repo: null, remote: null, target: null, list: [], loading: false, error: null }),
     withNativeFixtures({ ...handlers, pull_request_repository: () => prRemote, pull_requests: () => [prRequest] })
   ],
   decorators: [

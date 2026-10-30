@@ -1,8 +1,9 @@
-import { FileIcon, GitCommitIcon, ServerIcon, TrashIcon } from "@primer/octicons-react"
+import { FileIcon, GitCommitIcon, RepoForkedIcon, ServerIcon, TrashIcon } from "@primer/octicons-react"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
+import { useAccountsStore } from "@/features/accounts/store"
 import {
   addRemote,
   getConfigValue,
@@ -13,7 +14,9 @@ import {
   setConfigValue,
   setRemoteURL
 } from "@/lib/desktop-git"
+import { forkParent, readForkContributionTarget, writeForkContributionTarget } from "@/lib/fork-contribution"
 import { ipc } from "@/lib/ipc"
+import type { Remote } from "@/models/app-state"
 import { Repository } from "@/models/repository"
 import { Button } from "@/ui/base/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/ui/base/dialog"
@@ -23,14 +26,15 @@ import { RadioGroup, RadioGroupItem } from "@/ui/base/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/base/tabs"
 import { Textarea } from "@/ui/base/textarea"
 import type { IRemote } from "@/upstream/models/remote"
+import { ForkContributionTarget } from "@/upstream/models/workflow-preferences"
 import { gitAuthorNameIsValid, InvalidGitAuthorNameMessage } from "@/upstream/ui/lib/identifier-rules"
 
 import { NoRemote } from "./no-remote"
 
-/** Desktop repository-settings.tsx RepositorySettingsTab。Fork Behavior 本项目没有对应的贡献目标设置，不列 */
-const TABS = ["remote", "ignoredFiles", "gitConfig"] as const
+/** Desktop repository-settings.tsx RepositorySettingsTab；Fork Behavior 只在远端是 fork 时出现 */
+const TABS = ["remote", "ignoredFiles", "gitConfig", "forkBehavior"] as const
 type Tab = (typeof TABS)[number]
-const TAB_ICONS = { remote: ServerIcon, ignoredFiles: FileIcon, gitConfig: GitCommitIcon }
+const TAB_ICONS = { remote: ServerIcon, ignoredFiles: FileIcon, gitConfig: GitCommitIcon, forkBehavior: RepoForkedIcon }
 
 type GitConfigLocation = "global" | "local"
 
@@ -42,19 +46,23 @@ interface Loaded {
   localEmail: string | null
   globalName: string
   globalEmail: string
+  forkContributionTarget: ForkContributionTarget
 }
 
 /** Desktop RepositorySettings：各页签只改本地状态，点「保存」才按原版 onSubmit 的顺序写入
- *  （远端 URL → .gitignore → 本地 Git 身份），出错的留在对话框里，全部成功才关闭。 */
+ *  （远端 URL → .gitignore → fork 行为 → 本地 Git 身份），出错的留在对话框里，全部成功才关闭。 */
 export function RepositorySettings({
   repo,
   primaryRemote,
+  hosted,
   onDismissed,
   onPublish
 }: {
   repo: string
   /** Desktop gitStore.currentRemote：当前分支跟踪的远端，否则 origin */
   primaryRemote: string | null
+  /** 远端对应的托管仓库；是 fork 时才显示 Fork Behavior */
+  hosted: Remote | null
   onDismissed: () => void
   onPublish: () => void
 }) {
@@ -70,14 +78,19 @@ export function RepositorySettings({
   const [errors, setErrors] = useState<string[]>([])
   const [disabled, setDisabled] = useState(false)
   const [newRemote, setNewRemote] = useState({ name: "", url: "" })
+  const [parent, setParent] = useState<Remote | null>(null)
+  // 和原生菜单一样：GitLab 仓库把 GitHub 换成 GitLab
+  const platform = useAccountsStore(s => (hosted && s.accounts[hosted.host]?.kind === "gitlab" ? "GitLab" : "GitHub"))
+  const [forkContributionTarget, setForkContributionTarget] = useState(ForkContributionTarget.Parent)
 
   const load = async () => {
-    const [remotes, localName, localEmail, globalName, globalEmail] = await Promise.all([
+    const [remotes, localName, localEmail, globalName, globalEmail, forkContributionTarget] = await Promise.all([
       getRemotes(repository),
       getConfigValue(repository, "user.name", true),
       getConfigValue(repository, "user.email", true),
       getGlobalConfigValue("user.name"),
-      getGlobalConfigValue("user.email")
+      getGlobalConfigValue("user.email"),
+      readForkContributionTarget(repo)
     ])
     let ignore: string | null = null
     const failures: string[] = []
@@ -95,7 +108,8 @@ export function RepositorySettings({
         localName,
         localEmail,
         globalName: globalName ?? "",
-        globalEmail: globalEmail ?? ""
+        globalEmail: globalEmail ?? "",
+        forkContributionTarget
       },
       failures
     }
@@ -113,9 +127,15 @@ export function RepositorySettings({
         setLocation(loaded.location)
         setName(loaded.location === "local" ? (loaded.localName ?? "") : loaded.globalName)
         setEmail(loaded.location === "local" ? (loaded.localEmail ?? "") : loaded.globalEmail)
+        setForkContributionTarget(loaded.forkContributionTarget)
         setErrors(failures)
       })
       .catch((e: unknown) => active && setErrors([String(e)]))
+    // 查不到上游（离线、没登录）就当不是 fork：Fork Behavior 页签不出现，其余照常
+    if (hosted)
+      void forkParent(hosted)
+        .then(value => active && setParent(value))
+        .catch(() => {})
     return () => {
       active = false
     }
@@ -154,6 +174,13 @@ export function RepositorySettings({
         failures.push(t("repositorySettings.failedSavingTheGitignoreFile", { error: String(e) }))
       }
     }
+    if (forkContributionTarget !== loaded.forkContributionTarget) {
+      try {
+        await writeForkContributionTarget(repo, forkContributionTarget)
+      } catch (e) {
+        failures.push(String(e))
+      }
+    }
     try {
       if (location !== loaded.location && location === "global") {
         await removeConfigValue(repository, "user.name")
@@ -183,7 +210,7 @@ export function RepositorySettings({
           <TabsList
             aria-label={t("repositorySettings.title")}
             className="w-44 shrink-0 items-stretch justify-start gap-0.5 rounded-none border-r bg-transparent px-3 py-4 group-data-vertical/tabs:h-full">
-            {TABS.map(id => {
+            {TABS.filter(id => id !== "forkBehavior" || parent).map(id => {
               const Icon = TAB_ICONS[id]
               return (
                 <TabsTrigger key={id} value={id} className="h-9 flex-none justify-start gap-2 px-3">
@@ -362,6 +389,56 @@ export function RepositorySettings({
                 </Field>
               </FieldGroup>
             </TabsContent>
+
+            {parent && hosted && (
+              <TabsContent value="forkBehavior" className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+                <FieldGroup>
+                  <FieldSet>
+                    <FieldLegend id="fork-usage-heading">{t("repositorySettings.illBeUsingThisFork")}</FieldLegend>
+                    <RadioGroup
+                      aria-labelledby="fork-usage-heading"
+                      value={forkContributionTarget}
+                      disabled={!loaded}
+                      onValueChange={value => setForkContributionTarget(value as ForkContributionTarget)}>
+                      {[ForkContributionTarget.Parent, ForkContributionTarget.Self].map(option => (
+                        <Field key={option} orientation="horizontal">
+                          <RadioGroupItem id={`fork-target-${option}`} value={option} />
+                          <FieldLabel htmlFor={`fork-target-${option}`} className="font-normal">
+                            {t(
+                              option === ForkContributionTarget.Parent
+                                ? "repositorySettings.toContributeToTheParentRepository"
+                                : "repositorySettings.forMyOwnPurposes"
+                            )}
+                          </FieldLabel>
+                        </Field>
+                      ))}
+                    </RadioGroup>
+                  </FieldSet>
+                  {/* Desktop ForkSettingsDescription：按表单里还没保存的选择算目标仓库 */}
+                  <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
+                    {(
+                      [
+                        "pullRequestsTargetingWillBeShown",
+                        "issuesWillBeCreatedIn",
+                        "viewOnWebWillOpen",
+                        "newBranchesWillBeBasedOn"
+                      ] as const
+                    ).map(key => {
+                      const target = forkContributionTarget === ForkContributionTarget.Self ? hosted : parent
+                      return (
+                        <li key={key}>
+                          <Trans
+                            i18nKey={`repositorySettings.${key}`}
+                            values={{ name: `${target.owner}/${target.name}`, platform }}
+                            components={{ strong: <strong className="text-foreground font-medium" /> }}
+                          />
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </FieldGroup>
+              </TabsContent>
+            )}
 
             <DialogFooter className="mt-auto px-4 pb-4">
               <Button type="button" variant="outline" onClick={onDismissed}>

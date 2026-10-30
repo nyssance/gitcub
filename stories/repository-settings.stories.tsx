@@ -2,8 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 
 import { assertNativeFixtures, nativeCall, withNativeFixtures } from "../.storybook/mocks/native"
+import { getDesktopRuntime } from "../src/lib/desktop-runtime"
+import { readForkContributionTarget } from "../src/lib/fork-contribution"
 import i18n from "../src/lib/i18n"
 import { RepositorySettings } from "../src/ui/repository-settings/repository-settings"
+import { ForkContributionTarget } from "../src/upstream/models/workflow-preferences"
 
 const ok = {
   exitCode: 0,
@@ -22,7 +25,36 @@ const fixtures = {
   get_config_value: () => null,
   global_config_value: (args: unknown) =>
     (args as { key: string }).key === "user.name" ? "Global Name" : "global@example.test",
-  git_execute: () => ok
+  git_execute: () => ok,
+  // 不是 fork：上游就是自己
+  pull_request_repository: (args: unknown) => args
+}
+const hosted = { host: "github.com", owner: "gitcub", name: "gitcub" }
+const parent = { host: "github.com", owner: "desktop", name: "desktop" }
+
+// Desktop 仓库库（命名 JSON 存储）的内存替身：fork 行为存在里面
+const stores = new Map<string, Record<string, unknown>>()
+const storeFixtures = {
+  store_entries: (args: unknown) => {
+    const { scope, store } = args as { scope: string; store: string }
+    return { ...stores.get(`${scope}/${store}`) }
+  },
+  store_set: (args: unknown) => {
+    const { scope, store, key, value } = args as { scope: string; store: string; key: string; value: unknown }
+    stores.set(`${scope}/${store}`, { ...stores.get(`${scope}/${store}`), [key]: value })
+  }
+}
+const forkFixtures = {
+  ...fixtures,
+  ...storeFixtures,
+  pull_request_repository: () => parent
+}
+const withRegisteredFork = () => {
+  stores.clear()
+  const cleanup = withNativeFixtures(forkFixtures)()
+  return getDesktopRuntime()
+    .repositoriesStore.addRepository("/preview/repository")
+    .then(() => cleanup)
 }
 
 const meta = {
@@ -32,7 +64,7 @@ const meta = {
   tags: ["desktop-window"],
   beforeEach: withNativeFixtures(fixtures),
   afterEach: assertNativeFixtures,
-  args: { repo: "/preview/repository", primaryRemote: "origin", onDismissed: fn(), onPublish: fn() }
+  args: { repo: "/preview/repository", primaryRemote: "origin", hosted, onDismissed: fn(), onPublish: fn() }
 } satisfies Meta<typeof RepositorySettings>
 export default meta
 type Story = StoryObj<typeof meta>
@@ -152,5 +184,35 @@ export const NoRemote: Story = {
     const screen = within(document.body)
     await userEvent.click(await screen.findByRole("button", { name: "Publish" }))
     await expect(args.onPublish).toHaveBeenCalled()
+  }
+}
+
+/** 不是 fork 就没有 Fork Behavior 页签 */
+export const NotAForkHasNoForkBehavior: Story = {
+  play: async () => {
+    const screen = within(document.body)
+    await screen.findByRole("tab", { name: i18n.t("repositorySettings.gitConfig") })
+    await waitFor(() => expect(nativeCall).toHaveBeenCalledWith("pull_request_repository", hosted))
+    await expect(screen.queryByRole("tab", { name: i18n.t("repositorySettings.forkBehavior") })).not.toBeInTheDocument()
+  }
+}
+
+/** Desktop ForkSettings：fork 默认为上游贡献；改成「自己使用」后说明跟着草稿变，保存才写进仓库库 */
+export const ForkBehaviorSaves: Story = {
+  beforeEach: withRegisteredFork,
+  play: async ({ args }) => {
+    const screen = within(document.body)
+    await userEvent.click(await screen.findByRole("tab", { name: i18n.t("repositorySettings.forkBehavior") }))
+    const parentOption = screen.getByRole("radio", {
+      name: i18n.t("repositorySettings.toContributeToTheParentRepository")
+    })
+    await waitFor(() => expect(parentOption).toBeChecked())
+    await expect(screen.getAllByText("desktop/desktop")).toHaveLength(4)
+    await userEvent.click(screen.getByRole("radio", { name: i18n.t("repositorySettings.forMyOwnPurposes") }))
+    await expect(screen.getAllByText("gitcub/gitcub")).toHaveLength(4)
+    await expect(await readForkContributionTarget("/preview/repository")).toBe(ForkContributionTarget.Parent)
+    await userEvent.click(screen.getByRole("button", { name: i18n.t("common.save") }))
+    await waitFor(() => expect(args.onDismissed).toHaveBeenCalled())
+    await expect(await readForkContributionTarget("/preview/repository")).toBe(ForkContributionTarget.Self)
   }
 }

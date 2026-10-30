@@ -9,20 +9,22 @@ import { Effect } from "effect"
 import { create } from "zustand"
 
 import { call, describeError, forkCancelable } from "@/features/effect-runtime"
+import { contributionRepository } from "@/lib/fork-contribution"
 import type { PullRequest, Remote } from "@/models/app-state"
 
 interface PullRequestsStore {
-  /** 请求针对的仓库远端 */
+  /** 请求针对的本地仓库与其远端 */
+  repo: string | null
   remote: Remote | null
-  /** 实际列 PR 的仓库：fork 时是上游 */
+  /** 实际列 PR 的仓库：fork 且为上游贡献时是上游（Desktop getNonForkGitHubRepository） */
   target: Remote | null
   list: PullRequest[]
   loading: boolean
   error: string | null
   /** 远端变了才重新加载；同一个远端什么都不做 */
-  load: (remote: Remote | null) => void
+  load: (repo: string | null, remote: Remote | null) => void
   /** 打开页签时用：同一个远端就保留列表重新取，换了远端就从头加载 */
-  revalidate: (remote: Remote | null) => void
+  revalidate: (repo: string | null, remote: Remote | null) => void
   refresh: () => void
 }
 
@@ -31,11 +33,9 @@ const sameRemote = (a: Remote | null, b: Remote | null) =>
 
 let cancel = () => {}
 
-const fetchPullRequests = (remote: Remote) =>
+const fetchPullRequests = (repo: string, remote: Remote) =>
   Effect.gen(function* () {
-    const target = yield* call("pullRequestRepository", ipc =>
-      ipc.pullRequestRepository(remote.host, remote.owner, remote.name)
-    )
+    const target = yield* call("contributionRepository", () => contributionRepository(repo, remote))
     const list = yield* call("pullRequests", ipc => ipc.pullRequests(target.host, target.owner, target.name, true))
     usePullRequestsStore.setState({ target, list, loading: false })
   }).pipe(
@@ -45,24 +45,26 @@ const fetchPullRequests = (remote: Remote) =>
   )
 
 export const usePullRequestsStore = create<PullRequestsStore>((set, get) => ({
+  repo: null,
   remote: null,
   target: null,
   list: [],
   loading: false,
   error: null,
-  load: remote => {
-    if (sameRemote(get().remote, remote)) return
+  load: (repo, remote) => {
+    if (get().repo === repo && sameRemote(get().remote, remote)) return
     cancel()
-    set({ remote, target: null, list: [], error: null, loading: !!remote })
-    cancel = remote ? forkCancelable(fetchPullRequests(remote)) : () => {}
+    set({ repo, remote, target: null, list: [], error: null, loading: !!repo && !!remote })
+    cancel = repo && remote ? forkCancelable(fetchPullRequests(repo, remote)) : () => {}
   },
-  revalidate: remote => (sameRemote(get().remote, remote) ? get().refresh() : get().load(remote)),
+  revalidate: (repo, remote) =>
+    get().repo === repo && sameRemote(get().remote, remote) ? get().refresh() : get().load(repo, remote),
   refresh: () => {
-    const { remote } = get()
-    if (!remote) return
+    const { repo, remote } = get()
+    if (!repo || !remote) return
     cancel()
     // 原版刷新时列表不清空，只让刷新按钮转起来
     set({ error: null, loading: true })
-    cancel = forkCancelable(fetchPullRequests(remote))
+    cancel = forkCancelable(fetchPullRequests(repo, remote))
   }
 }))

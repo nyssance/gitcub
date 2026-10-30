@@ -442,6 +442,7 @@
     "remote": "远端",
     "ignoredFiles": "忽略的文件",
     "gitConfig": "Git 配置",
+    "forkBehavior": "Fork 行为",
     "primaryRemoteRepositoryUrl": "主远端仓库（{{name}}）URL",
     "remoteUrl": "远端 URL",
     "otherRemotes": "其他远端",
@@ -452,7 +453,14 @@
     "useALocalGitConfig": "使用本地 Git 配置",
     "couldNotReadRootGitignore": "无法读取根目录的 .gitignore：{{error}}",
     "failedSettingTheRemoteUrl": "设置远端 URL 失败：{{error}}",
-    "failedSavingTheGitignoreFile": "保存 .gitignore 失败：{{error}}"
+    "failedSavingTheGitignoreFile": "保存 .gitignore 失败：{{error}}",
+    "illBeUsingThisFork": "这个 fork 我会用来…",
+    "toContributeToTheParentRepository": "为上游仓库贡献",
+    "forMyOwnPurposes": "自己使用",
+    "pullRequestsTargetingWillBeShown": "拉取请求列表显示以 <strong>{{name}}</strong> 为目标的拉取请求。",
+    "issuesWillBeCreatedIn": "Issue 会建在 <strong>{{name}}</strong>。",
+    "viewOnWebWillOpen": "「在 {{platform}} 上查看」会在浏览器打开 <strong>{{name}}</strong>。",
+    "newBranchesWillBeBasedOn": "新分支基于 <strong>{{name}}</strong> 的默认分支。"
   },
   "unknownAuthors": {
     "title": "未知的共同作者",

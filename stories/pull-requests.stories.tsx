@@ -54,7 +54,8 @@ const meta = {
   tags: ["desktop-window"],
   // 列表数据在 store 里，跨故事会留着；每个故事从未加载开始
   beforeEach: [
-    () => usePullRequestsStore.setState({ remote: null, target: null, list: [], loading: false, error: null }),
+    () =>
+      usePullRequestsStore.setState({ repo: null, remote: null, target: null, list: [], loading: false, error: null }),
     withNativeFixtures(handlers)
   ],
   afterEach: assertNativeFixtures,

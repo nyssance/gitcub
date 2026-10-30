@@ -25,6 +25,7 @@ import {
 } from "@/lib/branch-workflows"
 import { getGlobalConfigValue, getRemoteHEAD } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
+import { contributesToParent, contributionRepository } from "@/lib/fork-contribution"
 import i18n from "@/lib/i18n"
 import { ipc } from "@/lib/ipc"
 import { useNativeMenu } from "@/lib/menu/use-native-menu"
@@ -244,7 +245,7 @@ export function App() {
 
   // Desktop 选中仓库时就加载开放的 PR（分支下拉页签上的数量）；换远端时中断上一次请求
   const selectedRemote = repo ? (remotes[repo] ?? null) : null
-  useEffect(() => usePullRequestsStore.getState().load(selectedRemote), [selectedRemote])
+  useEffect(() => usePullRequestsStore.getState().load(repo, selectedRemote), [repo, selectedRemote])
   const pullRequestCount = usePullRequestsStore(s => s.list.length)
   const pullRequestTarget = usePullRequestsStore(s => s.target)
   // Desktop currentPullRequest：当前分支对应的开放 PR（按 PR 检出的分支叫 pr/<号>）
@@ -829,7 +830,7 @@ export function App() {
         const remote = remotes[repo ?? ""]
         if (remote && repo)
           void (async () => {
-            const target = await ipc.pullRequestRepository(remote.host, remote.owner, remote.name)
+            const target = await contributionRepository(repo, remote)
             const details = (await ipc.branchDetails(repo)).find(b => !b.remote && b.name === status.branch)
             const upstream = details?.upstreamRemoteName
             const sources = await ipc.remotes(repo)
@@ -882,7 +883,11 @@ export function App() {
         if (repo)
           void run(async () => {
             const remotes = await ipc.remotes(repo)
-            const remote = remotes.find(([name]) => name === "upstream")?.[0] ?? status.remote ?? remotes[0]?.[0]
+            // Desktop findContributionTargetDefaultBranch：只有为上游贡献时才用 upstream 的默认分支
+            const upstream = (await contributesToParent(repo))
+              ? remotes.find(([name]) => name === "upstream")?.[0]
+              : undefined
+            const remote = upstream ?? status.remote ?? remotes[0]?.[0]
             if (!remote) throw new Error(t("prefs.noRemoteHint"))
             await ipc.fetch(repo, remote)
             const branch = await getRemoteHEAD(new Repository(repo, -1, null, false), remote)
@@ -896,20 +901,24 @@ export function App() {
       case "branch-on-github":
       case "compare-on-github":
       case "create-issue-in-repository-on-github": {
-        const remote = remotes[repo ?? ""]
-        if (remote) {
-          const root = `https://${remote.host}/${remote.owner}/${remote.name}`
-          const gitlab = accounts[remote.host]?.kind === "gitlab"
-          const suffix =
-            payload === "create-issue-in-repository-on-github"
-              ? gitlab
-                ? "/-/issues/new"
-                : "/issues/new"
-              : payload === "branch-on-github"
-                ? `${gitlab ? "/-" : ""}/tree/${encodeURIComponent(status.branch ?? "HEAD")}`
-                : `${gitlab ? "/-" : ""}/compare`
-          void openUrl(root + suffix).catch(e => setError(String(e)))
-        }
+        const hosted = remotes[repo ?? ""]
+        if (hosted && repo)
+          void (async () => {
+            // Desktop getGitHubHtmlUrl：Issue 建在贡献目标上；分支和比较看的是自己的远端
+            const remote =
+              payload === "create-issue-in-repository-on-github" ? await contributionRepository(repo, hosted) : hosted
+            const root = `https://${remote.host}/${remote.owner}/${remote.name}`
+            const gitlab = accounts[remote.host]?.kind === "gitlab"
+            const suffix =
+              payload === "create-issue-in-repository-on-github"
+                ? gitlab
+                  ? "/-/issues/new"
+                  : "/issues/new"
+                : payload === "branch-on-github"
+                  ? `${gitlab ? "/-" : ""}/tree/${encodeURIComponent(status.branch ?? "HEAD")}`
+                  : `${gitlab ? "/-" : ""}/compare`
+            await openUrl(root + suffix)
+          })().catch(e => setError(String(e)))
         break
       }
       case "show-changes":
@@ -974,8 +983,12 @@ export function App() {
         if (repo) void ipc.revealInFileManager(repo)
         break
       case "view-on-remote": {
-        const r = remotes[repo ?? ""]
-        if (r) void openUrl(`https://${r.host}/${r.owner}/${r.name}`)
+        const hosted = remotes[repo ?? ""]
+        // Desktop getGitHubHtmlUrl：fork 为上游贡献时打开上游
+        if (hosted && repo)
+          void contributionRepository(repo, hosted)
+            .then(r => openUrl(`https://${r.host}/${r.owner}/${r.name}`))
+            .catch(e => setError(String(e)))
         break
       }
       case "stash-all-changes":
@@ -1193,10 +1206,12 @@ export function App() {
           key={repo}
           repo={repo}
           primaryRemote={status.remote}
+          hosted={remotes[repo] ?? null}
           onDismissed={() => {
             useDialogsStore.getState().setRepositorySettingsOpen(false)
-            // 远端、身份可能变了：和关设置一样整体刷新
+            // 远端、身份、fork 行为可能变了：和关设置一样整体刷新，PR 列表按新的贡献目标重取
             void refresh()
+            usePullRequestsStore.getState().refresh()
           }}
           onPublish={() => {
             useDialogsStore.getState().setRepositorySettingsOpen(false)

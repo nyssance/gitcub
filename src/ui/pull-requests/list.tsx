@@ -78,7 +78,7 @@ export function PullRequests({
   const { t } = useTranslation()
   const { list, target, loading, error, revalidate, refresh } = usePullRequestsStore()
   // 选中仓库时已经预先取过（页签上的数量）；打开页签先显示已有的，同时重新取一次
-  useEffect(() => revalidate(remote), [revalidate, remote])
+  useEffect(() => revalidate(repo ?? null, remote), [revalidate, repo, remote])
 
   const [filterText, setFilterText] = useState("")
   // 展开哪条 PR 的检查项。一次只展开一条——同时摊开几十个 job 没人看得过来
