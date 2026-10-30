@@ -150,8 +150,8 @@ test("a partial-clone history fetch cannot block navigation or other native comm
       await window.__TAURI_INTERNALS__.invoke("load_state")
     })
     // The rail's "Discover" entry opens the embedded Trending board since
-    // 2026-10-22; the hosted repository tabs now live under "Repositories".
-    await page.locator('button:has-text("Repositories")').click()
+    // 2026-10-22; the hosted repository tabs now live under the GitCub header.
+    await page.locator('.repository-rail [data-slot="sidebar-header"] button:has-text("GitCub")').click()
     await page.waitForSelector('[role="tablist"][aria-label="Discover"]', { state: "visible" })
     // A local repository without a remote is listed under "Third-party".
     await page.locator('[data-slot="tabs-trigger"]:has-text("Third-party")').click()
