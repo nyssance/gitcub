@@ -1,7 +1,8 @@
+import { connectDesktopOverview } from "@alwith/module-desktop-shell/overview"
+import "@alwith/module-desktop-shell/overview.css"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import "@nyssance/atlas/styles.css"
 import { connectTrackpad } from "@nyssance/atlas/dom"
-import { desktopDefaults } from "@nyssance/atlas/layout"
 import { useAtlas } from "@nyssance/atlas/react"
 import { tauriTrackpad } from "@nyssance/atlas/tauri"
 import { type ReactNode, useEffect, useRef } from "react"
@@ -36,11 +37,12 @@ export function FloatingWorkspace({
     direction: i18n.dir(),
     trackpadEnabled,
     insetTop: 0,
-    insetBottom: desktopDefaults.insetBottom,
-    pagination: { label: t("canvas.label") },
-    overview: { label: t("canvas.overview"), openLink: url => { void openUrl(url) } }
+    insetBottom: 16,
+    pagination: false,
+    overview: { label: t("canvas.overview") }
   })
   const settled = !state.moving
+  useEffect(() => (atlas ? connectDesktopOverview(atlas, { openLink: openUrl }) : undefined), [atlas])
   useEffect(() => {
     const region = page === 0 ? "trending" : "workspace"
     if (atlas && atlas.getState().activeRegion !== region) atlas.goTo(region)
