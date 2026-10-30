@@ -1,7 +1,7 @@
 //! 设置：账户 token、Git 身份、外观与语言。
 //!
-//! token 走系统钥匙串（macOS Keychain / Windows Credential Manager /
-//! Linux keyutils），**不进配置文件**。明文存 token 是把长期凭据写到一个
+//! token 走系统钥匙串（macOS Keychain / Windows Credential Manager），
+//! **不进配置文件**。明文存 token 是把长期凭据写到一个
 //! 备份工具和同步盘都会顺手带走的地方。
 
 use crate::credentials;
@@ -126,16 +126,11 @@ fn read(key: &str) -> Option<String> {
 #[cfg(debug_assertions)]
 fn dev_token_path(key: &str) -> Option<std::path::PathBuf> {
     // 各系统放数据的地方不一样。写死 macOS 那条路径的话，
-    // Windows / Linux 上的开发构建会一声不响地存不下令牌
+    // Windows 上的开发构建会一声不响地存不下令牌
     let base: std::path::PathBuf = if cfg!(target_os = "macos") {
         std::path::Path::new(&std::env::var_os("HOME")?).join("Library/Application Support")
-    } else if cfg!(target_os = "windows") {
-        std::env::var_os("APPDATA")?.into()
     } else {
-        match std::env::var_os("XDG_DATA_HOME") {
-            Some(x) if !x.is_empty() => x.into(),
-            _ => std::path::Path::new(&std::env::var_os("HOME")?).join(".local/share"),
-        }
+        std::env::var_os("APPDATA")?.into()
     };
     #[cfg(feature = "hasgard-testing")]
     let base = std::env::var_os("GITCUB_TEST_DATA_DIR").map(std::path::PathBuf::from).unwrap_or(base);

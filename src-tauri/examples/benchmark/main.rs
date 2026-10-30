@@ -12,6 +12,6 @@ include!("run.rs");
 
 #[cfg(not(unix))]
 fn main() {
-    eprintln!("benchmark 对照的进程内快路径只在 unix 上编译，请在 macOS 或 Linux 上运行");
+    eprintln!("benchmark 对照的进程内快路径只在 unix 上编译，请在 macOS 上运行");
     std::process::exit(1);
 }

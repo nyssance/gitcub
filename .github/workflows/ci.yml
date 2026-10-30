@@ -1,8 +1,7 @@
 # 门禁。两件事：
 #   1. 主平台（macOS）直接执行检查命令；Fabric 仅用于本地开发。
-#   2. Windows / Linux 至少**编译一遍** —— 那两个平台的 cfg 分支在开发机上
-#      连语法都没被检查过（`#[cfg(windows)]` 的窗口效果就是这种），
-#      这一格是它们唯一的保障
+#   2. Windows 至少**编译一遍** —— 它的 cfg 分支在开发机上连语法都没被检查过
+#      （`#[cfg(windows)]` 的窗口效果就是这种），这一格是唯一的保障。不支持 Linux
 name: CI
 
 on:
@@ -81,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest]
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
@@ -89,20 +88,6 @@ jobs:
         with:
           workspaces: src-tauri
           key: ${{ matrix.os }}
-
-      # Tauri 在 Linux 上靠系统的 webkit2gtk；没有这些连 cargo check 都过不去
-      - name: 系统依赖（Linux）
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libjavascriptcoregtk-4.1-dev \
-            libsoup-3.0-dev \
-            libgtk-3-dev \
-            librsvg2-dev \
-            libxdo-dev \
-            patchelf
 
       # --all-targets 连测试代码一起编，这样平台相关的测试也不会漏
       - name: 编译

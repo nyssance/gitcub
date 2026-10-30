@@ -35,8 +35,3 @@ pub fn apply(window: &tauri::WebviewWindow) {
         Err(e) => log::warn!("窗口 Mica 应用失败: {e}"),
     }
 }
-
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-pub fn apply(_window: &tauri::WebviewWindow) {
-    // Linux 下 WebKitGTK 没有对应的原生材质，保持不透明
-}

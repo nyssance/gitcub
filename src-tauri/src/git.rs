@@ -31,9 +31,7 @@ pub fn set_resource_dir(dir: &Path) {
         ("macos", "aarch64") => "darwin-arm64",
         ("macos", _) => "darwin-x64",
         ("windows", "aarch64") => "win32-arm64",
-        ("windows", _) => "win32-x64",
-        ("linux", "aarch64") => "linux-arm64",
-        _ => "linux-x64",
+        _ => "win32-x64",
     };
     let root = dir.join("git").join(key);
     let _ = BUNDLED.set(executable(&root).is_file().then_some(root));
@@ -121,16 +119,11 @@ impl Git {
                 }
                 c.env("GIT_EXEC_PATH", exec_path(root));
                 if !cfg!(windows) {
-                    // macOS/Linux 的 /etc/gitconfig 是系统级的、我们改不了，
+                    // macOS 的 /etc/gitconfig 是系统级的、我们改不了，
                     // 指向发行包自带的那份，让用户的 global/local 配置仍能覆盖
                     c.env("GIT_CONFIG_SYSTEM", root.join("etc").join("gitconfig"));
                     // 初始化仓库时用来填充 .git 的模板
                     c.env("GIT_TEMPLATE_DIR", root.join("share/git-core/templates"));
-                }
-                if cfg!(target_os = "linux") {
-                    // 从任意位置运行时要靠 PREFIX 解析路径
-                    c.env("PREFIX", root);
-                    c.env("GIT_SSL_CAINFO", root.join("ssl").join("cacert.pem"));
                 }
                 c
             }

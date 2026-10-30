@@ -30,12 +30,6 @@ pub fn open_terminal(path: &Path) -> Result<(), String> {
         // 要执行的命令），靠 spawn 设好工作目录就行
         return spawn("wt", &["-d"], path).or_else(|_| spawn_in("cmd", &["/c", "start", "cmd"], path));
     }
-    // Linux 各发行版默认终端不一样，按常见程度试
-    for bin in ["x-terminal-emulator", "gnome-terminal", "konsole", "xterm"] {
-        if spawn(bin, &[], path).is_ok() {
-            return Ok(());
-        }
-    }
     Err("没找到可用的终端程序".into())
 }
 

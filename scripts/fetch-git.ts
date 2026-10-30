@@ -51,7 +51,7 @@ const unusedBinaries = [
 ]
 
 function platformKey() {
-  const system = { darwin: "darwin", win32: "win32", linux: "linux" }[process.platform as "darwin" | "win32" | "linux"]
+  const system = { darwin: "darwin", win32: "win32" }[process.platform as "darwin" | "win32"]
   const arch = { x64: "x64", arm64: "arm64" }[process.arch as "x64" | "arm64"] ?? process.arch
   return `${system}-${arch}`
 }

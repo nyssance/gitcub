@@ -21,7 +21,7 @@ base64 = "0.23"
 getrandom = "0.4"
 regex = "1"
 gix = { version = "0.90", features = ["sha256"] }
-keyring = { version = "4", features = ["apple-native-keyring-store", "linux-keyutils-keyring-store"] }
+keyring = { version = "4", features = ["apple-native-keyring-store"] }
 log = "0.4"
 chrono = "0.4"
 # 文件监听：别的程序（编辑器、构建、另一个终端里的 git）改了工作区时，

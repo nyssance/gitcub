@@ -1660,11 +1660,6 @@ pub async fn desktop_beep() -> Result<(), String> {
             use std::io::Write;
             std::io::stderr().write_all(b"\x07").map_err(|e| e.to_string())?;
         }
-        #[cfg(target_os = "linux")]
-        {
-            use std::io::Write;
-            std::io::stderr().write_all(b"\x07").map_err(|e| e.to_string())?;
-        }
         Ok(())
     })
     .await
