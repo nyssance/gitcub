@@ -1,3 +1,4 @@
+import { openUrl } from "@tauri-apps/plugin-opener"
 import "@nyssance/atlas/styles.css"
 import { connectTrackpad } from "@nyssance/atlas/dom"
 import { desktopDefaults } from "@nyssance/atlas/layout"
@@ -37,7 +38,7 @@ export function FloatingWorkspace({
     insetTop: 0,
     insetBottom: desktopDefaults.insetBottom,
     pagination: { label: t("canvas.label") },
-    overview: { label: t("canvas.overview") }
+    overview: { label: t("canvas.overview"), openLink: url => { void openUrl(url) } }
   })
   const settled = !state.moving
   useEffect(() => {
