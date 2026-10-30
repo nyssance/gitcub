@@ -1,101 +1,97 @@
-//! 热路径基准：gix 实现与 Desktop 同等 git 命令在同一仓库上的耗时对照。
-//! Desktop 一侧只计 git 进程本身（启动、执行、读完输出），不含其 JS 解析，
-//! 因此是 Desktop 耗时的下界。
-// 与 conformance 相同的模块集合，未用到的入口的 dead_code 与应用构建无关。
-#![allow(dead_code)]
-#[path = "../src/blame.rs"]
+// 基准的实现，由 main.rs 在 unix 下 include!；模块路径相对 examples/benchmark/。
+#[path = "../../src/blame.rs"]
 mod blame;
 #[cfg(unix)]
-#[path = "../src/blame_engine.rs"]
+#[path = "../../src/blame_engine.rs"]
 mod blame_engine;
-#[path = "../src/blame_model.rs"]
+#[path = "../../src/blame_model.rs"]
 mod blame_model;
-#[path = "../src/branch.rs"]
+#[path = "../../src/branch.rs"]
 mod branch;
 #[cfg(unix)]
-#[path = "../src/changed_paths.rs"]
+#[path = "../../src/changed_paths.rs"]
 mod changed_paths;
-#[path = "../src/credential_protocol.rs"]
+#[path = "../../src/credential_protocol.rs"]
 mod credential_protocol;
-#[path = "../src/cygwin.rs"]
+#[path = "../../src/cygwin.rs"]
 mod cygwin;
-#[path = "../src/desktop_import.rs"]
+#[path = "../../src/desktop_import.rs"]
 mod desktop_import;
-#[path = "../src/desktop_log.rs"]
+#[path = "../../src/desktop_log.rs"]
 mod desktop_log;
-#[path = "../src/file_history.rs"]
+#[path = "../../src/file_history.rs"]
 mod file_history;
-#[path = "../src/file_system.rs"]
+#[path = "../../src/file_system.rs"]
 mod file_system;
-#[path = "../src/git.rs"]
+#[path = "../../src/git.rs"]
 mod git;
-#[path = "../src/git_config.rs"]
+#[path = "../../src/git_config.rs"]
 mod git_config;
-#[path = "../src/gitignore.rs"]
+#[path = "../../src/gitignore.rs"]
 mod gitignore;
-#[path = "../src/graph.rs"]
+#[path = "../../src/graph.rs"]
 mod graph;
-#[path = "../src/history.rs"]
+#[path = "../../src/history.rs"]
 mod history;
-#[path = "../src/host_url.rs"]
+#[path = "../../src/host_url.rs"]
 mod host_url;
-#[path = "../src/image.rs"]
+#[path = "../../src/image.rs"]
 mod image;
-#[path = "../src/index_parser.rs"]
+#[path = "../../src/index_parser.rs"]
 mod index_parser;
-#[path = "../src/interactive.rs"]
+#[path = "../../src/interactive.rs"]
 mod interactive;
-#[path = "../src/lfs.rs"]
+#[path = "../../src/lfs.rs"]
 mod lfs;
-#[path = "../src/net.rs"]
+#[path = "../../src/net.rs"]
 mod net;
-#[path = "../src/notifications.rs"]
+#[path = "../../src/notifications.rs"]
 mod notifications;
-#[path = "../src/ops.rs"]
+#[path = "../../src/ops.rs"]
 mod ops;
 #[cfg(unix)]
-#[path = "../src/pack_reader.rs"]
+#[path = "../../src/pack_reader.rs"]
 mod pack_reader;
-#[path = "../src/porcelain.rs"]
+#[path = "../../src/porcelain.rs"]
 mod porcelain;
-#[path = "../src/process.rs"]
+#[path = "../../src/process.rs"]
 mod process;
-#[path = "../src/progress.rs"]
+#[path = "../../src/progress.rs"]
 mod progress;
-#[path = "../src/raw_diff.rs"]
+#[path = "../../src/raw_diff.rs"]
 mod raw_diff;
-#[path = "../src/remote.rs"]
+#[path = "../../src/remote.rs"]
 mod remote;
-#[path = "../src/remote_ops.rs"]
+#[path = "../../src/remote_ops.rs"]
 mod remote_ops;
-#[path = "../src/rename.rs"]
+#[path = "../../src/rename.rs"]
 mod rename;
-#[path = "../src/repository.rs"]
+#[path = "../../src/repository.rs"]
 mod repository;
-#[path = "../src/search_query.rs"]
+#[path = "../../src/search_query.rs"]
 mod search_query;
-#[path = "../src/shell_env.rs"]
+#[path = "../../src/shell_env.rs"]
 mod shell_env;
-#[path = "../src/ssh.rs"]
+#[path = "../../src/ssh.rs"]
 mod ssh;
-#[path = "../src/stage.rs"]
+#[path = "../../src/stage.rs"]
 mod stage;
-#[path = "../src/stats_context.rs"]
+#[path = "../../src/stats_context.rs"]
 mod stats_context;
-#[path = "../src/status.rs"]
+#[path = "../../src/status.rs"]
 mod status;
-#[path = "../src/system.rs"]
+#[path = "../../src/system.rs"]
 mod system;
-#[path = "../src/terminal.rs"]
+#[path = "../../src/terminal.rs"]
 mod terminal;
 #[cfg(test)]
-#[path = "../src/test_repo.rs"]
+#[path = "../../src/test_repo.rs"]
 mod test_repo;
-#[path = "../src/trampoline.rs"]
+#[path = "../../src/trampoline.rs"]
 mod trampoline;
-#[path = "../src/windows_integrations.rs"]
+#[path = "../../src/windows_integrations.rs"]
 mod windows_integrations;
-#[path = "../src/xdiff.rs"]
+#[path = "../../src/xdiff.rs"]
 mod xdiff;
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};

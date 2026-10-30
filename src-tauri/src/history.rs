@@ -3172,6 +3172,7 @@ mod tests {
         git(r, &["rev-parse", "HEAD"]).trim().to_string()
     }
 
+    #[cfg(unix)] // 用到 unix 的文件权限与符号链接
     #[test]
     fn 提交文件列表_进程内与_git_一致() {
         let d = tempfile::tempdir().unwrap();
@@ -3255,6 +3256,7 @@ mod tests {
 
     /// 每个文件的增删行数对照 `git show --numstat`：文本、重命名带修改、二进制（`-`）、只改模式。
     /// 快速路径与 git 路径都要给出相同的数字；Desktop（log.ts parseRawLogWithNumstat）把 `-` 按 0 计入总数。
+    #[cfg(unix)] // 用到 unix 的文件权限与符号链接
     #[test]
     fn 提交文件行数_与_git_show_numstat_一致() {
         let d = tempfile::tempdir().unwrap();
@@ -3348,6 +3350,7 @@ mod tests {
     }
 
     /// 随机提交序列：每一步随机新增、修改、删除、改模式，与 git 对照可作答的那些。
+    #[cfg(unix)] // 用到 unix 的文件权限与符号链接
     #[test]
     fn 提交文件列表_随机提交与_git_一致() {
         let d = tempfile::tempdir().unwrap();

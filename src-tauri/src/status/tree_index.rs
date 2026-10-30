@@ -372,6 +372,7 @@ mod tests {
         assert!(outcome.fallback.is_some(), "要做改名检测时交给 gix：{outcome:?}");
     }
 
+    #[cfg(unix)] // 用到 unix 的文件权限与符号链接
     #[test]
     fn cache_tree_与_head_不同的有效记录要展开() {
         let (_d, root) = init();

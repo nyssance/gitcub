@@ -5,7 +5,7 @@
 
 ## 方法
 
-- `src-tauri/examples/benchmark.rs`（release 构建）在同一进程里交替执行两侧，每项 10 次，取中位数与最小值。
+- `src-tauri/examples/benchmark/`（release 构建）在同一进程里交替执行两侧，每项 10 次，取中位数与最小值。
 - GitCub 一侧直接调用生产函数：`status::status`、`history::query_details`（Desktop 移植的 git-store、
   分支比较、PR 分支和提交表单读历史的入口；不带 revision、单个修订号、`A..B` 与 `<rev> --not --remotes` 走 gix 快速路径，
   其中有排除端时照搬 git 的 `limit_list` 受限遍历）、
