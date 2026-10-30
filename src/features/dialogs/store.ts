@@ -26,6 +26,8 @@ interface DialogsStore {
   prefsOpen: boolean
   prefsTab: PreferencesTab
   worktreesOpen: boolean
+  /** Desktop PopupType.RepositorySettings */
+  repositorySettingsOpen: boolean
   creatingPr: boolean
   publishing: boolean
   /** 等确认丢弃的文件；丢弃不可逆，照原版问一次 */
@@ -41,6 +43,7 @@ interface DialogsStore {
   openPreferences: (tab?: PreferencesTab) => void
   setPrefsOpen: (open: boolean) => void
   setWorktreesOpen: (open: boolean) => void
+  setRepositorySettingsOpen: (open: boolean) => void
   setCreatingPr: (open: boolean) => void
   setPublishing: (open: boolean) => void
   setDiscarding: (next: Updater<string[] | null>) => void
@@ -53,6 +56,7 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   prefsOpen: false,
   prefsTab: "accounts",
   worktreesOpen: false,
+  repositorySettingsOpen: false,
   creatingPr: false,
   publishing: false,
   discarding: null,
@@ -85,6 +89,7 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   openPreferences: tab => set(store => ({ prefsOpen: true, prefsTab: tab ?? store.prefsTab })),
   setPrefsOpen: prefsOpen => set({ prefsOpen }),
   setWorktreesOpen: worktreesOpen => set({ worktreesOpen }),
+  setRepositorySettingsOpen: repositorySettingsOpen => set({ repositorySettingsOpen }),
   setCreatingPr: creatingPr => set({ creatingPr }),
   setPublishing: publishing => set({ publishing }),
   setDiscarding: next => set(store => ({ discarding: resolve(next, store.discarding) }))
@@ -98,4 +103,5 @@ export const selectDialogBlocking = (store: DialogsStore) =>
   store.prefsOpen ||
   store.creatingPr ||
   store.publishing ||
-  store.worktreesOpen
+  store.worktreesOpen ||
+  store.repositorySettingsOpen

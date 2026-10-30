@@ -9,7 +9,6 @@ import {
   PaintbrushIcon,
   PersonIcon,
   QuestionIcon,
-  RepoIcon,
   TrashIcon
 } from "@primer/octicons-react"
 import { openUrl } from "@tauri-apps/plugin-opener"
@@ -63,7 +62,6 @@ const TAB_ICONS: Record<PreferencesTab, React.ComponentType<{ size?: number; "da
   prompts: QuestionIcon,
   advanced: GearIcon,
   accessibility: AccessibilityIcon,
-  repository: RepoIcon,
   trackpad: Touchpad
 }
 
@@ -73,7 +71,6 @@ interface Props {
   onOpenChange: (open: boolean) => void
   state: AppState
   onPatch: (p: Partial<AppState>) => void
-  repo: string | null
   /** 要列出的实例（公有两家 + 仓库里出现过的 + 用户加的），由 App 统一算 */
   hosts: string[]
   /** 各实例的账号，由 App 统一持有 */
@@ -113,7 +110,6 @@ export function Preferences({
   onOpenChange,
   state,
   onPatch,
-  repo,
   hosts,
   accounts,
   onAccountsChanged,
@@ -175,10 +171,7 @@ export function Preferences({
               <IntegrationSettings state={state} onPatch={onPatch} />
             </TabsContent>
             <TabsContent value="git" className="min-h-0 overflow-y-auto p-4">
-              <GitTab repo={repo} />
-            </TabsContent>
-            <TabsContent value="repository" className="min-h-0 overflow-y-auto p-4">
-              <RepositoryTab key={repo} repo={repo} />
+              <GitTab />
             </TabsContent>
             <TabsContent value="appearance" className="min-h-0 overflow-y-auto p-4">
               <AppearanceTab theme={state.theme} onChange={theme => onPatch({ theme })} />
@@ -586,7 +579,7 @@ const DEFAULT_BRANCH_SETTING = "init.defaultBranch"
 const DEFAULT_BRANCH = "main"
 
 /** Git 身份。不传 repo 时读写全局配置，并带 Desktop preferences/git.tsx 的「新仓库默认分支」设置。 */
-function GitTab({ repo, local = false }: { repo: string | null; local?: boolean }) {
+function GitTab() {
   const { t } = useTranslation()
   const [id, setId] = useState({ name: "", email: "" })
   const [ready, setReady] = useState(false)
@@ -595,7 +588,6 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
   // 清洗后不同时提示「将保存为 …」
   const [defaultBranch, setDefaultBranch] = useState<{ initial: string; value: string } | null>(null)
   useEffect(() => {
-    if (local) return
     let active = true
     setDefaultBranch(null)
     getGlobalConfigValue(DEFAULT_BRANCH_SETTING)
@@ -607,7 +599,7 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
     return () => {
       active = false
     }
-  }, [local])
+  }, [])
   const sanitizedDefaultBranch = defaultBranch ? sanitizedRefName(defaultBranch.value) : ""
   const saveDefaultBranch = async () => {
     if (!defaultBranch || !sanitizedDefaultBranch || sanitizedDefaultBranch === defaultBranch.initial) return
@@ -625,7 +617,7 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
     setReady(false)
     setError(null)
     ipc
-      .gitIdentity(local ? (repo ?? undefined) : undefined)
+      .gitIdentity()
       .then(value => {
         if (active) {
           setId(value)
@@ -636,7 +628,7 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
     return () => {
       active = false
     }
-  }, [repo, local])
+  }, [])
 
   // 改了就是改了：失焦即写 git config
   const save = async () => {
@@ -644,7 +636,7 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
     setError(null)
     try {
       if (!gitAuthorNameIsValid(id.name)) throw new Error(InvalidGitAuthorNameMessage)
-      await ipc.setGitIdentity(id.name, id.email, local ? (repo ?? undefined) : undefined)
+      await ipc.setGitIdentity(id.name, id.email)
     } catch (e) {
       setError(String(e))
     }
@@ -663,7 +655,7 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
         />
       </SettingRow>
       <Separator />
-      <SettingRow title={t("prefs.email")} description={t(local ? "prefs.localIdentity" : "prefs.globalOnly")}>
+      <SettingRow title={t("prefs.email")} description={t("prefs.globalOnly")}>
         <Input
           disabled={!ready}
           value={id.email}
@@ -673,32 +665,30 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
           className="h-8 w-56"
         />
       </SettingRow>
-      {!local && (
-        <>
-          <Separator />
-          <SettingRow
-            title={t("prefs.defaultBranch")}
-            description={
-              <>
-                {t("prefs.defaultBranchHint")}
-                {defaultBranch && sanitizedDefaultBranch !== defaultBranch.value && (
-                  <div role="status" className="text-foreground">
-                    {t("prefs.defaultBranchWarning", { name: sanitizedDefaultBranch })}
-                  </div>
-                )}
-              </>
-            }>
-            <Input
-              disabled={!defaultBranch}
-              value={defaultBranch?.value ?? ""}
-              aria-label={t("prefs.defaultBranch")}
-              onChange={e => defaultBranch && setDefaultBranch({ ...defaultBranch, value: e.currentTarget.value })}
-              onBlur={() => void saveDefaultBranch()}
-              className="h-8 w-56"
-            />
-          </SettingRow>
-        </>
-      )}
+      <>
+        <Separator />
+        <SettingRow
+          title={t("prefs.defaultBranch")}
+          description={
+            <>
+              {t("prefs.defaultBranchHint")}
+              {defaultBranch && sanitizedDefaultBranch !== defaultBranch.value && (
+                <div role="status" className="text-foreground">
+                  {t("prefs.defaultBranchWarning", { name: sanitizedDefaultBranch })}
+                </div>
+              )}
+            </>
+          }>
+          <Input
+            disabled={!defaultBranch}
+            value={defaultBranch?.value ?? ""}
+            aria-label={t("prefs.defaultBranch")}
+            onChange={e => defaultBranch && setDefaultBranch({ ...defaultBranch, value: e.currentTarget.value })}
+            onBlur={() => void saveDefaultBranch()}
+            className="h-8 w-56"
+          />
+        </SettingRow>
+      </>
       {error && <p className="text-destructive text-xs">{error}</p>}
     </SettingGroup>
   )
@@ -708,153 +698,6 @@ function GitTab({ repo, local = false }: { repo: string | null; local?: boolean 
  *
  * 这两样是「偶尔要改一次、改错了很烦」的东西：远端换了地址、或者要把某个
  * 目录加进忽略列表。放设置里而不是主界面，因为它们不该天天点到。 */
-function RepositoryTab({ repo }: { repo: string | null }) {
-  const { t } = useTranslation()
-  const [remotes, setRemotes] = useState<[string, string][]>([])
-  const [remoteName, setRemoteName] = useState("")
-  const [remoteUrl, setRemoteUrl] = useState("")
-  const [adding, setAdding] = useState(false)
-  const [ignore, setIgnore] = useState("")
-  const [ignoreReady, setIgnoreReady] = useState(false)
-  const remoteRequest = useRef(0)
-  const [error, setError] = useState<string | null>(null)
-
-  const load = useCallback(() => {
-    if (!repo) return
-    const request = ++remoteRequest.current
-    ipc
-      .remotes(repo)
-      .then(value => request === remoteRequest.current && setRemotes(value))
-      .catch((e: unknown) => request === remoteRequest.current && setError(String(e)))
-  }, [repo])
-
-  useEffect(() => {
-    load()
-    return () => {
-      remoteRequest.current += 1
-    }
-  }, [load])
-
-  useEffect(() => {
-    if (!repo) return
-    let active = true
-    setIgnoreReady(false)
-    ipc
-      .readGitignore(repo)
-      .then(value => {
-        if (active) {
-          setIgnore(value)
-          setIgnoreReady(true)
-        }
-      })
-      .catch((e: unknown) => active && setError(String(e)))
-    return () => {
-      active = false
-    }
-  }, [repo])
-
-  if (!repo) {
-    return (
-      <SettingGroup>
-        <div className="text-muted-foreground py-2.5 text-xs">{t("prefs.noRepo")}</div>
-      </SettingGroup>
-    )
-  }
-
-  return (
-    <SettingGroup>
-      {remotes.map(([name, url], i) => (
-        <div key={name}>
-          {i > 0 && <Separator />}
-          <SettingRow title={name}>
-            <Input
-              aria-label={name}
-              defaultValue={url}
-              onBlur={e => {
-                const v = e.currentTarget.value.trim()
-                if (v && v !== url) {
-                  ipc
-                    .setRemoteUrl(repo, name, v)
-                    .then(load)
-                    .catch(x => setError(String(x)))
-                }
-              }}
-              className="h-8 w-56 font-mono text-xs placeholder:font-sans"
-            />
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              title={t("prefs.removeRemote")}
-              onClick={() =>
-                void ipc
-                  .removeRemote(repo, name)
-                  .then(load)
-                  .catch(x => setError(String(x)))
-              }>
-              <TrashIcon size={14} />
-            </Button>
-          </SettingRow>
-        </div>
-      ))}
-
-      <SettingRow title={t("prefs.addRemote")}>
-        <Input
-          aria-label={t("prefs.remoteName")}
-          placeholder={t("prefs.remoteName")}
-          className="w-24"
-          value={remoteName}
-          disabled={adding}
-          onChange={e => setRemoteName(e.currentTarget.value)}
-        />
-        <Input
-          aria-label={t("prefs.remoteUrl")}
-          placeholder="https://…"
-          className="w-56"
-          value={remoteUrl}
-          disabled={adding}
-          onChange={e => setRemoteUrl(e.currentTarget.value)}
-        />
-        <Button
-          disabled={
-            adding || !remoteName.trim() || !remoteUrl.trim() || remotes.some(([name]) => name === remoteName.trim())
-          }
-          onClick={() => {
-            setAdding(true)
-            setError(null)
-            void ipc
-              .addRemote(repo, remoteName.trim(), remoteUrl.trim())
-              .then(() => {
-                setRemoteName("")
-                setRemoteUrl("")
-                load()
-              })
-              .catch(e => setError(String(e)))
-              .finally(() => setAdding(false))
-          }}>
-          {t("prefs.addRemote")}
-        </Button>
-      </SettingRow>
-      <GitTab key={repo} repo={repo} local />
-
-      <Separator />
-      <div className="py-2.5">
-        <div className="mb-1.5 text-sm">{t("prefs.gitignore")}</div>
-        <Textarea
-          aria-label={t("prefs.gitignore")}
-          disabled={!ignoreReady}
-          value={ignore}
-          onChange={e => setIgnore(e.currentTarget.value)}
-          onBlur={() => ignoreReady && void ipc.writeGitignore(repo, ignore).catch(x => setError(String(x)))}
-          rows={8}
-          className="resize-none font-mono text-xs"
-          placeholder={"node_modules\ntarget\n.DS_Store"}
-        />
-      </div>
-      {error && <p className="text-destructive text-xs">{error}</p>}
-    </SettingGroup>
-  )
-}
-
 function TrackpadTab({ enabled, onChange }: { enabled: boolean; onChange: (enabled: boolean) => void }) {
   const { t } = useTranslation()
   const available = useTrackpadAvailability()

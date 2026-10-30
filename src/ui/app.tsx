@@ -70,6 +70,7 @@ import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
 import { Preferences } from "@/ui/preferences/preferences"
 import { CreatePullRequest } from "@/ui/pull-requests/create"
 import { PullRequests } from "@/ui/pull-requests/list"
+import { RepositorySettings } from "@/ui/repository-settings/repository-settings"
 import { PublishRepository } from "@/ui/repository/publish"
 import { RepositoryRail } from "@/ui/repository/repository-rail"
 import { RepositorySplit } from "@/ui/repository/repository-split"
@@ -139,6 +140,7 @@ export function App() {
   const prefsTab = useDialogsStore(s => s.prefsTab)
   const openPreferences = useDialogsStore(s => s.openPreferences)
   const worktreesOpen = useDialogsStore(s => s.worktreesOpen)
+  const repositorySettingsOpen = useDialogsStore(s => s.repositorySettingsOpen)
   const setWorktreesOpen = useDialogsStore(s => s.setWorktreesOpen)
   const creatingPr = useDialogsStore(s => s.creatingPr)
   const setCreatingPr = useDialogsStore(s => s.setCreatingPr)
@@ -802,7 +804,7 @@ export function App() {
         })
         break
       case "show-repository-settings":
-        openPreferences("repository")
+        if (repo) useDialogsStore.getState().setRepositorySettingsOpen(true)
         break
       case "show-repository-list":
         document.querySelector<HTMLInputElement>(".rail-filter input")?.focus()
@@ -1149,7 +1151,6 @@ export function App() {
       }}
       state={state}
       onPatch={patch}
-      repo={repo}
       hosts={accountHosts}
       accounts={accounts}
       onAccountsChanged={() => refreshAccounts(true)}
@@ -1187,6 +1188,22 @@ export function App() {
       {askDialog}
       {askTextDialog}
       {stashAndSwitchDialog}
+      {repo && repositorySettingsOpen && (
+        <RepositorySettings
+          key={repo}
+          repo={repo}
+          primaryRemote={status.remote}
+          onDismissed={() => {
+            useDialogsStore.getState().setRepositorySettingsOpen(false)
+            // 远端、身份可能变了：和关设置一样整体刷新
+            void refresh()
+          }}
+          onPublish={() => {
+            useDialogsStore.getState().setRepositorySettingsOpen(false)
+            setPublishing(true)
+          }}
+        />
+      )}
       {repo && worktreesOpen && (
         <Worktrees
           key={repo}

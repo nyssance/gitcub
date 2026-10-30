@@ -28,7 +28,7 @@ import {
   UncommittedChangesStrategy
 } from "@/upstream/models/uncommitted-changes-strategy"
 
-/** 设置页签，顺序照原版 PreferencesTab（Copilot 不在范围）；仓库、触控板是本项目独有，排在后面 */
+/** 设置页签，顺序照原版 PreferencesTab（Copilot 不在范围）；触控板是本项目独有，排在最后 */
 export const PreferencesTabs = [
   "accounts",
   "integrations",
@@ -38,7 +38,6 @@ export const PreferencesTabs = [
   "prompts",
   "advanced",
   "accessibility",
-  "repository",
   "trackpad"
 ] as const
 export type PreferencesTab = (typeof PreferencesTabs)[number]

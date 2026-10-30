@@ -19,7 +19,6 @@ const meta = {
     onOpenChange: fn(),
     onPatch: fn(),
     onAccountsChanged: fn(),
-    repo: null,
     hosts: ["github.com", "gitlab.com"],
     accounts: {},
     state: {
@@ -82,7 +81,6 @@ export const NavigationContract: Story = {
 }
 export const Accounts: Story = {}
 export const GitIdentity: Story = { args: { initialTab: "git" } }
-export const RepositoryNotSelected: Story = { args: { initialTab: "repository" } }
 export const Appearance: Story = { args: { initialTab: "appearance" } }
 export const Trackpad: Story = {
   args: { initialTab: "trackpad" },
@@ -96,73 +94,6 @@ export const Trackpad: Story = {
   }
 }
 export const Advanced: Story = { args: { initialTab: "advanced" } }
-
-const repositoryFixtures = {
-  remotes: () => [["origin", "https://github.com/gitcub/gitcub.git"]],
-  read_gitignore: () => "node_modules\n",
-  git_identity: () => ({ name: "GitCub Preview", email: "preview@example.test" })
-}
-export const RepositoryLoadingCannotWrite: Story = {
-  args: { initialTab: "repository", repo: "/preview/repository" },
-  beforeEach: withNativeFixtures({
-    ...repositoryFixtures,
-    read_gitignore: () => new Promise<never>(() => {}),
-    git_identity: () => new Promise<never>(() => {})
-  }),
-  play: async () => {
-    const screen = within(document.body)
-    await expect(await screen.findByRole("textbox", { name: i18n.t("prefs.gitignore") })).toBeDisabled()
-    await expect(screen.getByRole("textbox", { name: i18n.t("prefs.name") })).toBeDisabled()
-    await expect(screen.getByRole("textbox", { name: i18n.t("prefs.email") })).toBeDisabled()
-    await userEvent.keyboard("{Tab}{Tab}")
-    await expect(
-      nativeCall.mock.calls.some(([command]) => command === "write_gitignore" || command === "set_git_identity")
-    ).toBe(false)
-  }
-}
-export const RepositoryFailedReadCannotWrite: Story = {
-  args: { initialTab: "repository", repo: "/preview/repository" },
-  beforeEach: withNativeFixtures({
-    ...repositoryFixtures,
-    read_gitignore: () => {
-      throw new Error("Cannot read ignore file")
-    }
-  }),
-  play: async () => {
-    const screen = within(document.body)
-    await expect(await screen.findByText(/Cannot read ignore file/)).toBeVisible()
-    await expect(screen.getByRole("textbox", { name: i18n.t("prefs.gitignore") })).toBeDisabled()
-    await expect(nativeCall.mock.calls.some(([command]) => command === "write_gitignore")).toBe(false)
-  }
-}
-export const RemoteRefreshPreservesIgnoreEdits: Story = {
-  args: { initialTab: "repository", repo: "/preview/repository" },
-  beforeEach: () => {
-    let removed = false
-    return withNativeFixtures({
-      ...repositoryFixtures,
-      remotes: () => (removed ? [] : repositoryFixtures.remotes()),
-      remove_remote: () => {
-        removed = true
-      },
-      write_gitignore: () => new Promise<never>(() => {})
-    })()
-  },
-  play: async () => {
-    const screen = within(document.body)
-    const ignore = await screen.findByRole("textbox", { name: i18n.t("prefs.gitignore") })
-    await waitFor(() => expect(ignore).toBeEnabled())
-    await userEvent.type(ignore, "custom-output\n")
-    await userEvent.click(screen.getByRole("button", { name: i18n.t("prefs.removeRemote") }))
-    await waitFor(() => expect(screen.queryByRole("textbox", { name: "origin" })).not.toBeInTheDocument())
-    await expect(ignore).toHaveValue("node_modules\ncustom-output\n")
-    await expect(nativeCall).toHaveBeenCalledWith("write_gitignore", {
-      repo: "/preview/repository",
-      content: "node_modules\ncustom-output\n"
-    })
-    await expect(nativeCall.mock.calls.filter(([command]) => command === "read_gitignore")).toHaveLength(1)
-  }
-}
 
 export const ImportLocalDesktop: Story = {
   args: {

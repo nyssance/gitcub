@@ -76,6 +76,18 @@ export const getRemoteHEAD = (repo: Repository, remote: string) =>
 export const getConfigValue = (repo: Repository, key: string, onlyLocal = false) =>
   invoke<string | null>("get_config_value", { repo: repo.path, key, onlyLocal })
 export const getGlobalConfigValue = (key: string) => invoke<string | null>("global_config_value", { key })
+/** Desktop setConfigValue：仓库级 `git config --replace-all` */
+export async function setConfigValue(repo: Repository, key: string, value: string) {
+  const result = await executeGit(["config", "--replace-all", key, value], repo.path, "setConfigValueInPath")
+  if (result.exitCode !== 0) throw new GitError(result)
+}
+/** Desktop removeConfigValue：`git config --unset-all`；本来就没设（退出码 5）不算失败 */
+export async function removeConfigValue(repo: Repository, key: string) {
+  const result = await executeGit(["config", "--unset-all", key], repo.path, "removeConfigValueInPath", {
+    successExitCodes: new Set([0, 5])
+  })
+  if (result.exitCode !== 0 && result.exitCode !== 5) throw new GitError(result)
+}
 export async function setGlobalConfigValue(key: string, value: string) {
   const path = await invoke<string>("working_directory")
   const result = await executeGit(["config", "--global", key, value], path, "setGlobalConfigValue", {

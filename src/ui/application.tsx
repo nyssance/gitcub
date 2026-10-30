@@ -190,7 +190,6 @@ export function Application() {
                 void i18n.changeLanguage(patch.language || (navigator.language.startsWith("zh") ? "zh-CN" : "en"))
               void ipc.saveState(next).catch(error => setError(String(error)))
             }}
-            repo={null}
             hosts={accountHosts}
             accounts={nativeAccounts}
             onAccountsChanged={() => {
