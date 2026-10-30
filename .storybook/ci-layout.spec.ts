@@ -4,7 +4,7 @@ for (const theme of ["light", "dark"]) {
     await page.setViewportSize({ width: 1000, height: 720 })
     const story = "collaboration-pr-and-mr-list--git-hub-failure-automatically-expands"
     await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=theme:${theme};locale:en`)
-    await expect(page.locator("html")).toHaveAttribute("data-story-finished", story)
+    await expect(page.locator("html")).toHaveAttribute("data-story-finished", story, { timeout: 20_000 })
     await expect(page.locator("html")).toHaveAttribute("data-story-status", "success")
     const popover = page.locator(".desktop-ci-popover")
     await expect(popover).toBeVisible()
@@ -28,7 +28,7 @@ for (const theme of ["light", "dark"]) {
     await page.setViewportSize({ width: 800, height: 600 })
     const story = "collaboration-pr-and-mr-list--keyboard-checkout"
     await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=theme:${theme};locale:en`)
-    await expect(page.locator("html")).toHaveAttribute("data-story-finished", story)
+    await expect(page.locator("html")).toHaveAttribute("data-story-finished", story, { timeout: 20_000 })
     await expect(page.locator("html")).toHaveAttribute("data-story-status", "success")
     const rows = page.getByRole("listitem")
     await expect(rows).toHaveCount(2)

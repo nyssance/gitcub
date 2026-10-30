@@ -2,6 +2,8 @@ import { fileURLToPath } from "node:url"
 
 import { defineConfig } from "@playwright/test"
 
+// 等 story 跑完 play 的那一步单独给 20 秒：CI 机器慢、4 个 worker 并发时 play 会超过默认的 5 秒，
+// 结果对不对仍由随后的 data-story-status 断言判断。
 export default defineConfig({
   testDir: ".",
   testMatch: [

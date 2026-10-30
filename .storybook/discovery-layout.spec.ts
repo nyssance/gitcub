@@ -5,7 +5,9 @@ for (const theme of ["light", "dark"]) {
     page
   }, info) => {
     await page.goto(`/iframe.html?id=repositories-navigation--grouped&viewMode=story&globals=locale:en;theme:${theme}`)
-    await expect(page.locator("html")).toHaveAttribute("data-story-finished", "repositories-navigation--grouped")
+    await expect(page.locator("html")).toHaveAttribute("data-story-finished", "repositories-navigation--grouped", {
+      timeout: 20_000
+    })
     const rail = page.locator(".repository-rail")
     await expect(rail).toHaveCSS("background-color", "rgba(0, 0, 0, 0)")
     const rows = rail.locator('[data-slot="sidebar-menu-button"]')
@@ -42,7 +44,9 @@ test("long repository groups collapse without changing horizontal geometry or mo
   page
 }) => {
   await page.goto("/iframe.html?id=repositories-navigation--long-groups&viewMode=story&globals=locale:en;theme:light")
-  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "repositories-navigation--long-groups")
+  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "repositories-navigation--long-groups", {
+    timeout: 20_000
+  })
   const rail = page.locator(".repository-rail")
   const github = rail.getByRole("button", { name: "GitHub 30", exact: true })
   const gitlab = rail.getByRole("button", { name: "gitlab.example 1", exact: true })
@@ -96,7 +100,9 @@ test("long repository groups collapse without changing horizontal geometry or mo
 test("browser controls keep Chrome order and stop replaces reload without a separate spinner", async ({ page }) => {
   await page.clock.install()
   await page.goto("/iframe.html?id=discovery-trending--connecting&viewMode=story&globals=locale:en;theme:light")
-  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-trending--connecting")
+  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-trending--connecting", {
+    timeout: 20_000
+  })
   const buttons = page.locator("header button")
   await expect(buttons).toHaveCount(4)
   await expect(buttons.nth(0)).toHaveAccessibleName("Back")
@@ -116,7 +122,9 @@ test("browser controls keep Chrome order and stop replaces reload without a sepa
 test("discovery connection timeout is recoverable before native page-load callbacks arrive", async ({ page }) => {
   await page.clock.install()
   await page.goto("/iframe.html?id=discovery-trending--connecting&viewMode=story&globals=locale:en;theme:light")
-  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-trending--connecting")
+  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-trending--connecting", {
+    timeout: 20_000
+  })
   await expect(page.getByRole("button", { name: "Stop loading", exact: true })).toBeVisible()
   await page.clock.fastForward(31000)
   await expect(page.getByRole("alert")).toBeVisible()
@@ -129,7 +137,9 @@ for (const width of [800, 1000]) {
   test(`discovery scrolling keeps toolbar and sidebar controls fixed at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 720 })
     await page.goto("/iframe.html?id=discovery-window--long-lists&viewMode=story&globals=locale:en;theme:light")
-    await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-window--long-lists")
+    await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-window--long-lists", {
+      timeout: 20_000
+    })
     const toolbar = page.getByRole("tablist", { name: "Discover", exact: true })
     const categories = page.getByRole("tablist", { name: "Repositories", exact: true })
     const toolbarBefore = await toolbar.boundingBox()
@@ -164,7 +174,9 @@ test("discovery floating canvas preserves workspace state and separates swiping 
 }, info) => {
   await page.setViewportSize({ width: 1000, height: 720 })
   await page.goto("/iframe.html?id=discovery-window--overview&viewMode=story&globals=locale:en;theme:light")
-  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-window--overview")
+  await expect(page.locator("html")).toHaveAttribute("data-story-finished", "discovery-window--overview", {
+    timeout: 20_000
+  })
   const canvas = page.locator("[data-floating-workspace]")
   const canvasBounds = await canvas.boundingBox()
   const workspaceBounds = await page.locator('[data-floating-board="workspace"]').boundingBox()

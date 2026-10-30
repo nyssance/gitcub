@@ -25,7 +25,7 @@ for (const theme of ["light", "dark"]) {
           const narrowWidth = story.tags?.includes("desktop-window") ? tauriConfig.app.windows[0].minWidth : 360
           await page.setViewportSize({ width: viewport === "compact" ? narrowWidth : 1000, height: 720 })
           await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:${theme};locale:${locale}`)
-          await expect(page.locator("html")).toHaveAttribute("data-story-finished", story.id)
+          await expect(page.locator("html")).toHaveAttribute("data-story-finished", story.id, { timeout: 20_000 })
           const reports = await page.locator("html").getAttribute("data-story-reports")
           expect(await page.locator("html").getAttribute("data-story-status"), reports ?? "Storybook result").toBe(
             "success"

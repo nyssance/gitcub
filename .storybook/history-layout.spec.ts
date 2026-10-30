@@ -12,7 +12,9 @@ for (const width of [800, 1200]) {
           })
     )
     await page.goto("/iframe.html?id=history-window--long-paths&viewMode=story&globals=locale:en;theme:light")
-    await expect(page.locator("html")).toHaveAttribute("data-story-finished", "history-window--long-paths")
+    await expect(page.locator("html")).toHaveAttribute("data-story-finished", "history-window--long-paths", {
+      timeout: 20_000
+    })
     const outer = page.locator("[data-repository-split]")
     const panels = outer.locator(':scope > [data-slot="resizable-panel"]')
     const details = page.locator("[data-commit-details]")

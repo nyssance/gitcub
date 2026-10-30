@@ -60,7 +60,7 @@ for (const theme of ["light", "dark"]) {
   ]) {
     test(`Desktop stylesheet geometry / ${theme} / ${story}`, async ({ page, context }, testInfo) => {
       await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=theme:${theme}`)
-      await expect(page.locator("html")).toHaveAttribute("data-story-finished", story)
+      await expect(page.locator("html")).toHaveAttribute("data-story-finished", story, { timeout: 20_000 })
       const root = page.locator(".side-by-side-diff-container")
       const size = await root.boundingBox()
       expect(size).not.toBeNull()
