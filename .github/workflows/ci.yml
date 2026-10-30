@@ -9,10 +9,10 @@ on:
     branches: [main]
   pull_request:
 
-# 同一分支上新的推送让旧的跑作废，不排队白烧
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # 只有 PR 的新推送取消旧运行；main 上每个提交都跑完，连续推送不会互相取消
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always
