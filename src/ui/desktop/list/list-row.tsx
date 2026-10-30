@@ -270,6 +270,8 @@ export class ListRow extends React.Component<React.PropsWithChildren<IListRowPro
       <div
         id={id}
         role={sectionHasHeader && rowIndex.row === 0 ? "presentation" : (role ?? "option")}
+        // GitCub：分组名已在列表与每行的 aria-label 里；标题行对辅助技术隐藏，listbox/list 下只剩 option/listitem
+        aria-hidden={sectionHasHeader && rowIndex.row === 0 ? true : undefined}
         aria-setsize={ariaSetSize}
         aria-posinset={ariaPosInSet}
         aria-selected={role !== "listitem" && selectable ? selected : undefined}

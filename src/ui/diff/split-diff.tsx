@@ -227,7 +227,10 @@ export function SplitDiff({
   const layoutKey = useMemo(() => ({ diff, wrap, split }), [diff, wrap, split])
   const [measured, setMeasured] = useState<{ key: object; width: number } | null>(null)
   const contentWidth = measured?.key === layoutKey ? measured.width : 0
-  const visibleRange = virtual.getVirtualItems().map(item => item.index).join(",")
+  const visibleRange = virtual
+    .getVirtualItems()
+    .map(item => item.index)
+    .join(",")
   useLayoutEffect(() => {
     if (layoutKey.wrap || !parent.current) return
     let widest = 0
