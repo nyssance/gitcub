@@ -14,6 +14,7 @@ import {
 import { TipState } from "../../models/tip"
 import { getAppMenu, updateAccounts } from "../../ui/main-process-proxy"
 import type { EndpointToken } from "../../upstream/lib/endpoint-token"
+import { fatalError } from "../../upstream/lib/fatal-error"
 import { getBoolean, setBoolean } from "../../upstream/lib/local-storage"
 import { BaseStore } from "../../upstream/lib/stores/base-store"
 import type { Progress } from "../../upstream/models/progress"
@@ -34,6 +35,7 @@ import type { ApiRepositoriesStore } from "./api-repositories-store"
 import type { CloningRepositoriesStore } from "./cloning-repositories-store"
 import { GitStoreCache } from "./git-store-cache"
 import type { GitHubUserStore } from "./github-user-store"
+import { BackgroundFetcher } from "./helpers/background-fetcher"
 import { findRemoteBranchName } from "./helpers/find-branch-name"
 import { RepositoryIndicatorUpdater } from "./helpers/repository-indicator-updater"
 import type { IssuesStore } from "./issues-store"
@@ -54,6 +56,10 @@ export class AppStore extends BaseStore {
   private readonly popupManager = new PopupManager()
   private readonly subscriptions: Array<{ dispose(): void }> = []
   private readonly indicatorStartupTimer: number
+  private currentBackgroundFetcher: BackgroundFetcher | null = null
+  /** GitCub: the selected repository's fetch goes through the UI's Git operation lock
+   *  (Desktop _fetch with FetchType.BackgroundTask); the app installs it, until then nothing is fetched. */
+  public backgroundFetch: ((repository: Repository) => Promise<void>) | null = null
 
   public constructor(
     private readonly gitHubUserStore: GitHubUserStore,
@@ -90,6 +96,7 @@ export class AppStore extends BaseStore {
     }, InitialRepositoryIndicatorTimeout)
   }
   public dispose() {
+    this.stopBackgroundFetching()
     window.clearTimeout(this.indicatorStartupTimer)
     this.repositoryIndicatorUpdater.stop()
     this.repositoryIndicatorUpdater.resume()
@@ -103,8 +110,46 @@ export class AppStore extends BaseStore {
     return this.gitStoreCache.get(repository)
   }
   public selectRepository(repository: Repository | CloningRepository | null) {
+    const previouslySelectedRepository = this.selectedRepository
     this.selectedRepository = repository
     this.emitUpdate()
+    // Desktop _selectRepository: one fetcher, for the selected repository only.
+    if (
+      previouslySelectedRepository?.constructor === repository?.constructor &&
+      previouslySelectedRepository?.hash === repository?.hash
+    )
+      return
+    this.stopBackgroundFetching()
+    if (repository instanceof Repository) this.startBackgroundFetching(repository, !previouslySelectedRepository)
+  }
+
+  private stopBackgroundFetching() {
+    const backgroundFetcher = this.currentBackgroundFetcher
+    if (backgroundFetcher) {
+      backgroundFetcher.stop()
+      this.currentBackgroundFetcher = null
+    }
+  }
+
+  private startBackgroundFetching(repository: Repository, withInitialSkew: boolean) {
+    if (this.currentBackgroundFetcher) {
+      fatalError(
+        `We should only have on background fetcher active at once, but we're trying to start background fetching on ${repository.name} while another background fetcher is still active!`
+      )
+    }
+
+    if (!repository.gitHubRepository) {
+      return
+    }
+
+    const fetcher = new BackgroundFetcher(
+      repository,
+      this.accountsStore,
+      r => this.backgroundFetch?.(r) ?? Promise.resolve(),
+      r => this.shouldBackgroundFetch(r, null)
+    )
+    fetcher.start(withInitialSkew)
+    this.currentBackgroundFetcher = fetcher
   }
   public getState() {
     return {
@@ -158,9 +203,12 @@ export class AppStore extends BaseStore {
       this.repositoriesStore.onDidUpdate(repositories => {
         this.repositories = repositories
         if (this.selectedRepository instanceof Repository) {
-          this.selectedRepository = repositories.find(repo => repo.id === this.selectedRepository?.id) ?? null
+          // Desktop updateRepositorySelectionAfterRepositoriesChanged: a changed hash (e.g. the
+          // GitHub association just matched) re-selects, which restarts the background fetcher.
+          this.selectRepository(repositories.find(repo => repo.id === this.selectedRepository?.id) ?? null)
+        } else {
+          this.emitUpdate()
         }
-        this.emitUpdate()
       })
     )
     for (const store of [

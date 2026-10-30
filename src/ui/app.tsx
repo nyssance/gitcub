@@ -202,6 +202,19 @@ export function App() {
   }, [registeredRepositoryPaths, selectedRepositoryPath])
 
   useEffect(() => useRepositoryIndicatorsStore.getState().bind(), [])
+  // Desktop BackgroundFetcher: the selected repository's periodic fetch shares the Git operation lock.
+  useEffect(() => {
+    const { appStore } = getDesktopRuntime()
+    appStore.backgroundFetch = async repository => {
+      const { status, runBackground } = useRepositoryStore.getState()
+      if (repository.path !== activeRepository() || !status.remote) return
+      const remote = status.remote
+      await runBackground(() => ipc.fetch(repository.path, remote))
+    }
+    return () => {
+      appStore.backgroundFetch = null
+    }
+  }, [])
 
   useEffect(() => useAccountsStore.getState().loadRemotes(repositories), [repositories, rawRemotes, remoteErrors])
 

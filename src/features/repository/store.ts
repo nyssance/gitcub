@@ -58,6 +58,8 @@ interface RepositoryStore {
   /** 换仓库时清掉上一个仓库的状态。 */
   reset: () => void
   run: <T>(operation: () => Promise<T>) => Promise<T | undefined>
+  /** Desktop FetchType.BackgroundTask：同一把操作锁，忙时跳过；失败只记日志，不清掉也不覆盖界面上的错误。 */
+  runBackground: (operation: () => Promise<unknown>) => Promise<void>
   setError: (error: string | null) => void
   showProgress: (text: string) => void
   setLfs: (lfs: LfsState | null) => void
@@ -147,6 +149,30 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
         )
       )
     )
+  },
+  runBackground: operation => {
+    if (locked || get().busy) return Promise.resolve()
+    locked = true
+    set({ busy: true })
+    return runPromise(
+      attempt(operation).pipe(
+        Effect.catch(error => Effect.sync(() => log.warn("Background fetch failed", describeError(error)))),
+        Effect.ensuring(
+          Effect.promise(() =>
+            get()
+              .refresh()
+              .catch(error => log.warn("Refresh after background fetch failed", String(error)))
+          ).pipe(
+            Effect.andThen(
+              Effect.sync(() => {
+                locked = false
+                set({ busy: false, progress: "" })
+              })
+            )
+          )
+        )
+      )
+    ).then(() => undefined)
   },
   setError: error => set({ error }),
   showProgress: text => set({ progress: text.split(/[\r\n]/).findLast(Boolean) ?? "" }),
