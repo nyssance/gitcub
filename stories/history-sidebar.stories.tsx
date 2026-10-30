@@ -97,6 +97,22 @@ export const SearchAndClear: Story = {
     await expect(await canvas.findByText("Initial commit")).toBeVisible()
   }
 }
+type Canvas = ReturnType<typeof within>
+
+/** 匹配选项收在搜索框内的菜单里：打开、勾选、关上。 */
+async function toggleMatchOption(canvas: Canvas, name: string) {
+  await userEvent.click(canvas.getByRole("button", { name: i18n.t("history.matchOptions") }))
+  await userEvent.click(await within(document.body).findByRole("menuitemcheckbox", { name }))
+  await userEvent.keyboard("{Escape}")
+}
+
+/** 对比分支是图标菜单里的单选项；选「不对比」回到普通历史。 */
+async function compareWith(canvas: Canvas, name: string) {
+  await userEvent.click(canvas.getByRole("button", { name: new RegExp(`^${i18n.t("history.compareWith")}`) }))
+  await userEvent.click(await within(document.body).findByRole("menuitemradio", { name }))
+  await userEvent.keyboard("{Escape}")
+}
+
 export const ToggleMatchOptions: Story = {
   play: async ({ canvas }) => {
     await userEvent.type(canvas.getByPlaceholderText(i18n.t("history.searchPlaceholder")), "fix")
@@ -108,8 +124,8 @@ export const ToggleMatchOptions: Story = {
         skip: 0
       })
     )
-    await userEvent.click(canvas.getByRole("button", { name: i18n.t("history.matchCase") }))
-    await userEvent.click(canvas.getByRole("button", { name: i18n.t("history.matchRegex") }))
+    await toggleMatchOption(canvas, i18n.t("history.matchCase"))
+    await toggleMatchOption(canvas, i18n.t("history.matchRegex"))
     await waitFor(() =>
       expect(nativeCall).toHaveBeenCalledWith("search_commits", {
         repo,
@@ -124,8 +140,7 @@ export const ToggleMatchOptions: Story = {
 }
 export const CompareAndMerge: Story = {
   play: async ({ canvas, args }) => {
-    await canvas.findByRole("option", { name: `${i18n.t("history.compareWith")}: release` })
-    await userEvent.selectOptions(canvas.getByRole("combobox", { name: i18n.t("history.compareWith") }), "release")
+    await compareWith(canvas, "release")
     await userEvent.click(await canvas.findByRole("button", { name: i18n.t("history.mergeIn", { branch: "release" }) }))
     await expect(args.onMerge).toHaveBeenCalledWith("release")
     await expect(args.onCompared).toHaveBeenCalledWith({ ahead: [commit], behind: [commits[1]] })
@@ -171,13 +186,11 @@ export const SwitchingComparison: Story = {
       (args as { theirs: string }).theirs === "next" ? new Promise<never>(() => {}) : handlers.compare_commits()
   }),
   play: async ({ canvas, args }) => {
-    const select = canvas.getByRole("combobox", { name: i18n.t("history.compareWith") })
-    await canvas.findByRole("option", { name: `${i18n.t("history.compareWith")}: release` })
-    await userEvent.selectOptions(select, "release")
+    await compareWith(canvas, "release")
     await expect(
       await canvas.findByRole("button", { name: i18n.t("history.mergeIn", { branch: "release" }) })
     ).toBeEnabled()
-    await userEvent.selectOptions(select, "next")
+    await compareWith(canvas, "next")
     await waitFor(() =>
       expect(nativeCall).toHaveBeenCalledWith("compare_commits", { repo, ours: "main", theirs: "next", limit: 200 })
     )
@@ -192,11 +205,9 @@ export const SwitchingComparison: Story = {
 export const ClearFailedComparison: Story = {
   beforeEach: withNativeFixtures({ ...handlers, compare_commits: unavailable }),
   play: async ({ canvas }) => {
-    const select = canvas.getByRole("combobox", { name: i18n.t("history.compareWith") })
-    await canvas.findByRole("option", { name: `${i18n.t("history.compareWith")}: release` })
-    await userEvent.selectOptions(select, "release")
+    await compareWith(canvas, "release")
     await expect(await canvas.findByRole("alert")).toHaveTextContent("Preview service unavailable")
-    await userEvent.selectOptions(select, "")
+    await compareWith(canvas, i18n.t("history.noCompare"))
     await waitFor(() => expect(canvas.queryByRole("alert")).not.toBeInTheDocument())
     await expect(await canvas.findByText("Initial commit")).toBeVisible()
   }
@@ -226,7 +237,7 @@ export const FileHistory: Story = {
       canvas.getByRole("button", { name: i18n.t("history.closeFileHistory") }).getBoundingClientRect().left
     )
     await expect(canvas.queryByPlaceholderText(i18n.t("history.searchPlaceholder"))).not.toBeInTheDocument()
-    await expect(canvas.queryByRole("combobox", { name: i18n.t("history.compareWith") })).not.toBeInTheDocument()
+    await expect(canvas.queryByRole("button", { name: new RegExp(`^${i18n.t("history.compareWith")}`) })).not.toBeInTheDocument()
     await expect(canvas.getByRole("status")).toHaveTextContent(i18n.t("history.loadingMore"))
     await expect(canvas.getByText(commit.summary).closest("[draggable]")).toHaveAttribute("draggable", "false")
   }

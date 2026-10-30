@@ -1,6 +1,6 @@
-import { ArrowUpIcon, SearchIcon } from "@primer/octicons-react"
+import { ArrowUpIcon, GitCompareIcon, SearchIcon } from "@primer/octicons-react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { CaseSensitive, CheckCheck, CircleHelp, Regex, WholeWord, X } from "lucide-react"
+import { CaseSensitive, CheckCheck, CircleHelp, Regex, SlidersHorizontal, WholeWord, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -21,9 +21,18 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger
 } from "@/ui/base/context-menu"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger
+} from "@/ui/base/dropdown-menu"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/ui/base/input-group"
 import { Item, ItemContent, ItemDescription, ItemTitle } from "@/ui/base/item"
-import { NativeSelect } from "@/ui/base/native-select"
 import {
   Popover,
   PopoverContent,
@@ -33,7 +42,6 @@ import {
   PopoverTrigger
 } from "@/ui/base/popover"
 import { ScrollArea } from "@/ui/base/scroll-area"
-import { ToggleGroup, ToggleGroupItem } from "@/ui/base/toggle-group"
 
 import i18n from "../../lib/i18n"
 import { CommitGraph } from "./graph"
@@ -297,7 +305,7 @@ export function HistorySidebar({
         : t("history.end")
 
   const search = (
-    <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b px-2 py-1.5">
+    <div className="flex shrink-0 items-center gap-1 border-b px-2 py-1.5">
       {fileHistory ? (
         // 文件历史模式：搜索和对比都收起来，一行里只放路径标签和关闭按钮
         <>
@@ -319,7 +327,7 @@ export function HistorySidebar({
         </>
       ) : (
         <>
-          <InputGroup className="h-7 min-w-40">
+          <InputGroup className="h-7 min-w-0 flex-1">
             <InputGroupAddon>
               <SearchIcon size={12} />
             </InputGroupAddon>
@@ -331,6 +339,38 @@ export function HistorySidebar({
               onKeyDown={e => e.key === "Escape" && setQuery("")}
             />
             <InputGroupAddon align="inline-end">
+              {/* 区分大小写 / 全字 / 正则 / 全部满足，对应 GitLens 搜索框的四个开关；收进框内菜单，开着的选项让按钮高亮 */}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <InputGroupButton
+                      size="icon-xs"
+                      variant={options.length > 0 ? "secondary" : "ghost"}
+                      aria-label={t("history.matchOptions")}
+                      title={t("history.matchOptions")}
+                    />
+                  }>
+                  <SlidersHorizontal />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-44">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>{t("history.matchOptions")}</DropdownMenuLabel>
+                    {SEARCH_OPTIONS.map(({ value, label, icon: Icon }) => (
+                      <DropdownMenuCheckboxItem
+                        key={value}
+                        checked={options.includes(value)}
+                        onCheckedChange={checked =>
+                          setOptions(previous =>
+                            checked ? [...previous, value] : previous.filter(option => option !== value)
+                          )
+                        }>
+                        <Icon />
+                        {t(label)}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
               {/* 操作符速查。只列语法，不替用户改查询 */}
               <Popover>
                 <PopoverTrigger
@@ -357,43 +397,37 @@ export function HistorySidebar({
               </Popover>
             </InputGroupAddon>
           </InputGroup>
-          {/* 区分大小写 / 全字 / 正则 / 全部满足，对应 GitLens 搜索框的四个开关 */}
-          <ToggleGroup
-            multiple
-            size="sm"
-            variant="outline"
-            spacing={0}
-            className="shrink-0"
-            value={options}
-            onValueChange={value => setOptions(value as SearchOption[])}
-            aria-label={t("history.matchOptions")}>
-            {SEARCH_OPTIONS.map(({ value, label, icon: Icon }) => (
-              <ToggleGroupItem
-                key={value}
-                value={value}
-                className="h-7 min-w-7 px-1.5"
-                aria-label={t(label)}
-                title={t(label)}>
-                <Icon />
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          {/* 和哪条分支对比。选空就是看普通历史 */}
-          <NativeSelect
-            size="sm"
-            className="history-compare shrink-0"
-            value={against ?? ""}
-            onChange={e => setAgainst(e.currentTarget.value || null)}
-            aria-label={t("history.compareWith")}>
-            <option value="">{t("history.noCompare")}</option>
-            {branches
-              .filter(b => b !== currentBranch)
-              .map(b => (
-                <option key={b} value={b}>
-                  {t("history.compareWith")}: {b}
-                </option>
-              ))}
-          </NativeSelect>
+          {/* 和哪条分支对比（原版 compare-sidebar 的分支选择）。选空就是看普通历史。
+              侧栏只有 250px，收成图标菜单，对比中时按钮高亮 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  size="icon-sm"
+                  variant={against ? "secondary" : "ghost"}
+                  className="history-compare shrink-0"
+                  aria-label={against ? `${t("history.compareWith")}: ${against}` : t("history.compareWith")}
+                  title={against ? `${t("history.compareWith")}: ${against}` : t("history.compareWith")}
+                />
+              }>
+              <GitCompareIcon size={16} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-80 min-w-52">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{t("history.compareWith")}</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={against ?? ""} onValueChange={value => setAgainst(value || null)}>
+                  <DropdownMenuRadioItem value="">{t("history.noCompare")}</DropdownMenuRadioItem>
+                  {branches
+                    .filter(b => b !== currentBranch)
+                    .map(b => (
+                      <DropdownMenuRadioItem key={b} value={b}>
+                        {b}
+                      </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </>
       )}
       <Tags repo={repo} />
@@ -584,24 +618,6 @@ export function HistorySidebar({
                     {/* 原版 `.info .description { margin-top: 3px }`，摘要 semibold */}
                     <ItemContent className="min-w-0 gap-[3px]">
                       <ItemTitle className="flex w-full min-w-0 items-center gap-1.5 text-xs font-semibold">
-                        {/* 指向这个提交的分支 / 标签 */}
-                        {!filtered && !!rows[row.index]?.refs.length && (
-                          <span className="flex max-w-1/2 min-w-0 gap-1.5">
-                            {rows[row.index].refs.map((r, k) => (
-                              <span
-                                // 同短名的本地分支和远端跟踪分支可能挂在同一个提交上
-                                key={`${k}:${r}`}
-                                title={r}
-                                className={cn(
-                                  "list-badge max-w-20 shrink truncate rounded px-1 text-[10px] leading-4",
-                                  // HEAD 所在的分支加粗
-                                  rows[row.index].head === r && "font-semibold"
-                                )}>
-                                {r}
-                              </span>
-                            ))}
-                          </span>
-                        )}
                         {/* 贮藏行：虚线框标出 stash@{n}，和分支、标签的实底标记区分 */}
                         {stash != null && (
                           <Badge
@@ -620,6 +636,24 @@ export function HistorySidebar({
                           title={c.summary}>
                           {c.summary || t("history.emptySummary")}
                         </span>
+                        {/* 指向这个提交的分支 / 标签：原版 tag-indicator 在摘要右侧，最多占一半宽 */}
+                        {!filtered && !!rows[row.index]?.refs.length && (
+                          <span className="flex max-w-1/2 min-w-0 shrink-0 justify-end gap-1">
+                            {rows[row.index].refs.map((r, k) => (
+                              <span
+                                // 同短名的本地分支和远端跟踪分支可能挂在同一个提交上
+                                key={`${k}:${r}`}
+                                title={r}
+                                className={cn(
+                                  "list-badge max-w-20 shrink truncate rounded px-1 text-[10px] leading-4",
+                                  // HEAD 所在的分支加粗
+                                  rows[row.index].head === r && "font-semibold"
+                                )}>
+                                {r}
+                              </span>
+                            ))}
+                          </span>
+                        )}
                       </ItemTitle>
                       <CommitByline commit={c} />
                     </ItemContent>

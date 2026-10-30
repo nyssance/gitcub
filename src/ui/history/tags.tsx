@@ -1,3 +1,4 @@
+import { TagIcon } from "@primer/octicons-react"
 import { confirm } from "@tauri-apps/plugin-dialog"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -82,8 +83,14 @@ function RepositoryTags({ repo }: { repo: string }) {
   }
   return (
     <>
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        {t("tags.title")}
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        className="shrink-0"
+        aria-label={t("tags.title")}
+        title={t("tags.title")}
+        onClick={() => setOpen(true)}>
+        <TagIcon size={16} />
       </Button>
       <Dialog open={open} onOpenChange={value => !busy && setOpen(value)}>
         <DialogContent className="sm:max-w-2xl">
