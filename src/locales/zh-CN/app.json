@@ -454,6 +454,12 @@
     "failedSettingTheRemoteUrl": "设置远端 URL 失败：{{error}}",
     "failedSavingTheGitignoreFile": "保存 .gitignore 失败：{{error}}"
   },
+  "unknownAuthors": {
+    "title": "未知的共同作者",
+    "countUsersWerentFound": "有 {{count}} 位用户没有找到，不会作为共同作者加入这次提交。确定要提交吗？",
+    "theseUsersWerentFound": "以下用户没有找到，不会作为共同作者加入这次提交。确定要提交吗？",
+    "commitAnyway": "仍然提交"
+  },
   "common": {
     "justNow": "刚刚",
     "confirmTitle": "确认",

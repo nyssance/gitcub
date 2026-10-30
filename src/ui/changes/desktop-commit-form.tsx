@@ -1,4 +1,3 @@
-import { confirm } from "@tauri-apps/plugin-dialog"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useMemo, useState } from "react"
 
@@ -16,7 +15,7 @@ import { useRepositoryPolicy } from "../../lib/use-repository-policy"
 import type { CommitOptions, Issue } from "../../models/app-state"
 import type { Commit, ICommitContext } from "../../models/commit"
 import type { FileChange } from "../../models/repo-status"
-import type { Author } from "../../upstream/models/author"
+import type { Author, UnknownAuthor } from "../../upstream/models/author"
 import { CommitIdentity } from "../../upstream/models/commit-identity"
 import type { ICommitMessage } from "../../upstream/models/commit-message"
 import { DiffSelection, DiffSelectionType } from "../../upstream/models/diff"
@@ -24,6 +23,7 @@ import { WorkingDirectoryFileChange } from "../../upstream/models/status"
 import { EmojiAutocompletionProvider } from "../autocompletion/emoji-autocompletion-provider"
 import type { IAutocompletionProvider } from "../autocompletion/provider-contract"
 import { InlineError } from "../shared/inline-error"
+import { UnknownAuthors } from "../unknown-authors/unknown-authors-dialog"
 import { CommitMessage } from "./commit-message"
 
 interface Props {
@@ -56,6 +56,10 @@ export function DesktopCommitForm(props: Props) {
   const [message, setMessage] = useState<ICommitMessage | null>(null)
   const [amending, setAmending] = useState<Commit | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [unknownAuthors, setUnknownAuthors] = useState<{
+    authors: readonly UnknownAuthor[]
+    proceed: () => void
+  } | null>(null)
 
   useEffect(() => {
     const subscription = runtime.accountsStore.onDidUpdate(setAccounts)
@@ -206,13 +210,7 @@ export function DesktopCommitForm(props: Props) {
         onShowCreateForkDialog={() => {
           if (policy.forkUrl) void openUrl(policy.forkUrl).catch(e => setError(String(e)))
         }}
-        onConfirmCommitWithUnknownCoAuthors={(_authors, proceed) => {
-          void confirm("Some co-authors could not be resolved. Commit without their attribution?", {
-            kind: "warning"
-          }).then(ok => {
-            if (ok) proceed()
-          })
-        }}
+        onConfirmCommitWithUnknownCoAuthors={(authors, proceed) => setUnknownAuthors({ authors, proceed })}
         onFilesToCommitNotVisible={proceed => {
           // Desktop ConfirmCommitFilteredChanges：可在「提示」里关掉
           void useDialogsStore
@@ -223,6 +221,13 @@ export function DesktopCommitForm(props: Props) {
             })
         }}
       />
+      {unknownAuthors && (
+        <UnknownAuthors
+          authors={unknownAuthors.authors}
+          onCommit={unknownAuthors.proceed}
+          onDismissed={() => setUnknownAuthors(null)}
+        />
+      )}
     </>
   )
 }

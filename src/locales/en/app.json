@@ -461,6 +461,12 @@
     "failedSettingTheRemoteUrl": "Failed setting the remote URL: {{error}}",
     "failedSavingTheGitignoreFile": "Failed saving the .gitignore file: {{error}}"
   },
+  "unknownAuthors": {
+    "title": "Unknown Co-Authors",
+    "countUsersWerentFound": "{{count}} users weren't found and won't be added as co-authors of this commit. Are you sure you want to commit?",
+    "theseUsersWerentFound": "These users weren't found and won't be added as co-authors of this commit. Are you sure you want to commit?",
+    "commitAnyway": "Commit Anyway"
+  },
   "common": {
     "justNow": "just now",
     "confirmTitle": "Confirm",
