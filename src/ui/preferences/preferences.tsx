@@ -118,13 +118,12 @@ export function Preferences({
           }}
           className="h-full min-h-0 gap-0">
           <TabsList
-            variant="line"
             aria-label={t("prefs.title")}
-            className="w-48 shrink-0 items-stretch justify-start border-r px-3 py-4 group-data-vertical/tabs:h-full">
+            className="w-48 shrink-0 items-stretch justify-start gap-0.5 rounded-none border-r bg-transparent px-3 py-4 group-data-vertical/tabs:h-full">
             {TABS.map((id, i) => {
               const Icon = TAB_ICONS[i]
               return (
-                <TabsTrigger key={id} value={id} className="h-9 flex-none gap-2">
+                <TabsTrigger key={id} value={id} className="h-9 flex-none justify-start gap-2 px-3">
                   <Icon data-icon="inline-start" size={16} />
                   <span>{t(`prefs.${id}`)}</span>
                 </TabsTrigger>
@@ -382,7 +381,7 @@ export function AccountsTab({
                     onChange={e => setDraft(d => ({ ...d, [host]: e.currentTarget.value }))}
                     onBlur={() => draft[host] && void save(host)}
                     placeholder={t("prefs.pasteToken")}
-                    className="h-8 w-56 font-mono text-xs"
+                    className="h-8 w-56 font-mono text-xs placeholder:font-sans"
                   />
                   {a.ignored && (
                     <Button size="sm" variant="outline" disabled={busy} onClick={() => void signOut(host, false)}>
@@ -430,7 +429,7 @@ export function AccountsTab({
                       if (v && v !== clients[host]) onSetClient(host, v)
                     }}
                     placeholder="application id"
-                    className="h-8 min-w-0 flex-1 font-mono text-xs"
+                    className="h-8 min-w-0 flex-1 font-mono text-xs placeholder:font-sans"
                   />
                   <Button
                     size="sm"
@@ -746,7 +745,7 @@ function RepositoryTab({ repo }: { repo: string | null }) {
                     .catch(x => setError(String(x)))
                 }
               }}
-              className="h-8 w-56 font-mono text-xs"
+              className="h-8 w-56 font-mono text-xs placeholder:font-sans"
             />
             <Button
               size="icon-sm"
