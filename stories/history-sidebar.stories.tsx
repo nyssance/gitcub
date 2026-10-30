@@ -237,7 +237,9 @@ export const FileHistory: Story = {
       canvas.getByRole("button", { name: i18n.t("history.closeFileHistory") }).getBoundingClientRect().left
     )
     await expect(canvas.queryByPlaceholderText(i18n.t("history.searchPlaceholder"))).not.toBeInTheDocument()
-    await expect(canvas.queryByRole("button", { name: new RegExp(`^${i18n.t("history.compareWith")}`) })).not.toBeInTheDocument()
+    await expect(
+      canvas.queryByRole("button", { name: new RegExp(`^${i18n.t("history.compareWith")}`) })
+    ).not.toBeInTheDocument()
     await expect(canvas.getByRole("status")).toHaveTextContent(i18n.t("history.loadingMore"))
     await expect(canvas.getByText(commit.summary).closest("[draggable]")).toHaveAttribute("draggable", "false")
   }
