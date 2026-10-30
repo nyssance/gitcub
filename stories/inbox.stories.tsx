@@ -4,13 +4,13 @@ import { expect, fn, userEvent, waitFor } from "storybook/test"
 import { assertNativeFixtures, nativeCall, withNativeFixtures } from "../.storybook/mocks/native"
 import i18n from "../src/lib/i18n"
 import { Inbox } from "../src/ui/inbox/inbox"
-import { file, pending, repo, status, unavailable } from "./fixtures"
+import { file, pending, repo, summary, unavailable } from "./fixtures"
 
 const meta = {
   title: "Collaboration/Inbox",
   component: Inbox,
   tags: ["desktop-window"],
-  beforeEach: withNativeFixtures({ repo_status: () => status }),
+  beforeEach: withNativeFixtures({ repo_summary: () => summary }),
   afterEach: assertNativeFixtures,
   args: { repositories: [repo], hosts: [], onOpenRepo: fn() },
   decorators: [
@@ -30,7 +30,7 @@ export const Clear: Story = {
 }
 export const LocalActions: Story = {
   beforeEach: withNativeFixtures({
-    repo_status: () => ({ ...status, ahead: 2, changes: [{ ...file, change: "conflicted" }] })
+    repo_summary: () => ({ ...summary, ahead: 2, conflicts: [file.path] })
   }),
   play: async ({ canvas, args }) => {
     await expect(await canvas.findByText(i18n.t("inbox.conflict", { count: 1 }))).toBeVisible()
@@ -65,11 +65,11 @@ export const RemoteReview: Story = {
     )
   }
 }
-export const Loading: Story = { beforeEach: withNativeFixtures({ repo_status: pending }) }
+export const Loading: Story = { beforeEach: withNativeFixtures({ repo_summary: pending }) }
 export const FailureAndRetry: Story = {
   beforeEach: () => {
     let attempts = 0
-    return withNativeFixtures({ repo_status: () => (++attempts === 1 ? unavailable() : status) })()
+    return withNativeFixtures({ repo_summary: () => (++attempts === 1 ? unavailable() : summary) })()
   },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole("alert")).toHaveTextContent("Preview service unavailable")

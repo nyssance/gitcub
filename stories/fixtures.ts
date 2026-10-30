@@ -1,5 +1,5 @@
 import type { CommitInfo } from "../src/models/history"
-import type { FileChange, RepoStatus } from "../src/models/repo-status"
+import type { FileChange, RepoStatus, RepoSummary } from "../src/models/repo-status"
 
 export const repo = "/preview/gitcub"
 export const commit: CommitInfo = {
@@ -31,6 +31,15 @@ export const status: RepoStatus = {
   behind: 0,
   operation: null,
   theirs: null
+}
+/** 待办页的摘要：只有引用和索引能回答的事，与 status.rs 的 RepoSummary 对应 */
+export const summary: RepoSummary = {
+  branch: "main",
+  remote: "origin",
+  hasUpstream: true,
+  ahead: 0,
+  behind: 0,
+  conflicts: []
 }
 export const pending = () => new Promise<never>(() => {})
 export const unavailable = () => {

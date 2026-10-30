@@ -21,7 +21,8 @@ for (const theme of ["light", "dark"]) {
       await row.hover()
       expect(await row.boundingBox()).toEqual(before)
     }
-    const heading = rail.getByRole("button", { name: "Repositories", exact: true })
+    const heading = rail.getByRole("button", { name: "GitCub", exact: true })
+    await expect(heading).toBeVisible()
     await expect(heading.locator("svg")).toHaveCount(0)
     const selected = rail.getByRole("button", { name: "gitcub", exact: true })
     const next = rail.getByRole("button", { name: "atlas", exact: true })
@@ -173,7 +174,7 @@ test("discovery floating canvas preserves workspace state and separates swiping 
   const search = page.getByPlaceholder("Search repositories")
   await search.fill("gitcub")
   const discover = page.getByRole("button", { name: "Discover", exact: true })
-  const repositories = page.getByRole("button", { name: "Repositories", exact: true })
+  const repositories = page.getByRole("button", { name: "GitCub", exact: true })
   await expect(repositories).toHaveAttribute("aria-current", "page")
   await discover.click()
   await expect(canvas).toHaveAttribute("data-page", "0")
@@ -218,7 +219,7 @@ test("discovery floating canvas preserves workspace state and separates swiping 
   await page.getByRole("button", { name: "Discover", exact: true }).click()
   await expect(canvas).toHaveAttribute("data-page", "0")
   await expect(page.getByRole("button", { name: "Discover", exact: true })).toHaveAttribute("aria-current", "page")
-  await page.getByRole("button", { name: "Repositories", exact: true }).click()
+  await page.getByRole("button", { name: "GitCub", exact: true }).click()
   await expect(canvas).toHaveAttribute("data-page", "1")
   await expect(search).toHaveValue("gitcub")
   await expect
