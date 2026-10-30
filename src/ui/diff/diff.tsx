@@ -198,14 +198,6 @@ function FileDiffView(props: Props) {
       />
     </>
   )
-  // Keep controls available during a filtered reload or error so the user can recover.
-  if (hide && !visual)
-    return (
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex h-9 shrink-0 items-center gap-2 overflow-x-auto border-b px-3">{controls}</div>
-        <Centered>{error ?? t("diff.loading")}</Centered>
-      </div>
-    )
   return (
     <ContextMenu>
       <ContextMenuTrigger
@@ -295,6 +287,7 @@ function FileDiffView(props: Props) {
 
 function TextDiffView({
   controls,
+  status,
   split = false,
   wrap = true,
   query = "",
@@ -318,8 +311,28 @@ function TextDiffView({
 }: Props) {
   const { t } = useTranslation()
   if (!file) return <Centered>{t("diff.selectFile")}</Centered>
-  if (error) return <Centered className="text-destructive">{error}</Centered>
-  if (!diff) return <Centered>{t("diff.loading")}</Centered>
+  // 原版 `.diff-container .header`：左右 10px 内边距，路径是正文字体、目录淡化，状态图标在最右。
+  // 加载中、出错时标题行照样在同一个位置：切「隐藏空白改动」后过滤结果还没回来，
+  // diff 选项弹层不能因为换了一棵树被卸掉。
+  const header = (
+    <div className="flex h-9 shrink-0 items-center gap-3 overflow-x-auto border-b px-2.5 whitespace-nowrap">
+      <Path path={file} className="min-w-12 flex-1 text-xs" />
+      {diff && !error && (
+        <span className="text-muted-foreground shrink-0 text-xs">
+          {t("diff.hunkCount", { count: diff.hunks.length })}
+        </span>
+      )}
+      {controls}
+      {status && <span className="flex shrink-0 items-center [&_svg]:size-4">{status}</span>}
+    </div>
+  )
+  if (error || !diff)
+    return (
+      <div className="diff-container flex min-h-0 flex-1 flex-col">
+        {header}
+        {error ? <Centered className="text-destructive">{error}</Centered> : <Centered>{t("diff.loading")}</Centered>}
+      </div>
+    )
   // 二进制文件没有「行」可比。图片有它自己的看法（两版摆出来比），
   // 其余的至少要说清楚是二进制——掉进下面那个「没有改动」等于撒谎。
   if (diff.isBinary) {
@@ -332,15 +345,7 @@ function TextDiffView({
 
   return (
     <div className="diff-container flex min-h-0 flex-1 flex-col">
-      {/* 原版 `.diff-container .header`：左右 10px 内边距，路径是正文字体、目录淡化，状态图标在最右 */}
-      <div className="flex h-9 shrink-0 items-center gap-3 overflow-x-auto border-b px-2.5 whitespace-nowrap">
-        <Path path={file} className="min-w-12 flex-1 text-xs" />
-        <span className="text-muted-foreground shrink-0 text-xs">
-          {t("diff.hunkCount", { count: diff.hunks.length })}
-        </span>
-        {controls}
-        {status && <span className="flex shrink-0 items-center [&_svg]:size-4">{status}</span>}
-      </div>
+      {header}
       {/* 双向文字控制符在编辑器里是隐形的，却能让代码「看起来」和「实际编译的」
           完全是两回事（Trojan Source，CVE-2021-42574）。原版也是在 diff 上方
           挂一条警告——解析器早就算出来了，不说出来等于白算。 */}
