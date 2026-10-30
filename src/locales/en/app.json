@@ -356,6 +356,8 @@
     "clientIdHint": "Create an OAuth application on {{host}} and paste its Application ID (not a secret)",
     "createApp": "Create",
     "deviceHint": "Enter this code in the browser to authorize:",
+    "copyCode": "Copy code",
+    "copied": "Copied",
     "authDenied": "Authorization denied",
     "authExpired": "Code expired, try again",
     "repository": "Repository",

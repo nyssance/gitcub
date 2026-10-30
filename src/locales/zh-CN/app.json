@@ -349,6 +349,8 @@
     "clientIdHint": "在 {{host}} 建一个 OAuth 应用，把 Application ID 填这里（不是密钥）",
     "createApp": "去创建",
     "deviceHint": "在浏览器里输入这串码完成授权：",
+    "copyCode": "复制验证码",
+    "copied": "已复制",
     "authDenied": "授权被拒绝",
     "authExpired": "授权码已过期，请重试",
     "repository": "仓库",

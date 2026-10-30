@@ -1,4 +1,13 @@
-import { GearIcon, GitCommitIcon, HomeIcon, PaintbrushIcon, RepoIcon, TrashIcon } from "@primer/octicons-react"
+import {
+  CheckIcon,
+  CopyIcon,
+  GearIcon,
+  GitCommitIcon,
+  HomeIcon,
+  PaintbrushIcon,
+  RepoIcon,
+  TrashIcon
+} from "@primer/octicons-react"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { Touchpad } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -198,6 +207,9 @@ export function AccountsTab({
 }) {
   const { t } = useTranslation()
   const [device, setDevice] = useState<{ host: string; start: DeviceStart } | null>(null)
+  /** 授权码已复制：换一个码（重新登录或取消）就回到复制图标 */
+  const [copied, setCopied] = useState(false)
+  useEffect(() => setCopied(false), [device])
   const [clientDraft, setClientDraft] = useState<Record<string, string>>({})
   // 内置的应用 ID：有内置的就不用让用户填，直接给「登录」按钮
   const [builtin, setBuiltin] = useState<Record<string, string>>({})
@@ -440,7 +452,23 @@ export function AccountsTab({
             {device?.host === host && (
               <div className="bg-muted/50 my-2 rounded-md p-3 text-xs">
                 <div className="text-muted-foreground">{t("prefs.deviceHint")}</div>
-                <div className="mt-1 font-mono text-lg tracking-widest">{device.start.userCode}</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="font-mono text-lg tracking-widest select-all">{device.start.userCode}</span>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    type="button"
+                    title={copied ? t("prefs.copied") : t("prefs.copyCode")}
+                    aria-label={copied ? t("prefs.copied") : t("prefs.copyCode")}
+                    onClick={() =>
+                      void navigator.clipboard.writeText(device.start.userCode).then(
+                        () => setCopied(true),
+                        e => setError(String(e))
+                      )
+                    }>
+                    {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"
