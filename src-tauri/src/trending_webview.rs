@@ -205,7 +205,7 @@ pub async fn sync_trending_webview(
                 let _ = on_load.send(event.to_string());
             });
         let view = window.add_child(builder).map_err(|e| e.to_string())?;
-        // Native child views are not clipped by the parent renderer's CSS radius.
+        // Only the bottom corners meet the outer panel edge. The top joins the toolbar.
         #[cfg(target_os = "macos")]
         view.with_webview(|platform| {
             use objc2::{
@@ -219,6 +219,9 @@ pub async fn sync_trending_webview(
                     let layer: *mut AnyObject = msg_send![native, layer];
                     if !layer.is_null() {
                         let _: () = msg_send![layer, setCornerRadius: 11.0_f64];
+                        let flipped: Bool = msg_send![layer, isGeometryFlipped];
+                        let bottom_corners: usize = if flipped.as_bool() { 12 } else { 3 };
+                        let _: () = msg_send![layer, setMaskedCorners: bottom_corners];
                         let _: () = msg_send![layer, setMasksToBounds: Bool::YES];
                     }
                 }
