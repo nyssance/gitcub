@@ -1,0 +1,193 @@
+/* 从 GitHub Desktop 移植的分支 foldout 样式（MIT License, github.com/desktop/desktop）。
+ *
+ * 来源文件：
+ *   app/styles/ui/_branches.scss（.branches-container / .branches-list-item / .merge-button-row）
+ *   app/styles/ui/_filter-list.scss（.filter-list / .filter-field-row / .filter-list-group-header）
+ *   app/styles/ui/_list.scss（.list-item 选中、焦点选中、悬停）
+ *   app/styles/ui/_no-branches.scss
+ *
+ * 只作用于 .branches-container 内部：其它 SectionFilterList（PR 列表、克隆列表）各有自己的规则。
+ * SCSS 变量换成本项目 token：--spacing 10px、--spacing-half 5px、--font-size 12px、--font-size-sm 11px，
+ * --text-secondary-color → --muted-foreground，--box-selected-* → --list-selected-*。 */
+
+.branches-container {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+.branches-container-panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* _filter-list.scss */
+.branches-container .filter-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.branches-container .filter-list .filter-field-row {
+  margin: 10px;
+  min-width: 0;
+  gap: 10px;
+}
+.branches-container .filter-list .filter-field-row .filter-list-filter-field {
+  flex: 1;
+  min-width: 0;
+}
+.branches-container .filter-list-container {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.branches-container .filter-list-group-header {
+  padding: 0 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+/* _list.scss */
+.branches-container .list-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+.branches-container .list-item:focus {
+  outline: none;
+}
+.branches-container .list-item:not(.not-selectable):hover {
+  background: var(--list-hover);
+}
+.branches-container .list-item.selected {
+  --muted-foreground: var(--list-selected-foreground);
+  color: var(--list-selected-foreground);
+  background-color: var(--list-selected);
+}
+.branches-container .list-focus-container.focus-within .list-item.selected {
+  --muted-foreground: var(--list-selected-active-foreground);
+  color: var(--list-selected-active-foreground);
+  background-color: var(--list-selected-active);
+}
+.branches-container .list-item .list-item-content-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* _branches.scss（.resizable：宽度跟 foldout） */
+.branches-list {
+  width: 100%;
+  min-height: 0;
+}
+.branches-list-item {
+  height: 100%;
+  padding: 0 10px;
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+  flex-grow: 1;
+  align-items: center;
+}
+.branches-list-item.drop-target * {
+  pointer-events: none;
+}
+.branches-list-item .icon {
+  margin-right: 5px;
+  width: 16px;
+  flex-shrink: 0;
+}
+.branches-list-item .name {
+  flex-grow: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+.branches-list-item .name mark {
+  font-weight: bold;
+  background-color: inherit;
+  color: currentColor;
+}
+.branches-list-item .description {
+  margin-right: 5px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  flex-grow: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.branches-container .merge-button-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-top: 1px solid var(--border);
+  padding: 10px;
+}
+.branches-container .merge-button-row .merge-button .icon {
+  margin-right: 5px;
+}
+
+/* _no-branches.scss（.resizable：365px 居中、flex:none） */
+.branches-container .no-branches {
+  width: 365px;
+  margin: 10px auto;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px;
+}
+.branches-container .no-branches .title {
+  font-weight: 600;
+  text-align: center;
+}
+.branches-container .no-branches .subtitle {
+  margin-left: 20px;
+  margin-right: 20px;
+  text-align: center;
+  font-size: 11px;
+}
+.branches-container .no-branches .create-branch-button {
+  margin: 20px;
+  align-self: stretch;
+}
+.branches-container .no-branches .protip {
+  padding-left: 30px;
+  padding-right: 30px;
+  text-align: center;
+  font-size: 11px;
+}
+.branches-container .no-branches p {
+  margin: 0;
+}
+
+/* GitCub：合并模式提示与额外工作树，放在过滤行之上 */
+.branches-container .branches-action-hint {
+  padding: 10px 10px 0;
+}
+.branches-container .branches-worktrees {
+  display: flex;
+  flex-direction: column;
+  padding-top: 5px;
+}
+
+/* .merge-button.button-component { align-self: auto }：在纵向 flex 的行里横向撑满 */
+.branches-container .merge-button-row .merge-button {
+  width: 100%;
+}

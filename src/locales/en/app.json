@@ -736,7 +736,17 @@
     "files_other": "{{count}} files ",
     "summaryRequired": "A commit summary is required to commit",
     "selectFiles": "Select one or more files to commit",
-    "committingChanges": "Committing changes…"
+    "committingChanges": "Committing changes…",
+    "defaultBranch": "Default Branch",
+    "recentBranches": "Recent Branches",
+    "otherBranches": "Other Branches",
+    "newBranch": "New Branch",
+    "filter": "Filter",
+    "copyBranchName": "Copy Branch Name",
+    "checkoutInNewWorktree": "Checkout in New Worktree…",
+    "chooseBranchToMergeInto": "Choose a branch to merge into",
+    "fullName": "Full Name: ",
+    "lastModified": "Last Modified: "
   },
   "ci": {
     "summary": "Checks Summary",

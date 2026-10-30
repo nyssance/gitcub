@@ -1,5 +1,5 @@
 import { ChevronDownIcon } from "@primer/octicons-react"
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/ui/base/button"
@@ -18,6 +18,8 @@ interface Props {
   children?: ReactNode
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  /** Desktop ToolbarDropdown foldoutStyleOverrides：覆盖默认的「与按钮同宽」 */
+  foldoutStyle?: CSSProperties
 }
 
 /** 工具栏下拉：`图标 | 标题 / 值 | 箭头`，点击在下方展开 foldout。
@@ -32,7 +34,8 @@ export function ToolbarDropdown({
   grow,
   children,
   open,
-  onOpenChange
+  onOpenChange,
+  foldoutStyle
 }: Props) {
   const content = (
     <>
@@ -75,7 +78,7 @@ export function ToolbarDropdown({
         sideOffset={0}
         alignOffset={0}
         // 宽度跟点击框一致：Base UI 把锚元素的尺寸挂成 --anchor-width
-        style={{ width: "var(--anchor-width)" }}
+        style={{ width: "var(--anchor-width)", ...foldoutStyle }}
         className="overflow-hidden rounded-none border-t-0 p-0">
         {children}
       </PopoverContent>

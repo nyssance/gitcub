@@ -93,7 +93,7 @@ export class BranchListItem extends React.Component<IBranchListItemProps, IBranc
     const { authorDate, isCurrentBranch, name } = this.props
 
     const icon = isCurrentBranch ? octicons.check : octicons.gitBranch
-    const className = classNames("branches-list-item flex min-w-0 items-center gap-2", {
+    const className = classNames("branches-list-item", {
       "drop-target": this.state.isDragInProgress
     })
 
@@ -108,9 +108,9 @@ export class BranchListItem extends React.Component<IBranchListItemProps, IBranc
         onMouseEnter={this.onMouseEnter}
         onMouseLeave={this.onMouseLeave}
         onMouseUp={this.onMouseUp}>
-        <Octicon className="icon shrink-0" symbol={icon} />
+        <Octicon className="icon" symbol={icon} />
         <TooltippedContent
-          className="name min-w-0 flex-1 truncate"
+          className="name"
           tooltip={name}
           onlyWhenOverflowed={true}
           tagName="div"

@@ -97,6 +97,11 @@ export class AppStore extends BaseStore {
       subscription.dispose()
     })
   }
+  /** GitCub: the branch foldout reads allBranches / recentBranches / defaultBranch from the same GitStore
+   *  Desktop's BranchesContainer is fed from (git-store loadBranches). */
+  public gitStoreFor(repository: Repository) {
+    return this.gitStoreCache.get(repository)
+  }
   public selectRepository(repository: Repository | CloningRepository | null) {
     this.selectedRepository = repository
     this.emitUpdate()

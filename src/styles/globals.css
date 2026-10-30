@@ -5,6 +5,7 @@
 @import "./diff.css" layer(components);
 @import "./workflow.css" layer(components);
 @import "./check-runs.css" layer(components);
+@import "./branches.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
