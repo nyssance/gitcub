@@ -2,7 +2,7 @@
 import * as React from "react"
 
 import { formatDate } from "../lib/format-date"
-import { formatRelative } from "../upstream/lib/format-relative"
+import i18n from "../lib/i18n"
 import { TooltippedContent } from "./desktop/tooltipped-content"
 
 interface IRelativeTimeProps {
@@ -37,6 +37,24 @@ const DAY = HOUR * 24
 
 // The maximum value that can be used in setInterval or
 // setTimeout without it overflowing (2 ^ 31 - 1). See
+/** 原版 format-relative.ts 的阈值，但按界面语言格式化（原版写死 en-US，中文界面里会出现「22 hours ago」）。 */
+function formatRelative(ms: number) {
+  const formatter = new Intl.RelativeTimeFormat(i18n.language || "en-US", { numeric: "auto" })
+  const sign = ms < 0 ? -1 : 1
+  const sec = Math.round(Math.abs(ms) / 1000)
+  const min = Math.round(sec / 60)
+  const hr = Math.round(min / 60)
+  const day = Math.round(hr / 24)
+  const month = Math.round(day / 30)
+  const year = Math.round(month / 12)
+  if (sec < 45) return formatter.format(sec * sign, "second")
+  if (min < 45) return formatter.format(min * sign, "minute")
+  if (hr < 24) return formatter.format(hr * sign, "hour")
+  if (day < 30) return formatter.format(day * sign, "day")
+  if (month < 18) return formatter.format(month * sign, "month")
+  return formatter.format(year * sign, "year")
+}
+
 //  http://stackoverflow.com/a/16314807
 const MAX_INTERVAL = 2147483647
 
@@ -71,7 +89,9 @@ export function getRelativeTimeInfoFromDate(then: Date, onlyRelative: boolean = 
   } else if (duration < MINUTE) {
     return {
       absoluteText,
-      relativeText: "just now",
+      relativeText: i18n.language.startsWith("en")
+        ? "just now"
+        : new Intl.RelativeTimeFormat(i18n.language).format(0, "second"),
       duration: MINUTE - duration
     }
   } else if (duration < HOUR) {
