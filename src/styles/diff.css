@@ -576,3 +576,27 @@
 .side-by-side-diff-container .cm-diff-add-inner {
   background: var(--desktop-diff-add-inner-background-color);
 }
+
+/* —— .diff-search（Desktop _side-by-side-diff.scss）—————————————————
+ * 变量换成本项目 token：--base-border → 1px --border、--border-radius 6px、
+ * --base-box-shadow 0 2px 7px --shadow-color（浅色 rgba(71,83,95,.19)、深色 rgba(0,0,0,.5)）、--popup-z-index 19、--spacing 10px、--spacing-half 5px */
+.diff-search {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+  padding: 5px 10px;
+  box-shadow: 0 2px 7px rgba(71, 83, 95, 0.19);
+  z-index: 19;
+  background: var(--background);
+
+  /* 输入框本身是标准 shadcn InputGroup（基础控件不按 Desktop 外观覆盖），只沿用原版 180px 宽 */
+  .text-box-component {
+    width: 180px;
+  }
+}
+.dark .diff-search {
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
+}

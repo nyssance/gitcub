@@ -1,8 +1,15 @@
 import { AlertIcon } from "@primer/octicons-react"
 import { listen } from "@tauri-apps/api/event"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from "@/components/ui/context-menu"
 import { diffKind, type DiffTokens, expandDiff, fileKindOf, getDiff, selectableLines } from "@/lib/diff"
 import { diffLineMapping, projectDiffSelection, restoreDiffSelection } from "@/lib/diff-selection-mapping"
 import { ipc } from "@/lib/ipc"
@@ -14,15 +21,9 @@ import { type DiffHunk, DiffHunkExpansionType, DiffType, type IRawDiff } from "@
 import type { DiffSelection } from "@/upstream/models/diff/diff-selection"
 import type { DiffExpansionKind } from "@/upstream/ui/diff/text-diff-expansion"
 
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuGroup,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "@/components/ui/context-menu"
-import { Input } from "@/components/ui/input"
+import { AriaLiveContainer } from "../accessibility/aria-live-container"
 import { DiffOptions } from "./diff-options"
+import { DiffSearchInput } from "./diff-search-input"
 import { SplitDiff } from "./split-diff"
 
 interface Props {
@@ -33,6 +34,8 @@ interface Props {
   onDiscardLines?: (diff: IRawDiff, lines: number[]) => void
 
   controls?: React.ReactNode
+  /** Desktop side-by-side-diff-container 里浮在 diff 右上角的搜索框与播报 */
+  search?: React.ReactNode
   /** 文件状态图标，放在标题行最右（原版 DiffHeader：PathLabel、diff 选项、状态 Octicon） */
   status?: React.ReactNode
   split?: boolean
@@ -76,18 +79,60 @@ function FileDiffView(props: Props) {
   const [hide, setHide] = useState(false)
   const [filtered, setFiltered] = useState<IRawDiff | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Desktop side-by-side-diff.tsx 的搜索：⌘F 或菜单「查找」才弹出 DiffSearchInput，回车才搜，
+  // 同一个词再回车跳下一处（⇧ 上一处），Esc 或失焦收起并清掉结果；结果只经 aria-live 播报
+  const [isSearching, setIsSearching] = useState(false)
   const [query, setQuery] = useState("")
   const [searchResults, setSearchResults] = useState({ current: 0, total: 0 })
   const [searchStep, setSearchStep] = useState(0)
-  const search = useRef<HTMLInputElement>(null)
+  const [emptySearch, setEmptySearch] = useState(false)
+  const [ariaLiveChangeSignal, setAriaLiveChangeSignal] = useState(false)
+  const resetSearch = (searching: boolean, empty = false) => {
+    setAriaLiveChangeSignal(signal => !signal)
+    setQuery("")
+    setSearchStep(0)
+    setEmptySearch(empty)
+    setIsSearching(searching)
+  }
+  const showSearch = useEffectEvent(() => {
+    if (!isSearching) resetSearch(true)
+  })
   useEffect(() => {
+    const onWindowKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return
+      if (event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.key === "f") {
+        event.preventDefault()
+        showSearch()
+      }
+    }
+    window.addEventListener("keydown", onWindowKeyDown)
     const subscription = listen<string>("menu", event => {
-      if (event.payload === "find-text") search.current?.focus()
+      if (event.payload === "find-text") showSearch()
     })
     return () => {
+      window.removeEventListener("keydown", onWindowKeyDown)
       void subscription.then(dispose => dispose())
     }
   }, [])
+  const onSearch = (searchQuery: string, direction: "next" | "previous") => {
+    setAriaLiveChangeSignal(signal => !signal)
+    if (searchQuery.trim() === "") {
+      resetSearch(true, true)
+    } else if (searchQuery === query && searchResults.total > 0) {
+      setSearchStep(step => step + (direction === "next" ? 1 : -1))
+    } else {
+      setEmptySearch(false)
+      setQuery(searchQuery)
+      setSearchStep(0)
+    }
+  }
+  const ariaLiveMessage = query
+    ? searchResults.total > 0
+      ? t("diffSearchInput.resultCurrentOfTotalForQuery", { ...searchResults, query })
+      : t("diffSearchInput.noResultsForQuery", { query })
+    : emptySearch
+      ? t("diffSearchInput.noResults")
+      : ""
   // refresh the filtered projection whenever the canonical diff changes.
   useEffect(() => {
     if (!hide || !props.repo || !props.file) {
@@ -161,26 +206,6 @@ function FileDiffView(props: Props) {
       : props.selection
   const controls = (
     <>
-      <Input
-        ref={search}
-        aria-label={t("diff.search")}
-        placeholder={t("diff.search")}
-        className="h-7 w-28 shrink-0"
-        value={query}
-        onChange={e => {
-          setQuery(e.currentTarget.value)
-          setSearchStep(0)
-        }}
-        onKeyDown={e => {
-          if (e.key === "Enter") setSearchStep(v => v + (e.shiftKey ? -1 : 1))
-          if (e.key === "Escape") setQuery("")
-        }}
-      />
-      {query && (
-        <span role="status" className="text-muted-foreground shrink-0 text-xs">
-          {searchResults.current}/{searchResults.total}
-        </span>
-      )}
       <DiffOptions
         isInteractiveDiff={!!props.onSelectionChange}
         hideWhitespaceChanges={hide}
@@ -219,6 +244,12 @@ function FileDiffView(props: Props) {
           onSearchResults={setSearchResults}
           diff={visual}
           controls={controls}
+          search={
+            <>
+              {isSearching && <DiffSearchInput onSearch={onSearch} onClose={() => resetSearch(false)} />}
+              <AriaLiveContainer message={ariaLiveMessage} trackedUserInput={ariaLiveChangeSignal} />
+            </>
+          }
           split={split}
           wrap={wrap}
           query={query}
@@ -287,6 +318,7 @@ function FileDiffView(props: Props) {
 
 function TextDiffView({
   controls,
+  search,
   status,
   split = false,
   wrap = true,
@@ -317,11 +349,6 @@ function TextDiffView({
   const header = (
     <div className="flex h-9 shrink-0 items-center gap-3 overflow-x-auto border-b px-2.5 whitespace-nowrap">
       <Path path={file} className="min-w-12 flex-1 text-xs" />
-      {diff && !error && (
-        <span className="text-muted-foreground shrink-0 text-xs">
-          {t("diff.hunkCount", { count: diff.hunks.length })}
-        </span>
-      )}
       {controls}
       {status && <span className="flex shrink-0 items-center [&_svg]:size-4">{status}</span>}
     </div>
@@ -364,22 +391,25 @@ function TextDiffView({
       {diff.hunks.length === 0 ? (
         <Centered>{t("diff.noChanges")}</Centered>
       ) : (
-        <SplitDiff
-          split={split}
-          tokens={tokens}
-          wrap={wrap}
-          diff={diff}
-          selection={selection}
-          onChange={readOnly ? undefined : onSelectionChange}
-          onExpand={onExpand}
-          onContextLine={onContextLine}
-          hideWhitespace={hideWhitespace}
-          onHideWhitespaceChange={onHideWhitespaceChange}
-          onTextContext={onTextContext}
-          onSearchResults={onSearchResults}
-          query={query}
-          searchStep={searchStep}
-        />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          {search}
+          <SplitDiff
+            split={split}
+            tokens={tokens}
+            wrap={wrap}
+            diff={diff}
+            selection={selection}
+            onChange={readOnly ? undefined : onSelectionChange}
+            onExpand={onExpand}
+            onContextLine={onContextLine}
+            hideWhitespace={hideWhitespace}
+            onHideWhitespaceChange={onHideWhitespaceChange}
+            onTextContext={onTextContext}
+            onSearchResults={onSearchResults}
+            query={query}
+            searchStep={searchStep}
+          />
+        </div>
       )}
     </div>
   )

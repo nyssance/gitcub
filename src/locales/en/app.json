@@ -236,10 +236,7 @@
     "discardHunk": "Discard this hunk",
     "selectFile": "Select a file to view changes",
     "loading": "Loading…",
-    "hunkCount_one": "{{count}} hunk",
-    "hunkCount_other": "{{count}} hunks",
     "noChanges": "No changes against the index",
-    "search": "Find in diff",
     "split": "Split",
     "unified": "Unified",
     "wrap": "Wrap Lines",
@@ -979,5 +976,11 @@
     "committed": "Committed",
     "undo": "Undo",
     "undoIsDisabledWhileTheRepositoryIsBeingUpdated": "Undo is disabled while the repository is being updated"
+  },
+  "diffSearchInput": {
+    "search": "Search…",
+    "noResults": "No results",
+    "noResultsForQuery": "No results for \"{{query}}\"",
+    "resultCurrentOfTotalForQuery": "Result {{current}} of {{total}} for \"{{query}}\""
   }
 }

@@ -233,9 +233,7 @@
     "discardHunk": "丢弃这一块的改动",
     "selectFile": "选择一个文件查看更改",
     "loading": "载入中…",
-    "hunkCount_other": "{{count}} 个区块",
     "noChanges": "该文件相对暂存区没有更改",
-    "search": "搜索差异",
     "split": "并排",
     "unified": "统一",
     "wrap": "自动换行",
@@ -973,5 +971,11 @@
     "committed": "提交于",
     "undo": "撤销",
     "undoIsDisabledWhileTheRepositoryIsBeingUpdated": "仓库正在更新，暂时不能撤销"
+  },
+  "diffSearchInput": {
+    "search": "搜索…",
+    "noResults": "没有结果",
+    "noResultsForQuery": "没有找到“{{query}}”",
+    "resultCurrentOfTotalForQuery": "“{{query}}”第 {{current}} 处，共 {{total}} 处"
   }
 }
