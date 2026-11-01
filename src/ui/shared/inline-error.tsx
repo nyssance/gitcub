@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 
-import { Alert, AlertDescription } from "@/ui/base/alert"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/base/tooltip"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 /** Keep service diagnostics readable without displacing the Git workflow. */
 export function InlineError({ error }: { error: string }) {

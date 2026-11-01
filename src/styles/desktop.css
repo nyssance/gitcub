@@ -554,3 +554,38 @@
   padding-left: 0;
   margin-bottom: 0;
 }
+
+/* —— #undo-commit（Desktop _undo-commit.scss）——————————————————— */
+#undo-commit {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  border-top: var(--base-border);
+  background: var(--box-alt-background-color);
+
+  .commit-info {
+    padding: var(--spacing-half) var(--spacing);
+    padding-right: 0;
+    margin-right: var(--spacing-half);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: var(--font-size-sm);
+
+    .summary,
+    .ago {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ago {
+      color: var(--text-secondary-color);
+    }
+  }
+
+  /* 包一层才能给按钮留边距：padding 放在 #undo-commit 上，展开收起的动画就带不上它 */
+  .actions {
+    padding: var(--spacing);
+    padding-left: 0;
+  }
+}

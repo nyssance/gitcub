@@ -12,7 +12,7 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*", "./node_modules/@nyssance/shadcn/dist/vega/*"]
     },
     "types": ["bun"]
   },

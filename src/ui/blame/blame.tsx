@@ -6,8 +6,8 @@ import { useTranslation } from "react-i18next"
 import { ipc } from "@/lib/ipc"
 import { cn } from "@/lib/utils"
 import type { BlameLine } from "@/models/history"
-import { Button, Button as StandardButton } from "@/ui/base/button"
-import { Spinner } from "@/ui/base/spinner"
+import { Button, Button as StandardButton } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 
 /** 逐行追溯。
  *

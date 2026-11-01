@@ -4,7 +4,7 @@ import { platform } from "@tauri-apps/plugin-os"
 import * as React from "react"
 
 import { cn } from "../../../lib/utils"
-import { Dialog as StandardDialog, DialogContent as StandardDialogContent, DialogTitle } from "../../base/dialog"
+import { Dialog as StandardDialog, DialogContent as StandardDialogContent, DialogTitle } from "@/components/ui/dialog"
 import { sendDialogDidOpen } from "../../native-dialogs"
 import { DialogHeader } from "./header"
 

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect } from "storybook/test"
 
-import { Input } from "../src/ui/base/input"
-import { TooltipProvider } from "../src/ui/base/tooltip"
+import { Input } from "@/components/ui/input"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { InlineError } from "../src/ui/shared/inline-error"
 
 const meta = {

@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next"
 
 import type { CommitFile } from "@/models/history"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/ui/base/context-menu"
-import { Item, ItemActions, ItemContent, ItemTitle } from "@/ui/base/item"
-import { Separator } from "@/ui/base/separator"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { Item, ItemActions, ItemContent, ItemTitle } from "@/components/ui/item"
+import { Separator } from "@/components/ui/separator"
 import { List } from "@/ui/desktop/list"
 import { Path } from "@/ui/shared/path"
 import { CommitStatusIcon } from "@/ui/shared/status-icon"

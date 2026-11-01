@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { RadioGroup as StandardRadioGroup } from "../base/radio-group"
+import { RadioGroup as StandardRadioGroup } from "@/components/ui/radio-group"
 import { RadioButton } from "./radio-button"
 
 interface IRadioGroupProps<T> {

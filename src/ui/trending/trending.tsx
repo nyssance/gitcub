@@ -7,8 +7,8 @@ import { useTranslation } from "react-i18next"
 import { ipc } from "@/lib/ipc"
 import { getZoomFactor } from "@/lib/menu/native-menu"
 import type { BrowserAction, BrowserState } from "@/models/browser"
-import { Alert, AlertDescription } from "@/ui/base/alert"
-import { Button } from "@/ui/base/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 
 const TRENDING_URL = "https://github.com/trending"
 let updates = Promise.resolve()

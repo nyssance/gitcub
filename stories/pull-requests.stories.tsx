@@ -8,7 +8,7 @@ import { APICheckConclusion, APICheckStatus } from "../src/lib/api"
 import { canDropCommits, endCommitDrag, startCommitDrag } from "../src/lib/commit-drag"
 import i18n from "../src/lib/i18n"
 import type { CheckRun, PullRequest } from "../src/models/app-state"
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { PullRequests } from "../src/ui/pull-requests/list"
 import { pending, unavailable } from "./fixtures"
 

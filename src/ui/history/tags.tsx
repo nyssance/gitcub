@@ -7,11 +7,11 @@ import { hookFailureHandling } from "@/features/dialogs/store"
 import { useRepositoryStore } from "@/features/repository/store"
 import { ipc } from "@/lib/ipc"
 
-import { Button } from "../base/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../base/dialog"
-import { Empty, EmptyHeader, EmptyTitle } from "../base/empty"
-import { Input } from "../base/input"
-import { Spinner } from "../base/spinner"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 import { Select } from "../desktop/select"
 
 export function Tags({ repo }: { repo: string }) {

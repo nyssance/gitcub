@@ -2,7 +2,7 @@ import classNames from "classnames"
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { Toggle } from "../base/toggle"
+import { Toggle } from "@/components/ui/toggle"
 
 interface IToggleButtonProps {
   /**

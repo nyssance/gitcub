@@ -4,7 +4,7 @@ import { platform } from "@tauri-apps/plugin-os"
 import * as React from "react"
 
 import type { TerminalOutput } from "../../lib/git-execution"
-import { Spinner } from "../base/spinner"
+import { Spinner } from "@/components/ui/spinner"
 import { Dialog, DialogContent, DialogFooter } from "../desktop/dialog"
 import { OkCancelButtonGroup } from "../desktop/dialog/ok-cancel-button-group"
 

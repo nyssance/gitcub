@@ -2,14 +2,14 @@
 import { APICheckConclusion } from "../../lib/api"
 import type { IRefCheck } from "../../lib/ci-checks/ci-checks"
 import i18n from "../../lib/i18n"
-import { Button } from "../base/button"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "../base/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 import { Octicon, syncClockwise } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
 

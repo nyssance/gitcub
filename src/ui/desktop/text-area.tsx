@@ -2,8 +2,8 @@ import classNames from "classnames"
 import * as React from "react"
 // Desktop MIT port; platform imports adapted to Tauri.
 
-import { Field, FieldLabel } from "../base/field"
-import { Textarea } from "../base/textarea"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ITextAreaProps {
   /** The label for the textarea field. */

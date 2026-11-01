@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next"
 
 import { type AutolinkRuleErrors, validateAutolinkRule } from "@/lib/autolink-rules"
 import type { AutolinkRule } from "@/models/app-state"
-import { Button } from "@/ui/base/button"
-import { Checkbox } from "@/ui/base/checkbox"
-import { Input } from "@/ui/base/input"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 
 const emptyRule: AutolinkRule = { prefix: "", url: "", alphanumeric: false, ignoreCase: false, title: "" }
 

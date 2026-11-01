@@ -8,8 +8,8 @@ import { appStatus } from "@/lib/desktop-status"
 import type { CommitOptions, Issue, Remote } from "@/models/app-state"
 import { emptyChangesFilter, type IChangesListItem } from "@/models/changes-filter"
 import type { FileChange } from "@/models/repo-status"
-import { Button } from "@/ui/base/button"
-import { Checkbox } from "@/ui/base/checkbox"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -18,11 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from "@/ui/base/dropdown-menu"
-import { Empty, EmptyHeader, EmptyTitle } from "@/ui/base/empty"
-import { Input } from "@/ui/base/input"
-import { Label } from "@/ui/base/label"
-import { Separator } from "@/ui/base/separator"
+} from "@/components/ui/dropdown-menu"
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import { LinkButton } from "@/ui/desktop/link-button"
 import { hasUnresolvedConflicts, isConflictedFile } from "@/upstream/lib/status"
 import { DiffSelectionType } from "@/upstream/models/diff/diff-selection"

@@ -2,7 +2,7 @@ import classNames from "classnames"
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { Button as StandardButton } from "@/ui/base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 
 import { createUniqueId, releaseUniqueId } from "../../lib/ui/id-pool"
 import { Octicon } from "../octicons"

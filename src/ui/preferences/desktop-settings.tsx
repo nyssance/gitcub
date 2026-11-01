@@ -13,10 +13,10 @@ import {
   type TimeFormat,
   timeFormats
 } from "@/models/formatting-preferences"
-import { Checkbox } from "@/ui/base/checkbox"
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/ui/base/field"
-import { NativeSelect, NativeSelectOption } from "@/ui/base/native-select"
-import { RadioGroup, RadioGroupItem } from "@/ui/base/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { UncommittedChangesStrategy } from "@/upstream/models/uncommitted-changes-strategy"
 
 /** 一个带说明的勾选项：原版 Checkbox + settings-description */

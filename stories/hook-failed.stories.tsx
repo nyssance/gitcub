@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../src/ui/base/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { CommitProgress } from "../src/ui/commit-progress/commit-progress"
 import { HookFailed } from "../src/ui/hook-failed/hook-failed"
 

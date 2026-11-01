@@ -4,7 +4,7 @@ import { arch } from "@tauri-apps/plugin-os"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button as StandardButton } from "@/ui/base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 
 import { getVersion } from "../lib/app-version"
 import { releaseChannel } from "../lib/build-environment"

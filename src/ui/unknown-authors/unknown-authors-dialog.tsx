@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from "../base/alert-dialog"
+} from "@/components/ui/alert-dialog"
 
 /** Don't list more than this number of authors. */
 const MaxAuthorsToList = 10

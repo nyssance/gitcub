@@ -1,10 +1,10 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { Button as StandardButton } from "@/ui/base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 
-import { DialogHeader as StandardHeader, DialogTitle } from "../../base/dialog"
-import { Spinner } from "../../base/spinner"
+import { DialogHeader as StandardHeader, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
 import { Octicon } from "../../octicons"
 import * as octicons from "../../octicons/octicons.generated"
 

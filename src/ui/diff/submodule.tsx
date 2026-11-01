@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next"
 import { ipc } from "@/lib/ipc"
 import type { SubmoduleInfo } from "@/models/app-state"
 import type { FileChange } from "@/models/repo-status"
-import { Button } from "@/ui/base/button"
-import { Spinner } from "@/ui/base/spinner"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 
 /** 子模块的「diff」。
  *

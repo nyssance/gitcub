@@ -4,7 +4,7 @@ import { expect, fn, userEvent, waitFor } from "storybook/test"
 
 import { assertNativeFixtures, nativeCall, withNativeFixtures } from "../.storybook/mocks/native"
 import i18n from "../src/lib/i18n"
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { SubmoduleView } from "../src/ui/diff/submodule"
 import { file, pending, repo, unavailable } from "./fixtures"
 

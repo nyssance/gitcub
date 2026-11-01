@@ -3,8 +3,8 @@ import { useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { type Route, routes } from "@/lib/navigate"
-import { Button } from "@/ui/base/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/base/tabs"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { RemoteRepoList } from "./stars"
 

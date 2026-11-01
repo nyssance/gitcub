@@ -974,5 +974,11 @@
     "reorder": "reorder",
     "discardChanges": "discard changes",
     "restoreStashedChanges": "restore stashed changes"
+  },
+  "undoCommit": {
+    "undoCommit": "Undo commit",
+    "committed": "Committed",
+    "undo": "Undo",
+    "undoIsDisabledWhileTheRepositoryIsBeingUpdated": "Undo is disabled while the repository is being updated"
   }
 }

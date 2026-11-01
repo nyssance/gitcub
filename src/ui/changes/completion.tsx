@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { EMOJI } from "@/lib/emoji"
 import { cn } from "@/lib/utils"
 import type { Issue } from "@/models/app-state"
-import { Button as StandardButton } from "@/ui/base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 import { findNextSelectableRow } from "@/upstream/ui/lib/list/selection"
 
 /** 一条候选。 */

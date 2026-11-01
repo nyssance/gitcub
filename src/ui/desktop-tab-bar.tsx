@@ -2,8 +2,8 @@
 import * as React from "react"
 
 import { dragAndDropManager } from "../lib/drag-and-drop-manager"
-import { Separator } from "./base/separator"
-import { Tabs, TabsList } from "./base/tabs"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsList } from "@/components/ui/tabs"
 import { TabBarItem } from "./tab-bar-item"
 import { TabBarType } from "./tab-bar-type"
 

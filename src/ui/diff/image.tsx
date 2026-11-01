@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next"
 import { formatBytes } from "@/lib/format-bytes"
 import { cn } from "@/lib/utils"
 import type { ImageDiff as ImageDiffData, ImageSide } from "@/models/app-state"
-import { Empty, EmptyHeader, EmptyTitle } from "@/ui/base/empty"
-import { Slider } from "@/ui/base/slider"
-import { ToggleGroup, ToggleGroupItem } from "@/ui/base/toggle-group"
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import { Slider } from "@/components/ui/slider"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { getAspectFitSize, getMaxFitSize, type ISize } from "@/upstream/ui/diff/image-diffs/sizing"
 
 /** 怎么看两版图片。四种都留着——它们各自擅长的场合不一样：

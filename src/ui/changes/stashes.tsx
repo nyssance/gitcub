@@ -2,7 +2,7 @@ import { ArchiveIcon, TrashIcon } from "@primer/octicons-react"
 import { useTranslation } from "react-i18next"
 
 import type { StashEntry } from "@/models/app-state"
-import { Button, Button as StandardButton } from "@/ui/base/button"
+import { Button, Button as StandardButton } from "@/components/ui/button"
 
 /** 贮藏列表。
  *

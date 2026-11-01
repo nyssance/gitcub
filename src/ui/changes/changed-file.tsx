@@ -6,7 +6,7 @@ import { changesContextMenu, type ChangesMenuEntry, type MenuPlatform } from "@/
 import { ipc } from "@/lib/ipc"
 import { __DARWIN__, __WIN32__ } from "@/lib/platform-flags"
 import type { FileChange } from "@/models/repo-status"
-import { Checkbox } from "@/ui/base/checkbox"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -16,8 +16,8 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
   ContextMenuTrigger
-} from "@/ui/base/context-menu"
-import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/ui/base/item"
+} from "@/components/ui/context-menu"
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Path } from "@/ui/shared/path"
 import { ChangeStatusIcon } from "@/ui/shared/status-icon"
 import { DiffSelectionType } from "@/upstream/models/diff/diff-selection"

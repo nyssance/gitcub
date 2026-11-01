@@ -4,7 +4,7 @@ import * as React from "react"
 
 import type { AriaHasPopupType } from "../../lib/ui/aria-types"
 import { createObservableRef } from "../../lib/ui/observable-ref"
-import { Button as StandardButton } from "../base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 import { Tooltip, TooltipDirection } from "./tooltip"
 
 export interface IButtonProps {

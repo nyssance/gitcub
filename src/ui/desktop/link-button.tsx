@@ -5,7 +5,7 @@ import * as React from "react"
 
 import { shell } from "../../lib/app-shell"
 import { createObservableRef } from "../../lib/ui/observable-ref"
-import { Button as StandardButton } from "../base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 import { Tooltip } from "./tooltip"
 
 interface ILinkButtonProps {

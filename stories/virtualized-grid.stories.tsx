@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useRef, useState } from "react"
 import { expect, fn, userEvent, waitFor } from "storybook/test"
 
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { Grid, type GridImperativeAPI } from "../src/ui/desktop/list/virtualized-grid"
 
 // Migrated from tests/conformance/virtualized-grid.test.ts; preserve every offset/ref assertion.

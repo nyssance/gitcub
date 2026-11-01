@@ -2,7 +2,7 @@
 import * as React from "react"
 
 import i18n from "../../lib/i18n"
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia } from "../base/empty"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty"
 import { Button } from "../desktop/button"
 import { Octicon } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"

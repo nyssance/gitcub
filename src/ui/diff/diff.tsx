@@ -20,8 +20,8 @@ import {
   ContextMenuGroup,
   ContextMenuItem,
   ContextMenuTrigger
-} from "../base/context-menu"
-import { Input } from "../base/input"
+} from "@/components/ui/context-menu"
+import { Input } from "@/components/ui/input"
 import { DiffOptions } from "./diff-options"
 import { SplitDiff } from "./split-diff"
 

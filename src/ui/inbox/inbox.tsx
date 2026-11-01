@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next"
 
 import { ipc } from "@/lib/ipc"
 import { mapLimit } from "@/lib/map-limit"
-import { Button } from "@/ui/base/button"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/ui/base/empty"
-import { Spinner } from "@/ui/base/spinner"
+import { Button } from "@/components/ui/button"
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import { Spinner } from "@/components/ui/spinner"
 
 /** 待我处理。
  *

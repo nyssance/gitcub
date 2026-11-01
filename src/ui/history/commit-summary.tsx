@@ -11,8 +11,8 @@ import { type TokenResult, TokenType } from "@/lib/text-token-parser"
 import { cn } from "@/lib/utils"
 import type { AutolinkRule, Remote } from "@/models/app-state"
 import type { CommitFile, CommitInfo } from "@/models/history"
-import { Avatar, AvatarFallback, AvatarImage } from "@/ui/base/avatar"
-import { Separator } from "@/ui/base/separator"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
 
 /** 提交摘要，横跨右侧整宽，位于文件列表和 diff 之上。
  *

@@ -1,7 +1,7 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { Spinner } from "../base/spinner"
+import { Spinner } from "@/components/ui/spinner"
 
 /** A Loading component. */
 // Preserve the original Desktop component contract.

@@ -3,7 +3,7 @@ import type { ReactNode } from "react"
 import type { HostingPlatform } from "@/lib/autolink-rules"
 import type { AutolinkRule, Remote } from "@/models/app-state"
 import type { CommitFile, CommitInfo } from "@/models/history"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/ui/base/resizable"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 import { CommitSummary } from "./commit-summary"
 import { CommitFileList } from "./file-list"

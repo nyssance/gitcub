@@ -1,5 +1,6 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss";
+@source "../../node_modules/@nyssance/shadcn/dist/vega";
 @import "./scrollbars.css";
 @import "./desktop.css" layer(components);
 @import "./diff.css" layer(components);

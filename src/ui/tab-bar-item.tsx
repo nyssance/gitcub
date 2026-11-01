@@ -3,7 +3,7 @@
 import classNames from "classnames"
 import * as React from "react"
 
-import { Tabs, TabsList, TabsTrigger } from "./base/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TabBarType } from "./tab-bar-type"
 
 interface ITabBarItemProps {

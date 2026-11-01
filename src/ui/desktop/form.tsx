@@ -2,7 +2,7 @@ import classNames from "classnames"
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { FieldGroup } from "../base/field"
+import { FieldGroup } from "@/components/ui/field"
 
 interface IFormProps {
   /** The class name for the form. */

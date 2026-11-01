@@ -15,16 +15,16 @@ import { ipc } from "@/lib/ipc"
 import { isUnpushedCommit, type LocalCommits, type PushStatus } from "@/lib/unpushed-commits"
 import { cn } from "@/lib/utils"
 import type { CommitInfo, Comparison, GraphRow } from "@/models/history"
-import { Avatar, AvatarFallback, AvatarImage } from "@/ui/base/avatar"
-import { Badge } from "@/ui/base/badge"
-import { Button } from "@/ui/base/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger
-} from "@/ui/base/context-menu"
+} from "@/components/ui/context-menu"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -34,9 +34,9 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger
-} from "@/ui/base/dropdown-menu"
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/ui/base/input-group"
-import { Item, ItemContent, ItemDescription, ItemTitle } from "@/ui/base/item"
+} from "@/components/ui/dropdown-menu"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+import { Item, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/item"
 import {
   Popover,
   PopoverContent,
@@ -44,8 +44,8 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger
-} from "@/ui/base/popover"
-import { ScrollArea } from "@/ui/base/scroll-area"
+} from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import i18n from "../../lib/i18n"
 import { CommitGraph } from "./graph"

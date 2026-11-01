@@ -4,7 +4,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 
 import { assertNativeFixtures, nativeCall, withNativeFixtures } from "../.storybook/mocks/native"
 import i18n from "../src/lib/i18n"
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { Blame } from "../src/ui/blame/blame"
 import { commit, pending, repo, unavailable } from "./fixtures"
 

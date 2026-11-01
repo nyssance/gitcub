@@ -2,8 +2,8 @@
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
-import { Checkbox as StandardCheckbox } from "../base/checkbox"
-import { Field, FieldLabel } from "../base/field"
+import { Checkbox as StandardCheckbox } from "@/components/ui/checkbox"
+import { Field, FieldLabel } from "@/components/ui/field"
 export enum CheckboxValue {
   On,
   Off,

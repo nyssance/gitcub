@@ -1,6 +1,6 @@
 import { type ComponentProps, lazy, Suspense } from "react"
 
-import { Spinner } from "../base/spinner"
+import { Spinner } from "@/components/ui/spinner"
 
 const Diff = lazy(() => import("./diff").then(module => ({ default: module.DiffView })))
 

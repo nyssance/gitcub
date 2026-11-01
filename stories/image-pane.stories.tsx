@@ -5,7 +5,7 @@ import { expect, userEvent, waitFor } from "storybook/test"
 import { assertNativeFixtures, nativeCall, withNativeFixtures } from "../.storybook/mocks/native"
 import i18n from "../src/lib/i18n"
 import type { ImageDiff } from "../src/models/app-state"
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { ImagePane } from "../src/ui/diff/diff"
 import { repo } from "./fixtures"
 

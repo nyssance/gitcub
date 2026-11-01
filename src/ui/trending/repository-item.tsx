@@ -2,7 +2,7 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { ExternalLinkIcon, LockIcon, StarIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
-import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from "@/ui/base/item"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/item"
 
 interface Props {
   owner: string

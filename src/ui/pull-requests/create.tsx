@@ -6,9 +6,9 @@ import { hookFailureHandling } from "@/features/dialogs/store"
 import { ipc } from "@/lib/ipc"
 import { pullRequestCreationURL, type PullRequestTargets } from "@/lib/pull-request-navigation"
 import type { Remote } from "@/models/app-state"
-import { Button } from "@/ui/base/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/ui/base/dialog"
-import { Spinner } from "@/ui/base/spinner"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
 
 import { Select } from "../desktop/select"
 

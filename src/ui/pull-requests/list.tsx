@@ -10,15 +10,15 @@ import type { IFilterListItem } from "@/lib/filter-list"
 import { formatDate } from "@/lib/format-date"
 import type { PullRequest, Remote } from "@/models/app-state"
 import { getPreferAbsoluteDates } from "@/models/formatting-preferences"
-import { Button } from "@/ui/base/button"
+import { Button } from "@/components/ui/button"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuGroup,
   ContextMenuItem,
   ContextMenuTrigger
-} from "@/ui/base/context-menu"
-import { Spinner } from "@/ui/base/spinner"
+} from "@/components/ui/context-menu"
+import { Spinner } from "@/components/ui/spinner"
 import { NoPullRequests } from "@/ui/branches/no-pull-requests"
 import { HighlightText } from "@/ui/desktop/highlight-text"
 import { SectionFilterList } from "@/ui/desktop/section-filter-list"

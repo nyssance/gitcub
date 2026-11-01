@@ -1,11 +1,11 @@
 import { GearIcon, TriangleDownIcon } from "@primer/octicons-react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/ui/base/button"
-import { Checkbox } from "@/ui/base/checkbox"
-import { Label } from "@/ui/base/label"
-import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/ui/base/popover"
-import { RadioGroup, RadioGroupItem } from "@/ui/base/radio-group"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 /** Desktop `diff-options.tsx`：齿轮按钮弹出 Diff Settings，含「隐藏空白改动」与「统一 / 并排」。
  *  另加本项目已有的「自动换行」，放在同一个弹层里，不再占顶栏。 */

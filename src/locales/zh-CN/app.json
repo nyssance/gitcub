@@ -968,5 +968,11 @@
     "reorder": "重排",
     "discardChanges": "丢弃更改",
     "restoreStashedChanges": "恢复贮藏的更改"
+  },
+  "undoCommit": {
+    "undoCommit": "撤销提交",
+    "committed": "提交于",
+    "undo": "撤销",
+    "undoIsDisabledWhileTheRepositoryIsBeingUpdated": "仓库正在更新，暂时不能撤销"
   }
 }

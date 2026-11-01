@@ -1,7 +1,7 @@
 import type { ReactNode, Ref } from "react"
 import type { PanelImperativeHandle } from "react-resizable-panels"
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/ui/base/resizable"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 export function RepositorySplit({
   sidebar,

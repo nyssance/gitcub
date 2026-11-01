@@ -3,8 +3,8 @@ import * as React from "react"
 // Desktop MIT port; platform imports adapted to Tauri.
 
 import { createUniqueId, releaseUniqueId } from "../../lib/ui/id-pool"
-import { Field, FieldLabel } from "../base/field"
-import { NativeSelect } from "../base/native-select"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { NativeSelect } from "@/components/ui/native-select"
 
 interface ISelectProps {
   /** The label for the select control. */

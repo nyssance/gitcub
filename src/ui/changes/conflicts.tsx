@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import type { Resolution } from "@/models/app-state"
 import type { FileChange, Operation } from "@/models/repo-status"
-import { Button } from "@/ui/base/button"
+import { Button } from "@/components/ui/button"
 
 /** 一个取舍按钮上该写什么。
  *

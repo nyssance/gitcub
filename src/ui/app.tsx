@@ -56,12 +56,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from "@/ui/base/alert-dialog"
-import { Checkbox } from "@/ui/base/checkbox"
-import { Input } from "@/ui/base/input"
-import { Label } from "@/ui/base/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/base/tabs"
-import { TooltipProvider } from "@/ui/base/tooltip"
+} from "@/components/ui/alert-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { Blame } from "@/ui/blame/blame"
 import { PullRequestBadge } from "@/ui/branches/pull-request-badge"
 import { Banner } from "@/ui/changes/banner"

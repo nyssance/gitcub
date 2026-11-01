@@ -3,7 +3,7 @@ import { useState } from "react"
 import { expect, userEvent, waitFor } from "storybook/test"
 
 import i18n from "../src/lib/i18n"
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { ImageDiffView } from "../src/ui/diff/image"
 
 const picture = (color: string) => ({

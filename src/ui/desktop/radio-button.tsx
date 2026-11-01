@@ -1,7 +1,7 @@
 import * as React from "react"
 
-import { FieldLabel } from "../base/field"
-import { RadioGroup, RadioGroupItem } from "../base/radio-group"
+import { FieldLabel } from "@/components/ui/field"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 interface IRadioButtonProps<T> {
   /**

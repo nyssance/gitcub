@@ -3,7 +3,7 @@ import * as React from "react"
 
 import type { ObservableRef } from "../../lib/ui/observable-ref"
 import { cn } from "../../lib/utils"
-import { Tooltip as StandardTooltip, TooltipContent } from "../base/tooltip"
+import { Tooltip as StandardTooltip, TooltipContent } from "@/components/ui/tooltip"
 export enum TooltipDirection {
   NORTH = "n",
   NORTH_EAST = "ne",

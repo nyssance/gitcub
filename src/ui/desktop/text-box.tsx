@@ -4,8 +4,8 @@ import * as React from "react"
 
 import { createUniqueId, releaseUniqueId } from "../../lib/ui/id-pool"
 import { AriaLiveContainer } from "../accessibility/aria-live-container"
-import { Field, FieldLabel } from "../base/field"
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "../base/input-group"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { Octicon } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
 

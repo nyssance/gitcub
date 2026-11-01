@@ -1,7 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useState } from "react"
 
-import { Button as StandardButton } from "@/ui/base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 
 /** Windows 上的最小化 / 最大化 / 关闭按钮。
  *

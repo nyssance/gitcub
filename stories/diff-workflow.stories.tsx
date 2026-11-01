@@ -5,7 +5,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 import { nativeCall, withNativeFixtures } from "../.storybook/mocks/native"
 import { initialSelection } from "../src/lib/diff"
 import i18n from "../src/lib/i18n"
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { DiffView } from "../src/ui/diff/diff"
 import { DiffParser } from "../src/upstream/lib/diff-parser"
 

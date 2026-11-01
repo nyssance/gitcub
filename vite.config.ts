@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from "node:url"
 
+import { shadcn } from "@nyssance/shadcn/vite"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
@@ -10,6 +11,7 @@ import { getSHA } from "./scripts/git-info.ts"
 export default defineConfig({
   define: { "import.meta.env.VITE_GIT_SHA": JSON.stringify(getSHA(fileURLToPath(new URL("./.git", import.meta.url)))) },
   plugins: [
+    shadcn({ style: "vega" }),
     react(),
     tailwindcss(),
     {
@@ -30,7 +32,6 @@ export default defineConfig({
       events: fileURLToPath(new URL("./node_modules/events/events.js", import.meta.url)),
       timers: fileURLToPath(new URL("./node_modules/timers-browserify/main.js", import.meta.url)),
       buffer: fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url)),
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
       util: fileURLToPath(new URL("./node_modules/util/util.js", import.meta.url))
     }
   },

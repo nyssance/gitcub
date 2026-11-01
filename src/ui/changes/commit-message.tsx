@@ -5,7 +5,7 @@ import classNames from "classnames"
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { Button as StandardButton } from "@/ui/base/button"
+import { Button as StandardButton } from "@/components/ui/button"
 
 import { enableHooksEnvironment } from "../../lib/desktop-features"
 import { setGlobalConfigValue } from "../../lib/desktop-git"
@@ -42,8 +42,8 @@ import {
   CoAuthorAutocompletionProvider,
   type IAutocompletionProvider
 } from "../autocompletion"
-import { InputGroup, InputGroupAddon } from "../base/input-group"
-import { Separator } from "../base/separator"
+import { InputGroup, InputGroupAddon } from "@/components/ui/input-group"
+import { Separator } from "@/components/ui/separator"
 import { Button } from "../desktop/button"
 import { FocusContainer } from "../desktop/focus-container"
 import { LinkButton } from "../desktop/link-button"

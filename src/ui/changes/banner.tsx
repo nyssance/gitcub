@@ -2,7 +2,7 @@ import { AlertIcon, CheckIcon, XIcon } from "@primer/octicons-react"
 import { useEffect } from "react"
 
 import { cn } from "@/lib/utils"
-import { Button, Button as StandardButton } from "@/ui/base/button"
+import { Button, Button as StandardButton } from "@/components/ui/button"
 
 /** 刚做完一件事的提示条，带一个「撤销」。
  *

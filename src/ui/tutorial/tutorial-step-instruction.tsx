@@ -2,8 +2,8 @@
 import * as React from "react"
 
 import { orderedTutorialSteps, type ValidTutorialStep } from "../../upstream/models/tutorial-step"
-import { Button } from "../base/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../base/collapsible"
+import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Octicon } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
 

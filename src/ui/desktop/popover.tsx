@@ -2,7 +2,7 @@
 import type * as React from "react"
 
 import { cn } from "../../lib/utils"
-import { Popover as StandardPopover, PopoverContent } from "../base/popover"
+import { Popover as StandardPopover, PopoverContent } from "@/components/ui/popover"
 export enum PopoverAnchorPosition {
   Top = "top",
   TopRight = "top-right",

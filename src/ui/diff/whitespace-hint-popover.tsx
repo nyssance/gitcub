@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 
-import { Button } from "../base/button"
-import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle } from "../base/popover"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle } from "@/components/ui/popover"
 import type { PopoverAnchorPosition } from "../desktop/popover"
 
 interface Props {

@@ -11,13 +11,14 @@
     "prefix": ""
   },
   "iconLibrary": "lucide",
+  "rtl": true,
   "menuColor": "default",
   "menuAccent": "subtle",
   "aliases": {
     "components": "@/ui",
-    "ui": "@/ui/base",
+    "ui": "@/components/ui",
     "lib": "@/lib",
-    "hooks": "@/lib/hooks",
+    "hooks": "@/hooks",
     "utils": "@/lib/utils"
   },
   "registries": {

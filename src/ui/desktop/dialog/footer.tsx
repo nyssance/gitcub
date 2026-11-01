@@ -1,7 +1,7 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { DialogFooter as StandardFooter } from "../../base/dialog"
+import { DialogFooter as StandardFooter } from "@/components/ui/dialog"
 
 /**
  * A container component for footer content in a Dialog.

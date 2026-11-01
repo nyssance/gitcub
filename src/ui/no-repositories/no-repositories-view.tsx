@@ -3,11 +3,11 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/ui/base/button"
-import { Input } from "@/ui/base/input"
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/ui/base/item"
-import { Separator } from "@/ui/base/separator"
-import { Spinner } from "@/ui/base/spinner"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { Separator } from "@/components/ui/separator"
+import { Spinner } from "@/components/ui/spinner"
 
 interface Props {
   repositories: string[]

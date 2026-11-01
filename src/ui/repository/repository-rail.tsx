@@ -23,17 +23,17 @@ import { ipc } from "@/lib/ipc"
 import { type Route, routes } from "@/lib/navigate"
 import type { Accounts, Ownership, Remote } from "@/models/app-state"
 import type { ILocalRepositoryState } from "@/models/repository"
-import { Avatar, AvatarFallback, AvatarImage } from "@/ui/base/avatar"
-import { Badge } from "@/ui/base/badge"
-import { Button } from "@/ui/base/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/ui/base/collapsible"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger
-} from "@/ui/base/context-menu"
+} from "@/components/ui/context-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,10 +42,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuShortcut,
   DropdownMenuTrigger
-} from "@/ui/base/dropdown-menu"
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/ui/base/empty"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/ui/base/input-group"
-import { ScrollArea } from "@/ui/base/scroll-area"
+} from "@/components/ui/dropdown-menu"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
   SidebarFooter,
@@ -58,8 +58,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider
-} from "@/ui/base/sidebar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/base/tabs"
+} from "@/components/ui/sidebar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { InlineError } from "@/ui/shared/inline-error"
 
 /** 左栏导航：仓库列表。

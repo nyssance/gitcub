@@ -4,7 +4,7 @@ import { expect, userEvent, within } from "storybook/test"
 
 import { APICheckConclusion, APICheckStatus } from "../src/lib/api"
 import type { IRefCheck } from "../src/lib/ci-checks/ci-checks"
-import { Button } from "../src/ui/base/button"
+import { Button } from "@/components/ui/button"
 import { CICheckRunList } from "../src/ui/check-runs/ci-check-run-list"
 
 const run: IRefCheck = {
