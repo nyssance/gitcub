@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../src/ui/base/dialog"
 import { CommitProgress } from "../src/ui/commit-progress/commit-progress"
 import { HookFailed } from "../src/ui/hook-failed/hook-failed"
 
@@ -73,5 +74,28 @@ export const CommitProgressReplaysOutput: Story = {
         "pre-commit hook done"
       )
     )
+  }
+}
+
+/** 发布仓库、建 PR 这类对话框里推送时 pre-push 失败：HookFailed 叠在上面，照样能选 */
+export const OverAnotherDialog: Story = {
+  render: args => (
+    <>
+      <Dialog open>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Publish repository</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+      <HookFailed {...args} hookName="pre-push" />
+    </>
+  ),
+  play: async ({ args }) => {
+    const screen = within(document.body)
+    await expect(await screen.findByText("The pre-push hook failed. What would you like to do?")).toBeVisible()
+    await userEvent.click(screen.getByRole("button", { name: "Ignore and Continue" }))
+    await expect(args.resolve).toHaveBeenCalledWith("ignore")
+    await expect(args.onDismissed).toHaveBeenCalled()
   }
 }

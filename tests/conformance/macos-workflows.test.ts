@@ -853,6 +853,10 @@ test("fork pull requests list the parent and check out the source through the na
     // Desktop stages untracked files before stashing, so they live in the stash
     // tree itself, not a third parent from Git's --include-untracked mode.
     assert.equal(git("show", "stash@{0}:drag-local-edit.txt"), "keep local edits")
+  } catch (error) {
+    console.error("Fork pull request UI at failure:", await page.evaluate(() => document.body.innerText))
+    console.error("Fork pull request Git at failure:", git("status", "--short", "--branch"))
+    throw error
   } finally {
     await page.evaluate(() => window.__restoreRequestIPC())
     git("checkout", previousBranch)
@@ -1000,6 +1004,46 @@ test("aborting a failing commit-msg hook while amending keeps the commit and rep
     await page.evaluate(() => localStorage.removeItem("git-hooks-env-enabled"))
     rmSync(hook, { force: true })
     await page.locator('[role="button"]:has-text("Stop amending")').click()
+  }
+})
+
+test("a failing pre-push hook goes through the proxy and aborting stops the push quietly", async ({
+  mainWindow: page
+}) => {
+  const tracking = git("rev-parse", "refs/remotes/origin/remote-feature")
+  const hook = join(smokeRepoPath, ".git", "hooks", "pre-push")
+  const marker = join(smokeRepoPath, ".git", "pre-push-marker")
+  writeFileSync(
+    hook,
+    `#!/bin/sh\n{ echo "remote=$1"; cat; } > '${marker}'\necho "push rejected by hook" >&2\nexit 1\n`,
+    {
+      mode: 0o755
+    }
+  )
+  await page.evaluate(() => localStorage.setItem("git-hooks-env-enabled", "1"))
+  try {
+    await page.evaluate(async () =>
+      window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "push" })
+    )
+    const dialog = page.locator("#hook-failed-dialog")
+    await expect(dialog).toContainText("The pre-push hook failed. What would you like to do?", { timeout: 30000 })
+    await expect(dialog).toContainText("push rejected by hook")
+    // The smoke origin has diverged, so git rejects the update before pre-push and leaves its stdin empty;
+    // stdin forwarding is covered end to end by hooks::proxy::tests::pre_push_through_git_gets_refs_on_stdin
+    assert.match(readFileSync(marker, "utf8"), /^remote=origin\n/)
+    // Desktop Dialog ignores dismissal during its first 250ms; Abort is a dismissal
+    await new Promise(resolve => setTimeout(resolve, 300))
+    await dialog.locator('button:has-text("Abort")').click()
+    await expect.poll(() => page.locator(".branch-button button").isEnabled()).toBe(true)
+    assert.equal(git("rev-parse", "refs/remotes/origin/remote-feature"), tracking)
+    assert.equal(await page.evaluate(() => document.body.innerText.includes("push rejected by hook")), false)
+  } catch (error) {
+    console.error("Push hooks UI at failure:", await page.evaluate(() => document.body.innerText))
+    throw error
+  } finally {
+    await page.evaluate(() => localStorage.removeItem("git-hooks-env-enabled"))
+    rmSync(hook, { force: true })
+    rmSync(marker, { force: true })
   }
 })
 
