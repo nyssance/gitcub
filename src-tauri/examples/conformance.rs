@@ -365,12 +365,14 @@ fn execute(request: &Value) -> Result<Value, String> {
             request["remote"].as_str().unwrap(),
             serde_json::from_value(request["options"].clone()).map_err(|e| e.to_string())?,
             None,
+            None,
             None
         )?),
         "remote/pull-output" => json!(net::pull_output(
             repo,
             request["remote"].as_str().unwrap(),
             serde_json::from_value(request["options"].clone()).map_err(|e| e.to_string())?,
+            None,
             None,
             None
         )?),
@@ -424,6 +426,7 @@ fn execute(request: &Value) -> Result<Value, String> {
                 request["branch"].as_str().unwrap(),
                 &strings("tags")?,
                 serde_json::from_value(request["options"].clone()).map_err(|e| e.to_string())?,
+                None,
                 None,
                 None,
             )?;

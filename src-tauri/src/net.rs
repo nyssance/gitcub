@@ -64,6 +64,7 @@ pub fn push(
         PushOptions { set_upstream, force_with_lease, ..Default::default() },
         token,
         user,
+        None,
     )
 }
 
@@ -73,22 +74,46 @@ pub struct PushOptions {
     pub set_upstream: bool,
     pub force_with_lease: bool,
     pub no_verify: bool,
+    /// 前端要进度（Desktop push.ts 有 progressCallback 时带 --progress）
+    pub progress: bool,
 }
 
+/// 推送、拉取、获取的进度回调（Desktop executionOptionsWithProgress 的 progressCallback）
+pub type OnProgress<'a> = Option<&'a mut dyn FnMut(crate::progress::Progress)>;
+
+/// 有回调时边跑边把 stderr 交给解析器（Desktop createProgressProcessCallback），没有就照常等输出
+fn output_with_progress(
+    git: Git, parser: fn() -> crate::progress::Parser, on_progress: OnProgress,
+) -> Result<std::process::Output, String> {
+    let Some(emit) = on_progress else { return git.output() };
+    let mut stream = crate::progress::ProgressStream::new(parser(), emit);
+    let output = git.output_raw_stream(|chunk| stream.push(chunk))?;
+    stream.finish();
+    Ok(output)
+}
+
+#[allow(clippy::too_many_arguments)]
 pub fn push_with_tags(
     repo: &Path, remote: &str, refspec: &str, tags: &[String], options: PushOptions, token: Option<&str>,
-    user: Option<&str>,
+    user: Option<&str>, on_progress: OnProgress,
 ) -> Result<(), String> {
     // 原版 push.ts interceptHooks
-    crate::hooks::scoped(repo, &["pre-push"], || push_with_tags_unhooked(repo, remote, refspec, tags, options, token, user))
+    crate::hooks::scoped(repo, &["pre-push"], || {
+        push_with_tags_unhooked(repo, remote, refspec, tags, options, token, user, on_progress)
+    })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn push_with_tags_unhooked(
     repo: &Path, remote: &str, refspec: &str, tags: &[String], options: PushOptions, token: Option<&str>,
-    user: Option<&str>,
+    user: Option<&str>, on_progress: OnProgress,
 ) -> Result<(), String> {
-    let PushOptions { set_upstream, force_with_lease, no_verify } = options;
+    let PushOptions { set_upstream, force_with_lease, no_verify, .. } = options;
     let mut g = Git::new(Some(repo)).arg("push");
+    // Desktop push.ts：有进度回调才带 --progress
+    if on_progress.is_some() {
+        g = g.arg("--progress");
+    }
 
     if set_upstream {
         g = g.arg("--set-upstream");
@@ -102,7 +127,9 @@ fn push_with_tags_unhooked(
     for tag in tags {
         g = g.arg(if tag.starts_with("refs/tags/") { tag.clone() } else { format!("refs/tags/{tag}") });
     }
-    g.with_optional_token(token, user).run()
+    let output =
+        output_with_progress(g.with_optional_token(token, user), crate::progress::Parser::push_parser, on_progress)?;
+    crate::git::checked_result(Path::new("."), output, &[0], &[]).map(|_| ())
 }
 
 #[derive(Default, serde::Deserialize)]
@@ -137,23 +164,21 @@ impl RemoteOutput {
     }
 }
 pub fn fetch_output(
-    repo: &Path, remote: &str, options: RemoteOptions, token: Option<&str>, user: Option<&str>,
+    repo: &Path, remote: &str, options: RemoteOptions, token: Option<&str>, user: Option<&str>, on_progress: OnProgress,
 ) -> Result<RemoteOutput, String> {
     let mut git = Git::new(Some(repo)).arg("fetch");
     if options.progress {
         git = git.arg("--progress");
     }
-    let output = git
-        .args(["--prune", "--recurse-submodules=on-demand", "--", remote])
-        .with_optional_token(token, user)
-        .output()?;
+    let git = git.args(["--prune", "--recurse-submodules=on-demand", "--", remote]).with_optional_token(token, user);
+    let output = output_with_progress(git, crate::progress::Parser::fetch_parser, on_progress)?;
     if output.status.success() {
         crate::remote_ops::update_head(repo, remote, token, user)?;
     }
     Ok(output.into())
 }
 pub fn fetch(repo: &Path, remote: &str, token: Option<&str>, user: Option<&str>) -> Result<(), String> {
-    fetch_output(repo, remote, RemoteOptions::default(), token, user)?.success()
+    fetch_output(repo, remote, RemoteOptions::default(), token, user, None)?.success()
 }
 pub fn fetch_refspec(repo: &Path, remote: &str, refspec: &str, token: Option<&str>) -> Result<(), String> {
     let output =
@@ -162,19 +187,35 @@ pub fn fetch_refspec(repo: &Path, remote: &str, refspec: &str, token: Option<&st
 }
 /// Desktop pull semantics: honor configured merge/rebase/ff policy and recurse submodules.
 pub fn pull_output(
-    repo: &Path, remote: &str, options: RemoteOptions, token: Option<&str>, user: Option<&str>,
+    repo: &Path, remote: &str, options: RemoteOptions, token: Option<&str>, user: Option<&str>, on_progress: OnProgress,
 ) -> Result<RemoteOutput, String> {
     if remote.starts_with('-') {
         return Err("Cannot pull from a remote whose name starts with '-'.".into());
     }
     // 原版 pull.ts interceptHooks
-    let intercept =
-        ["pre-merge-commit", "prepare-commit-msg", "commit-msg", "post-merge", "pre-rebase", "pre-commit", "post-rewrite"];
-    crate::hooks::scoped(repo, &intercept, || pull_output_unhooked(repo, remote, options, token, user))
+    let intercept = [
+        "pre-merge-commit",
+        "prepare-commit-msg",
+        "commit-msg",
+        "post-merge",
+        "pre-rebase",
+        "pre-commit",
+        "post-rewrite",
+    ];
+    let output = crate::hooks::scoped(repo, &intercept, || {
+        pull_output_unhooked(repo, remote, options, token, user, on_progress)
+    })?;
+    // Desktop _pull：成功后更新远端 HEAD；这一步不要紧，失败只记日志，不让用户重试整个拉取
+    if output.exit_code == Some(0)
+        && let Err(error) = crate::remote_ops::update_head(repo, remote, token, user)
+    {
+        log::error!("Failed updating remote HEAD: {error}");
+    }
+    Ok(output)
 }
 
 fn pull_output_unhooked(
-    repo: &Path, remote: &str, options: RemoteOptions, token: Option<&str>, user: Option<&str>,
+    repo: &Path, remote: &str, options: RemoteOptions, token: Option<&str>, user: Option<&str>, on_progress: OnProgress,
 ) -> Result<RemoteOutput, String> {
     let mut command = Git::new(Some(repo)).args(["-c", "rebase.backend=merge", "pull"]);
     if crate::git_config::get(Some(repo), "pull.ff", false, false)?.is_none() {
@@ -186,10 +227,11 @@ fn pull_output_unhooked(
     if options.no_verify {
         command = command.arg("--no-verify");
     }
-    Ok(command.args(["--recurse-submodules", "--", remote]).with_optional_token(token, user).output()?.into())
+    let command = command.args(["--recurse-submodules", "--", remote]).with_optional_token(token, user);
+    Ok(output_with_progress(command, crate::progress::Parser::pull_parser, on_progress)?.into())
 }
 pub fn pull(repo: &Path, remote: &str, token: Option<&str>, user: Option<&str>) -> Result<(), String> {
-    pull_output(repo, remote, RemoteOptions::default(), token, user)?.success()
+    pull_output(repo, remote, RemoteOptions::default(), token, user, None)?.success()
 }
 
 /// 切换分支。
@@ -261,7 +303,8 @@ pub fn commit_output(repo: &Path, summary: &str, description: &str, options: Com
 /// Desktop createCommit：开了钩子环境时按原版 interceptHooks 交给钩子代理，git 输出逐块给「提交进度」
 pub fn commit_with_hooks(
     repo: &Path, summary: &str, description: &str, options: CommitOptions, hooks_env: Option<crate::hooks::HooksEnv>,
-    callbacks: Option<std::sync::Arc<dyn crate::hooks::HookCallbacks>>, on_output: impl FnMut(crate::git::TerminalChunk),
+    callbacks: Option<std::sync::Arc<dyn crate::hooks::HookCallbacks>>,
+    on_output: impl FnMut(crate::git::TerminalChunk),
 ) -> Result<String, String> {
     if summary.trim().is_empty() {
         return Err("提交摘要不能为空".into());
@@ -302,6 +345,77 @@ mod tests {
 
     fn git(r: &Path, args: &[&str]) -> std::process::Output {
         Cmd::new("git").arg("-C").arg(r).args(args).output().unwrap()
+    }
+
+    /// Desktop executionOptionsWithProgress：推送、获取、拉取带进度回调时，stderr 边跑边解析成进度，
+    /// 百分比按各自的步骤权重单调增长到 1；不带回调时不加 --progress、不解析
+    #[test]
+    fn 推送_获取_拉取的进度() {
+        use crate::progress::Progress;
+        let d = tempfile::tempdir().unwrap();
+        let commit = |r: &Path, name: &str| {
+            // 不可压缩的内容，让 git 一定打包出对象并报告进度
+            let bytes: Vec<u8> = (0..200_000u32).map(|i| (i.wrapping_mul(2_654_435_761) >> 13) as u8).collect();
+            std::fs::write(r.join(name), bytes).unwrap();
+            git(r, &["add", "."]);
+            git(r, &["-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-qm", name]);
+        };
+        let upstream = d.path().join("up.git");
+        let a = d.path().join("a");
+        let b = d.path().join("b");
+        Cmd::new("git").args(["init", "-q", "--bare", "-b", "main"]).arg(&upstream).output().unwrap();
+        let url = format!("file://{}", upstream.display());
+        for r in [&a, &b] {
+            Cmd::new("git").args(["clone", "-q", &url]).arg(r).output().unwrap();
+        }
+        commit(&a, "one");
+        git(&a, &["push", "-q", "origin", "HEAD:main"]);
+        git(&b, &["pull", "-q", "origin", "main"]);
+
+        let percents = |events: &[Progress], title: &str| -> Vec<f64> {
+            let seen: Vec<f64> = events
+                .iter()
+                .map(|e| match e {
+                    Progress::Progress { percent, .. } | Progress::Context { percent, .. } => *percent,
+                })
+                .collect();
+            assert!(seen.windows(2).all(|w| w[0] <= w[1] + 1e-9), "{seen:?}");
+            assert!(
+                events.iter().any(|e| matches!(e, Progress::Progress { details, .. } if details.title == title)),
+                "缺少 {title}: {:?}",
+                events
+                    .iter()
+                    .map(|e| match e {
+                        Progress::Progress { details, .. } => details.text.clone(),
+                        Progress::Context { text, .. } => text.clone(),
+                    })
+                    .collect::<Vec<_>>()
+            );
+            seen
+        };
+
+        commit(&a, "two");
+        let mut pushed = Vec::new();
+        let options = PushOptions { set_upstream: false, progress: true, ..Default::default() };
+        push_with_tags(&a, "origin", "HEAD:main", &[], options, None, None, Some(&mut |e| pushed.push(e))).unwrap();
+        let seen = percents(&pushed, "Writing objects");
+        assert!((seen.last().copied().unwrap() - 0.9).abs() < 1e-6, "写完对象占 0.2 + 0.7：{seen:?}");
+
+        let mut fetched = Vec::new();
+        let options = RemoteOptions { progress: true, ..Default::default() };
+        let out = fetch_output(&b, "origin", options, None, None, Some(&mut |e| fetched.push(e))).unwrap();
+        assert_eq!(out.exit_code, Some(0));
+        // 对象少时 git 用 unpack-objects 静默解包，没有 Receiving objects 这一步
+        percents(&fetched, "remote: Compressing objects");
+
+        commit(&a, "three");
+        git(&a, &["push", "-q", "origin", "HEAD:main"]);
+        let mut pulled = Vec::new();
+        let options = RemoteOptions { progress: true, ..Default::default() };
+        let out = pull_output(&b, "origin", options, None, None, Some(&mut |e| pulled.push(e))).unwrap();
+        assert_eq!(out.exit_code, Some(0), "{}", out.stderr);
+        percents(&pulled, "remote: Compressing objects");
+        assert!(b.join("three").exists());
     }
 
     #[test]

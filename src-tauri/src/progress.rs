@@ -101,19 +101,35 @@ impl Parser {
             last_percent: 0.0,
         })
     }
+    fn with_steps(steps: &[(&str, f64)]) -> Self {
+        Self::new(steps.iter().map(|(title, weight)| Step { title: (*title).into(), weight: *weight }).collect())
+            .expect("progress steps are nonempty")
+    }
+    /// Desktop progress/clone.ts
     pub fn clone_parser() -> Self {
-        Self::new(
-            [
-                ("remote: Compressing objects", 0.1),
-                ("Receiving objects", 0.6),
-                ("Resolving deltas", 0.1),
-                ("Checking out files", 0.2),
-            ]
-            .into_iter()
-            .map(|(title, weight)| Step { title: title.into(), weight })
-            .collect(),
-        )
-        .expect("clone steps are nonempty")
+        Self::with_steps(&[
+            ("remote: Compressing objects", 0.1),
+            ("Receiving objects", 0.6),
+            ("Resolving deltas", 0.1),
+            ("Checking out files", 0.2),
+        ])
+    }
+    /// Desktop progress/push.ts
+    pub fn push_parser() -> Self {
+        Self::with_steps(&[("Compressing objects", 0.2), ("Writing objects", 0.7), ("remote: Resolving deltas", 0.1)])
+    }
+    /// Desktop progress/fetch.ts
+    pub fn fetch_parser() -> Self {
+        Self::with_steps(&[("remote: Compressing objects", 0.1), ("Receiving objects", 0.7), ("Resolving deltas", 0.2)])
+    }
+    /// Desktop progress/pull.ts
+    pub fn pull_parser() -> Self {
+        Self::with_steps(&[
+            ("remote: Compressing objects", 0.1),
+            ("Receiving objects", 0.7),
+            ("Resolving deltas", 0.15),
+            ("Checking out files", 0.15),
+        ])
     }
     pub fn parse(&mut self, line: &str) -> Progress {
         let text = strip_controls(line);
@@ -205,14 +221,15 @@ pub fn clone_progress(stderr: &[u8]) -> Vec<Progress> {
 }
 
 /// Decode complete CR/LF progress records without losing split UTF-8 chunks.
-pub struct CloneStream<F: FnMut(Progress)> {
+/// Desktop from-process.ts createProgressProcessCallback：把 stderr 按 \r / \n 切成行交给解析器
+pub struct ProgressStream<F: FnMut(Progress)> {
     parser: Parser,
     pending: Vec<u8>,
     emit: F,
 }
-impl<F: FnMut(Progress)> CloneStream<F> {
-    pub fn new(emit: F) -> Self {
-        Self { parser: Parser::clone_parser(), pending: Vec::new(), emit }
+impl<F: FnMut(Progress)> ProgressStream<F> {
+    pub fn new(parser: Parser, emit: F) -> Self {
+        Self { parser, pending: Vec::new(), emit }
     }
     pub fn push(&mut self, chunk: crate::git::TerminalChunk) {
         if !matches!(chunk.stream, crate::git::TerminalStream::Stderr) {

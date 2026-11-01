@@ -257,7 +257,7 @@ pub fn clone_output_stream(
     if let Some(token) = token {
         git = git.with_token(token, None);
     }
-    let mut progress = crate::progress::CloneStream::new(on_progress);
+    let mut progress = crate::progress::ProgressStream::new(crate::progress::Parser::clone_parser(), on_progress);
     let output = git.output_raw_stream(|chunk| progress.push(chunk))?;
     progress.finish();
     Ok(output)

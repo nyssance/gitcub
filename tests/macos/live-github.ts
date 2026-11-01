@@ -160,7 +160,8 @@ try {
     tags: [],
     options: { setUpstream: true },
     hooks: null,
-    events: CHANNEL
+    events: CHANNEL,
+    progress: CHANNEL
   })
   pushed = true
   record("native stage, commit and authenticated push")

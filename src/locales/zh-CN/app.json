@@ -32,7 +32,12 @@
     "forcePushWarning": "<0>警告：</0>强制推送会改写远端的历史。在这个分支上工作的协作者需要重置自己的本地分支，与远端历史保持一致。",
     "pushPullFetchOptions": "推送、拉取、获取选项",
     "actionComplete": "{{action}}完成",
-    "pullPushOrFetch": "拉取、推送或获取"
+    "pullPushOrFetch": "拉取、推送或获取",
+    "pushingTo": "正在推送到 {{remote}}",
+    "pullingRemote": "正在从 {{remote}} 拉取",
+    "fetchingRemote": "正在从 {{remote}} 获取",
+    "refreshingRepository": "正在刷新仓库",
+    "fastForwardingBranches": "正在快进分支"
   },
   "rail": {
     "repositories": "仓库",

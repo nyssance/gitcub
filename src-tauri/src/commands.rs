@@ -577,8 +577,8 @@ pub async fn merge_branch(
     tauri::async_runtime::spawn_blocking(move || {
         crate::hooks::operation(hooks, hook_channel(events), || ops::merge(Path::new(&repo), &branch, squash))
     })
-        .await
-        .map_err(|error| error.to_string())?
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -681,8 +681,7 @@ pub async fn undo_commit(repo: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn amend_commit(
     repo: String, summary: String, description: String, hooks: Option<crate::hooks::HooksEnv>,
-    events: tauri::ipc::Channel<crate::hooks::HookEvent>,
-    output: tauri::ipc::Channel<crate::git::TerminalChunk>,
+    events: tauri::ipc::Channel<crate::hooks::HookEvent>, output: tauri::ipc::Channel<crate::git::TerminalChunk>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         crate::hooks::operation(hooks, hook_channel(events), || {
@@ -691,8 +690,8 @@ pub async fn amend_commit(
             })
         })
     })
-        .await
-        .map_err(|error| error.to_string())?
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -1161,23 +1160,28 @@ pub async fn tag_targets(repo: String) -> Result<std::collections::BTreeMap<Stri
 pub async fn push_with_tags(
     app: tauri::AppHandle, repo: String, remote: String, branch: String, tags: Vec<String>,
     options: Option<net::PushOptions>, hooks: Option<crate::hooks::HooksEnv>,
-    events: tauri::ipc::Channel<crate::hooks::HookEvent>,
+    events: tauri::ipc::Channel<crate::hooks::HookEvent>, progress: tauri::ipc::Channel<crate::progress::Progress>,
 ) -> Result<(), String> {
     let path = Path::new(&repo);
     let token = settings::token_for_push(&app, path, &remote).await?;
+    let options = options.unwrap_or_default();
     tauri::async_runtime::spawn_blocking(move || {
-        crate::hooks::operation(hooks, hook_channel(events), || with_auth_hint(
-            net::push_with_tags(
-                Path::new(&repo),
-                &remote,
-                &branch,
-                &tags,
-                options.unwrap_or_default(),
-                token.as_deref(),
-                None,
-            ),
-            token.is_some(),
-        ))
+        let mut emit = progress_sender(options.progress, progress);
+        crate::hooks::operation(hooks, hook_channel(events), || {
+            with_auth_hint(
+                net::push_with_tags(
+                    Path::new(&repo),
+                    &remote,
+                    &branch,
+                    &tags,
+                    options,
+                    token.as_deref(),
+                    None,
+                    emit.as_mut().map(|emit| emit as &mut dyn FnMut(_)),
+                ),
+                token.is_some(),
+            )
+        })
     })
     .await
     .map_err(|error| error.to_string())?
@@ -1261,6 +1265,15 @@ pub async fn files_not_tracked_by_lfs(repo: String, paths: Vec<String>) -> Resul
         .await
         .map_err(|error| error.to_string())?
 }
+/// 前端给了进度通道时，把解析出的每条进度原样发过去
+fn progress_sender(
+    enabled: bool, channel: tauri::ipc::Channel<crate::progress::Progress>,
+) -> Option<impl FnMut(crate::progress::Progress)> {
+    enabled.then_some(move |event| {
+        let _ = channel.send(event);
+    })
+}
+
 #[tauri::command]
 pub async fn fast_forward_branches(repo: String) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
@@ -1469,11 +1482,20 @@ pub fn is_application_bundle_metadata(metadata: String) -> Result<bool, String> 
 #[tauri::command]
 pub async fn fetch_output(
     app: tauri::AppHandle, repo: String, remote: String, options: net::RemoteOptions,
+    progress: tauri::ipc::Channel<crate::progress::Progress>,
 ) -> Result<net::RemoteOutput, String> {
     let p = Path::new(&repo);
     let token = token_of(&app, p, &remote).await?;
     tauri::async_runtime::spawn_blocking(move || {
-        net::fetch_output(Path::new(&repo), &remote, options, token.as_deref(), None)
+        let mut emit = progress_sender(options.progress, progress);
+        net::fetch_output(
+            Path::new(&repo),
+            &remote,
+            options,
+            token.as_deref(),
+            None,
+            emit.as_mut().map(|emit| emit as &mut dyn FnMut(_)),
+        )
     })
     .await
     .map_err(|error| error.to_string())?
@@ -1482,12 +1504,15 @@ pub async fn fetch_output(
 pub async fn pull_output(
     app: tauri::AppHandle, repo: String, remote: String, options: net::RemoteOptions,
     hooks: Option<crate::hooks::HooksEnv>, events: tauri::ipc::Channel<crate::hooks::HookEvent>,
+    progress: tauri::ipc::Channel<crate::progress::Progress>,
 ) -> Result<net::RemoteOutput, String> {
     let p = Path::new(&repo);
     let token = token_of(&app, p, &remote).await?;
     tauri::async_runtime::spawn_blocking(move || {
+        let mut emit = progress_sender(options.progress, progress);
         crate::hooks::operation(hooks, hook_channel(events), || {
-            net::pull_output(Path::new(&repo), &remote, options, token.as_deref(), None)
+            let emit = emit.as_mut().map(|emit| emit as &mut dyn FnMut(_));
+            net::pull_output(Path::new(&repo), &remote, options, token.as_deref(), None, emit)
         })
     })
     .await

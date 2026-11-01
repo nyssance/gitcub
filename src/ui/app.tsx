@@ -534,31 +534,67 @@ export function App() {
   // Desktop performPull: without a current remote the pull fails with "The repository has no remotes.";
   // fetching every remote of an empty list does nothing. A bare "origin" would be a relative path to Git.
   // Desktop _pull 的 onHookFailure：选了中止就当没拉，不报错
-  /** Desktop pushPullFetchProgress：推送、拉取、获取从开始到结束，进度挂在推拉按钮上 */
-  const withNetworkProgress = async <T,>(
-    path: string,
-    operation: (onProgress: (progress: NetworkProgress) => void) => Promise<T>
-  ) => {
-    const { setNetworkProgress } = useRepositoryStore.getState()
+  /** Desktop pushPullFetchProgress：推送、拉取、获取从开始到刷新完，进度挂在推拉按钮上 */
+  const setNetworkProgress = (path: string, progress: NetworkProgress | null) =>
+    useRepositoryStore.getState().setNetworkProgress(path, progress)
+  /** Desktop performPush / _pull / performFetch 收尾：快进其他分支（失败只记日志），刷新占最后 10%。
+   *  刷新本身由 run 在操作之后做，进度保持到那时才清掉 */
+  const refreshAfterNetworkOperation = async (path: string, refreshStartProgress: number) => {
+    const title = t("toolbar.refreshingRepository")
+    setNetworkProgress(path, {
+      kind: "generic",
+      title,
+      description: t("toolbar.fastForwardingBranches"),
+      value: refreshStartProgress
+    })
+    await ipc.fastForwardBranches(path).catch(error => log.error("Branch fast-forwarding failed", error))
+    setNetworkProgress(path, { kind: "generic", title, value: refreshStartProgress + 0.1 * 0.5 })
+  }
+  const withNetworkProgress = async (path: string, operation: () => Promise<unknown>) => {
     try {
-      return await operation(progress => setNetworkProgress(path, progress))
+      await run(operation)
     } finally {
       setNetworkProgress(path, null)
     }
   }
-  const pullCurrent = (path: string) => {
-    const remote = useRepositoryStore.getState().status.remote
-    if (!remote) return Promise.reject(new BranchWorkflowError("noRemotes"))
-    const { onHookFailure, ignoreAborted } = hookFailureHandling()
-    return withNetworkProgress(path, progressCallback =>
-      ignoreAborted(pullRemote({ path }, { name: remote }, { onHookFailure, progressCallback }), undefined)
-    )
-  }
-  const fetchCurrent = async (path: string) => {
-    const remote = useRepositoryStore.getState().status.remote
-    if (remote)
-      await withNetworkProgress(path, progressCallback => fetchRemote({ path }, { name: remote }, progressCallback))
-  }
+  /** Desktop _pull：拉取约是获取的两倍时长，两者缩放到 0–0.9，最后 10% 留给刷新 */
+  const doPull = (path: string) =>
+    withNetworkProgress(path, async () => {
+      const remote = useRepositoryStore.getState().status.remote
+      if (!remote) throw new BranchWorkflowError("noRemotes")
+      const scale = (1 / (2 + 1)) * (1 - 0.1)
+      const pullWeight = 2 * scale
+      const fetchWeight = 1 * scale
+      const title = t("toolbar.pullingRemote", { remote })
+      const { onHookFailure, ignoreAborted } = hookFailureHandling()
+      setNetworkProgress(path, { kind: "pull", title, value: 0 })
+      const pulled = await ignoreAborted(
+        pullRemote(
+          { path },
+          { name: remote },
+          {
+            onHookFailure,
+            progressCallback: progress =>
+              setNetworkProgress(path, { ...progress, title, value: progress.value * pullWeight })
+          }
+        ).then(() => true),
+        false
+      )
+      if (!pulled) return
+      await refreshAfterNetworkOperation(path, pullWeight + fetchWeight)
+    })
+  /** Desktop performFetch：获取占 0.9，刷新 0.1 */
+  const doFetch = (path: string) =>
+    withNetworkProgress(path, async () => {
+      const remote = useRepositoryStore.getState().status.remote
+      if (!remote) return
+      const fetchWeight = 0.9
+      const title = t("toolbar.fetchingRemote", { remote })
+      await fetchRemote({ path }, { name: remote }, progress =>
+        setNetworkProgress(path, { ...progress, title, value: progress.value * fetchWeight })
+      )
+      await refreshAfterNetworkOperation(path, fetchWeight)
+    })
   /** Keep confirmation, transport and recovery inside one operation lock. */
   const confirmBranchStash = (name: string, current: string) => ask(t("branch.stashConfirm", { name, current }))
 
@@ -604,33 +640,46 @@ export function App() {
       setPublishing(true)
       return
     }
-    await run(async () => {
+    // Desktop performPush：推送约是获取的 2.5 倍时长，推送与随后的获取缩放到 0–0.9，最后 10% 留给刷新
+    const scale = (1 / (2.5 + 1)) * (1 - 0.1)
+    const pushWeight = 2.5 * scale
+    const fetchWeight = 1 * scale
+    await withNetworkProgress(repo, async () => {
       // Desktop _push 的 onHookFailure：pre-push 失败时问；选了中止就到此为止，不报错
       const { onHookFailure, ignoreAborted } = hookFailureHandling()
+      let pushedTo = null as string | null
       await ignoreAborted(
         pushWithRecovery(
           repo,
           force,
           {
             ...ipc,
-            push: (path, remote, branch, target, forceWithLease) =>
-              withNetworkProgress(path, progressCallback =>
-                push(
-                  { path },
-                  { name: remote },
-                  branch,
-                  target,
-                  null,
-                  { forceWithLease, onHookFailure },
-                  progressCallback
-                )
+            push: async (path, remote, branch, target, forceWithLease) => {
+              const title = t("toolbar.pushingTo", { remote })
+              setNetworkProgress(path, { kind: "push", title, value: 0 })
+              await push(
+                { path },
+                { name: remote },
+                branch,
+                target,
+                null,
+                { forceWithLease, onHookFailure },
+                progress => setNetworkProgress(path, { ...progress, title, value: pushWeight * progress.value })
               )
+              pushedTo = remote
+            }
           },
           () => ask(t("push.needsPull")),
           () => ask(t("push.forceConfirm"), "confirmForcePush")
         ),
         undefined
       )
+      if (pushedTo === null) return
+      const title = t("toolbar.fetchingRemote", { remote: pushedTo })
+      await fetchRemote({ path: repo }, { name: pushedTo }, progress =>
+        setNetworkProgress(repo, { ...progress, title, value: pushWeight + progress.value * fetchWeight })
+      )
+      await refreshAfterNetworkOperation(repo, pushWeight + fetchWeight)
     })
   }
 
@@ -1063,10 +1112,10 @@ export function App() {
         void doPush()
         break
       case "pull":
-        if (repo) void run(() => pullCurrent(repo))
+        if (repo) void doPull(repo)
         break
       case "fetch":
-        if (repo) void run(() => fetchCurrent(repo))
+        if (repo) void doFetch(repo)
         break
       case "open-in-editor":
         if (repo) void ipc.openInEditor(repo)
@@ -1115,8 +1164,8 @@ export function App() {
         onFocusSummary: () =>
           document.querySelector<HTMLInputElement>(".commit-message-component .summary input")?.focus(),
         onPush: () => void doPush(),
-        onPull: () => repo && void run(() => pullCurrent(repo)),
-        onFetch: () => repo && void run(() => fetchCurrent(repo)),
+        onPull: () => repo && void doPull(repo),
+        onFetch: () => repo && void doFetch(repo),
         onPreferences: () => setPrefsOpen(true)
       })
     window.addEventListener("keydown", onKey)
@@ -1465,8 +1514,8 @@ export function App() {
                 // 凭据由后端自己找（设置里的令牌 → git 凭据助手 → gh/glab），
                 // 前端不碰令牌，也不需要先判断「配没配」
                 onPush={() => void doPush()}
-                onPull={() => run(() => pullCurrent(repo))}
-                onFetch={() => run(() => fetchCurrent(repo))}
+                onPull={() => void doPull(repo)}
+                onFetch={() => void doFetch(repo)}
                 onForcePush={() => void doPush(true)}
                 onWorktrees={() => setWorktreesOpen(true)}
                 onOpenWorktree={path => {

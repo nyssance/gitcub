@@ -191,7 +191,8 @@ export function PushPullButton(props: Props) {
     if (progressChanged && progress !== null) {
       const { description, title, kind } = progress
       setScreenReaderStateMessage(`${title} ${description ?? t("toolbar.hangOn")}`)
-      actionInProgress.current ??= kind
+      // Desktop isPullPushFetchProgress：收尾的刷新进度不算动作
+      if (kind !== "generic") actionInProgress.current ??= kind
     }
 
     if (progressComplete) {

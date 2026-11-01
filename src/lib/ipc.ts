@@ -435,6 +435,7 @@ export const ipc = {
       branch,
       tags,
       options: { forceWithLease: force, setUpstream },
+      progress: new Channel(),
       ...(await hookArgs(repo, pushInterceptHooks))
     }),
 
