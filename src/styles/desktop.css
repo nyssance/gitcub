@@ -555,22 +555,24 @@
   margin-bottom: 0;
 }
 
-/* —— #undo-commit（Desktop _undo-commit.scss）——————————————————— */
+/* —— #undo-commit（Desktop _undo-commit.scss）———————————————————
+ * 变量换成本项目 token：--base-border → 1px --border、--box-alt-background-color → --box-alt、
+ * --spacing 10px、--spacing-half 5px、--font-size-sm 11px、--text-secondary-color → --muted-foreground */
 #undo-commit {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  border-top: var(--base-border);
-  background: var(--box-alt-background-color);
+  border-top: 1px solid var(--border);
+  background: var(--box-alt);
 
   .commit-info {
-    padding: var(--spacing-half) var(--spacing);
+    padding: 5px 10px;
     padding-right: 0;
-    margin-right: var(--spacing-half);
+    margin-right: 5px;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    font-size: var(--font-size-sm);
+    font-size: 11px;
 
     .summary,
     .ago {
@@ -579,13 +581,13 @@
       white-space: nowrap;
     }
     .ago {
-      color: var(--text-secondary-color);
+      color: var(--muted-foreground);
     }
   }
 
   /* 包一层才能给按钮留边距：padding 放在 #undo-commit 上，展开收起的动画就带不上它 */
   .actions {
-    padding: var(--spacing);
+    padding: 10px;
     padding-left: 0;
   }
 }

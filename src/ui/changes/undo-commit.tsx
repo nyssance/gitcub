@@ -1,7 +1,7 @@
 // Desktop MIT port of ui/changes/undo-commit.tsx; written as a function component.
 import { useTranslation } from "react-i18next"
 
-import type { CommitInfo } from "@/models/history"
+import type { Commit } from "@/models/commit"
 import type { Emoji } from "@/upstream/lib/emoji"
 
 import { Button } from "../desktop/button"
@@ -13,7 +13,7 @@ interface IUndoCommitProps {
   readonly onUndo: () => void
 
   /** The commit to undo. */
-  readonly commit: CommitInfo
+  readonly commit: Commit
 
   /** The emoji cache to use when rendering the commit message */
   readonly emoji: Map<string, Emoji>
@@ -31,7 +31,7 @@ export function UndoCommit({ onUndo, commit, emoji, isPushPullFetchInProgress, i
   const disabled = isPushPullFetchInProgress || isCommitting
   const title = disabled ? t("undoCommit.undoIsDisabledWhileTheRepositoryIsBeingUpdated") : undefined
 
-  const authorDate = new Date(commit.time * 1000)
+  const authorDate = commit.author.date
   return (
     <div id="undo-commit" role="group" aria-label={t("undoCommit.undoCommit")}>
       <div className="commit-info">

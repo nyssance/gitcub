@@ -1,13 +1,8 @@
 import { AlertIcon, FilterIcon } from "@primer/octicons-react"
+import { AnimatePresence, motion } from "motion/react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import type { IMentionableUser } from "@/lib/databases/github-user-database"
-import { applyFilters, hasActiveFilters, isCommittingFileHiddenByFilter } from "@/lib/desktop-filter-changes"
-import { appStatus } from "@/lib/desktop-status"
-import type { CommitOptions, Issue, Remote } from "@/models/app-state"
-import { emptyChangesFilter, type IChangesListItem } from "@/models/changes-filter"
-import type { FileChange } from "@/models/repo-status"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -23,6 +18,14 @@ import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import type { IMentionableUser } from "@/lib/databases/github-user-database"
+import { applyFilters, hasActiveFilters, isCommittingFileHiddenByFilter } from "@/lib/desktop-filter-changes"
+import { appStatus } from "@/lib/desktop-status"
+import type { CommitOptions, Issue, Remote } from "@/models/app-state"
+import { emptyChangesFilter, type IChangesListItem } from "@/models/changes-filter"
+import type { Commit } from "@/models/commit"
+import type { FileChange } from "@/models/repo-status"
+import { UndoCommit } from "@/ui/changes/undo-commit"
 import { LinkButton } from "@/ui/desktop/link-button"
 import { hasUnresolvedConflicts, isConflictedFile } from "@/upstream/lib/status"
 import { DiffSelectionType } from "@/upstream/models/diff/diff-selection"
@@ -68,9 +71,15 @@ interface Props {
   onStashAll: () => void
   /** 撤销上一次提交：提交没了，改动退回暂存区 */
   onUndoCommit: () => void
+  /** Desktop mostRecentLocalCommit：还没推送的最新提交，底部撤销栏显示它 */
+  mostRecentLocalCommit?: Commit | null
+  /** Desktop isPushPullFetchInProgress：推拉获取进行中撤销按钮禁用 */
+  isPushPullFetchInProgress?: boolean
   /** 修订上一次提交：把当前填的标题/描述覆盖上去 */
   onAmend: (summary: string, description: string) => Promise<boolean>
 }
+
+const noEmoji = new Map()
 
 /** Changes 标签页。
  *
@@ -103,6 +112,8 @@ export function ChangesSidebar({
   onCommit,
   onStashAll,
   onUndoCommit,
+  mostRecentLocalCommit = null,
+  isPushPullFetchInProgress = false,
   onAmend,
   author,
   issues,
@@ -111,6 +122,8 @@ export function ChangesSidebar({
 }: Props) {
   const { t } = useTranslation()
   const [amendRequest, setAmendRequest] = useState(0)
+  const [amending, setAmending] = useState(false)
+  const [isCommitting, setIsCommitting] = useState(false)
   const [filters, setFilters] = useState(emptyChangesFilter)
   useEffect(() => {
     if (!filterVisible) setFilters(emptyChangesFilter)
@@ -204,7 +217,6 @@ export function ChangesSidebar({
           <DropdownMenuItem disabled={changes.length === 0} onClick={onStashAll}>
             {t("stash.stashAll")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onUndoCommit}>{t("changes.undoCommit")}</DropdownMenuItem>
           <DropdownMenuItem disabled={!hasActiveFilters(filters)} onClick={() => setFilters(emptyChangesFilter)}>
             {t("changes.clearFilters")}
           </DropdownMenuItem>
@@ -311,7 +323,28 @@ export function ChangesSidebar({
         unresolved={unresolved.length > 0}
         onCommit={onCommit}
         onAmend={onAmend}
+        onAmendingChange={setAmending}
+        onCommittingChange={setIsCommitting}
       />
+      {/* Desktop renderUndoCommit：变基冲突中不显示；带标签的提交、修订中也不显示（撤销后标签仍指着它） */}
+      <AnimatePresence initial={false}>
+        {!rebaseConflict && mostRecentLocalCommit?.tags.length === 0 && !amending && (
+          <motion.div
+            key="undo"
+            className="overflow-hidden"
+            initial={{ maxHeight: 0 }}
+            animate={{ maxHeight: 200, transition: { duration: 0.5, ease: "easeIn" } }}
+            exit={{ maxHeight: 0, transition: { duration: 0.5, ease: "easeOut" } }}>
+            <UndoCommit
+              isPushPullFetchInProgress={isPushPullFetchInProgress}
+              commit={mostRecentLocalCommit}
+              onUndo={onUndoCommit}
+              emoji={noEmoji}
+              isCommitting={isCommitting}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

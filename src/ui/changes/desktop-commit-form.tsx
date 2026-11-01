@@ -51,6 +51,9 @@ interface Props {
   unresolved: boolean
   onCommit(summary: string, description: string, options: CommitOptions): Promise<boolean>
   onAmend(summary: string, description: string): Promise<boolean>
+  /** 侧栏的撤销栏要知道：修订中不显示、提交中禁用（Desktop commitToAmend / isCommitting） */
+  onAmendingChange?: (amending: boolean) => void
+  onCommittingChange?: (committing: boolean) => void
 }
 export function DesktopCommitForm(props: Props) {
   const runtime = getDesktopRuntime()
@@ -77,6 +80,9 @@ export function DesktopCommitForm(props: Props) {
   const [message, setMessage] = useState<ICommitMessage | null>(null)
   const [amending, setAmending] = useState<Commit | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { onAmendingChange, onCommittingChange } = props
+  useEffect(() => onAmendingChange?.(amending !== null), [amending, onAmendingChange])
+  useEffect(() => onCommittingChange?.(busy), [busy, onCommittingChange])
   const [unknownAuthors, setUnknownAuthors] = useState<{
     authors: readonly UnknownAuthor[]
     proceed: () => void

@@ -104,7 +104,6 @@
     "skipHooks": "跳过提交钩子",
     "signOff": "添加 Signed-off-by",
     "allowEmpty": "允许空提交",
-    "undoCommit": "撤销上次提交",
     "amend": "修订上次提交",
     "include": "将 {{path}} 选入提交",
     "isIncludedInCommit": "整份选入提交",

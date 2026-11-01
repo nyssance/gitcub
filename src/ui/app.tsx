@@ -5,6 +5,21 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import type { PanelImperativeHandle } from "react-resizable-panels"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAccountsStore } from "@/features/accounts/store"
 import { activeRepository, useAppStateStore } from "@/features/app-state/store"
 import { type FileState, useChangesStore } from "@/features/changes/store"
@@ -47,21 +62,6 @@ import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import { Repository } from "@/models/repository"
 import { type RetryAction, RetryActionType } from "@/models/retry-actions"
 import { AppError } from "@/ui/app-error"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TooltipProvider } from "@/components/ui/tooltip"
 import { Blame } from "@/ui/blame/blame"
 import { PullRequestBadge } from "@/ui/branches/pull-request-badge"
 import { Banner } from "@/ui/changes/banner"
@@ -209,6 +209,7 @@ export function App() {
   const graphDone = useHistoryStore(s => s.graphDone)
   const graphLoading = useHistoryStore(s => s.graphLoading)
   const localCommits = useHistoryStore(s => s.localCommits)
+  const networkProgress = useRepositoryStore(s => s.networkProgress)
   const commitSha = useHistoryStore(s => s.commitSha)
   const setCommitSha = useHistoryStore(s => s.setCommitSha)
   const commitFiles = useHistoryStore(s => s.commitFiles)
@@ -412,6 +413,21 @@ export function App() {
   useEffect(
     () => useHistoryStore.getState().loadLocalCommits(historyTab ? repo : null, needsLocalCommits),
     [repo, historyTab, reloadKey, needsLocalCommits]
+  )
+
+  // Desktop refreshChangesSection 的 loadLocalCommits：Changes 页底部撤销栏要的那一条，跟着每次刷新取
+  const mostRecentLocalCommit = useHistoryStore(s => s.mostRecentLocalCommit)
+  useEffect(
+    () =>
+      useHistoryStore
+        .getState()
+        .loadMostRecentLocalCommit(
+          repo,
+          stateLoaded && !status.unborn
+            ? { remote: status.remote, hasUpstream: status.hasUpstream, ahead: status.ahead }
+            : null
+        ),
+    [repo, stateLoaded, reloadKey, status.remote, status.hasUpstream, status.ahead, status.unborn, status.head]
   )
 
   const loadMoreGraph = useCallback(() => {
@@ -1943,6 +1959,8 @@ export function App() {
                           onCommit={doCommit}
                           onStashAll={() => void doStashAll()}
                           onUndoCommit={() => void doUndoCommit()}
+                          mostRecentLocalCommit={mostRecentLocalCommit}
+                          isPushPullFetchInProgress={networkProgress !== null}
                           onAmend={async (summary, description) => {
                             return (
                               (await rewrite(async () => {

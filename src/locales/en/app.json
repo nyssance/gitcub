@@ -106,7 +106,6 @@
     "skipHooks": "Bypass commit hooks",
     "signOff": "Add Signed-off-by trailer",
     "allowEmpty": "Allow empty commit",
-    "undoCommit": "Undo last commit",
     "amend": "Amend last commit",
     "include": "Include {{path}} in commit",
     "isIncludedInCommit": "Fully included in commit",

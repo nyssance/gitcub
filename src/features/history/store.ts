@@ -10,9 +10,11 @@ import { create } from "zustand"
 
 import { call, createTaskGroup, forkCancelable, resolve, type Updater } from "@/features/effect-runtime"
 import { useRepositoryStore } from "@/features/repository/store"
+import { getCommits } from "@/lib/commit-history"
 import { type DiffTokens, getCommitSyntaxTokens } from "@/lib/diff"
 import { FILE_HISTORY_BATCH, GRAPH_BATCH } from "@/lib/ipc"
-import type { LocalCommits } from "@/lib/unpushed-commits"
+import type { LocalCommits, PushStatus } from "@/lib/unpushed-commits"
+import type { Commit } from "@/models/commit"
 import type { CommitFile, CommitInfo, Comparison, GraphCursor, GraphRow } from "@/models/history"
 import { DiffParser } from "@/upstream/lib/diff-parser"
 import type { IRawDiff } from "@/upstream/models/diff"
@@ -29,6 +31,9 @@ interface HistoryStore {
   graphLoading: boolean
   /** 没有上游时 Desktop 的 localCommitSHAs（`HEAD --not --remotes`）；有上游或没远端时为 null */
   localCommits: LocalCommits | null
+  /** Desktop repository.tsx 的 mostRecentLocalCommit（localCommitSHAs[0] 的提交）：Changes 页底部的撤销栏。
+   *  Desktop 每次 refreshChangesSection 都 loadLocalCommits，这里只取第一条 */
+  mostRecentLocalCommit: Commit | null
   commitSha: string | null
   commitFiles: CommitFile[]
   commitFile: string | null
@@ -47,6 +52,7 @@ interface HistoryStore {
   loadGraph: (repo: string) => () => void
   loadMoreGraph: (repo: string) => void
   loadLocalCommits: (repo: string | null, needed: boolean) => void
+  loadMostRecentLocalCommit: (repo: string | null, status: PushStatus | null) => void
   loadFileHistory: (repo: string | null, file: string | null) => void
   loadMoreFileHistory: (repo: string) => void
   loadCommitFiles: (repo: string | null, sha: string | null) => () => void
@@ -60,6 +66,7 @@ interface HistoryStore {
 
 const graph = createTaskGroup()
 const local = createTaskGroup()
+const mostRecentLocal = createTaskGroup()
 const fileHistory = createTaskGroup()
 /** 上一页返回的续走游标，翻页时传回去；换会话时清掉（后端核对不上也会从头走） */
 let fileHistoryCursor: string | null = null
@@ -74,6 +81,7 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
   graphDone: false,
   graphLoading: false,
   localCommits: null,
+  mostRecentLocalCommit: null,
   commitSha: null,
   commitFiles: [],
   commitFile: null,
@@ -88,9 +96,11 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
   compared: null,
   reset: () => {
     graph.interrupt()
+    mostRecentLocal.interrupt()
     preferredFile = null
     set({
       compared: null,
+      mostRecentLocalCommit: null,
       graphRows: [],
       graphCursor: null,
       graphDone: false,
@@ -186,6 +196,25 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
             set({ localCommits: null })
             reportError(error.message)
           }
+        })
+      )
+    )
+  },
+  // Desktop git-store.ts loadLocalCommits：有上游是 `upstream..HEAD`，没有上游是 `HEAD --not --remotes`；
+  // 没有远端的仓库后者就是整条 HEAD 历史。有上游时 ahead 为 0 范围为空，ahead > 0 时 HEAD 本身在范围里。
+  // 取不到（未出生的分支）就不显示，同 Desktop performFailableOperation 只记不抛
+  loadMostRecentLocalCommit: (repo, status) => {
+    mostRecentLocal.interrupt()
+    const additional = status?.hasUpstream ? (status.ahead > 0 ? [] : null) : ["--not", "--remotes"]
+    if (!repo || !status || additional === null) {
+      set({ mostRecentLocalCommit: null })
+      return
+    }
+    mostRecentLocal.fork(
+      Effect.tryPromise(() => getCommits({ path: repo }, "HEAD", 1, undefined, additional)).pipe(
+        Effect.match({
+          onSuccess: ([commit]) => set({ mostRecentLocalCommit: commit ?? null }),
+          onFailure: () => set({ mostRecentLocalCommit: null })
         })
       )
     )
