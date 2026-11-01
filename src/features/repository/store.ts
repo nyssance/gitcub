@@ -43,7 +43,9 @@ export const EMPTY_STATUS: RepoStatus = {
   unborn: false,
   head: null,
   fetchHead: null,
-  pullWithRebase: null
+  pullWithRebase: null,
+  upstream: null,
+  upstreamRemoteName: null
 }
 
 /** Desktop Progress（models/progress.ts）里推拉按钮用到的部分：标题、说明、0–1 的进度 */

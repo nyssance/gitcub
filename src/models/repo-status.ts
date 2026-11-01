@@ -66,6 +66,10 @@ export interface RepoStatus {
   fetchHead: { modifiedMs: number; empty: boolean } | null
   /** `pull.rebase` 是 "true" / "false" 时的值，其余为 null（Desktop pullWithRebase 为 undefined） */
   pullWithRebase: boolean | null
+  /** Desktop Branch.upstream（`%(upstream:short)`，如 `origin/other`）；按配置给出，跟踪引用不在也有值 */
+  upstream: string | null
+  /** Desktop Branch.upstreamRemoteName（`%(upstream:remotename)`） */
+  upstreamRemoteName: string | null
 }
 
 /** 待办页用的摘要，与 status.rs 的 RepoSummary 对应。不含工作区改动，只有引用和索引能回答的事 */

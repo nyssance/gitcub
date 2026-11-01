@@ -5,6 +5,7 @@ import { beforeEach, expect, test } from "bun:test"
 import { useAppStateStore } from "../../src/features/app-state/store"
 import { EMPTY_STATUS, nextLastFetched, useRepositoryStore } from "../../src/features/repository/store"
 import { ForcePushBranchState, getCurrentBranchForcePushState } from "../../src/lib/force-push-state"
+import { pushPullRemoteName } from "../../src/ui/toolbar/toolbar"
 
 const diverged = { branch: "main", head: "b", hasUpstream: true, ahead: 1, behind: 1 }
 
@@ -100,4 +101,15 @@ test("待推送标签按仓库持久化，只更新当前仓库的状态，清�
   store.clearTagsToPush("/r")
   expect(useRepositoryStore.getState().tagsToPush).toEqual([])
   expect(localStorage.getItem("tags-to-push-/r")).toBeNull()
+})
+
+// Desktop app.tsx renderPushPullToolbarButton 的 remoteName
+test("推拉按钮的远端名：跟上游的远端，上游分支名不同时显示完整上游", () => {
+  const status = { ...EMPTY_STATUS, branch: "main", remote: "origin" }
+  expect(pushPullRemoteName(status)).toBe("origin")
+  expect(pushPullRemoteName({ ...status, upstream: "fork/main", upstreamRemoteName: "fork" })).toBe("fork")
+  expect(pushPullRemoteName({ ...status, upstream: "origin/other", upstreamRemoteName: "origin" })).toBe("origin/other")
+  expect(pushPullRemoteName({ ...status, branch: null, upstream: "origin/other", upstreamRemoteName: "origin" })).toBe(
+    "origin"
+  )
 })

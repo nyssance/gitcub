@@ -34,7 +34,9 @@ export const status: RepoStatus = {
   unborn: false,
   head: null,
   fetchHead: null,
-  pullWithRebase: null
+  pullWithRebase: null,
+  upstream: null,
+  upstreamRemoteName: null
 }
 /** 待办页的摘要：只有引用和索引能回答的事，与 status.rs 的 RepoSummary 对应 */
 export const summary: RepoSummary = {

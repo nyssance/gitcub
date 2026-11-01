@@ -6,6 +6,7 @@ import { useToolbarStore } from "@/features/toolbar/store"
 import type { ForcePushBranchState } from "@/lib/force-push-state"
 import type { RepoStatus } from "@/models/repo-status"
 import { Resizable } from "@/ui/resizable/resizable"
+import { removeRemotePrefix } from "@/upstream/lib/remove-remote-prefix"
 
 import { BranchDropdown } from "./branch-dropdown"
 import { PushPullButton } from "./push-pull-button"
@@ -13,6 +14,13 @@ import { PushPullButton } from "./push-pull-button"
 /** 工具栏。只属于右列——左栏是常驻的仓库列表，通栏从上到下，
  * 所以「当前仓库」那格没了（Desktop 把它做成下拉，是因为它没有常驻列表）。
  * 整条是拖拽区：macOS 上红绿灯浮在左栏顶部，这里不用让位。 */
+
+/** Desktop renderPushPullToolbarButton：有上游时用上游的远端名；上游分支名与本地不同时显示完整上游（如 `origin/other`） */
+export function pushPullRemoteName(status: RepoStatus) {
+  if (status.branch === null || status.unborn || status.upstreamRemoteName === null) return status.remote
+  if (status.upstream !== null && removeRemotePrefix(status.upstream) !== status.branch) return status.upstream
+  return status.upstreamRemoteName
+}
 
 export function ToolbarRight(props: {
   repo: string | null
@@ -89,7 +97,7 @@ export function ToolbarRight(props: {
         description="Push pull button">
         <PushPullButton
           aheadBehind={status.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null}
-          remoteName={status.remote}
+          remoteName={pushPullRemoteName(status)}
           networkActionInProgress={networkProgress !== null}
           lastFetched={lastFetched}
           progress={networkProgress}

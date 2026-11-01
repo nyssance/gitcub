@@ -108,6 +108,10 @@ pub struct RepoStatus {
     pub fetch_head: Option<FetchHead>,
     /// Desktop git-store checkPullWithRebase：`pull.rebase` 原样是 "true" / "false" 才有值，其余（没设、merges 等）为 None
     pub pull_with_rebase: Option<bool>,
+    /// Desktop Branch.upstream（`%(upstream:short)`，如 `origin/other`）：从配置读，跟踪引用不在也有值
+    pub upstream: Option<String>,
+    /// Desktop Branch.upstreamRemoteName（`%(upstream:remotename)`）
+    pub upstream_remote_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -117,6 +121,22 @@ pub struct FetchHead {
     pub modified_ms: f64,
     /// 空文件多半是拉取失败了，Desktop 这时不更新上次拉取时间
     pub empty: bool,
+}
+
+/// Desktop getBranches 的 `%(upstream:short)` 与 `%(upstream:remotename)`：按 branch.<name>.remote / merge 配置算出
+/// 上游的跟踪引用并去掉 refs/remotes/ 前缀，不起 git 进程
+fn upstream_of(repo: &gix::Repository, branch: Option<&str>) -> (Option<String>, Option<String>) {
+    let Some(branch) = branch else { return (None, None) };
+    let Ok(full) = gix::refs::FullName::try_from(format!("refs/heads/{branch}")) else { return (None, None) };
+    let upstream = repo
+        .branch_remote_tracking_ref_name(full.as_ref(), gix::remote::Direction::Fetch)
+        .and_then(Result::ok)
+        .map(|name| name.as_ref().shorten().to_string());
+    let remote_name = upstream
+        .as_ref()
+        .and_then(|_| repo.branch_remote_name(branch, gix::remote::Direction::Fetch))
+        .map(|name| name.as_bstr().to_string());
+    (upstream, remote_name)
 }
 
 fn pull_with_rebase(value: Option<&str>) -> Option<bool> {
@@ -693,6 +713,7 @@ pub(crate) fn status_tuned(repo_path: &Path, tuning: Tuning) -> Result<RepoStatu
     let fetch_head = fetch_head(repo.path());
     let pull_rebase = config.string("pull.rebase");
     let pull_with_rebase = pull_with_rebase(pull_rebase.as_ref().and_then(|v| std::str::from_utf8(v).ok()));
+    let (upstream, upstream_remote_name) = upstream_of(&repo, branch.as_deref());
 
     Ok(RepoStatus {
         branch,
@@ -707,6 +728,8 @@ pub(crate) fn status_tuned(repo_path: &Path, tuning: Tuning) -> Result<RepoStatu
         head,
         fetch_head,
         pull_with_rebase,
+        upstream,
+        upstream_remote_name,
     })
 }
 
@@ -1258,6 +1281,40 @@ mod tests {
         let linked = dir.path().join("linked");
         git(&r, &["worktree", "add", "-q", "-b", "linked", linked.to_str().unwrap()]);
         assert!(status(&linked).unwrap().fetch_head.is_none(), "链接工作树还没拉取过");
+    }
+
+    /// Desktop getBranches 的 `%(upstream:short)` / `%(upstream:remotename)`：跟 git 自己算的一致，
+    /// 上游名与本地不同、跟踪引用已不存在（gone）时也照配置给出
+    #[test]
+    fn 上游分支名与远端名() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = dir.path().join("repo");
+        std::fs::create_dir(&r).unwrap();
+        git(&r, &["init", "-q", "-b", "main"]);
+        git(
+            &r,
+            &["-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "--allow-empty", "-m", "base"],
+        );
+        let none = status(&r).unwrap();
+        assert_eq!((none.upstream, none.upstream_remote_name), (None, None));
+        let remote = dir.path().join("remote.git");
+        git(&r, &["clone", "-q", "--bare", ".", remote.to_str().unwrap()]);
+        git(&r, &["remote", "add", "upstream", remote.to_str().unwrap()]);
+        git(&r, &["push", "-q", "upstream", "main:other"]);
+        git(&r, &["fetch", "-q", "upstream"]);
+        git(&r, &["branch", "-q", "--set-upstream-to=upstream/other"]);
+        let expected = |field: &str| {
+            let out = git(&r, &["for-each-ref", &format!("--format=%(upstream:{field})"), "refs/heads/main"]);
+            Some(out.trim().to_string())
+        };
+        let tracked = status(&r).unwrap();
+        assert_eq!(tracked.upstream, expected("short"));
+        assert_eq!(tracked.upstream.as_deref(), Some("upstream/other"));
+        assert_eq!(tracked.upstream_remote_name, expected("remotename"));
+        git(&r, &["update-ref", "-d", "refs/remotes/upstream/other"]);
+        let gone = status(&r).unwrap();
+        assert!(!gone.has_upstream);
+        assert_eq!(gone.upstream.as_deref(), Some("upstream/other"));
     }
 
     #[test]

@@ -28,7 +28,9 @@ const clean: RepoStatus = {
   unborn: false,
   head: null,
   fetchHead: null,
-  pullWithRebase: null
+  pullWithRebase: null,
+  upstream: null,
+  upstreamRemoteName: null
 }
 const dirty: RepoStatus = {
   ...clean,
