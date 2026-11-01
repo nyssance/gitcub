@@ -69,7 +69,7 @@ pub(crate) fn system_attributes() -> Option<std::path::PathBuf> {
 /// `.gitattributes`（git-lfs 用 `ls-files --cached --others --exclude-standard` 找它们并读工作区内容）、
 /// `info/attributes`、全局和系统属性文件。它们都不含 `lfs` 时 git-lfs 一定报告「没有」，
 /// 不必起 git-lfs 和它内部的十来个 git 进程。返回 `true` 只表示「需要问 git-lfs」。
-fn may_use_lfs(repo: &Path) -> Result<bool, String> {
+fn may_use_lfs(repo: &Path, untracked: Option<&[String]>) -> Result<bool, String> {
     let repo = gix::open(repo).map_err(|e| e.to_string())?;
     let workdir = repo.workdir().ok_or("bare repository")?.to_path_buf();
     let index = repo.index_or_empty().map_err(|e| e.to_string())?;
@@ -84,19 +84,25 @@ fn may_use_lfs(repo: &Path) -> Result<bool, String> {
             files.push(workdir.join(gix::path::from_bstr(path).map_err(|e| e.to_string())?));
         }
     }
-    let options = repo
-        .dirwalk_options()
-        .map_err(|e| e.to_string())?
-        .emit_untracked(gix::dir::walk::EmissionMode::Matching)
-        .emit_ignored(None)
-        .emit_tracked(false);
-    let mut collect = gix::dir::walk::delegate::Collect::default();
-    let interrupt = std::sync::atomic::AtomicBool::new(false);
-    // 非 glob 的 pathspec 里 `*` 可以跨目录，等于「任何以 .gitattributes 结尾的路径」。
-    repo.dirwalk(&index, ["*.gitattributes"], &interrupt, options, &mut collect).map_err(|e| e.to_string())?;
-    for (entry, _) in collect.unorded_entries {
-        if is_attributes(&entry.rela_path) {
-            files.push(workdir.join(gix::path::from_bstr(&entry.rela_path).map_err(|e| e.to_string())?));
+    match untracked {
+        // 刚做完的 status（`-uall`、不含被忽略的）已经列出了全部未跟踪文件，不必再遍历一遍工作区
+        Some(paths) => files.extend(paths.iter().filter(|path| is_attributes(path.as_bytes())).map(|path| workdir.join(path))),
+        None => {
+            let options = repo
+                .dirwalk_options()
+                .map_err(|e| e.to_string())?
+                .emit_untracked(gix::dir::walk::EmissionMode::Matching)
+                .emit_ignored(None)
+                .emit_tracked(false);
+            let mut collect = gix::dir::walk::delegate::Collect::default();
+            let interrupt = std::sync::atomic::AtomicBool::new(false);
+            // 非 glob 的 pathspec 里 `*` 可以跨目录，等于「任何以 .gitattributes 结尾的路径」。
+            repo.dirwalk(&index, ["*.gitattributes"], &interrupt, options, &mut collect).map_err(|e| e.to_string())?;
+            for (entry, _) in collect.unorded_entries {
+                if is_attributes(&entry.rela_path) {
+                    files.push(workdir.join(gix::path::from_bstr(&entry.rela_path).map_err(|e| e.to_string())?));
+                }
+            }
         }
     }
     files.push(repo.common_dir().join("info").join("attributes"));
@@ -125,8 +131,9 @@ fn may_use_lfs(repo: &Path) -> Result<bool, String> {
     Ok(false)
 }
 
-pub fn state(repo: &Path) -> LfsState {
-    if matches!(may_use_lfs(repo), Ok(false)) {
+/// `untracked`：同一次刷新里 status 列出的未跟踪路径；不给就自己遍历工作区找未跟踪的 `.gitattributes`。
+pub fn state(repo: &Path, untracked: Option<&[String]>) -> LfsState {
+    if matches!(may_use_lfs(repo, untracked), Ok(false)) {
         return LfsState { used: false, available: false, installed: false };
     }
     let available = available();
@@ -179,9 +186,19 @@ mod tests {
         };
         let check = |label: &str| {
             let truth = crate::ops::using_lfs(&r).unwrap();
-            let may = may_use_lfs(&r).unwrap();
+            let may = may_use_lfs(&r, None).unwrap();
             assert!(may || !truth, "{label}: pre-check said no but git-lfs tracks patterns");
-            assert_eq!(state(&r).used, truth, "{label}");
+            assert_eq!(state(&r, None).used, truth, "{label}");
+            // status 给出的未跟踪列表与自己遍历工作区得出同一结论
+            let status = crate::status::status(&r).unwrap();
+            let untracked: Vec<String> = status
+                .changes
+                .iter()
+                .filter(|change| matches!(change.kind, crate::status::ChangeKind::Untracked))
+                .map(|change| change.path.clone())
+                .collect();
+            assert_eq!(may_use_lfs(&r, Some(&untracked)).unwrap(), may, "{label}: from status");
+            assert_eq!(state(&r, Some(&untracked)).used, truth, "{label}: from status");
             may
         };
         assert!(!check("empty repository"));
@@ -204,15 +221,15 @@ mod tests {
         std::fs::remove_file(r.join(".git/info/attributes")).unwrap();
         write("docs/.gitattributes", "# lfs is not used here\n");
         assert!(check("lfs only in a comment"));
-        assert!(!state(&r).used);
+        assert!(!state(&r, None).used);
     }
 
     #[test]
     fn 普通仓库不认为用了_lfs() {
         let (_d, r) = repo();
-        assert!(!state(&r).used);
+        assert!(!state(&r, None).used);
         std::fs::write(r.join(".gitattributes"), "*.txt text\n").unwrap();
-        assert!(!state(&r).used, "普通的 attributes 不算");
+        assert!(!state(&r, None).used, "普通的 attributes 不算");
     }
 
     #[test]
@@ -223,14 +240,14 @@ mod tests {
             "# 注释里提 filter=lfs 不算\n*.psd filter=lfs diff=lfs merge=lfs -text\n",
         )
         .unwrap();
-        assert!(state(&r).used);
+        assert!(state(&r, None).used);
     }
 
     #[test]
     fn 注释里的规则不算数() {
         let (_d, r) = repo();
         std::fs::write(r.join(".gitattributes"), "# *.psd filter=lfs diff=lfs\n").unwrap();
-        assert!(!state(&r).used);
+        assert!(!state(&r, None).used);
     }
 
     /// 装完之后过滤器要对这个仓库生效。
@@ -245,7 +262,7 @@ mod tests {
         let (_d, r) = repo();
         std::fs::write(r.join(".gitattributes"), "*.psd filter=lfs\n").unwrap();
         install(&r).unwrap();
-        assert!(state(&r).installed);
+        assert!(state(&r, None).installed);
     }
 
     /// 仓库自己的配置把全局那份盖住了（filter.lfs.smudge 被显式置空）。
@@ -258,17 +275,17 @@ mod tests {
         let (_d, r) = repo();
         std::fs::write(r.join(".gitattributes"), "*.psd filter=lfs\n").unwrap();
         git(&r, &["config", "--local", "filter.lfs.smudge", ""]);
-        assert!(!state(&r).installed, "置空之后应当算没生效");
+        assert!(!state(&r, None).installed, "置空之后应当算没生效");
 
         install(&r).unwrap();
-        assert!(state(&r).installed, "补了 --local 之后该生效");
+        assert!(state(&r, None).installed, "补了 --local 之后该生效");
     }
 
     /// 没有 LFS 规则的仓库不该为了填字段去起 git 进程
     #[test]
     fn 不用_lfs_时其余字段都是假() {
         let (_d, r) = repo();
-        let s = state(&r);
+        let s = state(&r, None);
         assert!(!s.used && !s.available && !s.installed);
     }
 }

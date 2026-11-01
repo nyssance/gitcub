@@ -9,7 +9,6 @@ import { Repository } from "../models/repository"
 import { RepoRulesInfo } from "../upstream/models/repo-rules"
 import { getHTMLURL } from "./api"
 import type { IAPIRepoRule, IAPIRepoRuleset } from "./api-rule-types"
-import { ipc } from "./ipc"
 import { parseRepoRules } from "./repo-rules"
 
 interface BranchPolicy {
@@ -36,7 +35,6 @@ export interface RepositoryPolicy {
   rulesets: Map<number, IAPIRepoRuleset>
   account: Account | null
   forkUrl: string | null
-  aheadBehind: { ahead: number; behind: number } | null
 }
 
 export function emptyRepositoryPolicy(path: string): RepositoryPolicy {
@@ -47,8 +45,7 @@ export function emptyRepositoryPolicy(path: string): RepositoryPolicy {
     noWrite: false,
     rulesets: new Map(),
     account: null,
-    forkUrl: null,
-    aheadBehind: null
+    forkUrl: null
   }
 }
 
@@ -62,29 +59,17 @@ export async function loadRepositoryPolicy(
   accounts: readonly Account[],
   io: {
     branchPolicy: (repo: string, branch: string) => Promise<BranchPolicy | null>
-    repoStatus: (repo: string) => Promise<{ hasUpstream: boolean; ahead: number; behind: number }>
   } = {
-    branchPolicy: (repo, branch) => invoke<BranchPolicy | null>("branch_policy", { repo, branch }),
-    repoStatus: repo => ipc.repoStatus(repo)
+    branchPolicy: (repo, branch) => invoke<BranchPolicy | null>("branch_policy", { repo, branch })
   }
 ): Promise<RepositoryPolicy | null> {
-  // 本地 ahead/behind 与远端策略无关：读不到只记错误，策略本身照常返回
-  const statusPromise = io.repoStatus(path).then(
-    status => status,
-    (error: unknown) => {
-      log.error(`[loadRepositoryPolicy] unable to read the local status for ${branch}`, error)
-      return null
-    }
-  )
   let value: BranchPolicy | null
   try {
     value = await io.branchPolicy(path, branch)
   } catch (error) {
     log.info(`[loadRepositoryPolicy] unable to read the branch policy for ${branch}`, error)
-    await statusPromise
     return null
   }
-  const status = await statusPromise
   if (!value) return null
   {
     const account = accounts.find(account => new URL(getHTMLURL(account.endpoint)).host === value.remote.host) ?? null
@@ -114,8 +99,7 @@ export async function loadRepositoryPolicy(
       rulesets,
       protected: value.protected,
       noWrite: value.noWrite,
-      forkUrl: `https://${remote.host}/${remote.owner}/${remote.name}${value.kind === "gitlab" ? "/-/forks/new" : "/fork"}`,
-      aheadBehind: status?.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null
+      forkUrl: `https://${remote.host}/${remote.owner}/${remote.name}${value.kind === "gitlab" ? "/-/forks/new" : "/fork"}`
     }
   }
 }

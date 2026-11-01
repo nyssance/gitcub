@@ -296,7 +296,9 @@ export const ipc = {
   /** 仓库里的 PR 模板；没有就是 null */
   prTemplate: (repo: string) => invoke<string | null>("pr_template", { repo }),
   /** 这个仓库和 LFS 的关系：用没用、有没有 git-lfs、过滤器生效没 */
-  lfsState: (repo: string) => invoke<LfsState>("lfs_state", { repo }),
+  /** `untracked`：同一次刷新里 status 列出的未跟踪路径，给了后端就不再遍历工作区 */
+  lfsState: (repo: string, untracked?: readonly string[]) =>
+    invoke<LfsState>("lfs_state", { repo, untracked: untracked ?? null }),
   /** 给这个仓库装上 LFS 过滤器 */
   lfsInstall: (repo: string) => invoke<void>("lfs_install", { repo }),
   /** 写提交信息时 `#` 补全用的 issue 号 */

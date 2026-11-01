@@ -378,8 +378,10 @@ pub async fn pr_template(repo: String) -> Result<Option<String>, String> {
 
 /// 这个仓库和 LFS 的关系：用没用、有没有 git-lfs、装没装过滤器。
 #[tauri::command]
-pub async fn lfs_state(repo: String) -> Result<lfs::LfsState, String> {
-    tauri::async_runtime::spawn_blocking(move || lfs::state(Path::new(&repo))).await.map_err(|error| error.to_string())
+pub async fn lfs_state(repo: String, untracked: Option<Vec<String>>) -> Result<lfs::LfsState, String> {
+    tauri::async_runtime::spawn_blocking(move || lfs::state(Path::new(&repo), untracked.as_deref()))
+        .await
+        .map_err(|error| error.to_string())
 }
 
 /// 给这个仓库装上 LFS 过滤器。

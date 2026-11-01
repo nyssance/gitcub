@@ -1248,7 +1248,7 @@ pub(crate) mod in_process {
         {
             return Err("路径需要 precompose".into());
         }
-        let index = repo.open_index().map_err(|e| e.to_string())?;
+        let index = repo.index_or_empty().map_err(|e| e.to_string())?;
         if index.is_sparse() {
             return Err("稀疏索引".into());
         }
@@ -1570,6 +1570,17 @@ mod tests {
         const C_NEW: &str = "#include <stdio.h>\n\nint first(void)\n{\n\treturn 1;\n}\n\nint second(void)\n{\n\treturn 2;\n}\n\nint third(void)\n{\n\treturn 3;\n}\n";
         const PY_OLD: &str = "def a():\n    if x:\n        return 1\n    return 0\n\n\ndef c():\n    return 3\n";
         const PY_NEW: &str = "def a():\n    if x:\n        return 1\n    return 0\n\n\ndef b():\n    if y:\n        return 2\n    return 0\n\n\ndef c():\n    return 3\n";
+
+        /// 刚 `git init`、还没有 `.git/index` 的仓库：git 当作空索引，新文件（含空文件）照常作答
+        #[test]
+        fn 没有索引文件的新仓库() {
+            let (_d, r) = repo();
+            assert!(!r.join(".git/index").exists());
+            write(&r, "empty", b"");
+            write(&r, "text.txt", b"a\nb\n");
+            check(&r, "empty", FileKind::New).unwrap();
+            check(&r, "text.txt", FileKind::New).unwrap();
+        }
 
         /// (路径, HEAD 内容, 工作区内容)
         fn modified_shapes() -> Vec<(String, Vec<u8>, Vec<u8>)> {

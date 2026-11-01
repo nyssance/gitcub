@@ -69,7 +69,6 @@ interface RepositoryStore {
   setLfs: (lfs: LfsState | null) => void
   setAuthor: (author: { name: string; email: string }) => void
   setStatus: (next: Updater<RepoStatus>) => void
-  loadLfs: (repo: string | null) => () => void
   /** Desktop buildAutocompletionProviders：Issue 与用户都取贡献目标（fork 为上游贡献时是上游） */
   loadCompletions: (repo: string | null, remote: Remote | null | undefined) => () => void
   loadAuthor: () => void
@@ -83,7 +82,7 @@ const refreshRepository = (repo: string | null) =>
     const { getState, setState } = useRepositoryStore
     setState(store => ({ reloadKey: store.reloadKey + 1 }))
     if (!repo) {
-      setState({ status: EMPTY_STATUS })
+      setState({ status: EMPTY_STATUS, lfs: null })
       return
     }
     const [next, remote] = yield* Effect.all(
@@ -95,6 +94,14 @@ const refreshRepository = (repo: string | null) =>
     // 文件监听在构建这类场景下会反复触发刷新；内容没变就不换对象，改动列表不白重绘
     if (!equal(getState().status, next)) setState({ status: next })
     setState(store => ({ diffKey: store.diffKey + 1 }))
+    // LFS 规则只可能来自 .gitattributes 等文件：同一次刷新里接着查，未跟踪的那些直接用这份 status，
+    // 后端不必再遍历工作区；与 status 串行，不和它抢磁盘。查不到只当没用 LFS，不报错
+    const untracked = next.changes.filter(change => change.kind === "untracked").map(change => change.path)
+    const lfs = yield* call("lfsState", ipc => ipc.lfsState(repo, untracked)).pipe(
+      Effect.catch(() => Effect.succeed(null))
+    )
+    if (repo !== activeRepository()) return
+    if (!equal(getState().lfs, lfs)) setState({ lfs })
     const stashes = yield* call("stashes", ipc => ipc.stashes(repo))
     if (repo !== activeRepository()) return
     if (!equal(getState().stashList, stashes)) setState({ stashList: stashes })
@@ -125,7 +132,7 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
     void runner()
     return () => runner.cancel()
   },
-  reset: () => set({ status: EMPTY_STATUS, stashList: [], error: null }),
+  reset: () => set({ status: EMPTY_STATUS, stashList: [], lfs: null, error: null }),
   run: operation => {
     if (locked || get().busy) return Promise.resolve(undefined)
     const repo = activeRepository()
@@ -185,18 +192,7 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   setLfs: lfs => set({ lfs }),
   setAuthor: author => set({ author }),
   setStatus: next => set(store => ({ status: resolve(next, store.status) })),
-  // 不用 LFS 的仓库这一步不起任何 git 进程；Git 操作后的刷新（reloadKey）要重新查
-  loadLfs: repo => {
-    if (!repo) {
-      set({ lfs: null })
-      return () => {}
-    }
-    return forkCancelable(
-      call("lfsState", ipc => ipc.lfsState(repo)).pipe(
-        Effect.match({ onFailure: () => set({ lfs: null }), onSuccess: lfs => set({ lfs }) })
-      )
-    )
-  },
+
   // 取不到（没远端/没登录）就是空的，补全什么都不弹，不该因为这个跳错误
   loadCompletions: (repo, remote) => {
     set({ issues: [], mentionables: [] })

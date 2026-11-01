@@ -804,6 +804,8 @@ gix-blame 候选行的归属比对：合成与冲突仓库全部相同，Desktop
 
 ## 应用启动与内存（2026-10-29）
 
+> 本节 GitCub「打开仓库」一列计时有误（列表加载完之前就停了表），以「打开仓库：计时更正与重复读取（2026-11-01）」为准。
+
 `bun run bench:app`（`scripts/bench-app.ts`）把打包好的 GitCub 和已安装的 GitHub Desktop 用同一种方式各启动 5 次、
 交替进行，取中位数；数据在 `test-results/benchmark/app.json`（不入库）。这次运行：2026-10-29 18:51，main 提交 3812f18，
 启动时 load 1.8（1 分钟），macOS 27.2，GitHub Desktop 3.6.7（`/Applications` 里的正式版），GitCub 为
@@ -894,25 +896,51 @@ Desktop 从 `cli-action` 发出到改动列表出现 308 ms（306–384）。
 
 未覆盖：推送、拉取、提交这些写操作本来就交给 git；没有在真实大仓库上数，也没有数长时间运行后的进程数。
 
-## 应用启动与内存：真实仓库（2026-11-01）
+## 打开仓库：计时更正与重复读取（2026-11-01）
 
-`bun run bench:app -- --launches 3 --repo test-results/bench-repos/desktop`（Desktop 完整克隆，40 388 个提交、2 615 个文件，
-工作区干净），GitCub 为 debug 包，两边同一台机器、同一次运行交替启动，中位数：
+**更正**：此前各节 GitCub「打开仓库」的数字都不成立。脚本找的计数格式（`n/m`）早已不在界面上，读到的
+始终是 0，列表还没加载出来就停了表；此外 GitCub 一侧从整页重载开始计时，Desktop 一侧从添加对话框开始，
+起点也不同。本节起改为：
 
-| 应用 | 启动到就绪 (ms) | 启动到窗口 (ms) | 就绪后 RSS (MiB) | 打开仓库 (ms) | 打开仓库后 RSS (MiB) |
-|---|---:|---:|---:|---:|---:|
-| GitCub | 528 | 301 | 303 | 207 | 420 |
-| GitHub Desktop | 859 | 979 | 500 | 311 | 528 |
+- 两边都等改动列表显示**全部**改动才停表：先用 `git status --porcelain -uall` 数出预期个数，计数等于它才算。
+- 计时放在页面里：点击时记起点，`MutationObserver` 在计数达标那次 DOM 变动时记终点。外部轮询两边开销不同
+  （GitCub 每次起一个 hasgard 进程，Desktop 共用一个 DevTools 连接），只用来取结果。
+- Desktop：在「Add Local Repository」对话框里点提交。GitCub 添加仓库走系统文件夹选择框，脚本驱动不了，
+  改为从侧栏的小仓库切到被测仓库。Desktop 多一步添加校验，这一差别对 GitCub 有利，数字按此理解。
+- `--dirty N` 在合成仓库里再改 N/2 个已跟踪文件、加 N/2 个未跟踪文件。
 
-GitCub 从启动到打开仓库后 settle 只起 1 个顶层 git 进程（`var GIT_ATTR_SYSTEM`，每进程一次），之后空闲 0 个；
-合成仓库（5 万文件）结果相同。
+**发现并修掉的重复工作**（先在前端给 IPC 临时打点，按数据改，改后复测）：
 
-本次修正了脚本的计时：GitCub 一侧重载页面后原先固定 `sleep(500)` 再开始数改动列表，打开仓库的耗时因此
-不会低于约 510 ms（之前各次结果都是 509–512 ms）。改为重载前在旧页面上放一个标记，标记消失（新页面已在应答）
-就开始轮询，不再有固定等待；同一合成仓库从 511 ms 降到 207 ms，变化全部来自去掉的等待。Desktop 一侧本来就是轮询，
-不受影响。上面「应用启动与内存（2026-10-29）」一节的打开仓库数字含这段等待，偏高约 300 ms。
+1. 一次切换同时跑 3 次 `repo_status`：提交框与分支下拉各自取分支策略时又各读一遍 status，只为领先／落后。
+   改为策略不再读 status，提交框的 aheadBehind 渲染时取自仓库 store 的 status（Desktop 也取自仓库状态）。
+2. `lfs_state` 跟着每次刷新都会递增的 `reloadKey` 重跑，切换时还跑两遍，每次都完整遍历工作区找未跟踪的
+   `.gitattributes`；前端取消只丢结果，后端照跑。改为并进同一次刷新、排在 status 之后，未跟踪列表直接取自
+   这份 status（`-uall`、不含忽略），不再遍历；测试断言两种来源结论一致，并都与 `git lfs track` 对照。
+3. 换仓库那次提交里，加载 diff 的 effect 拿到的还是旧仓库的选中文件，在新仓库里起了一次 `git diff`。
+   改为从 store 取当前值。
+4. 刚 `git init`、没有 `.git/index` 的仓库，工作区 diff 快速路径打不开索引而回退 git；改为按空索引处理，
+   新增用例与 git 逐字节对照（含空文件）。
 
-未覆盖：release 包、冷启动（两边二进制都在页缓存里）、有大量改动的工作区。
+**结果**：`bun run bench:app -- --launches 5 [--dirty 5000 | --repo …] --app <release 包>`，同一次运行交替启动，中位数。
+release 包另编于 `target/bench`：hasgard 驱动只在 `debug_assertions` 下编入，所以用
+`CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true` 加 `--features hasgard-testing`。debug 包的 Rust 未优化，
+status 慢一个数量级，不用于和 Desktop 比较。
+
+| 仓库 | 改动 | GitCub 打开仓库 (ms) | Desktop 打开仓库 (ms) |
+|---|---:|---:|---:|
+| 合成 5 万文件 | 601 | 100 | 140 |
+| 合成 5 万文件 `--dirty 5000` | 5 585 | 102 | 143 |
+| Desktop 完整克隆（干净） | 0 | 30 | 31 |
+
+同一组改动前后（release 包、合成仓库 601 个改动，IPC 打点）：切换后 `repo_status` 从 3 次并发、每次约 140 ms，
+变为 1 次 67 ms；`lfs_state` 从 2 次各 130–200 ms 变为 1 次 14 ms；全部改动出现在点击后约 185 ms → 99 ms。
+
+git 进程：三个仓库从启动到打开后 settle 都只起 1 个（`var GIT_ATTR_SYSTEM`，每进程一次），空闲 0 个；
+改动前合成仓库多 2 个 `git diff`（上面第 3、4 条）。
+
+启动到就绪、启动到窗口（release 包，合成仓库这次）：GitCub 501 / 300 ms，Desktop 849 / 1004 ms。
+
+未覆盖：冷启动（两边二进制都在页缓存里）；GitCub 通过系统选择框添加仓库的整条路径。
 
 ## 复现
 

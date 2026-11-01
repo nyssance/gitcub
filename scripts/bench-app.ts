@@ -10,7 +10,16 @@
 // that appeared with GitCub (launchd starts them, so they are not its children). Both apps run on
 // a fresh profile and get the same repository; nothing of the developer's own data is touched.
 import { type ChildProcess, spawn } from "node:child_process"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from "node:fs"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import { basename, join } from "node:path"
@@ -31,6 +40,8 @@ interface Options {
   settle: number
   files: number
   commits: number
+  /** Working-tree changes made in the synthetic repository: half modified tracked files, half new untracked ones. */
+  dirty: number
 }
 
 interface Sample {
@@ -40,7 +51,8 @@ interface Sample {
   windowMs: number | null
   /** RSS sum of the process tree `settle` ms after ready, in KiB. */
   rssReadyKiB: number
-  /** Opening the repository: request → changes list rendered with every change counted. */
+  /** Opening the repository → changes list showing every change. Desktop: submit click in the Add Local Repository
+   *  dialog; GitCub: click on it in the repository rail, coming from a small repository (no picker to drive). */
   repositoryMs: number
   changes: number
   /** RSS sum `settle` ms after the changes list rendered, in KiB. */
@@ -62,7 +74,8 @@ function parseArguments(argv: string[]): Options {
     desktop: true,
     settle: 3000,
     files: 50_000,
-    commits: 200
+    commits: 200,
+    dirty: 0
   }
   for (let i = 0; i < argv.length; i++) {
     const argument = argv[i]!
@@ -98,6 +111,9 @@ function parseArguments(argv: string[]): Options {
         break
       case "--commits":
         options.commits = integer()
+        break
+      case "--dirty":
+        options.dirty = integer()
         break
       default:
         throw new Error(`Unknown option: ${argument}`)
@@ -284,23 +300,59 @@ async function hasgard(socket: string, expression: string) {
   return result as unknown
 }
 
+// Both apps' `add-existing-repository` dialog: the clock starts at the submit click, once validation has enabled it.
+const submitEnabledExpression = `(() => {
+  const button = document.querySelector('#add-existing-repository button[type="submit"]');
+  return !!button && !button.disabled;
+})()`
+
+// Timed inside the page on both sides: from the click to the DOM mutation that makes the list show every change.
+// Polling from outside costs differently per app (a hasgard process per poll against one DevTools socket), so it
+// only collects the result.
+const armExpression = (count: string, expected: number) => `(() => {
+  window.__benchStart = null;
+  window.__benchDone = null;
+  const check = () => {
+    if (window.__benchStart === null || window.__benchDone !== null) return;
+    const value = ${count};
+    if (value === ${expected}) window.__benchDone = [performance.now() - window.__benchStart, value];
+  };
+  new MutationObserver(check).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true });
+  return true;
+})()`
+const clickExpression = (click: string) =>
+  `(() => { window.__benchStart = performance.now(); ${click}; return true })()`
+const finishedExpression = "window.__benchDone"
+
+// The header (`sidebar.tsx`, locales `changes.fileCount` / `fileCountFiltered`) counts every change, rows only the
+// ones rendered: "603 changed files", "3 of 603 changed files"; "603 个文件已更改", "603 个中的 3 个".
 const gitcubChangesExpression = `(() => {
   const container = document.querySelector('.changes-list-container');
   if (!container) return -1;
-  const span = [...container.querySelectorAll('span[title]')].find(el => /^\\d+\\/\\d+$/.test(el.textContent.trim()));
-  return span ? Number(span.textContent.trim().split('/')[1]) : 0;
+  for (const span of container.querySelectorAll('label span')) {
+    const text = span.textContent.trim();
+    const match = text.match(/(\\d[\\d,]*) changed files?$/) || text.match(/^(\\d[\\d,]*) 个(?:文件已更改|中的)/);
+    if (match) return Number(match[1].replace(/,/g, ''));
+  }
+  return -1;
 })()`
 
-async function launchGitCub(bundle: string, repository: string, settle: number): Promise<Sample> {
+async function launchGitCub(bundle: string, repository: string, settle: number, expected: number): Promise<Sample> {
   const directory = mkdtempSync(join(tmpdir(), "gitcub-bench-app-"))
   const socket = join(directory, "hasgard.sock")
-  // The state GitCub restores on start: this one repository selected, the Desktop import already answered.
+  // GitCub adds repositories through the system folder picker (`app.tsx` pickRepo), which a script cannot drive, so it is
+  // timed switching from a small repository to this one: both listed under "Mine", the small one selected on start.
+  // Its untracked count differs from the measured one, so a stale header never satisfies the wait.
+  const small = join(directory, "small")
+  mkdirSync(small)
+  Bun.spawnSync(["git", "-C", small, "init", "-q", "-b", "main"])
+  for (let i = 0; i < (expected === 1 ? 2 : 1); i++) writeFileSync(join(small, `untracked-${i}`), "")
   writeFileSync(
     join(directory, "state.json"),
     JSON.stringify({
-      repositories: [repository],
-      selectedRepository: repository,
-      repoOwnership: { [repository]: "mine" },
+      repositories: [small, repository],
+      selectedRepository: small,
+      repoOwnership: { [small]: "mine", [repository]: "mine" },
       desktopImportHandled: true
     })
   )
@@ -343,22 +395,37 @@ async function launchGitCub(bundle: string, repository: string, settle: number):
     stop.done = true
     await sleep(settle)
     const ready = await processTree(child.pid!, helpersBefore)
-    // The fresh profile shows the welcome flow; mark it complete and reload like a returning user whose
-    // last selected repository is this one (tests/macos/live-account-errors.ts does the same).
-    const opened = performance.now()
+    // The fresh profile shows the welcome flow; mark it complete and reload like a returning user
+    // (tests/macos/live-account-errors.ts does the same). The marker lives on the old page only.
     await hasgard(
       socket,
       "(() => { window.__benchReloading = true; localStorage.setItem('has-shown-welcome-flow', '1'); location.reload(); return true })()"
     )
-    // The marker lives on the old page only: counting starts once the reloaded page answers, with no fixed wait
-    const changes = await until(
+    await until(
+      () => hasgard(socket, `!window.__benchReloading && ${readyExpression}`).catch(() => false),
+      ready => ready === true,
+      60,
+      "GitCub reloaded"
+    )
+    const target = `document.querySelector(${JSON.stringify(`button[title="${repository}"]`)})`
+    await until(
       () =>
-        hasgard(socket, `window.__benchReloading ? -1 : ${gitcubChangesExpression}`).catch(() => -1) as Promise<number>,
-      count => count >= 0,
+        hasgard(socket, `${gitcubChangesExpression} === ${expected === 1 ? 2 : 1} && !!${target}`).catch(() => false),
+      shown => shown === true,
+      60,
+      "GitCub small repository"
+    )
+    await hasgard(
+      socket,
+      armExpression(`${target}?.getAttribute('aria-current') === 'page' ? ${gitcubChangesExpression} : -1`, expected)
+    )
+    await hasgard(socket, clickExpression(`${target}.click()`))
+    const [repositoryMs, changes] = await until(
+      () => hasgard(socket, finishedExpression).catch(() => null) as Promise<[number, number] | null>,
+      done => done !== null,
       120,
       "GitCub changes list"
-    )
-    const repositoryMs = performance.now() - opened
+    ).then(done => done!)
     await sleep(settle)
     const afterRepository = await processTree(child.pid!, helpersBefore)
     const idleFrom = traceSize(directory)
@@ -507,7 +574,7 @@ const desktopChangesExpression = `(() => {
   return document.querySelectorAll('.changes-list-container .list-item').length;
 })()`
 
-async function launchDesktop(repository: string, settle: number): Promise<Sample> {
+async function launchDesktop(repository: string, settle: number, expected: number): Promise<Sample> {
   const directory = mkdtempSync(join(tmpdir(), "github-desktop-bench-app-"))
   const profile = join(directory, "profile")
   mkdirSync(profile)
@@ -564,7 +631,6 @@ async function launchDesktop(repository: string, settle: number): Promise<Sample
     // (`app/src/main-process/main.ts` handleCLIAction → `app/src/ui/index.tsx` ipcRenderer.on('cli-action')).
     // Emitting it on the renderer side, as Desktop's own E2E tests do for menu events, opens the
     // Add Repository dialog with the path filled in; its submit button is clicked in the DOM.
-    const opened = performance.now()
     await devtools.evaluate(
       `(() => { require('electron').ipcRenderer.emit('cli-action', {}, { kind: 'open-repository', path: ${JSON.stringify(repository)} }); return true })()`
     )
@@ -576,28 +642,22 @@ async function launchDesktop(repository: string, settle: number): Promise<Sample
       100
     )
     await until(
-      () =>
-        devtools
-          .evaluate(
-            `(() => {
-          const button = document.querySelector('#add-existing-repository button[type="submit"]');
-          if (button && !button.disabled) button.click();
-          return !document.querySelector('#add-existing-repository');
-        })()`
-          )
-          .catch(() => false),
-      closed => closed === true,
+      () => devtools.evaluate(submitEnabledExpression).catch(() => false),
+      enabled => enabled === true,
       60,
-      "Desktop add repository dialog",
-      200
+      "Desktop add repository button",
+      50
     )
-    const changes = await until(
-      () => devtools.evaluate(desktopChangesExpression).catch(() => -1) as Promise<number>,
-      count => count >= 0,
+    await devtools.evaluate(armExpression(desktopChangesExpression, expected))
+    await devtools.evaluate(
+      clickExpression(`document.querySelector('#add-existing-repository button[type="submit"]').click()`)
+    )
+    const [repositoryMs, changes] = await until(
+      () => devtools.evaluate(finishedExpression).catch(() => null) as Promise<[number, number] | null>,
+      done => done !== null,
       120,
       "Desktop changes list"
-    )
-    const repositoryMs = performance.now() - opened
+    ).then(done => done!)
     await sleep(settle)
     const afterRepository = await processTree(child.pid!, helpersBefore)
     return {
@@ -679,14 +739,41 @@ try {
     repository = join(scratch, `synthetic-${options.files}-files`)
     console.log(`Preparing ${repository} (${options.files} files, ${options.commits} commits)…`)
     createSyntheticRepository(repository, options.files, options.commits)
-  }
+    if (options.dirty > 0) {
+      const modified = Math.min(Math.ceil(options.dirty / 2), options.files)
+      for (let i = 0; i < modified; i++) {
+        const path = join(repository, `src/module-${String(Math.floor(i / 100)).padStart(4, "0")}/file-${i % 100}.ts`)
+        appendFileSync(path, "// dirty\n")
+      }
+      mkdirSync(join(repository, "untracked"))
+      for (let i = modified; i < options.dirty; i++) writeFileSync(join(repository, `untracked/new-${i}.ts`), `${i}\n`)
+      console.log(`Dirtied: ${modified} modified, ${options.dirty - modified} untracked`)
+    }
+  } else if (options.dirty > 0) throw new Error("--dirty only applies to the synthetic repository")
+  // The list counts as rendered only once it shows every change: a 0 drawn before status lands would stop the clock early
+  const status = Bun.spawnSync([
+    "git",
+    "--no-optional-locks",
+    "-C",
+    repository,
+    "status",
+    "--porcelain=v1",
+    "-z",
+    "-uall"
+  ])
+  if (status.exitCode !== 0) throw new Error(`git status failed: ${status.stderr.toString()}`)
+  const expected = status.stdout
+    .toString()
+    .split("\0")
+    .filter(entry => /^.. /.test(entry)).length
+  console.log(`Expected changes: ${expected}`)
   for (let launch = 1; launch <= options.launches; launch++) {
     console.log(`Launch ${launch}/${options.launches}: GitCub…`)
-    gitcub.push(await launchGitCub(bundle, repository, options.settle))
+    gitcub.push(await launchGitCub(bundle, repository, options.settle, expected))
     await sleep(1000)
     if (compareDesktop) {
       console.log(`Launch ${launch}/${options.launches}: GitHub Desktop…`)
-      desktop.push(await launchDesktop(repository, options.settle))
+      desktop.push(await launchDesktop(repository, options.settle, expected))
       await sleep(1000)
     }
   }

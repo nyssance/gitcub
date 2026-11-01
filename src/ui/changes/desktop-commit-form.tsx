@@ -5,6 +5,7 @@ import { useAccountsStore } from "../../features/accounts/store"
 import { useChangesStore } from "../../features/changes/store"
 import { useDialogsStore } from "../../features/dialogs/store"
 import { usePreferencesStore } from "../../features/preferences/store"
+import { useRepositoryStore } from "../../features/repository/store"
 import { getHTMLURL } from "../../lib/api"
 import { getCommits } from "../../lib/commit-history"
 import { getPlaceholderMessage } from "../../lib/commit-placeholder"
@@ -56,6 +57,11 @@ export function DesktopCommitForm(props: Props) {
   const [accounts, setAccounts] = useState(runtime.appStore.getState().accounts)
   const platformAccounts = useAccountsStore(s => s.accounts)
   const policy = useRepositoryPolicy(props.repo, props.branch, accounts)
+  // Desktop 的 aheadBehind 来自仓库状态（commit-message.tsx 的 props 由 repositoryState 给出），不另读一次 status
+  const hasUpstream = useRepositoryStore(s => s.status.hasUpstream)
+  const ahead = useRepositoryStore(s => s.status.ahead)
+  const behind = useRepositoryStore(s => s.status.behind)
+  const aheadBehind = useMemo(() => (hasUpstream ? { ahead, behind } : null), [hasUpstream, ahead, behind])
   const repository = policy.repository
   const [author, setAuthor] = useState(props.author)
   const [coAuthors, setCoAuthors] = useState<readonly Author[]>([])
@@ -212,7 +218,7 @@ export function DesktopCommitForm(props: Props) {
         prepopulateCommitSummary={prepopulate && !props.unresolved}
         showBranchProtected={policy.protected}
         repoRulesInfo={policy.rules}
-        aheadBehind={policy.aheadBehind}
+        aheadBehind={aheadBehind}
         showNoWriteAccess={policy.noWrite}
         coAuthors={coAuthors}
         showCoAuthoredBy={showCoAuthors}

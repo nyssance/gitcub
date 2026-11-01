@@ -358,9 +358,6 @@ export function App() {
     void ipc.watchRepo(repo).catch(error => log.warn("Unable to watch repository", error))
   }, [repo, stateLoaded])
 
-  // reloadKey 是 Git 操作后的显式刷新信号，LFS 状态要跟着重新查询
-  useEffect(() => useRepositoryStore.getState().loadLfs(repo), [repo, reloadKey])
-
   const currentRemote = remotes[repo ?? ""]
   useEffect(() => useRepositoryStore.getState().loadCompletions(repo, currentRemote), [repo, currentRemote])
 
@@ -418,10 +415,12 @@ export function App() {
 
   // A second edit leaves the porcelain status unchanged. The watcher refresh
   // revision must also invalidate the selected diff and syntax tokens.
-  useEffect(
-    () => useChangesStore.getState().loadDiff(repo, selected, status.changes),
-    [repo, selected, status.changes, diffKey]
-  )
+  // 换仓库的那次提交里，上面的 reset 已经清掉了选择与状态，而这次渲染拿到的 selected / status 还是旧仓库的：
+  // 从 store 取当前值，旧仓库的文件不会拿去新仓库里起一次 git diff（取消只丢结果，后端进程照样跑完）
+  useEffect(() => {
+    const current = useChangesStore.getState()
+    return current.loadDiff(repo, current.selected, useRepositoryStore.getState().status.changes)
+  }, [repo, selected, status.changes, diffKey])
 
   /** 克隆：先让用户选父目录，仓库名从 URL 推出来。 */
   const doClone = async (url: string) => {

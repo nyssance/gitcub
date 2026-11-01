@@ -1449,8 +1449,17 @@ fn main() {
         ),
         (
             "lfs-state",
-            "lfs_state (打开仓库和每次 Git 操作后)",
-            measure(iterations, || usize::from(lfs::state(repo).used)),
+            "lfs_state (每次刷新，接在 status 之后，未跟踪列表取自 status)",
+            {
+                let untracked: Vec<String> = status::status(repo)
+                    .expect("status")
+                    .changes
+                    .into_iter()
+                    .filter(|change| matches!(change.kind, status::ChangeKind::Untracked))
+                    .map(|change| change.path)
+                    .collect();
+                measure(iterations, || usize::from(lfs::state(repo, Some(&untracked)).used))
+            },
             measure(iterations, || {
                 // Desktop `isUsingLFS`（app/src/lib/git/lfs.ts）；Desktop 只在添加仓库时跑。
                 let out = Command::new("git")
