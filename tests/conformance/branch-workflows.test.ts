@@ -24,7 +24,11 @@ const clean: RepoStatus = {
   ahead: 1,
   behind: 0,
   operation: null,
-  theirs: null
+  theirs: null,
+  unborn: false,
+  head: null,
+  fetchHead: null,
+  pullWithRebase: null
 }
 const dirty: RepoStatus = {
   ...clean,

@@ -3,10 +3,13 @@ import equal from "deep-equal"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePreferencesStore } from "@/features/preferences/store"
+import { useRepositoryStore } from "@/features/repository/store"
 import { type IMenu, menuFromElectronMenu } from "@/models/app-menu"
 import { Repository } from "@/models/repository"
 
 import { getRemoteHEAD } from "../desktop-git"
+import { ForcePushBranchState, getCurrentBranchForcePushState } from "../force-push-state"
 import { contributesToParent, contributionRepository } from "../fork-contribution"
 import { ipc } from "../ipc"
 import { sameHostedRepository } from "../pull-request-checkout"
@@ -37,6 +40,11 @@ export function useNativeMenu(context: NativeMenuContext) {
   const editorName = integrations.find(app => app.bundleId === state?.externalEditor)?.name ?? state?.externalEditor
   const shellName = integrations.find(app => app.bundleId === state?.externalTerminal)?.name ?? state?.externalTerminal
   const repo = state?.selectedRepository
+  const forcePushBranches = useRepositoryStore(s => (repo ? s.forcePushBranches[repo] : undefined))
+  const askForConfirmationOnForcePush = usePreferencesStore(s => s.confirmForcePush)
+  // Desktop menu-update：isForcePushForCurrentRepository = forcePushBranchState === Recommended
+  const isForcePushForCurrentRepository =
+    getCurrentBranchForcePushState(status, forcePushBranches) === ForcePushBranchState.Recommended
   const [defaultBranch, setDefaultBranch] = useState<string>()
   const [hasCurrentPullRequest, setHasCurrentPullRequest] = useState(false)
   // Desktop AppMenu 模型：空白页的建议动作按菜单 id 找标签、快捷键和可用性
@@ -89,14 +97,14 @@ export function useNativeMenu(context: NativeMenuContext) {
     const templates = buildDefaultMenuTemplate({
       selectedExternalEditor: editorName || null,
       selectedShell: shellName || null,
-      askForConfirmationOnForcePush: true,
+      askForConfirmationOnForcePush,
       askForConfirmationOnRepositoryRemoval: true,
       askForConfirmationWhenStashingAllChanges: false,
       isStashedChangesVisible: stashesVisible,
       isChangesFilterVisible: filterVisible,
       contributionTargetDefaultBranch: defaultBranch,
       hasCurrentPullRequest,
-      isForcePushForCurrentRepository: status.hasUpstream && status.ahead > 0 && status.behind > 0
+      isForcePushForCurrentRepository
     })
     const enabled = repositoryMenuState(menuContext, defaultBranch)
     const apply = (items: MenuTemplate[]) => {
@@ -153,7 +161,9 @@ export function useNativeMenu(context: NativeMenuContext) {
     i18n,
     t,
     editorName,
-    shellName
+    shellName,
+    askForConfirmationOnForcePush,
+    isForcePushForCurrentRepository
   ])
   // 设置里选的编辑器名：改动行右键菜单的「用 … 打开」和原生菜单用同一个；
   // 菜单模型、默认分支和「当前分支已有 PR」给空白页的建议动作

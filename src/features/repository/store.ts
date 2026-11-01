@@ -36,7 +36,25 @@ export const EMPTY_STATUS: RepoStatus = {
   ahead: 0,
   behind: 0,
   operation: null,
-  theirs: null
+  theirs: null,
+  unborn: false,
+  head: null,
+  fetchHead: null,
+  pullWithRebase: null
+}
+
+/** Desktop Progress（models/progress.ts）里推拉按钮用到的部分：标题、说明、0–1 的进度 */
+export interface NetworkProgress {
+  kind: "push" | "pull" | "fetch"
+  title: string
+  description?: string
+  value: number
+}
+
+/** Desktop git-store updateLastFetched：FETCH_HEAD 为空多半是拉取失败，沿用上一次的时间；没有这个文件就是从没拉取过 */
+export function nextLastFetched(fetchHead: RepoStatus["fetchHead"], previous: Date | null): Date | null {
+  if (fetchHead === null) return null
+  return fetchHead.empty ? previous : new Date(fetchHead.modifiedMs)
 }
 
 interface RepositoryStore {
@@ -56,6 +74,24 @@ interface RepositoryStore {
   error: string | null
   busy: boolean
   progress: string
+  /** 推送、拉取、获取进行中（Desktop networkActionInProgress 与 pushPullFetchProgress） */
+  networkProgress: NetworkProgress | null
+  /** Desktop gitStore.lastFetched：推拉按钮下面那行「Last fetched …」 */
+  lastFetched: Date | null
+  /** Desktop branchesState.forcePushBranches：本应用改写过（修订、变基、压缩、重排）的分支 → 改写后的提交。
+   *  分支还停在这个提交上且与上游分叉时，推拉按钮建议强推。只在本次运行内记住，按仓库分开 */
+  forcePushBranches: Record<string, Record<string, string>>
+  /** 变基停在冲突上时，改写前的 HEAD 先记在这里，「继续」做完再结算 */
+  pendingRewrites: Record<string, string | null>
+  /** Desktop updatePushPullFetchProgress：只认当前仓库的进度，切走之后旧仓库的进度不再显示 */
+  setNetworkProgress: (repo: string, progress: NetworkProgress | null) => void
+  /** Desktop _addBranchToForcePushList：改写前的提交与刷新后的 HEAD 不同才记 */
+  addBranchToForcePushList: (repo: string, beforeChangeSha: string | null) => void
+  /** 修订、变基、压缩、重排刷新之后调用（Desktop 在多提交操作完成时记）：还停在变基里就先挂起；
+   *  不给 before 表示结算挂起的那次（冲突解决后「继续」），没有挂起就什么都不做 */
+  settleRewrite: (repo: string, before?: string | null) => void
+  /** 中止变基：挂起的那次不再记 */
+  dropRewrite: (repo: string) => void
   refresh: () => Promise<void>
   /** 换仓库时调用；返回的函数取消这个仓库的刷新。 */
   bind: (repo: string | null) => () => void
@@ -93,6 +129,8 @@ const refreshRepository = (repo: string | null) =>
     useAccountsStore.getState().setRemote(repo, remote)
     // 文件监听在构建这类场景下会反复触发刷新；内容没变就不换对象，改动列表不白重绘
     if (!equal(getState().status, next)) setState({ status: next })
+    const lastFetched = nextLastFetched(next.fetchHead, getState().lastFetched)
+    if (lastFetched?.getTime() !== getState().lastFetched?.getTime()) setState({ lastFetched })
     setState(store => ({ diffKey: store.diffKey + 1 }))
     // LFS 规则只可能来自 .gitattributes 等文件：同一次刷新里接着查，未跟踪的那些直接用这份 status，
     // 后端不必再遍历工作区；与 status 串行，不和它抢磁盘。查不到只当没用 LFS，不报错
@@ -125,6 +163,38 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   error: null,
   busy: false,
   progress: "",
+  networkProgress: null,
+  lastFetched: null,
+  forcePushBranches: {},
+  pendingRewrites: {},
+  setNetworkProgress: (repo, networkProgress) => {
+    if (repo === activeRepository()) set({ networkProgress })
+  },
+  settleRewrite: (repo, before) => {
+    const { status, pendingRewrites } = get()
+    const pending = before === undefined ? pendingRewrites[repo] : before
+    if (pending === undefined) return
+    if (status.operation === "rebase") {
+      set({ pendingRewrites: { ...pendingRewrites, [repo]: pending } })
+      return
+    }
+    get().dropRewrite(repo)
+    get().addBranchToForcePushList(repo, pending)
+  },
+  dropRewrite: repo => {
+    const { [repo]: _, ...rest } = get().pendingRewrites
+    set({ pendingRewrites: rest })
+  },
+  addBranchToForcePushList: (repo, beforeChangeSha) => {
+    const { status, forcePushBranches } = get()
+    if (repo !== activeRepository() || !status.branch || !status.head || status.head === beforeChangeSha) return
+    set({
+      forcePushBranches: {
+        ...forcePushBranches,
+        [repo]: { ...forcePushBranches[repo], [status.branch]: status.head }
+      }
+    })
+  },
   refresh: () => Promise.resolve(),
   bind: repo => {
     const runner = createCoalescingRunner(signal => runPromise(refreshRepository(repo), { signal }))
@@ -132,7 +202,8 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
     void runner()
     return () => runner.cancel()
   },
-  reset: () => set({ status: EMPTY_STATUS, stashList: [], lfs: null, error: null }),
+  reset: () =>
+    set({ status: EMPTY_STATUS, stashList: [], lfs: null, lastFetched: null, networkProgress: null, error: null }),
   run: operation => {
     if (locked || get().busy) return Promise.resolve(undefined)
     const repo = activeRepository()

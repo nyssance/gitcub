@@ -100,6 +100,38 @@ pub struct RepoStatus {
     pub operation: Option<crate::ops::Operation>,
     /// 「对面」那条分支：合并时是被合进来的那条，变基时是变基到的那条。
     pub theirs: Option<String>,
+    /// 当前分支还没有任何提交（Desktop TipState.Unborn）
+    pub unborn: bool,
+    /// HEAD 指向的提交；未诞生分支为 None。Desktop 拿它判断改写过的分支是否仍在原处（forcePushBranches）
+    pub head: Option<String>,
+    /// git 目录里的 FETCH_HEAD：Desktop git-store updateLastFetched 用它的修改时间当「上次拉取」
+    pub fetch_head: Option<FetchHead>,
+    /// Desktop git-store checkPullWithRebase：`pull.rebase` 原样是 "true" / "false" 才有值，其余（没设、merges 等）为 None
+    pub pull_with_rebase: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FetchHead {
+    /// 修改时间，Unix 毫秒
+    pub modified_ms: f64,
+    /// 空文件多半是拉取失败了，Desktop 这时不更新上次拉取时间
+    pub empty: bool,
+}
+
+fn pull_with_rebase(value: Option<&str>) -> Option<bool> {
+    match value {
+        Some("true") => Some(true),
+        Some("false") => Some(false),
+        _ => None,
+    }
+}
+
+/// `<git 目录>/FETCH_HEAD`（每个工作树各一份，Desktop 用 resolvedGitDir）；读不到就是从没拉取过
+fn fetch_head(git_dir: &Path) -> Option<FetchHead> {
+    let metadata = std::fs::metadata(git_dir.join("FETCH_HEAD")).ok()?;
+    let modified = metadata.modified().ok()?.duration_since(std::time::UNIX_EPOCH).ok()?;
+    Some(FetchHead { modified_ms: modified.as_secs_f64() * 1000.0, empty: metadata.len() == 0 })
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -656,7 +688,26 @@ pub(crate) fn status_tuned(repo_path: &Path, tuning: Tuning) -> Result<RepoStatu
         None => (None, None),
     };
 
-    Ok(RepoStatus { branch, changes, remote, has_upstream, ahead, behind, operation, theirs })
+    let unborn = repo.head().map(|head| head.is_unborn()).unwrap_or(false);
+    let head = repo.head_id().ok().map(|id| id.to_string());
+    let fetch_head = fetch_head(repo.path());
+    let pull_rebase = config.string("pull.rebase");
+    let pull_with_rebase = pull_with_rebase(pull_rebase.as_ref().and_then(|v| std::str::from_utf8(v).ok()));
+
+    Ok(RepoStatus {
+        branch,
+        changes,
+        remote,
+        has_upstream,
+        ahead,
+        behind,
+        operation,
+        theirs,
+        unborn,
+        head,
+        fetch_head,
+        pull_with_rebase,
+    })
 }
 
 /// Desktop git-store `loadRemotes`: the tracked remote only when it is a configured remote, otherwise the
@@ -1169,6 +1220,46 @@ mod tests {
         String::from_utf8_lossy(&o.stdout).into_owned()
     }
 
+    /// Desktop TipState.Unborn 与 git-store updateLastFetched：没有提交时是 unborn；FETCH_HEAD 在
+    /// 拉取之后出现，取它的修改时间，空文件标出来；链接工作树读自己 git 目录里的那份
+    #[test]
+    fn 未诞生分支与上次拉取() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = dir.path().join("repo");
+        std::fs::create_dir(&r).unwrap();
+        git(&r, &["init", "-q", "-b", "main"]);
+        let fresh = status(&r).unwrap();
+        assert!(fresh.unborn);
+        assert!(fresh.fetch_head.is_none());
+        git(
+            &r,
+            &["-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "--allow-empty", "-m", "base"],
+        );
+        let born = status(&r).unwrap();
+        assert!(!born.unborn);
+        assert_eq!(born.head.as_deref(), Some(git(&r, &["rev-parse", "HEAD"]).trim()));
+        assert!(fresh.head.is_none());
+        let upstream = dir.path().join("upstream.git");
+        git(&r, &["clone", "-q", "--bare", ".", upstream.to_str().unwrap()]);
+        git(&r, &["remote", "add", "origin", upstream.to_str().unwrap()]);
+        git(&r, &["fetch", "-q", "origin"]);
+        let fetched = status(&r).unwrap().fetch_head.expect("FETCH_HEAD after fetch");
+        assert!(!fetched.empty);
+        let mtime = std::fs::metadata(r.join(".git/FETCH_HEAD")).unwrap().modified().unwrap();
+        let expected = mtime.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64() * 1000.0;
+        assert_eq!(fetched.modified_ms, expected);
+        std::fs::write(r.join(".git/FETCH_HEAD"), "").unwrap();
+        assert!(status(&r).unwrap().fetch_head.unwrap().empty);
+        assert_eq!(status(&r).unwrap().pull_with_rebase, None);
+        for (value, expected) in [("true", Some(true)), ("false", Some(false)), ("merges", None)] {
+            git(&r, &["config", "pull.rebase", value]);
+            assert_eq!(status(&r).unwrap().pull_with_rebase, expected, "pull.rebase={value}");
+        }
+        let linked = dir.path().join("linked");
+        git(&r, &["worktree", "add", "-q", "-b", "linked", linked.to_str().unwrap()]);
+        assert!(status(&linked).unwrap().fetch_head.is_none(), "链接工作树还没拉取过");
+    }
+
     #[test]
     fn 摘要与完整_status_的分支_远端_领先与冲突一致() {
         let dir = tempfile::tempdir().unwrap();
@@ -1204,12 +1295,8 @@ mod tests {
         assert!(light.has_upstream && full.has_upstream);
         assert_eq!((light.ahead, light.behind), (1, 0));
         assert_eq!((light.ahead, light.behind), (full.ahead, full.behind));
-        let mut expected: Vec<_> = full
-            .changes
-            .iter()
-            .filter(|c| c.change == ChangeType::Conflicted)
-            .map(|c| c.path.clone())
-            .collect();
+        let mut expected: Vec<_> =
+            full.changes.iter().filter(|c| c.change == ChangeType::Conflicted).map(|c| c.path.clone()).collect();
         expected.sort();
         assert_eq!(light.conflicts, vec!["a.txt".to_string()]);
         assert_eq!(light.conflicts, expected);

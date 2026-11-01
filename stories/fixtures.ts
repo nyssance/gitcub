@@ -30,7 +30,11 @@ export const status: RepoStatus = {
   ahead: 0,
   behind: 0,
   operation: null,
-  theirs: null
+  theirs: null,
+  unborn: false,
+  head: null,
+  fetchHead: null,
+  pullWithRebase: null
 }
 /** 待办页的摘要：只有引用和索引能回答的事，与 status.rs 的 RepoSummary 对应 */
 export const summary: RepoSummary = {

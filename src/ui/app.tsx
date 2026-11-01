@@ -13,7 +13,7 @@ import { useHistoryStore } from "@/features/history/store"
 import { usePreferencesStore } from "@/features/preferences/store"
 import { usePullRequestsStore } from "@/features/pull-requests/store"
 import { useRepositoryIndicatorsStore } from "@/features/repository-indicators/store"
-import { useRepositoryStore } from "@/features/repository/store"
+import { type NetworkProgress, useRepositoryStore } from "@/features/repository/store"
 import { useWorkspaceStore } from "@/features/workspace/store"
 import { accountRemoteFor } from "@/lib/account-host"
 import {
@@ -25,6 +25,8 @@ import {
 } from "@/lib/branch-workflows"
 import { getGlobalConfigValue, getRemoteHEAD } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
+import { fetch as fetchRemote, pull as pullRemote } from "@/lib/fetch"
+import { ForcePushBranchState, getCurrentBranchForcePushState } from "@/lib/force-push-state"
 import { contributesToParent, contributionRepository } from "@/lib/fork-contribution"
 import type { HookCallbackOptions } from "@/lib/git-execution"
 import i18n from "@/lib/i18n"
@@ -112,7 +114,6 @@ export function App() {
   const error = useRepositoryStore(s => s.error)
   const setError = useRepositoryStore(s => s.setError)
   const busy = useRepositoryStore(s => s.busy)
-  const operationProgress = useRepositoryStore(s => s.progress)
   const showProgress = useRepositoryStore(s => s.showProgress)
   const refresh = useRepositoryStore(s => s.refresh)
   const run = useRepositoryStore(s => s.run)
@@ -200,6 +201,9 @@ export function App() {
   const sidebarPanel = useRef<PanelImperativeHandle>(null)
 
   const repo = state?.selectedRepository ?? null
+  const forcePushBranches = useRepositoryStore(s => (repo ? s.forcePushBranches[repo] : undefined))
+  // Desktop getCurrentBranchForcePushState：推拉按钮、菜单与空白页建议共用
+  const forcePushBranchState = getCurrentBranchForcePushState(status, forcePushBranches)
   const stateLoaded = state !== null
   const repositories = useMemo(() => state?.repositories ?? [], [state?.repositories])
 
@@ -530,13 +534,30 @@ export function App() {
   // Desktop performPull: without a current remote the pull fails with "The repository has no remotes.";
   // fetching every remote of an empty list does nothing. A bare "origin" would be a relative path to Git.
   // Desktop _pull 的 onHookFailure：选了中止就当没拉，不报错
+  /** Desktop pushPullFetchProgress：推送、拉取、获取从开始到结束，进度挂在推拉按钮上 */
+  const withNetworkProgress = async <T,>(
+    path: string,
+    operation: (onProgress: (progress: NetworkProgress) => void) => Promise<T>
+  ) => {
+    const { setNetworkProgress } = useRepositoryStore.getState()
+    try {
+      return await operation(progress => setNetworkProgress(path, progress))
+    } finally {
+      setNetworkProgress(path, null)
+    }
+  }
   const pullCurrent = (path: string) => {
-    if (!status.remote) return Promise.reject(new BranchWorkflowError("noRemotes"))
+    const remote = useRepositoryStore.getState().status.remote
+    if (!remote) return Promise.reject(new BranchWorkflowError("noRemotes"))
     const { onHookFailure, ignoreAborted } = hookFailureHandling()
-    return ignoreAborted(ipc.pull(path, status.remote, { onHookFailure }), undefined)
+    return withNetworkProgress(path, progressCallback =>
+      ignoreAborted(pullRemote({ path }, { name: remote }, { onHookFailure, progressCallback }), undefined)
+    )
   }
   const fetchCurrent = async (path: string) => {
-    if (status.remote) await ipc.fetch(path, status.remote)
+    const remote = useRepositoryStore.getState().status.remote
+    if (remote)
+      await withNetworkProgress(path, progressCallback => fetchRemote({ path }, { name: remote }, progressCallback))
   }
   /** Keep confirmation, transport and recovery inside one operation lock. */
   const confirmBranchStash = (name: string, current: string) => ask(t("branch.stashConfirm", { name, current }))
@@ -593,7 +614,17 @@ export function App() {
           {
             ...ipc,
             push: (path, remote, branch, target, forceWithLease) =>
-              push({ path }, { name: remote }, branch, target, null, { forceWithLease, onHookFailure })
+              withNetworkProgress(path, progressCallback =>
+                push(
+                  { path },
+                  { name: remote },
+                  branch,
+                  target,
+                  null,
+                  { forceWithLease, onHookFailure },
+                  progressCallback
+                )
+              )
           },
           () => ask(t("push.needsPull")),
           () => ask(t("push.forceConfirm"), "confirmForcePush")
@@ -689,6 +720,15 @@ export function App() {
     return ask(t(pushed ? "history.rewritePushed" : "history.rewriteConfirm", { what }))
   }
 
+  /** 修订、变基、压缩、重排：Desktop 在多提交操作完成（与修订提交后）把改写过的分支记进 forcePushBranches */
+  const rewrite = async <T,>(operation: () => Promise<T>) => {
+    const repository = repo
+    const before = useRepositoryStore.getState().status.head
+    const result = await run(operation)
+    if (repository) useRepositoryStore.getState().settleRewrite(repository, before)
+    return result
+  }
+
   const doCherryPickMany = async (shas: string[]) => {
     if (!repo) return
     await run(async () => {
@@ -713,7 +753,7 @@ export function App() {
     if (!target) return
     const oldest = headCommits.findIndex(c => c.sha === target.sha)
     if (!(await confirmRewrite(oldest, t("history.squashSelected")))) return
-    await run(() =>
+    await rewrite(() =>
       ipc.squashCommits(
         repo,
         chosen.slice(0, -1).map(c => c.sha),
@@ -731,7 +771,7 @@ export function App() {
     if (!repo || !c || !parent) return
     if (!(await confirmRewrite(index + 1, t("history.squashWhat", { a: c.summary, b: parent.summary })))) return
     // 不给信息 = 用 git 拼好的默认信息（两条摘要都留着）
-    void run(() => ipc.squashCommits(repo, [c.sha], parent.sha, headCommits[index + 2]?.sha ?? null, ""))
+    void rewrite(() => ipc.squashCommits(repo, [c.sha], parent.sha, headCommits[index + 2]?.sha ?? null, ""))
   }
 
   /** 把第 from 条提交拖到第 to 条的位置上。
@@ -749,7 +789,9 @@ export function App() {
     // 这次重写会碰到的最老那条：落点和原位置里更老的那个
     const oldest = Math.max(from, Math.max(0, beforeAt))
     if (!(await confirmRewrite(oldest, t("history.moveWhat", { a: moving.summary })))) return
-    void run(() => ipc.reorderCommits(repo, [moving.sha], before?.sha ?? null, headCommits[oldest + 1]?.sha ?? null))
+    void rewrite(() =>
+      ipc.reorderCommits(repo, [moving.sha], before?.sha ?? null, headCommits[oldest + 1]?.sha ?? null)
+    )
   }
 
   /** 把第 index 个提交和相邻的那个换位置。
@@ -764,7 +806,7 @@ export function App() {
     const before = headCommits[beforeAt]
     if (!moving || !before) return
     if (!(await confirmRewrite(beforeAt, t("history.moveWhat", { a: moving.summary })))) return
-    void run(() => ipc.reorderCommits(repo, [moving.sha], before.sha, headCommits[beforeAt + 1]?.sha ?? null))
+    void rewrite(() => ipc.reorderCommits(repo, [moving.sha], before.sha, headCommits[beforeAt + 1]?.sha ?? null))
   }
 
   /** 合并分支。先在内存里试合一次，会撞车就把数目摆出来让用户决定——
@@ -1401,7 +1443,10 @@ export function App() {
                 repo={repo}
                 status={status}
                 busy={busy}
-                progress={operationProgress}
+                forcePushBranchState={forcePushBranchState}
+                hostedPlatform={
+                  selectedRemote ? (accounts[selectedRemote.host]?.kind === "gitlab" ? "GitLab" : "GitHub") : null
+                }
                 onCheckout={b => doCheckout(b)}
                 onCreateBranch={(name, startPoint, noTrack) =>
                   run(async () => {
@@ -1411,7 +1456,7 @@ export function App() {
                 }
                 onDeleteBranch={doDeleteBranch}
                 onMergeBranch={(name, squash) => doMerge(name, squash)}
-                onRebaseBranch={name => run(() => ipc.rebaseBranch(repo, name, showProgress))}
+                onRebaseBranch={name => rewrite(() => ipc.rebaseBranch(repo, name, showProgress))}
                 onRenameBranch={from => {
                   void askText(t("branch.renameTo"), from).then(to => {
                     if (to && to !== from) void run(() => ipc.renameBranch(repo, from, to))
@@ -1422,7 +1467,7 @@ export function App() {
                 onPush={() => void doPush()}
                 onPull={() => run(() => pullCurrent(repo))}
                 onFetch={() => run(() => fetchCurrent(repo))}
-                onPublish={() => setPublishing(true)}
+                onForcePush={() => void doPush(true)}
                 onWorktrees={() => setWorktreesOpen(true)}
                 onOpenWorktree={path => {
                   patch({ repositories: [path, ...state.repositories.filter(r => r !== path)] })
@@ -1558,8 +1603,16 @@ export function App() {
                           theirs={status.theirs}
                           onResolve={(file, keep) => void run(() => ipc.resolveConflict(repo, file.path, keep))}
                           // 中止和收尾都按「正在进行的是哪个操作」来，不靠试错
-                          onAbort={op => void run(() => ipc.abortOperation(repo, op))}
-                          onContinue={op => void run(() => ipc.continueOperation(repo, op))}
+                          onAbort={op =>
+                            void run(() => ipc.abortOperation(repo, op)).then(() =>
+                              useRepositoryStore.getState().dropRewrite(repo)
+                            )
+                          }
+                          onContinue={op =>
+                            void run(() => ipc.continueOperation(repo, op)).then(() =>
+                              useRepositoryStore.getState().settleRewrite(repo)
+                            )
+                          }
                         />
                         {stashesVisible && (
                           <Stashes
@@ -1640,7 +1693,7 @@ export function App() {
                           onUndoCommit={() => void doUndoCommit()}
                           onAmend={async (summary, description) => {
                             return (
-                              (await run(async () => {
+                              (await rewrite(async () => {
                                 await applySelection(
                                   repo,
                                   status.changes.map(file => ({
@@ -1778,7 +1831,7 @@ export function App() {
                         remote: status.remote,
                         aheadBehind: status.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null,
                         tagsToPush: null,
-                        isForcePush: status.hasUpstream && status.ahead > 0 && status.behind > 0,
+                        isForcePush: forcePushBranchState === ForcePushBranchState.Recommended,
                         defaultBranch,
                         hasCurrentPullRequest,
                         isHosted: !!remotes[repo ?? ""],

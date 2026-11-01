@@ -58,6 +58,14 @@ export interface RepoStatus {
   operation: Operation | null
   /** 「对面」那条分支：合并时是被合进来的，变基时是变基到的 */
   theirs: string | null
+  /** 当前分支还没有任何提交（Desktop TipState.Unborn） */
+  unborn: boolean
+  /** HEAD 指向的提交；未诞生分支为 null */
+  head: string | null
+  /** git 目录里的 FETCH_HEAD：修改时间（Unix 毫秒）与是否为空；从没拉取过为 null */
+  fetchHead: { modifiedMs: number; empty: boolean } | null
+  /** `pull.rebase` 是 "true" / "false" 时的值，其余为 null（Desktop pullWithRebase 为 undefined） */
+  pullWithRebase: boolean | null
 }
 
 /** 待办页用的摘要，与 status.rs 的 RepoSummary 对应。不含工作区改动，只有引用和索引能回答的事 */

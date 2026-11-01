@@ -59,6 +59,10 @@
   --toolbar-muted: oklch(0.5 0 0);
   --toolbar-border: var(--border);
   --toolbar-hover: var(--accent);
+  /* Desktop --toolbar-badge-background-color / --toolbar-button-progress-color / --toolbar-dropdown-text-warning-color */
+  --toolbar-badge: oklch(0 0 0 / 8%);
+  --toolbar-progress: var(--accent);
+  --toolbar-warning: #c24e00;
 
   /* 文件状态标记 */
   --status-new: #22863a;
@@ -157,6 +161,9 @@
   --toolbar-muted: var(--muted-foreground);
   --toolbar-border: var(--border);
   --toolbar-hover: var(--accent);
+  --toolbar-badge: oklch(1 0 0 / 15%);
+  --toolbar-progress: var(--accent);
+  --toolbar-warning: #e36209;
 
   --status-new: #85e89d;
   --status-modified: #ffdf5d;
@@ -283,6 +290,9 @@
   --color-toolbar-muted: var(--toolbar-muted);
   --color-toolbar-border: var(--toolbar-border);
   --color-toolbar-hover: var(--toolbar-hover);
+  --color-toolbar-badge: var(--toolbar-badge);
+  --color-toolbar-progress: var(--toolbar-progress);
+  --color-toolbar-warning: var(--toolbar-warning);
 
   --color-status-new: var(--status-new);
   --color-status-modified: var(--status-modified);

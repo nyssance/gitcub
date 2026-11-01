@@ -181,7 +181,11 @@ it("repository menu disables unsafe actions while busy, detached or conflicted",
       ahead: 1,
       behind: 1,
       operation: null,
-      theirs: null
+      theirs: null,
+      unborn: false,
+      head: null,
+      fetchHead: null,
+      pullWithRebase: null
     },
     busy: false,
     remote: { host: "gitlab.example", owner: "group/sub", name: "project" },

@@ -1,6 +1,9 @@
 import { type ComponentProps, type ReactNode, useEffect, useRef } from "react"
 
+import { usePreferencesStore } from "@/features/preferences/store"
+import { useRepositoryStore } from "@/features/repository/store"
 import { useToolbarStore } from "@/features/toolbar/store"
+import type { ForcePushBranchState } from "@/lib/force-push-state"
 import type { RepoStatus } from "@/models/repo-status"
 import { Resizable } from "@/ui/resizable/resizable"
 
@@ -15,7 +18,9 @@ export function ToolbarRight(props: {
   repo: string | null
   status: RepoStatus
   busy: boolean
-  progress?: string
+  forcePushBranchState: ForcePushBranchState
+  /** 远端所在的托管平台；不是托管仓库为 null */
+  hostedPlatform: "GitHub" | "GitLab" | null
   onCheckout: (branch: string) => Promise<void>
   onCreateBranch: (name: string, startPoint?: string, noTrack?: boolean) => Promise<void>
   onDeleteBranch: (name: string) => Promise<void>
@@ -25,7 +30,7 @@ export function ToolbarRight(props: {
   onPush: () => void
   onPull: () => void
   onFetch: () => void
-  onPublish: () => void
+  onForcePush: () => void
   onWorktrees: () => void
   onOpenWorktree: (path: string) => void
   renderPullRequests?: ComponentProps<typeof BranchDropdown>["renderPullRequests"]
@@ -35,6 +40,10 @@ export function ToolbarRight(props: {
   const toolbar = useRef<HTMLDivElement>(null)
   const branchDropdownWidth = useToolbarStore(s => s.branchDropdownWidth)
   const pushPullButtonWidth = useToolbarStore(s => s.pushPullButtonWidth)
+  const networkProgress = useRepositoryStore(s => s.networkProgress)
+  const lastFetched = useRepositoryStore(s => s.lastFetched)
+  const askForConfirmationOnForcePush = usePreferencesStore(s => s.confirmForcePush)
+  const { status } = props
   // 原版在窗口尺寸变化时重算上下限（updateResizableConstraints）；这里量工具栏自己
   useEffect(() => {
     const element = toolbar.current
@@ -78,14 +87,23 @@ export function ToolbarRight(props: {
         minimumWidth={pushPullButtonWidth.min}
         description="Push pull button">
         <PushPullButton
-          status={props.status}
-          disabled={!props.repo}
-          busy={props.busy}
-          progress={props.progress}
+          aheadBehind={status.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null}
+          remoteName={status.remote}
+          networkActionInProgress={networkProgress !== null}
+          lastFetched={lastFetched}
+          progress={networkProgress}
+          tipState={status.unborn ? "unborn" : status.branch === null ? "detached" : "valid"}
+          pullWithRebase={status.pullWithRebase ?? undefined}
+          rebaseInProgress={status.operation === "rebase"}
+          forcePushBranchState={props.forcePushBranchState}
+          numTagsToPush={0}
+          askForConfirmationOnForcePush={askForConfirmationOnForcePush}
+          hostedPlatform={props.hostedPlatform}
+          disabled={!props.repo || props.busy}
           onPush={props.onPush}
           onPull={props.onPull}
           onFetch={props.onFetch}
-          onPublish={props.onPublish}
+          onForcePush={props.onForcePush}
         />
       </Resizable>
     </div>
