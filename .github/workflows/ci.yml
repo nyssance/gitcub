@@ -4,10 +4,9 @@
 #      （`#[cfg(windows)]` 的窗口效果就是这种），这一格是唯一的保障。不支持 Linux
 name: CI
 
+# 推送不自动跑：交付以本地完整验证为准，需要时在 Actions 里手动触发
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
