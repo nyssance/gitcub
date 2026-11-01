@@ -348,11 +348,12 @@ async function launchGitCub(bundle: string, repository: string, settle: number):
     const opened = performance.now()
     await hasgard(
       socket,
-      "(() => { localStorage.setItem('has-shown-welcome-flow', '1'); location.reload(); return true })()"
+      "(() => { window.__benchReloading = true; localStorage.setItem('has-shown-welcome-flow', '1'); location.reload(); return true })()"
     )
-    await sleep(500)
+    // The marker lives on the old page only: counting starts once the reloaded page answers, with no fixed wait
     const changes = await until(
-      () => hasgard(socket, gitcubChangesExpression).catch(() => -1) as Promise<number>,
+      () =>
+        hasgard(socket, `window.__benchReloading ? -1 : ${gitcubChangesExpression}`).catch(() => -1) as Promise<number>,
       count => count >= 0,
       120,
       "GitCub changes list"
