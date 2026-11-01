@@ -38,7 +38,7 @@
     "@lezer/python": "^1.1.19",
     "@lezer/rust": "^1.0.3",
     "@lezer/yaml": "^1.0.4",
-    "@nyssance/atlas": "^0.1.8",
+    "@nyssance/atlas": "^0.1.9",
     "@primer/octicons-react": "^19.42.0",
     "@tanstack/react-virtual": "^3.14.24",
     "@tauri-apps/api": "^3.0.0-alpha.3",

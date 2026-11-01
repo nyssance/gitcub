@@ -3,9 +3,8 @@ import "@alwith/module-desktop-shell/overview.css"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import "@nyssance/atlas/styles.css"
 import { connectTrackpad } from "@nyssance/atlas/dom"
-import { desktopDefaults } from "@nyssance/atlas/layout"
 import { useAtlas } from "@nyssance/atlas/react"
-import { tauriTrackpad } from "@nyssance/atlas/tauri"
+import { attachWindowDrag, tauriTrackpad } from "@nyssance/atlas/tauri"
 import { type ReactNode, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -37,11 +36,10 @@ export function FloatingWorkspace({
     flickMinIndex: 1,
     direction: i18n.dir(),
     trackpadEnabled,
-    // 没有分页圆点和状态栏，底部不留 32px 的页脚：与左右一样是标准 gutter 合成的外沿（4 + 4）
-    insetBottom: desktopDefaults.gutter * 2,
     pagination: false,
     overview: { label: t("canvas.overview") }
   })
+  useEffect(() => (atlas ? attachWindowDrag(atlas.root, console.error) : undefined), [atlas])
   const settled = !state.moving
   useEffect(() => (atlas ? connectDesktopOverview(atlas, { openLink: openUrl }) : undefined), [atlas])
   useEffect(() => {
@@ -63,9 +61,7 @@ export function FloatingWorkspace({
       <div
         ref={viewport}
         className="min-h-0 flex-1 overflow-hidden"
-        data-tauri-drag-region
         data-canvas-viewport
-        data-atlas
         data-atlas-layout="navigation"
         role="group"
         aria-label={t("canvas.label")}
