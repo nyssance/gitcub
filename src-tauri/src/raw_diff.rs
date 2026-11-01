@@ -661,18 +661,49 @@ pub(crate) mod in_process {
 
     pub(crate) fn config(repo: &gix::Repository) -> Result<Config<'_>, Fallback> {
         let bundled = match crate::git::bundled_system_config() {
-            Some(path) => {
-                let file = gix::config::File::from_path_no_includes(path, gix::config::Source::System)
-                    .map_err(|e| e.to_string())?;
-                let has = |name: &str| file.sections_by_name(name).is_some_and(|mut s| s.next().is_some());
-                if has("include") || has("includeIf") {
-                    return Err("打包的系统配置带 include".into());
-                }
-                Some(file)
-            }
+            Some(path) => Some(bundled_system_file(path)?),
             None => None,
         };
         Ok(Config { snapshot: repo.config_snapshot(), bundled })
+    }
+
+    /// 打包 git 的系统配置（dugite 的 etc/gitconfig 开头就是 `[include] path=/etc/gitconfig`）照 git 的 include 语义展开：
+    /// 被包含的文件按位置插进去，后面的同名键覆盖它；被包含的文件不存在时 git 静默跳过（config.c `handle_path_include`）。
+    /// 只认开头连续的无条件 include、绝对路径、被包含的文件里不再有 include；其余形状让位。
+    pub(crate) fn bundled_system_file(path: std::path::PathBuf) -> Result<gix::config::File, Fallback> {
+        use gix::config::{File, Source};
+        let include = |name: &BStr| name.eq_ignore_ascii_case(b"include") || name.eq_ignore_ascii_case(b"includeIf");
+        let file = File::from_path_no_includes(path, Source::System).map_err(|e| e.to_string())?;
+        let sections: Vec<_> = file
+            .sections()
+            .map(|s| (s.header().name().to_owned(), s.header().subsection_name().is_some(), s.values("path")))
+            .collect();
+        let leading =
+            sections.iter().take_while(|(name, sub, _)| name.eq_ignore_ascii_case(b"include") && !sub).count();
+        if sections[leading..].iter().any(|(name, ..)| include(name.as_bstr())) {
+            return Err("打包的系统配置里 include 不在开头或带条件".into());
+        }
+        if leading == 0 {
+            return Ok(file);
+        }
+        let mut merged = File::new(gix::config::file::Metadata::from(Source::System));
+        for target in sections[..leading].iter().flat_map(|(.., paths)| paths) {
+            let target = std::path::PathBuf::from(target.to_str().map_err(|_| "include 路径不是 UTF-8")?);
+            if !target.is_absolute() {
+                return Err("include 路径不是绝对路径".into());
+            }
+            if !target.exists() {
+                continue;
+            }
+            let inner = File::from_path_no_includes(target, Source::System).map_err(|e| e.to_string())?;
+            if inner.sections().any(|s| include(s.header().name())) {
+                return Err("被包含的系统配置还有 include".into());
+            }
+            merged.append(inner).map_err(|e| e.to_string())?;
+        }
+        // include 段本身也留着：`git config --get include.path` 照样读得到
+        merged.append(file).map_err(|e| e.to_string())?;
+        Ok(merged)
     }
 
     struct Header<'a> {
@@ -1386,6 +1417,64 @@ mod tests {
 
         assert!(parse_line_endings("").is_none());
         assert!(parse_line_endings("fatal: 什么别的错").is_none());
+    }
+
+    /// 打包 git 的系统配置展开 include 后，每个键的取值与 `GIT_CONFIG_SYSTEM=<文件> git config --system --includes` 相同
+    /// （git 命令读系统配置时总是展开 include；`git config` 指定了作用域时要显式加 `--includes`）
+    #[cfg(unix)]
+    #[test]
+    fn 打包的系统配置按_git_的语义展开_include() {
+        let dir = tempfile::tempdir().unwrap();
+        let write = |name: &str, text: &str| {
+            let path = dir.path().join(name);
+            std::fs::write(&path, text).unwrap();
+            path
+        };
+        let included =
+            write("etc-gitconfig", "[core]\n\tquotePath = false\n\tautocrlf = input\n[diff]\n\tnoprefix = true\n");
+        let missing = dir.path().join("missing");
+        let git_value = |system: &std::path::Path, key: &str| {
+            let out = std::process::Command::new("git")
+                .args(["config", "--system", "--includes", "--get", key])
+                .env("GIT_CONFIG_SYSTEM", system)
+                .env_remove("GIT_CONFIG_NOSYSTEM")
+                .output()
+                .unwrap();
+            out.status.success().then(|| String::from_utf8(out.stdout).unwrap().trim_end().to_string())
+        };
+        let ours = |file: &gix::config::File, key: &str| file.string(key).map(|v| v.to_string());
+        // dugite 的形状：开头 include 本机系统配置，后面自己的段覆盖它
+        for target in [&included, &missing] {
+            let bundled = write(
+                "bundled",
+                &format!(
+                    "[include]\n  path={}\n\n[core]\n\tautocrlf = false\n[credential \"https://dev.azure.com\"]\n  useHttpPath = true\n",
+                    target.display()
+                ),
+            );
+            let file = in_process::bundled_system_file(bundled.clone()).unwrap();
+            for key in [
+                "core.quotePath",
+                "core.autocrlf",
+                "diff.noprefix",
+                "credential.https://dev.azure.com.useHttpPath",
+                "include.path",
+            ] {
+                assert_eq!(ours(&file, key), git_value(&bundled, key), "{key} via {}", target.display());
+            }
+        }
+        // 只认开头的无条件、绝对路径、不再嵌套的 include
+        for text in [
+            "[core]\n\tautocrlf = false\n[include]\n\tpath = /etc/gitconfig\n".to_string(),
+            "[includeIf \"gitdir:/x/\"]\n\tpath = /etc/gitconfig\n".to_string(),
+            "[include]\n\tpath = relative\n".to_string(),
+            format!(
+                "[include]\n\tpath = {}\n",
+                write("nested", &format!("[include]\n\tpath = {}\n", included.display())).display()
+            ),
+        ] {
+            assert!(in_process::bundled_system_file(write("bundled", &text)).is_err(), "{text}");
+        }
     }
 
     /// 工作区 diff 的进程内快速路径对照 git 本身：同一个仓库、同一个文件，

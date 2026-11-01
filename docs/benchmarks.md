@@ -855,26 +855,28 @@ Desktop 从 `cli-action` 发出到改动列表出现 308 ms（306–384）。
 
 ## 运行中起的 git 进程（2026-11-01）
 
-上面各项是单个函数的耗时；这一节数应用实际跑起来时还起了哪些 git 进程。方法：debug 包在原生测试夹具里启动
-（冒烟仓库：一个提交、一个未跟踪文件），整个进程树设 `GIT_TRACE2_EVENT`，只数顶层 `start` 事件（sid 不含 `/`）。
-测试套件给 git 设了 `GIT_CONFIG_GLOBAL`、`GIT_CONFIG_SYSTEM` 与 `GIT_CONFIG_NOSYSTEM`，快速路径见到这些变量会按设计
-让位给 git，所以这次运行改用临时 `HOME` 放空的 `.gitconfig`，并去掉 `GIT_CONFIG_GLOBAL`。
+上面各项是单个函数的耗时，基准进程用的是 PATH 上的 git；这一节数**打包后的应用**实际跑起来时还起了哪些 git 进程。
+方法：debug 包在原生测试夹具里启动（冒烟仓库：一个提交、一个未跟踪文件），整个进程树设 `GIT_TRACE2_EVENT`，只数顶层
+`start` 事件（sid 不含 `/`），不计测试脚本自己的 git 与欢迎页读写全局身份。测试套件给 git 设了 `GIT_CONFIG_GLOBAL`，
+快速路径见到它会按设计让位，所以这次运行给应用换了临时 `HOME`（空的 `.gitconfig`）并去掉这个变量。
 
-| 阶段 | 顶层 git 进程 |
-| --- | --- |
-| 空闲 20 s | 0 |
-| 改一个文件后 5 s（FSEvents 触发刷新） | 1：选中未跟踪文件的 `diff --no-index` |
-| History / Changes 来回切两次 | 2：根提交的文件列表 `log -C -M -m -1 … --raw --numstat` 与文件 diff |
-| 窗口失焦再聚焦 | 1：同上未跟踪文件的 diff |
-| 启动与欢迎流程 | 欢迎页读全局 `user.name` / `user.email` 共三轮（Desktop 欢迎流程同样经 git 读） |
+第一次测量发现一个缺陷：打包 git 的系统配置（dugite 的 `etc/gitconfig`）开头就是 `[include] path=/etc/gitconfig`，
+而 `raw_diff::in_process::config` 见到 include 就让位，于是**打包后的应用里**工作区 diff、提交文件 diff 与 blame 的
+进程内快速路径从来没生效（上面的结果表只在用 PATH 上 git 的基准进程里成立）。改为照 git 的 include 语义展开：
+开头连续的无条件 include、绝对路径、被包含的文件不再嵌套时把它按位置插进去，文件不存在时跳过（git 同样静默跳过），
+其余形状仍让位；`raw_diff` 的单元测试逐键对照 `GIT_CONFIG_SYSTEM=<文件> git config --system --includes`。
 
-剩下的几次都不是热路径的缺口：在同一个仓库形状上直接调用 `raw_diff::in_process::working_directory_diff`、
-`history::commit_files_in_process` 与 `raw_diff::in_process::commit_file_diff`，三者都在进程内作答；应用里让位是因为
-测试启动器仍给应用进程留着 `GIT_CONFIG_SYSTEM` / `GIT_CONFIG_NOSYSTEM`。去掉 `GIT_CONFIG_GLOBAL` 后，
-`show <sha>^:README.md`（根提交没有父提交，原版也照样发出这条请求）已经不再起进程。
+| 阶段 | 修复前 | 修复后 |
+| --- | --- | --- |
+| 空闲 10–20 s | 0 | 0 |
+| 改一个文件（FSEvents 触发刷新） | 1：选中未跟踪文件的 `diff --no-index` | 0 |
+| History / Changes 来回切两次 | 2–3：根提交的 `log … --raw --numstat`、文件 diff、`show <sha>^:README.md` | 1：`show <sha>^:README.md` |
 
-未覆盖：推送、拉取、提交这些写操作本来就交给 git；没有在真实用户环境（无任何 `GIT_CONFIG_*` 变量）下用大仓库重测，
-也没有数长时间运行后的进程数。
+剩下的 `show <sha>^:README.md` 是 Desktop 取旧版本内容的同一条请求，根提交没有父提交，git 报错、调用方忽略；
+只在选中根提交时出现。
+
+未覆盖：推送、拉取、提交这些写操作本来就交给 git；没有在大仓库上重测，也没有数长时间运行后的进程数；
+基准进程本身仍用 PATH 上的 git，没有改成读打包的系统配置。
 
 ## 复现
 
