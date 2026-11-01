@@ -68,7 +68,7 @@
 - 用户于 2026-10-22 明确收敛原生触控板手势范围：目前仅支持 Wry，CEF 暂不支持，不继续为 CEF 自造采集方案，不引入私有 API 或要求关闭 App Sandbox 的库。CEF 宿主保留 Atlas 布局、鼠标与键盘操作；不得将布局兼容宣称为原生三指手势兼容。
 - Atlas 自有代码同样采用 TS7、ESNext 与共享 `@nyssance/ts7-lint` 现代语法规则；CI 和本地使用同一检查入口。
 - Atlas 用单一 `gutter` 参数控制固定的视口左右留白和随面板移动的两侧半间隙，默认 4px；底部默认预留 32px，与顶部拖动栏等高，显式 `insetBottom` 可覆盖；分页消费 Atlas 默认实现，实时缩略图总览通过独立入口调用 Atlas，leading/trailing 默认不参与分页、导航始终不参与，内容 padding 独立。鼠标平移按 Desktop 默认中键，通过 `panButton: "middle" | "side"` 传参和运行时更新；库不提供设置界面或保存宿主偏好。
-- 用户于 2026-11-01 明确：边距一律用 Atlas 标准值（与 ALwith Desktop 相同），GitCub 不传 `gutter`、`insetTop`、`insetBottom` 等边距参数，但凡传参覆盖都是错的；标题栏拖动区就是 Atlas 的上边距（视口自身带 `data-tauri-drag-region`），不另加占位条。
+- 用户于 2026-11-01 明确：边距用 Atlas 标准值（与 ALwith Desktop 相同），GitCub 不传 `gutter`、`insetTop` 覆盖，不写死像素；标题栏拖动区就是 Atlas 的上边距（视口自身带 `data-tauri-drag-region`），不另加占位条。GitCub 没有分页与状态栏，底部为 8，与左右外沿相同，写作 `desktopDefaults.gutter * 2`。
 
 ## 界面布局
 

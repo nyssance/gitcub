@@ -3,6 +3,7 @@ import "@alwith/module-desktop-shell/overview.css"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import "@nyssance/atlas/styles.css"
 import { connectTrackpad } from "@nyssance/atlas/dom"
+import { desktopDefaults } from "@nyssance/atlas/layout"
 import { useAtlas } from "@nyssance/atlas/react"
 import { tauriTrackpad } from "@nyssance/atlas/tauri"
 import { type ReactNode, useEffect, useRef } from "react"
@@ -36,6 +37,8 @@ export function FloatingWorkspace({
     flickMinIndex: 1,
     direction: i18n.dir(),
     trackpadEnabled,
+    // 没有分页圆点和状态栏，底部不留 32px 的页脚：与左右一样是标准 gutter 合成的外沿（4 + 4）
+    insetBottom: desktopDefaults.gutter * 2,
     pagination: false,
     overview: { label: t("canvas.overview") }
   })
@@ -55,7 +58,7 @@ export function FloatingWorkspace({
 
   return (
     <div className="bg-muted/40 flex min-h-0 min-w-0 flex-1 flex-col" data-floating-workspace data-page={page}>
-      {/* Atlas 的标准上下边距（32px，与 ALwith Desktop 相同）就是标题栏高度；视口自身可拖窗口，
+      {/* Atlas 的标准上边距（32px，与 ALwith Desktop 相同）就是标题栏高度；视口自身可拖窗口，
           Tauri 只在按下的正是这个元素时拖动，面板里的点击不受影响 */}
       <div
         ref={viewport}
