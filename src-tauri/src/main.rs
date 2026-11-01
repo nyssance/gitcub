@@ -79,13 +79,14 @@ mod xdiff;
 fn main() {
     // git 需要凭据时会以 GIT_ASKPASS 的身份重新拉起本程序，提示串作为 argv[1]，
     // 答案写 stdout。必须在初始化 Tauri 之前短路掉，否则会弹出一个空窗口。
+    // 打开钩子环境后，git 调起的钩子是一行脚本，以 `--gitcub-hook-proxy` 重新拉起本程序（见 hooks.rs）。
+    // 要在 askpass 之前：带凭据推送时钩子也继承了 GITCUB_ASKPASS_TOKEN，先判 askpass 会把钩子当成问密码
+    if let Some(code) = hooks::proxy_if_invoked() {
+        std::process::exit(code);
+    }
     if let Some(answer) = net::askpass_if_invoked() {
         println!("{answer}");
         return;
-    }
-    // 打开钩子环境后，git 调起的钩子是一行脚本，以 `--gitcub-hook-proxy` 重新拉起本程序（见 hooks.rs）
-    if let Some(code) = hooks::proxy_if_invoked() {
-        std::process::exit(code);
     }
 
     let builder = tauri::Builder::default()

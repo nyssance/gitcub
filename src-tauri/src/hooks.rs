@@ -313,6 +313,23 @@ mod proxy {
         format!("{first:016x}{:016x}", hasher.finish())
     }
 
+    /// 钩子脚本：exec 应用自身的代理身份
+    #[cfg(not(test))]
+    fn proxy_script() -> Result<String, String> {
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        Ok(format!("#!/bin/sh\nexec {} {PROXY_ARG} \"$0\" \"$@\"\n", shell_quote(&exe.to_string_lossy())))
+    }
+
+    /// 单元测试里当前程序是测试框架：让它只跑 tests::hook_proxy_entry，由那里以代理身份退出
+    #[cfg(test)]
+    fn proxy_script() -> Result<String, String> {
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        Ok(format!(
+            "#!/bin/sh\nGITCUB_TEST_PROXY_ARGS=\"$0 $*\" exec {} --exact hooks::proxy::tests::hook_proxy_entry --nocapture --quiet\n",
+            shell_quote(&exe.to_string_lossy())
+        ))
+    }
+
     fn shell_quote(value: &str) -> String {
         format!("'{}'", value.replace('\'', r"'\''"))
     }
@@ -326,11 +343,10 @@ mod proxy {
         let socket_dir = tempfile::Builder::new().prefix("gitcub-").tempdir_in("/tmp").map_err(|e| e.to_string())?;
         let socket = socket_dir.path().join("s");
         let listener = UnixListener::bind(&socket).map_err(|e| e.to_string())?;
-        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let script = proxy_script()?;
         for hook in hooks {
             let path = dir.path().join(hook);
-            let script = format!("#!/bin/sh\nexec {} {PROXY_ARG} \"$0\" \"$@\"\n", shell_quote(&exe.to_string_lossy()));
-            std::fs::write(&path, script).map_err(|e| e.to_string())?;
+            std::fs::write(&path, &script).map_err(|e| e.to_string())?;
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
         }
@@ -633,7 +649,9 @@ mod proxy {
                     kind.is_fifo() || kind.is_socket() || kind.is_file()
                 })
         };
-        let request = ProxyRequest { token, args, cwd, env: std::env::vars().collect(), stdin: stdin_connected };
+        // 应用只用得到 GIT_ / GITHEAD_ 变量（原版 safeEnv）；凭据之类别的变量不往回送
+        let env = std::env::vars().filter(|(key, _)| key.starts_with("GIT_") || key.starts_with("GITHEAD_")).collect();
+        let request = ProxyRequest { token, args, cwd, env, stdin: stdin_connected };
         let mut stdin = std::io::stdin().lock();
         let stdin: Option<&mut dyn Read> = if stdin_connected { Some(&mut stdin) } else { None };
         proxy(&PathBuf::from(socket), &request, stdin, &mut std::io::stderr().lock())
@@ -676,6 +694,12 @@ mod proxy {
 
         /// 不经 git，直接以代理身份回连：钩子在 shell 环境里跑、stderr 回放、进度与失败询问按原版顺序
         fn invoke(repo: &Path, hook: &str, callbacks: Arc<Recorder>, hooks_env: HooksEnv) -> (i32, String) {
+            invoke_with_stdin(repo, hook, callbacks, hooks_env, None)
+        }
+
+        fn invoke_with_stdin(
+            repo: &Path, hook: &str, callbacks: Arc<Recorder>, hooks_env: HooksEnv, stdin: Option<&[u8]>,
+        ) -> (i32, String) {
             serve(&[hook.to_string()], hooks_env, Some(callbacks), |env| {
                 let env = env.into_iter().collect::<HashMap<_, _>>();
                 let mut request_env = std::env::vars().collect::<HashMap<_, _>>();
@@ -686,10 +710,12 @@ mod proxy {
                     args: vec![format!("/tmp/x/{hook}"), "message-file".into()],
                     cwd: repo.to_string_lossy().into_owned(),
                     env: request_env,
-                    stdin: false,
+                    stdin: stdin.is_some(),
                 };
                 let mut stderr = Vec::new();
-                let code = proxy(Path::new(&env[SOCKET_ENV]), &request, None, &mut stderr);
+                let mut input = stdin.unwrap_or_default();
+                let input: Option<&mut dyn Read> = stdin.is_some().then_some(&mut input as &mut dyn Read);
+                let code = proxy(Path::new(&env[SOCKET_ENV]), &request, input, &mut stderr);
                 Ok((code, String::from_utf8_lossy(&stderr).into_owned()))
             })
             .unwrap()
@@ -727,6 +753,50 @@ mod proxy {
             assert_eq!(code, 0);
             assert!(stderr.ends_with("pre-commit hook failure ignored by user\n"), "{stderr}");
             assert_eq!(ignore.events.lock().unwrap().last().unwrap(), "pre-commit finished");
+        }
+
+        #[test]
+        fn hook_stdin_is_buffered_and_replayed() {
+            let repo = repo_with_hook("pre-push", "#!/bin/sh\necho \"remote=$1\" >&2\ncat >&2\n");
+            let callbacks = Arc::new(Recorder { events: Mutex::default(), ignore: false });
+            let (code, stderr) =
+                invoke_with_stdin(repo.path(), "pre-push", callbacks, shell_env(), Some(b"refs/heads/main 1 refs/heads/main 2\n"));
+            assert_eq!(code, 0, "{stderr}");
+            assert!(stderr.contains("remote=message-file\nrefs/heads/main 1 refs/heads/main 2\n"), "{stderr}");
+        }
+
+        /// 钩子脚本在测试里 exec 的入口（见 proxy_script）；平时直接返回
+        #[test]
+        fn hook_proxy_entry() {
+            if let Ok(args) = std::env::var("GITCUB_TEST_PROXY_ARGS") {
+                std::process::exit(run_client(args.split(' ').map(String::from).collect()));
+            }
+        }
+
+        /// 整条链：git push → 钩子脚本 → 代理身份 → 服务 → `git hook run`；pre-push 的 stdin 一路带到钩子，
+        /// 带凭据推送时 GIT_CONFIG_PARAMETERS 里的 core.hooksPath 不被凭据配置冲掉
+        #[test]
+        fn pre_push_through_git_gets_refs_on_stdin() {
+            let remote = tempfile::tempdir().unwrap();
+            std::process::Command::new("git").args(["init", "-q", "--bare"]).current_dir(remote.path()).status().unwrap();
+            let marker = tempfile::NamedTempFile::new().unwrap();
+            let repo = repo_with_hook(
+                "pre-push",
+                &format!("#!/bin/sh\n{{ echo \"remote=$1\"; cat; }} > '{}'\nexit 1\n", marker.path().display()),
+            );
+            let git = |args: &[&str]| {
+                std::process::Command::new("git").args(args).current_dir(repo.path()).output().unwrap();
+            };
+            git(&["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "a"]);
+            git(&["remote", "add", "origin", &remote.path().to_string_lossy()]);
+            let callbacks = Arc::new(Recorder { events: Mutex::default(), ignore: true });
+            let pushed = super::super::operation(Some(shell_env()), Some(callbacks.clone()), || {
+                crate::net::push(repo.path(), "origin", "HEAD:refs/heads/main", false, false, Some("token"), None)
+            });
+            let received = std::fs::read_to_string(marker.path()).unwrap();
+            assert!(pushed.is_ok(), "{pushed:?} {received}");
+            assert!(received.starts_with("remote=origin\nHEAD "), "{received}");
+            assert_eq!(callbacks.events.lock().unwrap().first().unwrap(), "pre-push started");
         }
 
         #[test]
