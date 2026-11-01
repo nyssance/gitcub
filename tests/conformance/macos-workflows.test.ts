@@ -970,6 +970,39 @@ test("hooks environment proxies a failing pre-commit hook and continues after ig
   }
 })
 
+test("aborting a failing commit-msg hook while amending keeps the commit and reports no error", async ({
+  mainWindow: page
+}) => {
+  const head = git("rev-parse", "HEAD")
+  const hook = join(smokeRepoPath, ".git", "hooks", "commit-msg")
+  writeFileSync(hook, '#!/bin/sh\necho "amend rejected by hook" >&2\nexit 1\n', { mode: 0o755 })
+  await page.evaluate(() => localStorage.setItem("git-hooks-env-enabled", "1"))
+  try {
+    await page.locator('.changes-list-container button[aria-label="Filter"]').click()
+    await page.locator('[role="menuitem"]:has-text("Amend last commit")').click()
+    await page.locator('button.commit-button:has-text("Amend")').waitFor({ state: "visible" })
+    await page.locator(".summary-field input").fill("Amend through the hooks proxy")
+    await page.locator("button.commit-button").click()
+    const dialog = page.locator("#hook-failed-dialog")
+    await expect(dialog).toContainText("The commit-msg hook failed. What would you like to do?", { timeout: 30000 })
+    await expect(dialog).toContainText("amend rejected by hook")
+    // Desktop Dialog ignores dismissal during its first 250ms; Abort is a dismissal
+    await new Promise(resolve => setTimeout(resolve, 300))
+    await dialog.locator('button:has-text("Abort")').click()
+    await expect.poll(() => page.locator("button.commit-button").isEnabled()).toBe(true)
+    assert.equal(git("rev-parse", "HEAD"), head)
+    await expect(page.locator("button.commit-button")).toContainText("Amend")
+    assert.equal(await page.evaluate(() => document.body.innerText.includes("amend rejected by hook")), false)
+  } catch (error) {
+    console.error("Amend hooks UI at failure:", await page.evaluate(() => document.body.innerText))
+    throw error
+  } finally {
+    await page.evaluate(() => localStorage.removeItem("git-hooks-env-enabled"))
+    rmSync(hook, { force: true })
+    await page.locator('[role="button"]:has-text("Stop amending")').click()
+  }
+})
+
 test("About exposes the author's GitHub profile", async ({ mainWindow: page }) => {
   await page.evaluate(async () => {
     await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu-event", payload: ["show-about"] })

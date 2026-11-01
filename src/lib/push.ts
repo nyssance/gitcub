@@ -1,5 +1,8 @@
 import { invoke } from "@tauri-apps/api/core"
 
+import type { HookCallbackOptions } from "./git-execution"
+import { hookArgs, pushInterceptHooks } from "./hooks/with-hooks-env"
+
 export interface PushProgress {
   kind: "push"
   title: string
@@ -15,7 +18,7 @@ export async function push(
   localBranch: string,
   remoteBranch: string | null,
   tagsToPush: readonly string[] | null,
-  options?: { forceWithLease?: boolean; noVerify?: boolean },
+  options?: { forceWithLease?: boolean; noVerify?: boolean } & HookCallbackOptions,
   progressCallback?: (progress: PushProgress) => void
 ) {
   progressCallback?.({
@@ -34,6 +37,7 @@ export async function push(
       setUpstream: !remoteBranch,
       forceWithLease: options?.forceWithLease ?? false,
       noVerify: options?.noVerify ?? false
-    }
+    },
+    ...(await hookArgs(repository.path, pushInterceptHooks, options))
   })
 }

@@ -72,6 +72,28 @@ pub fn bundled_system_config() -> Option<PathBuf> {
     bundled().filter(|_| !cfg!(windows)).map(|root| root.join("etc").join("gitconfig"))
 }
 
+thread_local! {
+    /// 钩子代理给这一段 git 调用加的环境（hooks::scoped）；只在当前阻塞线程、只在那一段里有效
+    static EXTRA_ENV: std::cell::RefCell<Vec<(String, String)>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// 在 `run` 里新建的 git 调用都带上 `env`（原版 withHooksEnv 把 hooksEnv 交给这一条命令）
+pub fn with_extra_env<T>(env: Vec<(String, String)>, run: impl FnOnce() -> T) -> T {
+    struct Restore(Vec<(String, String)>);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            let previous = std::mem::take(&mut self.0);
+            EXTRA_ENV.with(|extra| *extra.borrow_mut() = previous);
+        }
+    }
+    let _restore = Restore(EXTRA_ENV.with(|extra| std::mem::replace(&mut *extra.borrow_mut(), env)));
+    run()
+}
+
+fn extra_config_parameters() -> Option<String> {
+    EXTRA_ENV.with(|extra| extra.borrow().iter().find(|(key, _)| key == "GIT_CONFIG_PARAMETERS").map(|(_, v)| v.clone()))
+}
+
 /// 一次 git 调用。
 pub struct Git {
     cmd: Command,
@@ -154,6 +176,12 @@ impl Git {
             .env("GIT_TERMINAL_PROMPT", "0")
             .env("GIT_ADVICE", "0");
 
+        EXTRA_ENV.with(|extra| {
+            for (key, value) in extra.borrow().iter() {
+                cmd.env(key, value);
+            }
+        });
+
         Self { cmd, stdin: None }
     }
 
@@ -198,7 +226,14 @@ impl Git {
         self.cmd
             .env("GIT_ASKPASS", exe)
             .env("GITCUB_ASKPASS_TOKEN", token)
-            .env("GIT_CONFIG_PARAMETERS", config_parameters(&["credential.helper="]));
+            // 原版 withTrampolineEnv 接在已有的（钩子代理的 core.hooksPath）后面，不覆盖
+            .env(
+                "GIT_CONFIG_PARAMETERS",
+                match extra_config_parameters() {
+                    Some(existing) => format!("{existing} {}", config_parameters(&["credential.helper="])),
+                    None => config_parameters(&["credential.helper="]),
+                },
+            );
         if let Some(u) = user {
             self.cmd.env("GITCUB_ASKPASS_USER", u);
         }

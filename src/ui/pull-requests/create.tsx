@@ -2,6 +2,7 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { hookFailureHandling } from "@/features/dialogs/store"
 import { ipc } from "@/lib/ipc"
 import { pullRequestCreationURL, type PullRequestTargets } from "@/lib/pull-request-navigation"
 import type { Remote } from "@/models/app-state"
@@ -105,8 +106,13 @@ export function CreatePullRequest({
     setError(null)
     try {
       const url = pullRequestCreationURL(context, target, branch, base)
-      await ipc.push(repo, source, `HEAD:refs/heads/${branch}`, true)
-      if (lifetime.current !== generation) return
+      // pre-push 失败时照 Desktop _push 问；中止就不再去网页建 PR，也不报错
+      const { onHookFailure, ignoreAborted } = hookFailureHandling()
+      const pushed = await ignoreAborted(
+        ipc.push(repo, source, `HEAD:refs/heads/${branch}`, true, false, { onHookFailure }).then(() => true),
+        false
+      )
+      if (!pushed || lifetime.current !== generation) return
       onPushed()
       await openUrl(url)
       if (lifetime.current === generation) onOpenChange(false)

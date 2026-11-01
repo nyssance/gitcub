@@ -3,6 +3,7 @@ import { confirm } from "@tauri-apps/plugin-dialog"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { hookFailureHandling } from "@/features/dialogs/store"
 import { ipc } from "@/lib/ipc"
 
 import { Button } from "../base/button"
@@ -72,7 +73,16 @@ function RepositoryTags({ repo }: { repo: string }) {
         return
       if (lifetime.current !== generation) return
       if (operation === "delete") await ipc.deleteTag(repo, tag)
-      else await ipc.push(repo, remote, `${operation === "push" ? `refs/tags/${tag}` : ""}:refs/tags/${tag}`)
+      else {
+        // Desktop 推标签也走 _push：pre-push 失败时问，中止就不报错
+        const { onHookFailure, ignoreAborted } = hookFailureHandling()
+        await ignoreAborted(
+          ipc.push(repo, remote, `${operation === "push" ? `refs/tags/${tag}` : ""}:refs/tags/${tag}`, false, false, {
+            onHookFailure
+          }),
+          undefined
+        )
+      }
       if (lifetime.current === generation) setRevision(v => v + 1)
     } catch (e) {
       if (lifetime.current === generation) setError(String(e))

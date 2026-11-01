@@ -115,6 +115,27 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   setCommitProgress: commitProgress => set({ commitProgress })
 }))
 
+/** Desktop AppStore.onHookFailure：钩子失败时弹 HookFailed；选了中止，这次操作随之失败但不再报错
+ *  （原版 `.catch(err => (aborted ? undefined : Promise.reject(err)))`） */
+export function hookFailureHandling() {
+  let aborted = false
+  return {
+    onHookFailure: (hookName: string, terminalOutput: TerminalOutput) =>
+      useDialogsStore
+        .getState()
+        .askHookFailure(hookName, terminalOutput)
+        .then(resolution => {
+          if (resolution === "abort") aborted = true
+          return resolution
+        }),
+    ignoreAborted: <T>(operation: Promise<T>, fallback: T) =>
+      operation.catch((error: unknown) => {
+        if (aborted) return fallback
+        throw error
+      })
+  }
+}
+
 /** 有弹窗挡在前面时，菜单与快捷键里的仓库操作按忙处理。 */
 export const selectDialogBlocking = (store: DialogsStore) =>
   !!store.asking ||

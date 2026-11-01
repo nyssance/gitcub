@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core"
 
 import { GitCommandError, type GitCommandResult } from "./clone"
+import type { HookCallbackOptions } from "./git-execution"
+import { hookArgs, pullInterceptHooks } from "./hooks/with-hooks-env"
 export interface RemoteProgress {
   kind: "fetch" | "pull"
   title: string
@@ -24,14 +26,15 @@ export async function fetch(
 export async function pull(
   repository: { path: string },
   remote: { name: string },
-  options?: { noVerify?: boolean; progressCallback?: (progress: RemoteProgress) => void }
+  options?: { noVerify?: boolean; progressCallback?: (progress: RemoteProgress) => void } & HookCallbackOptions
 ) {
   if (remote.name.startsWith("-")) throw new Error("Cannot pull from a remote whose name starts with '-'.")
   options?.progressCallback?.({ kind: "pull", title: `Pulling ${remote.name}`, value: 0, remote: remote.name })
   const result = await invoke<GitCommandResult>("pull_output", {
     repo: repository.path,
     remote: remote.name,
-    options: { noVerify: options?.noVerify ?? false, progress: options?.progressCallback !== undefined }
+    options: { noVerify: options?.noVerify ?? false, progress: options?.progressCallback !== undefined },
+    ...(await hookArgs(repository.path, pullInterceptHooks, options))
   })
   if (result.exitCode !== 0) throw new GitCommandError(result)
 }

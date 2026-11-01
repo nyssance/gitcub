@@ -181,6 +181,39 @@ pub fn with_hooks_env<T>(
     run(Vec::new())
 }
 
+type Operation = (HooksEnv, Option<std::sync::Arc<dyn HookCallbacks>>);
+
+thread_local! {
+    /// 当前这次操作的钩子环境与回调（hooks::operation）；操作里具体哪条 git 命令拦截哪些钩子由 scoped 决定
+    static OPERATION: std::cell::RefCell<Option<Operation>> = const { std::cell::RefCell::new(None) };
+}
+
+/// 在 `run` 里的 scoped 调用按 `hooks_env` 与 `callbacks` 交给钩子代理；`hooks_env` 为 None 时什么都不做
+pub fn operation<T>(
+    hooks_env: Option<HooksEnv>, callbacks: Option<std::sync::Arc<dyn HookCallbacks>>, run: impl FnOnce() -> T,
+) -> T {
+    struct Restore;
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            OPERATION.with(|operation| *operation.borrow_mut() = None);
+        }
+    }
+    let Some(hooks_env) = hooks_env else {
+        return run();
+    };
+    OPERATION.with(|operation| *operation.borrow_mut() = Some((hooks_env, callbacks)));
+    let _restore = Restore;
+    run()
+}
+
+/// 原版某条 git 命令的 interceptHooks：在当前操作里，`run` 新建的 git 调用拦截这些钩子
+pub fn scoped<T>(repo: &Path, intercept: &[&str], run: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
+    let Some((hooks_env, callbacks)) = OPERATION.with(|operation| operation.borrow().clone()) else {
+        return run();
+    };
+    with_hooks_env(repo, intercept, Some(hooks_env), callbacks, |env| crate::git::with_extra_env(env, run))
+}
+
 /// 钩子代理身份的入口：把这次钩子调用交给应用，退出码照应用说的
 #[cfg(unix)]
 pub fn proxy_if_invoked() -> Option<i32> {

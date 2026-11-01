@@ -195,19 +195,23 @@ pub fn merge_result(repo: &Path, branch: &str, squash: bool) -> Result<MergeResu
 }
 
 pub fn merge_with_options(repo: &Path, branch: &str, squash: bool, no_verify: bool) -> Result<MergeResult, String> {
-    let mut command = Git::new(Some(repo)).arg("merge");
-    if no_verify {
-        command = command.arg("--no-verify");
-    }
-    if squash {
-        command = command.arg("--squash");
-    }
-    let output = command.args(["--", branch]).env("GIT_MERGE_AUTOEDIT", "no").output()?;
+    // 原版 merge.ts 两条命令各自的 interceptHooks。命令在 scoped 里才建，钩子代理的环境才带得上
+    let output = crate::hooks::scoped(repo, &["pre-merge-commit", "post-merge", "commit-msg"], || {
+        let mut command = Git::new(Some(repo)).arg("merge");
+        if no_verify {
+            command = command.arg("--no-verify");
+        }
+        if squash {
+            command = command.arg("--squash");
+        }
+        command.args(["--", branch]).env("GIT_MERGE_AUTOEDIT", "no").output()
+    })?;
     if !output.status.success() {
         return Err(crate::git::stderr_of(&output));
     }
     if squash {
-        Git::new(Some(repo)).args(["commit", "--no-edit"]).run()?;
+        let intercept = ["pre-merge-commit", "prepare-commit-msg", "commit-msg", "post-commit", "pre-auto-gc"];
+        crate::hooks::scoped(repo, &intercept, || Git::new(Some(repo)).args(["commit", "--no-edit"]).run())?;
     }
     Ok(if output.stdout == b"Already up to date.\n" { MergeResult::AlreadyUpToDate } else { MergeResult::Success })
 }
@@ -477,12 +481,24 @@ pub fn undo_commit(repo: &Path) -> Result<(), String> {
 }
 
 /// 修订上一次提交。
+#[allow(dead_code)] // Non-streaming entry point used by the upstream conformance bridge.
 pub fn amend(repo: &Path, summary: &str, description: &str) -> Result<(), String> {
-    let mut g = Git::new(Some(repo)).args(["commit", "--amend", "-m"]).arg(summary);
-    if !description.trim().is_empty() {
-        g = g.args(["-m"]).arg(description);
-    }
-    g.run()
+    amend_stream(repo, summary, description, |_| {})
+}
+
+/// Desktop createCommit 的 amend：钩子多拦一个 post-rewrite，输出给「提交进度」
+pub fn amend_stream(
+    repo: &Path, summary: &str, description: &str, on_output: impl FnMut(crate::git::TerminalChunk),
+) -> Result<(), String> {
+    let intercept = ["pre-commit", "prepare-commit-msg", "commit-msg", "post-commit", "post-rewrite", "pre-auto-gc"];
+    crate::hooks::scoped(repo, &intercept, || {
+        let mut g = Git::new(Some(repo)).args(["commit", "--amend", "-m"]).arg(summary);
+        if !description.trim().is_empty() {
+            g = g.args(["-m"]).arg(description);
+        }
+        let out = g.output_stream(on_output)?;
+        crate::git::checked_result(Path::new("."), out, &[0], &[]).map(|_| ())
+    })
 }
 
 // ── 历史操作 ────────────────────────────────────────────────────────

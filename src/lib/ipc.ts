@@ -51,7 +51,15 @@ import { clone } from "./clone"
 import type { IMentionableUser } from "./databases/github-user-database"
 import { fetch, pull } from "./fetch"
 import { executeGit, type HookCallbackOptions, terminalOutputChannel } from "./git-execution"
-import { getHooksEnv, hookEvents } from "./hooks/with-hooks-env"
+import {
+  amendInterceptHooks,
+  commitInterceptHooks,
+  getHooksEnv,
+  hookArgs,
+  hookEvents,
+  mergeInterceptHooks,
+  pushInterceptHooks
+} from "./hooks/with-hooks-env"
 import { prepareImageDiff } from "./image-data"
 import { type TerminalChunk, TerminalOutputDecoder } from "./terminal-output-decoder"
 
@@ -89,10 +97,6 @@ export interface DesktopImport {
   externalTerminal: string | null
   skipped: string[]
 }
-// Desktop lib/git/commit.ts（https://git-scm.com/docs/githooks/2.46.1）；Rust net::commit_with_hooks 拦截同一组。
-// 改提交走 amendCommit，所以没有 post-rewrite
-const commitInterceptHooks = ["pre-commit", "prepare-commit-msg", "commit-msg", "post-commit", "pre-auto-gc"]
-
 export const ipc = {
   hasTrackpad: () => invoke<boolean>("has_trackpad"),
   detectDesktopImport: () =>
@@ -335,16 +339,32 @@ export const ipc = {
   },
   /** token 由后端从钥匙串取，前端不接触 */
   /** setUpstream：远端还没有这条分支时要带；forceWithLease：强推（不是 --force） */
-  push: (repo: string, remote: string, refspec: string, setUpstream = false, forceWithLease = false) =>
-    invoke<void>("push", { repo, remote, refspec, setUpstream, forceWithLease }),
+  push: async (
+    repo: string,
+    remote: string,
+    refspec: string,
+    setUpstream = false,
+    forceWithLease = false,
+    callbacks?: HookCallbackOptions
+  ) =>
+    invoke<void>("push", {
+      repo,
+      remote,
+      refspec,
+      setUpstream,
+      forceWithLease,
+      ...(await hookArgs(repo, pushInterceptHooks, callbacks))
+    }),
   fetch: (repo: string, remote: string) => fetch({ path: repo }, { name: remote }),
-  pull: (repo: string, remote: string) => pull({ path: repo }, { name: remote }),
+  pull: (repo: string, remote: string, callbacks?: HookCallbackOptions) =>
+    pull({ path: repo }, { name: remote }, callbacks),
 
   // ── 分支操作 ────────────────────────────────────────────────────
   /** 合之前先算一下会不会冲突 */
   mergePreview: (repo: string, ours: string, theirs: string) =>
     invoke<MergePreview>("merge_preview", { repo, ours, theirs }),
-  mergeBranch: (repo: string, branch: string, squash = false) => invoke<void>("merge_branch", { repo, branch, squash }),
+  mergeBranch: async (repo: string, branch: string, squash = false, callbacks?: HookCallbackOptions) =>
+    invoke<void>("merge_branch", { repo, branch, squash, ...(await hookArgs(repo, mergeInterceptHooks, callbacks)) }),
   continueOperation: (repo: string, operation: Operation) => invoke<void>("continue_operation", { repo, operation }),
   abortOperation: (repo: string, operation: Operation) => invoke<void>("abort_operation", { repo, operation }),
   rebaseBranch: (repo: string, base: string, onOutput?: (text: string) => void) =>
@@ -365,8 +385,21 @@ export const ipc = {
 
   // ── 撤销与历史操作 ──────────────────────────────────────────────
   undoCommit: (repo: string) => invoke<void>("undo_commit", { repo }),
-  amendCommit: (repo: string, summary: string, description: string) =>
-    invoke<void>("amend_commit", { repo, summary, description }),
+  /** Desktop createCommit 的 amend：钩子、进度与「提交进度」同提交 */
+  amendCommit: async (repo: string, summary: string, description: string, callbacks?: HookCallbackOptions) => {
+    const { output, finish } = terminalOutputChannel(callbacks?.onTerminalOutputAvailable)
+    try {
+      return await invoke<void>("amend_commit", {
+        repo,
+        summary,
+        description,
+        ...(await hookArgs(repo, amendInterceptHooks, callbacks)),
+        output
+      })
+    } finally {
+      finish()
+    }
+  },
   resetTo: (repo: string, mode: ResetMode, target: string) => invoke<void>("reset_to", { repo, mode, target }),
   revertCommit: (repo: string, sha: string, isMerge = false) => invoke<void>("revert_commit", { repo, sha, isMerge }),
   /** 把若干提交压成一个（重写历史） */
@@ -386,8 +419,22 @@ export const ipc = {
   tagTargets: (repo: string) => invoke<Record<string, string>>("tag_targets", { repo }),
   tagsToPush: (repo: string, remote: string, branch: string) =>
     invoke<string[]>("tags_to_push", { repo, remote, branch }),
-  pushWithTags: (repo: string, remote: string, branch: string, tags: string[], force = false, setUpstream = false) =>
-    invoke<void>("push_with_tags", { repo, remote, branch, tags, options: { forceWithLease: force, setUpstream } }),
+  pushWithTags: async (
+    repo: string,
+    remote: string,
+    branch: string,
+    tags: string[],
+    force = false,
+    setUpstream = false
+  ) =>
+    invoke<void>("push_with_tags", {
+      repo,
+      remote,
+      branch,
+      tags,
+      options: { forceWithLease: force, setUpstream },
+      ...(await hookArgs(repo, pushInterceptHooks))
+    }),
 
   // ── 交给系统上的其他工具 ────────────────────────────────────────
   revealInFileManager: (path: string) => invoke<void>("reveal_in_file_manager", { path }),

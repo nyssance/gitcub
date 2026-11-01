@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { hookFailureHandling } from "@/features/dialogs/store"
 import { ipc } from "@/lib/ipc"
 import { Button } from "@/ui/base/button"
 import { Checkbox } from "@/ui/base/checkbox"
@@ -41,7 +42,12 @@ export function PublishRepository({
     try {
       const url = await ipc.createRemoteRepo(host, name.trim(), isPrivate)
       await ipc.addRemote(repo, "origin", url)
-      await ipc.push(repo, "origin", `HEAD:refs/heads/${branch ?? "main"}`, true)
+      // Desktop _publishRepository 走 _push：pre-push 失败时问，中止就不报错（仓库已经建好）
+      const { onHookFailure, ignoreAborted } = hookFailureHandling()
+      await ignoreAborted(
+        ipc.push(repo, "origin", `HEAD:refs/heads/${branch ?? "main"}`, true, false, { onHookFailure }),
+        undefined
+      )
       onPublished()
       onOpenChange(false)
     } catch (e) {

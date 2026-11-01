@@ -79,6 +79,14 @@ pub fn push_with_tags(
     repo: &Path, remote: &str, refspec: &str, tags: &[String], options: PushOptions, token: Option<&str>,
     user: Option<&str>,
 ) -> Result<(), String> {
+    // 原版 push.ts interceptHooks
+    crate::hooks::scoped(repo, &["pre-push"], || push_with_tags_unhooked(repo, remote, refspec, tags, options, token, user))
+}
+
+fn push_with_tags_unhooked(
+    repo: &Path, remote: &str, refspec: &str, tags: &[String], options: PushOptions, token: Option<&str>,
+    user: Option<&str>,
+) -> Result<(), String> {
     let PushOptions { set_upstream, force_with_lease, no_verify } = options;
     let mut g = Git::new(Some(repo)).arg("push");
 
@@ -159,6 +167,15 @@ pub fn pull_output(
     if remote.starts_with('-') {
         return Err("Cannot pull from a remote whose name starts with '-'.".into());
     }
+    // 原版 pull.ts interceptHooks
+    let intercept =
+        ["pre-merge-commit", "prepare-commit-msg", "commit-msg", "post-merge", "pre-rebase", "pre-commit", "post-rewrite"];
+    crate::hooks::scoped(repo, &intercept, || pull_output_unhooked(repo, remote, options, token, user))
+}
+
+fn pull_output_unhooked(
+    repo: &Path, remote: &str, options: RemoteOptions, token: Option<&str>, user: Option<&str>,
+) -> Result<RemoteOutput, String> {
     let mut command = Git::new(Some(repo)).args(["-c", "rebase.backend=merge", "pull"]);
     if crate::git_config::get(Some(repo), "pull.ff", false, false)?.is_none() {
         command = command.arg("--ff");

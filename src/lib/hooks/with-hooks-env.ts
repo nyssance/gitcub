@@ -52,6 +52,35 @@ export async function getHooksEnv(path: string, interceptHooks: readonly string[
   }
 }
 
+// Desktop lib/git/*.ts interceptHooks (https://git-scm.com/docs/githooks/2.46.1). The Rust commands intercept
+// the same lists per git command; these decide whether the shell environment has to be loaded first.
+export const commitInterceptHooks = ["pre-commit", "prepare-commit-msg", "commit-msg", "post-commit", "pre-auto-gc"]
+export const amendInterceptHooks = [...commitInterceptHooks, "post-rewrite"]
+export const pushInterceptHooks = ["pre-push"]
+export const pullInterceptHooks = [
+  "pre-merge-commit",
+  "prepare-commit-msg",
+  "commit-msg",
+  "post-merge",
+  "pre-rebase",
+  "pre-commit",
+  "post-rewrite"
+]
+/** merge.ts runs `git merge` and, for a squash, `git commit`; both lists together */
+export const mergeInterceptHooks = [
+  "pre-merge-commit",
+  "post-merge",
+  "commit-msg",
+  "prepare-commit-msg",
+  "post-commit",
+  "pre-auto-gc"
+]
+
+/** The `hooks` and `events` arguments of a native command that runs git with interceptHooks */
+export async function hookArgs(path: string, interceptHooks: readonly string[], options?: HookCallbackOptions) {
+  return { hooks: await getHooksEnv(path, interceptHooks), events: hookEvents(options) }
+}
+
 /** The native side of onHookProgress / onHookFailure */
 export function hookEvents(options?: HookCallbackOptions) {
   const channel = new Channel<HookEvent>()

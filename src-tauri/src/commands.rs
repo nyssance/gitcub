@@ -439,6 +439,12 @@ pub async fn commit(
     .map_err(|error| error.to_string())?
 }
 
+fn hook_channel(
+    events: tauri::ipc::Channel<crate::hooks::HookEvent>,
+) -> Option<std::sync::Arc<dyn crate::hooks::HookCallbacks>> {
+    Some(std::sync::Arc::new(HookChannel(events)))
+}
+
 /// 原版 onHookProgress / onHookFailure：进度直接发；失败时等前端 HookFailed 的回答（resolve_hook_failure）
 struct HookChannel(tauri::ipc::Channel<crate::hooks::HookEvent>);
 
@@ -510,16 +516,20 @@ fn with_auth_hint(r: Result<(), String>, had_token: bool) -> Result<(), String> 
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // Tauri command arguments mirror the IPC payload.
 pub async fn push(
     app: tauri::AppHandle, repo: String, remote: String, refspec: String, set_upstream: bool, force_with_lease: bool,
+    hooks: Option<crate::hooks::HooksEnv>, events: tauri::ipc::Channel<crate::hooks::HookEvent>,
 ) -> Result<(), String> {
     let p = Path::new(&repo);
     let token = settings::token_for_push(&app, p, &remote).await?;
     tauri::async_runtime::spawn_blocking(move || {
-        with_auth_hint(
-            net::push(Path::new(&repo), &remote, &refspec, set_upstream, force_with_lease, token.as_deref(), None),
-            token.is_some(),
-        )
+        crate::hooks::operation(hooks, hook_channel(events), || {
+            with_auth_hint(
+                net::push(Path::new(&repo), &remote, &refspec, set_upstream, force_with_lease, token.as_deref(), None),
+                token.is_some(),
+            )
+        })
     })
     .await
     .map_err(|error| error.to_string())?
@@ -558,8 +568,13 @@ pub async fn merge_preview(repo: String, ours: String, theirs: String) -> Result
 }
 
 #[tauri::command]
-pub async fn merge_branch(repo: String, branch: String, squash: bool) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || ops::merge(Path::new(&repo), &branch, squash))
+pub async fn merge_branch(
+    repo: String, branch: String, squash: bool, hooks: Option<crate::hooks::HooksEnv>,
+    events: tauri::ipc::Channel<crate::hooks::HookEvent>,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::hooks::operation(hooks, hook_channel(events), || ops::merge(Path::new(&repo), &branch, squash))
+    })
         .await
         .map_err(|error| error.to_string())?
 }
@@ -662,8 +677,18 @@ pub async fn undo_commit(repo: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn amend_commit(repo: String, summary: String, description: String) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || ops::amend(Path::new(&repo), &summary, &description))
+pub async fn amend_commit(
+    repo: String, summary: String, description: String, hooks: Option<crate::hooks::HooksEnv>,
+    events: tauri::ipc::Channel<crate::hooks::HookEvent>,
+    output: tauri::ipc::Channel<crate::git::TerminalChunk>,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::hooks::operation(hooks, hook_channel(events), || {
+            ops::amend_stream(Path::new(&repo), &summary, &description, |chunk| {
+                let _ = output.send(chunk);
+            })
+        })
+    })
         .await
         .map_err(|error| error.to_string())?
 }
@@ -1130,14 +1155,16 @@ pub async fn tag_targets(repo: String) -> Result<std::collections::BTreeMap<Stri
         .map_err(|error| error.to_string())?
 }
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // Tauri command arguments mirror the IPC payload.
 pub async fn push_with_tags(
     app: tauri::AppHandle, repo: String, remote: String, branch: String, tags: Vec<String>,
-    options: Option<net::PushOptions>,
+    options: Option<net::PushOptions>, hooks: Option<crate::hooks::HooksEnv>,
+    events: tauri::ipc::Channel<crate::hooks::HookEvent>,
 ) -> Result<(), String> {
     let path = Path::new(&repo);
     let token = settings::token_for_push(&app, path, &remote).await?;
     tauri::async_runtime::spawn_blocking(move || {
-        with_auth_hint(
+        crate::hooks::operation(hooks, hook_channel(events), || with_auth_hint(
             net::push_with_tags(
                 Path::new(&repo),
                 &remote,
@@ -1148,7 +1175,7 @@ pub async fn push_with_tags(
                 None,
             ),
             token.is_some(),
-        )
+        ))
     })
     .await
     .map_err(|error| error.to_string())?
@@ -1452,11 +1479,14 @@ pub async fn fetch_output(
 #[tauri::command]
 pub async fn pull_output(
     app: tauri::AppHandle, repo: String, remote: String, options: net::RemoteOptions,
+    hooks: Option<crate::hooks::HooksEnv>, events: tauri::ipc::Channel<crate::hooks::HookEvent>,
 ) -> Result<net::RemoteOutput, String> {
     let p = Path::new(&repo);
     let token = token_of(&app, p, &remote).await?;
     tauri::async_runtime::spawn_blocking(move || {
-        net::pull_output(Path::new(&repo), &remote, options, token.as_deref(), None)
+        crate::hooks::operation(hooks, hook_channel(events), || {
+            net::pull_output(Path::new(&repo), &remote, options, token.as_deref(), None)
+        })
     })
     .await
     .map_err(|error| error.to_string())?

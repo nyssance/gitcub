@@ -8,7 +8,7 @@ import type { PanelImperativeHandle } from "react-resizable-panels"
 import { useAccountsStore } from "@/features/accounts/store"
 import { activeRepository, useAppStateStore } from "@/features/app-state/store"
 import { type FileState, useChangesStore } from "@/features/changes/store"
-import { selectDialogBlocking, useDialogsStore } from "@/features/dialogs/store"
+import { hookFailureHandling, selectDialogBlocking, useDialogsStore } from "@/features/dialogs/store"
 import { useHistoryStore } from "@/features/history/store"
 import { usePreferencesStore } from "@/features/preferences/store"
 import { usePullRequestsStore } from "@/features/pull-requests/store"
@@ -26,6 +26,7 @@ import {
 import { getGlobalConfigValue, getRemoteHEAD } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import { contributesToParent, contributionRepository } from "@/lib/fork-contribution"
+import type { HookCallbackOptions } from "@/lib/git-execution"
 import i18n from "@/lib/i18n"
 import { ipc } from "@/lib/ipc"
 import { useNativeMenu } from "@/lib/menu/use-native-menu"
@@ -154,7 +155,6 @@ export function App() {
   const setDiscarding = useDialogsStore(s => s.setDiscarding)
   const dialogBlocking = useDialogsStore(selectDialogBlocking)
   const hookFailed = useDialogsStore(s => s.hookFailed)
-  const askHookFailure = useDialogsStore(s => s.askHookFailure)
   const dismissHookFailed = useDialogsStore(s => s.dismissHookFailed)
   const commitProgress = useDialogsStore(s => s.commitProgress)
   const setCommitProgress = useDialogsStore(s => s.setCommitProgress)
@@ -530,8 +530,12 @@ export function App() {
   }
   // Desktop performPull: without a current remote the pull fails with "The repository has no remotes.";
   // fetching every remote of an empty list does nothing. A bare "origin" would be a relative path to Git.
-  const pullCurrent = (path: string) =>
-    status.remote ? ipc.pull(path, status.remote) : Promise.reject(new BranchWorkflowError("noRemotes"))
+  // Desktop _pull 的 onHookFailure：选了中止就当没拉，不报错
+  const pullCurrent = (path: string) => {
+    if (!status.remote) return Promise.reject(new BranchWorkflowError("noRemotes"))
+    const { onHookFailure, ignoreAborted } = hookFailureHandling()
+    return ignoreAborted(ipc.pull(path, status.remote, { onHookFailure }), undefined)
+  }
   const fetchCurrent = async (path: string) => {
     if (status.remote) await ipc.fetch(path, status.remote)
   }
@@ -576,16 +580,21 @@ export function App() {
   const doPush = async (force = false) => {
     if (!repo) return
     await run(async () => {
-      await pushWithRecovery(
-        repo,
-        force,
-        {
-          ...ipc,
-          push: (path, remote, branch, target, forceWithLease) =>
-            push({ path }, { name: remote }, branch, target, null, { forceWithLease })
-        },
-        () => ask(t("push.needsPull")),
-        () => ask(t("push.forceConfirm"), "confirmForcePush")
+      // Desktop _push 的 onHookFailure：pre-push 失败时问；选了中止就到此为止，不报错
+      const { onHookFailure, ignoreAborted } = hookFailureHandling()
+      await ignoreAborted(
+        pushWithRecovery(
+          repo,
+          force,
+          {
+            ...ipc,
+            push: (path, remote, branch, target, forceWithLease) =>
+              push({ path }, { name: remote }, branch, target, null, { forceWithLease, onHookFailure })
+          },
+          () => ask(t("push.needsPull")),
+          () => ask(t("push.forceConfirm"), "confirmForcePush")
+        ),
+        undefined
       )
     })
   }
@@ -606,6 +615,28 @@ export function App() {
 
   const doCheckout = async (branch: string) => {
     if (repo) await run(() => checkoutWithStash(repo, branch, ipc, checkoutPrompts, checkoutStrategy()))
+  }
+
+  /** Desktop _commitIncludedChanges / withIsCommitting：钩子进度与提交输出只属于这一次提交（改提交同样），
+   *  HookFailed 里选了中止时返回 false 且不报错 */
+  const commitWithHooks = async (commit: (callbacks: HookCallbackOptions) => Promise<void>) => {
+    const { onHookFailure, ignoreAborted } = hookFailureHandling()
+    const { setHookProgress, setSubscribeToCommitOutput } = useChangesStore.getState()
+    setHookProgress(null)
+    setSubscribeToCommitOutput(null)
+    try {
+      return await ignoreAborted(
+        commit({
+          onHookProgress: setHookProgress,
+          onHookFailure,
+          onTerminalOutputAvailable: setSubscribeToCommitOutput
+        }).then(() => true),
+        false
+      )
+    } finally {
+      setHookProgress(null)
+      setSubscribeToCommitOutput(null)
+    }
   }
 
   const doCommit = async (summary: string, description: string, options: CommitOptions) => {
@@ -629,34 +660,9 @@ export function App() {
             return { file: c, include: st.include, selection: st.selection, expectedDiff: st.diff }
           })
         )
-        // Desktop _commitIncludedChanges / withIsCommitting：钩子进度与提交输出只属于这一次提交；
-        // 在 HookFailed 里选了中止，git 随之失败，这时不再报错
-        let aborted = false
-        const { setHookProgress, setSubscribeToCommitOutput } = useChangesStore.getState()
-        setHookProgress(null)
-        setSubscribeToCommitOutput(null)
-        const committed = await ipc
-          .commit(repo, summary, description, options, {
-            onHookProgress: setHookProgress,
-            onHookFailure: (hookName, terminalOutput) =>
-              askHookFailure(hookName, terminalOutput).then(resolution => {
-                if (resolution === "abort") aborted = true
-                return resolution
-              }),
-            onTerminalOutputAvailable: setSubscribeToCommitOutput
-          })
-          .then(
-            () => true,
-            (error: unknown) => {
-              if (aborted) return false
-              throw error
-            }
-          )
-          .finally(() => {
-            setHookProgress(null)
-            setSubscribeToCommitOutput(null)
-          })
-        if (!committed) return false
+        if (!(await commitWithHooks(callbacks => ipc.commit(repo, summary, description, options, callbacks)))) {
+          return false
+        }
         if (repo === activeRepository()) {
           setFiles(new Map())
           setSelected(null)
@@ -776,7 +782,11 @@ export function App() {
         // 预览失败不该挡着合并本身，照常往下走
       }
     }
-    await run(() => ipc.mergeBranch(repo, name, squash))
+    // Desktop _mergeBranch：HookFailed 里选了中止就只刷新，不报错
+    await run(() => {
+      const { onHookFailure, ignoreAborted } = hookFailureHandling()
+      return ignoreAborted(ipc.mergeBranch(repo, name, squash, { onHookFailure }), undefined)
+    })
   }
 
   const doDeleteBranch = async (name: string) => {
@@ -927,7 +937,11 @@ export function App() {
             await ipc.fetch(repo, remote)
             const branch = await getRemoteHEAD(new Repository(repo, -1, null, false), remote)
             if (!branch) throw new Error(t("branch.noRemoteDefault"))
-            await ipc.mergeBranch(repo, `refs/remotes/${remote}/${branch}`, false)
+            const { onHookFailure, ignoreAborted } = hookFailureHandling()
+            await ignoreAborted(
+              ipc.mergeBranch(repo, `refs/remotes/${remote}/${branch}`, false, { onHookFailure }),
+              undefined
+            )
           })
         break
       case "open-with-external-editor":
@@ -1631,8 +1645,9 @@ export function App() {
                                     selection: stateOf(file.path).selection
                                   }))
                                 )
-                                await ipc.amendCommit(repo, summary, description)
-                                return true
+                                return commitWithHooks(callbacks =>
+                                  ipc.amendCommit(repo, summary, description, callbacks)
+                                )
                               })) ?? false
                             )
                           }}

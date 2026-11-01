@@ -131,6 +131,8 @@ async function evaluate(expression: string) {
   if (result?.error) throw new Error(redact(JSON.stringify(result.error)))
   return result
 }
+/** Stands in for a Tauri Channel argument in `invoke` */
+const CHANNEL = "__gitcubAcceptanceChannel__"
 async function invoke(command: string, args: unknown = {}) {
   const id = String(++requestId)
   // Hasgard limits each eval to 10s. Keep long native operations outside that
@@ -138,7 +140,10 @@ async function invoke(command: string, args: unknown = {}) {
   await evaluate(`(() => {
     const calls = window.__gitcubAcceptanceCalls ??= {};
     calls[${JSON.stringify(id)}] = { pending: true };
-    window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)}, ${JSON.stringify(args)}).then(
+    // Commands that stream output or hook events take channels; a fresh, unread channel per placeholder
+    const args = JSON.parse(${JSON.stringify(JSON.stringify(args))}, (_, value) =>
+      value === ${JSON.stringify(CHANNEL)} ? "__CHANNEL__:" + window.__TAURI_INTERNALS__.transformCallback(() => {}) : value);
+    window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)}, args).then(
       value => calls[${JSON.stringify(id)}] = { value },
       error => calls[${JSON.stringify(id)}] = { failure: String(error) }
     );
@@ -262,11 +267,22 @@ try {
     repo: clone,
     summary: "test: temporary GitCub live pipeline acceptance",
     description: "Disposable acceptance commit; never merge.",
-    options: {}
+    options: {},
+    hooks: null,
+    events: CHANNEL,
+    output: CHANNEL
   })
   const sha = (await exec("git", ["-C", clone, "rev-parse", "HEAD"])).stdout.trim()
   report.sha = sha
-  await invoke("push_with_tags", { repo: clone, remote: "origin", branch, tags: [], options: { setUpstream: true } })
+  await invoke("push_with_tags", {
+    repo: clone,
+    remote: "origin",
+    branch,
+    tags: [],
+    options: { setUpstream: true },
+    hooks: null,
+    events: CHANNEL
+  })
   pushed = true
   record("native stage, commit and authenticated push")
   await invoke("fetch", { repo: clone, remote: "origin" })
