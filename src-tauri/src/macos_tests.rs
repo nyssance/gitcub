@@ -62,7 +62,7 @@ fn rebase_conflict_survives_status_reload_and_can_abort_or_continue() {
     assert_eq!(std::fs::read_to_string(repo.join("file.txt")).unwrap(), "feature\n");
     assert!(ops::rebase(repo, "main").is_err());
     ops::resolve_conflict(repo, "file.txt", ops::Resolution::Theirs).unwrap();
-    ops::continue_operation(repo, ops::Operation::Rebase).unwrap();
+    ops::continue_operation(repo, ops::Operation::Rebase, &mut |_| {}).unwrap();
     assert!(status::status(repo).unwrap().operation.is_none());
     assert_eq!(git(repo, &["rev-parse", "HEAD^"]), git(repo, &["rev-parse", "main"]));
     assert_eq!(std::fs::read_to_string(repo.join("file.txt")).unwrap(), "feature\n");
@@ -169,7 +169,7 @@ fn merge_cherry_pick_and_revert_recover_after_failed_continue_and_abort() {
         };
         assert!(start().is_err());
         assert_eq!(status::status(repo).unwrap().operation, Some(operation));
-        assert!(ops::continue_operation(repo, operation).is_err());
+        assert!(ops::continue_operation(repo, operation, &mut |_| {}).is_err());
         assert_eq!(status::status(repo).unwrap().operation, Some(operation));
         ops::abort_operation(repo, operation).unwrap();
         assert_eq!(git(repo, &["rev-parse", "HEAD"]), original_head);
@@ -178,7 +178,7 @@ fn merge_cherry_pick_and_revert_recover_after_failed_continue_and_abort() {
         assert!(start().is_err());
         ops::resolve_conflict(repo, "file.txt", ops::Resolution::Theirs).unwrap();
         assert!(git(repo, &["diff", "--name-only", "--diff-filter=U"]).is_empty());
-        ops::continue_operation(repo, operation).unwrap();
+        ops::continue_operation(repo, operation, &mut |_| {}).unwrap();
         assert!(status::status(repo).unwrap().operation.is_none());
         assert_eq!(git(repo, &["status", "--porcelain"]), "");
         assert_eq!(

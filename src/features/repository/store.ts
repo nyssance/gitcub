@@ -26,7 +26,7 @@ import { createCoalescingRunner } from "@/lib/coalescing-runner"
 import type { IMentionableUser } from "@/lib/databases/github-user-database"
 import { contributionRepository } from "@/lib/fork-contribution"
 import type { Issue, LfsState, Remote, StashEntry } from "@/models/app-state"
-import type { MultiCommitOperationKind } from "@/models/multi-commit-operation"
+import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import type { RepoStatus } from "@/models/repo-status"
 import { getStringArray, setStringArray } from "@/upstream/lib/local-storage"
 import type { IMultiCommitOperationProgress } from "@/upstream/models/progress"
@@ -120,6 +120,8 @@ interface RepositoryStore {
   settleRewrite: (repo: string, before?: string | null) => void
   /** 中止变基：挂起的那次不再记 */
   dropRewrite: (repo: string) => void
+  /** Desktop multiCommitOperationState.operationDetail.kind：停在冲突上的变基原本是变基、压缩还是重排，继续时的进度标题用它 */
+  rebaseKinds: Record<string, MultiCommitOperationKind>
   refresh: () => Promise<void>
   /** 换仓库时调用；返回的函数取消这个仓库的刷新。 */
   bind: (repo: string | null) => () => void
@@ -203,7 +205,11 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   multiCommitOperation: null,
   setMultiCommitOperation: (repo, multiCommitOperation) => {
     if (repo === activeRepository()) set({ multiCommitOperation })
+    // 拣选不走 git rebase，继续时就是拣选
+    if (multiCommitOperation && multiCommitOperation.kind !== MultiCommitOperationKind.CherryPick)
+      set({ rebaseKinds: { ...get().rebaseKinds, [repo]: multiCommitOperation.kind } })
   },
+  rebaseKinds: {},
   setNetworkProgress: (repo, networkProgress) => {
     if (repo === activeRepository()) set({ networkProgress })
   },
@@ -235,7 +241,8 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   },
   dropRewrite: repo => {
     const { [repo]: _, ...rest } = get().pendingRewrites
-    set({ pendingRewrites: rest })
+    const { [repo]: __, ...kinds } = get().rebaseKinds
+    set({ pendingRewrites: rest, rebaseKinds: kinds })
   },
   addBranchToForcePushList: (repo, beforeChangeSha) => {
     const { status, forcePushBranches } = get()

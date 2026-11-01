@@ -374,7 +374,12 @@ export const ipc = {
     invoke<MergePreview>("merge_preview", { repo, ours, theirs }),
   mergeBranch: async (repo: string, branch: string, squash = false, callbacks?: HookCallbackOptions) =>
     invoke<void>("merge_branch", { repo, branch, squash, ...(await hookArgs(repo, mergeInterceptHooks, callbacks)) }),
-  continueOperation: (repo: string, operation: Operation) => invoke<void>("continue_operation", { repo, operation }),
+  /** 变基、拣选继续时按 Desktop 报进度（ops.rs continue_operation） */
+  continueOperation: (
+    repo: string,
+    operation: Operation,
+    onProgress?: (progress: IMultiCommitOperationProgress) => void
+  ) => invoke<void>("continue_operation", { repo, operation, progress: multiCommitProgress(onProgress) }),
   abortOperation: (repo: string, operation: Operation) => invoke<void>("abort_operation", { repo, operation }),
   rebaseBranch: (
     repo: string,

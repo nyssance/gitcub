@@ -5,6 +5,7 @@ import { beforeEach, expect, test } from "bun:test"
 import { useAppStateStore } from "../../src/features/app-state/store"
 import { EMPTY_STATUS, nextLastFetched, useRepositoryStore } from "../../src/features/repository/store"
 import { ForcePushBranchState, getCurrentBranchForcePushState } from "../../src/lib/force-push-state"
+import { MultiCommitOperationKind } from "../../src/models/multi-commit-operation"
 import { pushPullRemoteName } from "../../src/ui/toolbar/toolbar"
 
 const diverged = { branch: "main", head: "b", hasUpstream: true, ahead: 1, behind: 1 }
@@ -112,4 +113,16 @@ test("推拉按钮的远端名：跟上游的远端，上游分支名不同时�
   expect(pushPullRemoteName({ ...status, branch: null, upstream: "origin/other", upstreamRemoteName: "origin" })).toBe(
     "origin"
   )
+})
+
+// Desktop base-rebase onContinue 用流程里保存的 rebaseKind 定进度标题：压缩、重排停在冲突上，继续时仍是压缩、重排
+test("停在冲突上的变基记住原本的操作，结算或中止后清掉；拣选不记", () => {
+  useRepositoryStore.setState({ rebaseKinds: {} })
+  const store = useRepositoryStore.getState()
+  store.setMultiCommitOperation("/r", { kind: MultiCommitOperationKind.Squash, progress: null })
+  store.setMultiCommitOperation("/r", null)
+  store.setMultiCommitOperation("/other", { kind: MultiCommitOperationKind.CherryPick, progress: null })
+  expect(useRepositoryStore.getState().rebaseKinds).toEqual({ "/r": MultiCommitOperationKind.Squash })
+  store.dropRewrite("/r")
+  expect(useRepositoryStore.getState().rebaseKinds).toEqual({})
 })

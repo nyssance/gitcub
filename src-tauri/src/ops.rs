@@ -63,15 +63,17 @@ pub fn in_progress(git_dir: &Path) -> Option<(Operation, Option<String>)> {
 
 /// 收尾。合并是靠一次普通提交收尾的（`--no-edit` 用 git 备好的 MERGE_MSG），
 /// 其余三个都有自己的 `--continue`。
-pub fn continue_operation(repo: &Path, op: Operation) -> Result<(), String> {
+pub fn continue_operation(
+    repo: &Path, op: Operation, on_progress: &mut dyn FnMut(MultiCommitProgress),
+) -> Result<(), String> {
     if op == Operation::Merge {
         return finish_merge(repo, &[], &[]).map(|_| ());
     }
     if op == Operation::Rebase {
-        return continue_rebase(repo, &[], None);
+        return continue_rebase(repo, &[], None, on_progress);
     }
     if op == Operation::CherryPick {
-        let outcome = continue_cherry_pick(repo, &[], &[])?;
+        let outcome = continue_cherry_pick(repo, &[], &[], on_progress)?;
         return if matches!(outcome.result, CherryPickResult::CompletedWithoutError) {
             Ok(())
         } else {
@@ -108,8 +110,10 @@ pub fn finish_merge(repo: &Path, paths: &[String], resolutions: &[(String, Resol
 }
 
 /// Desktop continueRebase：按传入文件暂存解决结果，非交互式完成提交信息编辑。
-pub fn continue_rebase(repo: &Path, paths: &[String], editor: Option<&str>) -> Result<(), String> {
-    let outcome = continue_rebase_with_resolutions(repo, paths, &[], editor)?;
+pub fn continue_rebase(
+    repo: &Path, paths: &[String], editor: Option<&str>, on_progress: &mut dyn FnMut(MultiCommitProgress),
+) -> Result<(), String> {
+    let outcome = continue_rebase_with_resolutions(repo, paths, &[], editor, on_progress)?;
     match outcome.result {
         RebaseResult::CompletedWithoutError | RebaseResult::AlreadyUpToDate => Ok(()),
         _ => Err(outcome.diagnostic),
@@ -1002,6 +1006,7 @@ pub fn cherry_pick_commits_stream(
 
 pub fn continue_cherry_pick(
     repo: &Path, paths: &[String], resolutions: &[(String, Resolution)],
+    on_progress: &mut dyn FnMut(MultiCommitProgress),
 ) -> Result<CherryPickOutcome, String> {
     for (path, resolution) in resolutions {
         if paths.contains(path) {
@@ -1031,7 +1036,18 @@ pub fn continue_cherry_pick(
     let has_changes =
         crate::status::status(repo)?.changes.iter().any(|file| file.kind != crate::status::ChangeKind::Untracked);
     let args = if has_changes { ["cherry-pick", "--continue"] } else { ["commit", "--allow-empty"] };
-    let output = Git::new(Some(repo)).args(args).env("GIT_EDITOR", ":").output()?;
+    // Desktop 继续时进度对话框先显示停下时的进度（保存在 multiCommitOperationState 里），这里取快照里的同一个值；
+    // 之后照 configureOptionsWithCallBack 从已拣选的个数往后数
+    on_progress(snapshot.progress.clone());
+    let mut position = snapshot.cherry_picked_count;
+    let mut lines = line_stream(crate::git::TerminalStream::Stdout, |line| {
+        if is_cherry_picked_line(line) {
+            position += 1;
+            on_progress(progress_at(position, snapshot.commits.len(), &snapshot.commits));
+        }
+    });
+    let output = Git::new(Some(repo)).args(args).env("GIT_EDITOR", ":").output_raw_stream(|chunk| lines(&chunk))?;
+    drop(lines);
     parse_cherry_pick_output(repo, output, &snapshot.commits, snapshot.cherry_picked_count)
 }
 
@@ -1388,6 +1404,7 @@ pub fn rebase_branch_stream(
 
 pub fn continue_rebase_with_resolutions(
     repo: &Path, paths: &[String], resolutions: &[(String, Resolution)], editor: Option<&str>,
+    on_progress: &mut dyn FnMut(MultiCommitProgress),
 ) -> Result<RebaseOutcome, String> {
     for (path, resolution) in resolutions {
         resolve_conflict(repo, path, *resolution)?;
@@ -1414,10 +1431,18 @@ pub fn continue_rebase_with_resolutions(
     };
     let has_changes =
         crate::status::status(repo)?.changes.iter().any(|file| file.kind != crate::status::ChangeKind::Untracked);
+    // Desktop 继续时进度对话框先显示停下时的进度，之后照 configureOptionsForRebase 读 stderr 的 Rebasing (n/m)
+    on_progress(snapshot.progress.clone());
+    let mut lines = line_stream(crate::git::TerminalStream::Stderr, |line| {
+        if let Some(progress) = rebase_progress(line, &snapshot.commits) {
+            on_progress(progress);
+        }
+    });
     let output = Git::new(Some(repo))
         .args(["rebase", if has_changes { "--continue" } else { "--skip" }])
         .env("GIT_EDITOR", editor.unwrap_or(":"))
-        .output()?;
+        .output_raw_stream(|chunk| lines(&chunk))?;
+    drop(lines);
     parse_rebase_output(repo, output, &snapshot.commits, true)
 }
 
@@ -1443,6 +1468,56 @@ mod tests {
     }
 
     /// Desktop `getStashes` from the reflog in process must equal `git log -g` byte for byte.
+    /// Desktop 冲突解决后继续：进度对话框先显示停下时的进度，再接着报剩下的提交
+    #[test]
+    fn 继续变基与拣选的进度() {
+        let d = tempfile::tempdir().unwrap();
+        let r = d.path();
+        let g = |args: &[&str]| {
+            crate::test_repo::git(r, &[&["-c", "user.name=t", "-c", "user.email=t@example.com"], args].concat())
+        };
+        g(&["init", "-q", "-b", "main"]);
+        std::fs::write(r.join("shared"), "base").unwrap();
+        g(&["add", "."]);
+        g(&["commit", "-qm", "base"]);
+        g(&["checkout", "-qb", "feature"]);
+        for (name, file, content) in [("one", "one", "1"), ("two", "shared", "feature"), ("three", "three", "3")] {
+            std::fs::write(r.join(file), content).unwrap();
+            g(&["add", "."]);
+            g(&["commit", "-qm", name]);
+        }
+        g(&["checkout", "-q", "main"]);
+        std::fs::write(r.join("shared"), "main").unwrap();
+        g(&["commit", "-qam", "on main"]);
+        g(&["checkout", "-q", "feature"]);
+
+        let outcome = rebase_branch_stream(r, "main", None, |_| {}, |_| {}).unwrap();
+        assert!(matches!(outcome.result, RebaseResult::ConflictsEncountered));
+        std::fs::write(r.join("shared"), "resolved").unwrap();
+        g(&["add", "shared"]);
+        let mut continued = Vec::new();
+        continue_operation(r, Operation::Rebase, &mut |p| continued.push(p)).unwrap();
+        let seen: Vec<_> = continued.iter().map(|p| (p.position, p.current_commit_summary.as_str())).collect();
+        assert_eq!(seen, vec![(2, "two"), (3, "three")]);
+        assert_eq!(continued.last().unwrap().value, 1.0);
+
+        g(&["checkout", "-qb", "target", "main~1"]);
+        std::fs::write(r.join("shared"), "target").unwrap();
+        g(&["commit", "-qam", "on target"]);
+        let shas: Vec<String> = ["main", "feature~1", "feature"]
+            .iter()
+            .map(|rev| crate::test_repo::git(r, &["rev-parse", rev]).trim().into())
+            .collect();
+        assert!(cherry_pick_stream(r, &shas, |_| {}, |_| {}).is_err(), "第 1 个提交冲突");
+        std::fs::write(r.join("shared"), "resolved").unwrap();
+        g(&["add", "shared"]);
+        let mut continued = Vec::new();
+        continue_operation(r, Operation::CherryPick, &mut |p| continued.push(p)).unwrap();
+        let seen: Vec<_> = continued.iter().map(|p| (p.position, p.total_commit_count)).collect();
+        assert_eq!(seen.first(), Some(&(1, 3)), "停在第 1 个提交");
+        assert_eq!(continued.last().map(|p| (p.position, p.value)), Some((3, 1.0)));
+    }
+
     /// Desktop rebase / cherry-pick 的进度在 git 运行时边跑边报：变基读 stderr 的 `Rebasing (n/m)`，
     /// 拣选读 stdout 每个提交一行的 `[分支 sha] 摘要`；初始进度变基取第一个提交、拣选取最后一个
     #[test]

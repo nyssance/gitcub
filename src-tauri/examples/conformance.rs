@@ -263,7 +263,8 @@ fn execute(request: &Value) -> Result<Value, String> {
             repo,
             &strings("paths")?,
             &serde_json::from_value::<Vec<(String, ops::Resolution)>>(request["resolutions"].clone())
-                .map_err(|e| e.to_string())?
+                .map_err(|e| e.to_string())?,
+            &mut |_| {}
         )?),
         "cherry-pick/snapshot" => json!(ops::cherry_pick_snapshot(repo)?),
         "cherry-pick/abort" => {
@@ -402,7 +403,8 @@ fn execute(request: &Value) -> Result<Value, String> {
             &strings("paths")?,
             &serde_json::from_value::<Vec<(String, ops::Resolution)>>(request["resolutions"].clone())
                 .map_err(|e| e.to_string())?,
-            request["editor"].as_str()
+            request["editor"].as_str(),
+            &mut |_| {}
         )?),
         "tags/list" => json!(ops::all_tags(repo)?),
         "tags/create" => {
@@ -553,7 +555,7 @@ fn execute(request: &Value) -> Result<Value, String> {
             ),
         ),
         "rebase/continue" => {
-            rebase_result(repo, ops::continue_rebase(repo, &strings("paths")?, request["editor"].as_str()))
+            rebase_result(repo, ops::continue_rebase(repo, &strings("paths")?, request["editor"].as_str(), &mut |_| {}))
         }
         "rebase/state" => json!(ops::rebase_state(repo)),
         "history/files" => json!(history::commit_files(repo, request["sha"].as_str().unwrap())?),
@@ -801,6 +803,7 @@ fn execute(request: &Value) -> Result<Value, String> {
             ops::continue_operation(
                 repo,
                 serde_json::from_value(request["pausedOperation"].clone()).map_err(|error| error.to_string())?,
+                &mut |_| {},
             )?;
             Value::Null
         }

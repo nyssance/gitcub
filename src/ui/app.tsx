@@ -1724,9 +1724,20 @@ export function App() {
                             )
                           }
                           onContinue={op =>
-                            void run(() => ipc.continueOperation(repo, op)).then(() =>
-                              useRepositoryStore.getState().settleRewrite(repo)
-                            )
+                            void run(() => {
+                              // Desktop base-rebase / cherry-pick onContinue：继续时切回进度对话框
+                              const kind =
+                                op === "rebase"
+                                  ? (useRepositoryStore.getState().rebaseKinds[repo] ?? MultiCommitOperationKind.Rebase)
+                                  : op === "cherry-pick"
+                                    ? MultiCommitOperationKind.CherryPick
+                                    : null
+                              return kind === null
+                                ? ipc.continueOperation(repo, op)
+                                : withMultiCommitProgress(repo, kind, onProgress =>
+                                    ipc.continueOperation(repo, op, onProgress)
+                                  )
+                            }).then(() => useRepositoryStore.getState().settleRewrite(repo))
                           }
                         />
                         {stashesVisible && (

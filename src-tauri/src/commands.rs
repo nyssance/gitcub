@@ -610,10 +610,16 @@ pub async fn rebase_branch(
 /// 收尾/中止正在进行的那个操作。具体是哪个由 repo_status 的 operation 给出，
 /// 前端不用猜（以前是「先试 rebase --continue，失败再当成合并」）。
 #[tauri::command]
-pub async fn continue_operation(repo: String, operation: ops::Operation) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || ops::continue_operation(Path::new(&repo), operation))
-        .await
-        .map_err(|error| error.to_string())?
+pub async fn continue_operation(
+    repo: String, operation: ops::Operation, progress: tauri::ipc::Channel<ops::MultiCommitProgress>,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        ops::continue_operation(Path::new(&repo), operation, &mut |event| {
+            let _ = progress.send(event);
+        })
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -1399,7 +1405,7 @@ pub async fn continue_rebase_with_resolutions(
     repo: String, paths: Vec<String>, resolutions: Vec<(String, ops::Resolution)>,
 ) -> Result<ops::RebaseOutcome, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        ops::continue_rebase_with_resolutions(Path::new(&repo), &paths, &resolutions, None)
+        ops::continue_rebase_with_resolutions(Path::new(&repo), &paths, &resolutions, None, &mut |_| {})
     })
     .await
     .map_err(|error| error.to_string())?
@@ -1423,9 +1429,11 @@ pub async fn cherry_pick_with_progress(
 pub async fn continue_cherry_pick(
     repo: String, paths: Vec<String>, resolutions: Vec<(String, ops::Resolution)>,
 ) -> Result<ops::CherryPickOutcome, String> {
-    tauri::async_runtime::spawn_blocking(move || ops::continue_cherry_pick(Path::new(&repo), &paths, &resolutions))
-        .await
-        .map_err(|error| error.to_string())?
+    tauri::async_runtime::spawn_blocking(move || {
+        ops::continue_cherry_pick(Path::new(&repo), &paths, &resolutions, &mut |_| {})
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
