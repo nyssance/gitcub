@@ -285,7 +285,7 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
           Effect.sync(() => {
             useDialogsStore
               .getState()
-              .pushError(
+              .postError(
                 error._tag === "OperationError" ? toPresentableError(error.error) : new Error(describeError(error))
               )
             return undefined

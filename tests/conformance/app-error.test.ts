@@ -4,10 +4,14 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
+import { useDialogsStore } from "../../src/features/dialogs/store"
 import { DugiteError, GitErrorRegexes, parseError } from "../../src/lib/dugite-errors"
+import { ErrorWithMetadata } from "../../src/lib/error-with-metadata"
 import { GitError } from "../../src/lib/git-error"
 import { getDescriptionForError, isAuthFailureError } from "../../src/lib/git-error-description"
 import { toPresentableError } from "../../src/lib/presentable-error"
+import { Repository } from "../../src/models/repository"
+import { RetryActionType } from "../../src/models/retry-actions"
 
 test("识别表覆盖每个错误种类，每个种类都有确定的说明（文本或 null）", () => {
   const kinds = new Set(Object.values(GitErrorRegexes))
@@ -26,7 +30,7 @@ test("英文说明与 Desktop core.ts getDescriptionForError 逐字一致", () =
   let checked = 0
   for (const [, cases, , text] of body.matchAll(pattern)) {
     for (const [, kind] of cases!.matchAll(/case DugiteError\.(\w+):/g)) {
-      const expected = text!.replaceAll("\\'", "'").replace("GitHub Desktop", "GitCub")
+      const expected = text!.replaceAll(String.raw`\'`, "'").replace("GitHub Desktop", "GitCub")
       expect(getDescriptionForError(kind as DugiteError, "")).toBe(expected)
       checked++
     }
@@ -78,4 +82,28 @@ test("后端回来的文本：认得出种类给说明，git 原始输出留原�
     stderr: "fatal: Not a git repository (or any of the parent directories): .git"
   })
   expect(toPresentableError(parsed).message).toBe("This is not a git repository.")
+})
+
+// Desktop localChangesOverwrittenHandler：本地更改会被覆盖、带着仓库与重试动作的错误改弹「贮藏更改并继续」，其余照常进错误对话框
+test("本地更改会被覆盖的错误转给贮藏并继续对话框，列出会被覆盖的文件", () => {
+  useDialogsStore.setState({ errors: [], localChangesOverwritten: null })
+  const repository = new Repository("/r", -1, null, false)
+  const overwritten = toPresentableError(
+    "error: Your local changes to the following files would be overwritten by merge:\n\ta\n\tdir/b\nPlease commit your changes or stash them before you merge.\nAborting"
+  )
+  const retryAction = { type: RetryActionType.Pull, repository } as const
+  useDialogsStore.getState().postError(new ErrorWithMetadata(overwritten, { repository, retryAction }))
+  expect(useDialogsStore.getState().localChangesOverwritten).toEqual({ retryAction, files: ["a", "dir/b"] })
+  expect(useDialogsStore.getState().errors).toEqual([])
+
+  // 没有重试动作就没法「继续」，仍是普通错误
+  useDialogsStore.getState().postError(new ErrorWithMetadata(overwritten, { repository }))
+  expect(useDialogsStore.getState().errors).toHaveLength(1)
+  // 别的种类不归它管
+  const other = new ErrorWithMetadata(toPresentableError("fatal: refusing to merge unrelated histories"), {
+    repository,
+    retryAction
+  })
+  useDialogsStore.getState().postError(other)
+  expect(useDialogsStore.getState().errors.at(-1)).toBe(other)
 })

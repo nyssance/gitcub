@@ -25,7 +25,7 @@ import {
 } from "@/lib/branch-workflows"
 import { getGlobalConfigValue, getRemoteHEAD } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
-import { ErrorWithMetadata } from "@/lib/error-with-metadata"
+import { ErrorWithMetadata, type IErrorMetadata } from "@/lib/error-with-metadata"
 import { fetch as fetchRemote, pull as pullRemote } from "@/lib/fetch"
 import { ForcePushBranchState, getCurrentBranchForcePushState } from "@/lib/force-push-state"
 import { contributesToParent, contributionRepository } from "@/lib/fork-contribution"
@@ -45,7 +45,7 @@ import type { CommitOptions } from "@/models/app-state"
 import { Branch, BranchType } from "@/models/branch"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import { Repository } from "@/models/repository"
-import { RetryActionType } from "@/models/retry-actions"
+import { type RetryAction, RetryActionType } from "@/models/retry-actions"
 import { AppError } from "@/ui/app-error"
 import {
   AlertDialog,
@@ -77,6 +77,7 @@ import { headHistory, HistorySidebar } from "@/ui/history/sidebar"
 import { HookFailed } from "@/ui/hook-failed/hook-failed"
 import { Inbox } from "@/ui/inbox/inbox"
 import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
+import { LocalChangesOverwrittenDialog } from "@/ui/local-changes-overwritten/local-changes-overwritten-dialog"
 import { ProgressDialog } from "@/ui/multi-commit-operation/progress-dialog"
 import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
 import { Preferences } from "@/ui/preferences/preferences"
@@ -103,7 +104,19 @@ import { Worktrees } from "./worktrees/worktrees"
 /** 还没加载 Desktop 的 emoji 表；RichText 按空表渲染（:shortcode: 原样显示） */
 
 /** Desktop dispatcher.postError：进错误对话框；后端回来的 git 输出照 Desktop 识别种类、配上说明 */
-const showError = (error: unknown) => useDialogsStore.getState().pushError(toPresentableError(error))
+const showError = (error: unknown) => useDialogsStore.getState().postError(toPresentableError(error))
+
+/** Desktop gitStore.performFailableOperation 给错误附上的 repository 与 retryAction（错误处理器靠它们决定怎么接） */
+const withRetry =
+  (path: string, retryAction: (repository: Repository) => RetryAction, extra?: IErrorMetadata) =>
+  (error: unknown): never => {
+    const repository = new Repository(path, -1, null, false)
+    throw new ErrorWithMetadata(toPresentableError(error), {
+      repository,
+      retryAction: retryAction(repository),
+      ...extra
+    })
+  }
 const noEmoji = new Map()
 export function App() {
   const { t } = useTranslation()
@@ -128,6 +141,8 @@ export function App() {
   const error = useRepositoryStore(s => s.error)
   const errors = useDialogsStore(s => s.errors)
   const clearError = useDialogsStore(s => s.clearError)
+  const localChangesOverwritten = useDialogsStore(s => s.localChangesOverwritten)
+  const dismissLocalChangesOverwritten = useDialogsStore(s => s.dismissLocalChangesOverwritten)
   const busy = useRepositoryStore(s => s.busy)
   const showProgress = useRepositoryStore(s => s.showProgress)
   const refresh = useRepositoryStore(s => s.refresh)
@@ -610,7 +625,7 @@ export function App() {
         (error: unknown) => ({ error })
       )
       await refreshAfterNetworkOperation(path, pullWeight + fetchWeight)
-      if (failure) throw failure.error
+      if (failure) withRetry(path, repository => ({ type: RetryActionType.Pull, repository }))(failure.error)
     })
   /** Desktop performFetch：获取占 0.9，刷新 0.1 */
   const doFetch = (path: string) =>
@@ -702,11 +717,7 @@ export function App() {
                 tagsToPush,
                 { forceWithLease, onHookFailure },
                 progress => setNetworkProgress(path, { ...progress, title, value: pushWeight * progress.value })
-              ).catch((error: unknown) => {
-                throw new ErrorWithMetadata(toPresentableError(error), {
-                  retryAction: { type: RetryActionType.Push, repository: new Repository(path, -1, null, false) }
-                })
-              })
+              ).catch(withRetry(path, repository => ({ type: RetryActionType.Push, repository })))
               clearTagsToPush(path)
               pushedTo = remote
             }
@@ -740,7 +751,14 @@ export function App() {
   }
 
   const doCheckout = async (branch: string) => {
-    if (repo) await run(() => checkoutWithStash(repo, branch, ipc, checkoutPrompts, checkoutStrategy()))
+    if (!repo) return
+    // Desktop _checkoutBranch 的 RetryActionType.Checkout 与 gitContext checkout
+    const retry = withRetry(
+      repo,
+      repository => ({ type: RetryActionType.Checkout, repository, branch: branchNamed(branch) }),
+      { gitContext: { kind: "checkout", branchToCheckout: branchNamed(branch) } }
+    )
+    await run(() => checkoutWithStash(repo, branch, ipc, checkoutPrompts, checkoutStrategy()).catch(retry))
   }
 
   /** Desktop _commitIncludedChanges / withIsCommitting：钩子进度与提交输出只属于这一次提交（改提交同样），
@@ -790,7 +808,10 @@ export function App() {
         const committed = await commitWithHooks(callbacks =>
           ipc.commit(repo, summary, description, options, callbacks)
         ).catch((error: unknown) => {
-          throw new ErrorWithMetadata(toPresentableError(error), { gitContext: { kind: "commit" } })
+          throw new ErrorWithMetadata(toPresentableError(error), {
+            repository: new Repository(repo, -1, null, false),
+            gitContext: { kind: "commit" }
+          })
         })
         if (!committed) {
           return false
@@ -826,6 +847,30 @@ export function App() {
       [MultiCommitOperationKind.Merge]: t("multiCommitOperation.mergeInProgress"),
       [MultiCommitOperationKind.Reorder]: t("multiCommitOperation.reorderInProgress")
     })[kind]
+  /** Desktop dispatcher.performRetry：本应用接得住的几种 */
+  const performRetry = (retryAction: RetryAction) => {
+    switch (retryAction.type) {
+      case RetryActionType.Push:
+        return void doPush()
+      case RetryActionType.Pull:
+        return void doPull(retryAction.repository.path)
+      case RetryActionType.Fetch:
+        return void doFetch(retryAction.repository.path)
+      case RetryActionType.Clone:
+        return void cloneInto(retryAction.url, retryAction.path, retryAction.name)
+      case RetryActionType.Checkout:
+        return void doCheckout(retryAction.branch.name)
+      case RetryActionType.Merge:
+        return void doMerge(retryAction.theirBranch.name, false)
+    }
+  }
+  /** Desktop createStashForCurrentBranch(repository, false)：当前分支已有贮藏或分离头时不建 */
+  const createStashForCurrentBranch = async () => {
+    const branch = useRepositoryStore.getState().status.branch
+    if (!repo || !branch || desktopStashForBranch(stashList, branch) !== null) return false
+    return (await run(() => ipc.stashPush(repo, branch).then(() => true))) ?? false
+  }
+
   /** Desktop multiCommitOperation 的 ShowProgress：操作进行时显示进度对话框，结束（成功、冲突或出错）就关掉 */
   const withMultiCommitProgress = async <T,>(
     path: string,
@@ -968,7 +1013,21 @@ export function App() {
     // Desktop _mergeBranch：HookFailed 里选了中止就只刷新，不报错
     await run(() => {
       const { onHookFailure, ignoreAborted } = hookFailureHandling()
-      return ignoreAborted(ipc.mergeBranch(repo, name, squash, { onHookFailure }), undefined)
+      // Desktop _mergeBranch 的 RetryActionType.Merge；它的重试按普通合并做，压缩合并不附，免得重试变成普通合并
+      const merging = ipc.mergeBranch(repo, name, squash, { onHookFailure })
+      return ignoreAborted(
+        squash || !ours
+          ? merging
+          : merging.catch(
+              withRetry(repo, repository => ({
+                type: RetryActionType.Merge,
+                repository,
+                currentBranch: ours,
+                theirBranch: branchNamed(name)
+              }))
+            ),
+        undefined
+      )
     })
   }
 
@@ -1419,10 +1478,7 @@ export function App() {
               error={errors[0]}
               onDismissed={() => clearError(errors[0]!)}
               onShowPreferences={() => openPreferences()}
-              onRetryAction={retryAction => {
-                if (retryAction.type === RetryActionType.Clone)
-                  void cloneInto(retryAction.url, retryAction.path, retryAction.name)
-              }}
+              onRetryAction={performRetry}
             />
           )}
           <NoRepositoriesView
@@ -1445,16 +1501,24 @@ export function App() {
       {askDialog}
       {askTextDialog}
       {stashAndSwitchDialog}
+      {localChangesOverwritten && (
+        <LocalChangesOverwrittenDialog
+          key="local-changes-overwritten"
+          hasExistingStash={desktopStashForBranch(stashList, status.branch) !== null}
+          retryAction={localChangesOverwritten.retryAction}
+          files={localChangesOverwritten.files}
+          onDismissed={dismissLocalChangesOverwritten}
+          onCreateStash={createStashForCurrentBranch}
+          onRetry={performRetry}
+        />
+      )}
       {errors[0] && (
         <AppError
           key="app-error"
           error={errors[0]}
           onDismissed={() => clearError(errors[0]!)}
           onShowPreferences={() => openPreferences()}
-          onRetryAction={retryAction => {
-            if (retryAction.type === RetryActionType.Clone)
-              void cloneInto(retryAction.url, retryAction.path, retryAction.name)
-          }}
+          onRetryAction={performRetry}
         />
       )}
       {multiCommitOperation?.progress && (

@@ -8,6 +8,7 @@ import { create } from "zustand"
 
 import { resolve, type Updater } from "@/features/effect-runtime"
 import { type PreferencesTab, type Prompt, usePreferencesStore } from "@/features/preferences/store"
+import { localChangesOverwrittenHandler, type LocalChangesOverwrittenPopup } from "@/lib/error-handlers"
 import type { TerminalOutput, TerminalOutputListener } from "@/lib/git-execution"
 
 /** prompt：原版 Prompts 页里对应的那一项；弹窗带「不再显示」，关掉后直接放行 */
@@ -46,6 +47,11 @@ interface DialogsStore {
   pushError: (error: Error) => void
   /** Desktop _clearError */
   clearError: (error: Error) => void
+  /** Desktop dispatcher.postError：先过错误处理器，没被处理的才进错误对话框 */
+  postError: (error: Error) => void
+  /** Desktop PopupType.LocalChangesOverwritten */
+  localChangesOverwritten: LocalChangesOverwrittenPopup | null
+  dismissLocalChangesOverwritten: () => void
   /** Desktop PopupType.CommitProgress */
   commitProgress: TerminalOutputListener | null
   ask: (message: string, prompt?: Prompt) => Promise<boolean>
@@ -84,6 +90,13 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   errors: [],
   pushError: error => set(state => ({ errors: [...state.errors, error] })),
   clearError: error => set(state => ({ errors: state.errors.filter(e => e !== error) })),
+  postError: error => {
+    const localChangesOverwritten = localChangesOverwrittenHandler(error)
+    if (localChangesOverwritten) set({ localChangesOverwritten })
+    else get().pushError(error)
+  },
+  localChangesOverwritten: null,
+  dismissLocalChangesOverwritten: () => set({ localChangesOverwritten: null }),
   commitProgress: null,
   ask: (message, prompt) => {
     if (prompt && !usePreferencesStore.getState()[prompt]) return Promise.resolve(true)

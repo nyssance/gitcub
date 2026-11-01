@@ -947,5 +947,26 @@
     "retryClone": "重新克隆",
     "close": "关闭",
     "openPreferences": "打开设置"
+  },
+  "localChangesOverwritten": {
+    "error": "错误",
+    "unableToActionWhenChangesArePresentOnYourBranch": "分支上有更改时无法{{action}}。",
+    "theFollowingFilesWouldBeOverwritten": "以下文件会被覆盖：",
+    "youCanStashYourChangesNowAndRecoverThemAfterwards": "你可以现在贮藏这些更改，之后再恢复。",
+    "stashChangesAndContinue": "贮藏更改并继续",
+    "thisWillCreateAStashWithYourCurrentChanges": "这会用当前更改创建一个贮藏，之后恢复贮藏即可找回。",
+    "close": "关闭",
+    "checkout": "切换",
+    "pull": "拉取",
+    "merge": "合并",
+    "rebase": "变基",
+    "clone": "克隆",
+    "fetch": "获取",
+    "push": "推送",
+    "cherryPick": "拣选",
+    "squash": "压缩",
+    "reorder": "重排",
+    "discardChanges": "丢弃更改",
+    "restoreStashedChanges": "恢复贮藏的更改"
   }
 }

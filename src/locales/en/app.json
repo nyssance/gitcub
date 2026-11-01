@@ -953,5 +953,26 @@
     "retryClone": "Retry Clone",
     "close": "Close",
     "openPreferences": "Open Preferences"
+  },
+  "localChangesOverwritten": {
+    "error": "Error",
+    "unableToActionWhenChangesArePresentOnYourBranch": "Unable to {{action}} when changes are present on your branch.",
+    "theFollowingFilesWouldBeOverwritten": " The following files would be overwritten:",
+    "youCanStashYourChangesNowAndRecoverThemAfterwards": "You can stash your changes now and recover them afterwards.",
+    "stashChangesAndContinue": "Stash Changes and Continue",
+    "thisWillCreateAStashWithYourCurrentChanges": "This will create a stash with your current changes. You can recover them by restoring the stash afterwards.",
+    "close": "Close",
+    "checkout": "checkout",
+    "pull": "pull",
+    "merge": "merge",
+    "rebase": "rebase",
+    "clone": "clone",
+    "fetch": "fetch",
+    "push": "push",
+    "cherryPick": "cherry-pick",
+    "squash": "squash",
+    "reorder": "reorder",
+    "discardChanges": "discard changes",
+    "restoreStashedChanges": "restore stashed changes"
   }
 }

@@ -537,3 +537,20 @@
 #multi-commit-progress .summary .message {
   font-weight: bold;
 }
+
+/* Desktop _local-changes-overwritten.scss：会被覆盖的文件列表等宽、最高 175px 可滚动 */
+#local-changes-overwritten .dialog-content .files-list {
+  max-height: 175px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  margin-bottom: 10px;
+}
+#local-changes-overwritten .dialog-content .files-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#local-changes-overwritten .dialog-content .files-list li {
+  padding-left: 0;
+  margin-bottom: 0;
+}
