@@ -1,7 +1,9 @@
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { type Prompt, tabSizeDefault, usePreferencesStore } from "@/features/preferences/store"
 import { formatNumber } from "@/lib/format-number"
+import { getCacheHooksEnv, getHooksEnvEnabled, setCacheHooksEnv, setHooksEnvEnabled } from "@/lib/hooks/config"
 import {
   type DateFormat,
   dateFormats,
@@ -61,6 +63,43 @@ const STRATEGIES: [UncommittedChangesStrategy, string][] = [
   [UncommittedChangesStrategy.MoveToNewBranch, "prefs.alwaysBringMyChangesToMyNewBranch"],
   [UncommittedChangesStrategy.StashOnCurrentBranch, "prefs.alwaysStashAndLeaveMyChangesOnTheCurrentBranch"]
 ]
+
+/** Desktop preferences/git.tsx renderHooksSettings。选 shell 的下拉原版只在 Windows 上有，这里不列；
+ *  原版点「保存」才写，本页其余设置都是即改即存，这里跟着即改即存 */
+export function GitHooksSettings() {
+  const { t } = useTranslation()
+  const [enableGitHookEnv, setEnableGitHookEnv] = useState(getHooksEnvEnabled)
+  const [cacheGitHookEnv, setCacheGitHookEnv] = useState(getCacheHooksEnv)
+  return (
+    <FieldSet>
+      <FieldLegend>{t("prefs.hooks")}</FieldLegend>
+      <FieldGroup className="gap-3">
+        <CheckboxField
+          id="git-hooks-env"
+          label={t("prefs.loadGitHookEnvironmentVariablesFromShell")}
+          description={t("prefs.whenEnabledGitCubWillAttemptToLoadEnvironmentVariablesFromYourShell")}
+          checked={enableGitHookEnv}
+          onChange={value => {
+            setHooksEnvEnabled(value)
+            setEnableGitHookEnv(value)
+          }}
+        />
+        {enableGitHookEnv && (
+          <CheckboxField
+            id="git-hooks-cache"
+            label={t("prefs.cacheGitHookEnvironmentVariables")}
+            description={t("prefs.cacheHookEnvironmentVariablesToImprovePerformance")}
+            checked={cacheGitHookEnv}
+            onChange={value => {
+              setCacheHooksEnv(value)
+              setCacheGitHookEnv(value)
+            }}
+          />
+        )}
+      </FieldGroup>
+    </FieldSet>
+  )
+}
 
 /** Desktop preferences/prompts.tsx */
 export function PromptsTab() {

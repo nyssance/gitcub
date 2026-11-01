@@ -429,7 +429,12 @@
     "retry": "重试",
     "defaultBranch": "新仓库的默认分支名",
     "defaultBranchHint": "GitHub 的默认分支名是 main。因为工作流不同，或者集成仍要求历史上的默认分支名 master，你可能想改掉它。",
-    "defaultBranchWarning": "将保存为 {{name}}。"
+    "defaultBranchWarning": "将保存为 {{name}}。",
+    "hooks": "钩子",
+    "loadGitHookEnvironmentVariablesFromShell": "从 shell 加载 Git 钩子的环境变量",
+    "whenEnabledGitCubWillAttemptToLoadEnvironmentVariablesFromYourShell": "开启后，GitCub 执行 Git 钩子时会尝试从你的 shell 加载环境变量。如果钩子依赖 shell 配置文件里设置的环境变量（nvm、rbenv、asdf 等版本管理工具的常见做法），这会很有用。",
+    "cacheGitHookEnvironmentVariables": "缓存 Git 钩子的环境变量",
+    "cacheHookEnvironmentVariablesToImprovePerformance": "缓存钩子的环境变量以提升速度。如果钩子依赖经常变化的环境变量，请关闭。"
   },
   "autolinks": {
     "gitlabIssue": "在 GitLab 打开 Issue #{{num}}",

@@ -436,7 +436,12 @@
     "retry": "Retry",
     "defaultBranch": "Default branch name for new repositories",
     "defaultBranchHint": "GitHub's default branch name is main. You may want to change it due to different workflows, or because your integrations still require the historical default branch name of master.",
-    "defaultBranchWarning": "Will be saved as {{name}}."
+    "defaultBranchWarning": "Will be saved as {{name}}.",
+    "hooks": "Hooks",
+    "loadGitHookEnvironmentVariablesFromShell": "Load Git hook environment variables from shell",
+    "whenEnabledGitCubWillAttemptToLoadEnvironmentVariablesFromYourShell": "When enabled, GitCub will attempt to load environment variables from your shell when executing Git hooks. This is useful if your Git hooks depend on environment variables set in your shell configuration files, a common practice for version managers such as nvm, rbenv, asdf, etc.",
+    "cacheGitHookEnvironmentVariables": "Cache Git hook environment variables",
+    "cacheHookEnvironmentVariablesToImprovePerformance": "Cache hook environment variables to improve performance. Disable if your hooks rely on frequently changing environment variables."
   },
   "autolinks": {
     "gitlabIssue": "Open Issue #{{num}} on GitLab",

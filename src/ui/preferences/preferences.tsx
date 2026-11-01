@@ -43,6 +43,7 @@ import {
   AccessibilityTab,
   AppearanceFormatting,
   BackgroundUpdatesSettings,
+  GitHooksSettings,
   NotificationsTab,
   PromptsTab
 } from "./desktop-settings"
@@ -687,6 +688,10 @@ function GitTab() {
           />
         </SettingRow>
       </>
+      <Separator />
+      <div className="py-2.5">
+        <GitHooksSettings />
+      </div>
       {error && <p className="text-destructive text-xs">{error}</p>}
     </SettingGroup>
   )

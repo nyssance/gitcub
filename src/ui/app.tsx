@@ -61,10 +61,12 @@ import { Conflicts } from "@/ui/changes/conflicts"
 import { NoChanges } from "@/ui/changes/no-changes"
 import { ChangesSidebar } from "@/ui/changes/sidebar"
 import { Stashes } from "@/ui/changes/stashes"
+import { CommitProgress } from "@/ui/commit-progress/commit-progress"
 import { DiffView } from "@/ui/diff/lazy-diff"
 import { SubmoduleView } from "@/ui/diff/submodule"
 import { CommitDetails } from "@/ui/history/commit-details"
 import { headHistory, HistorySidebar } from "@/ui/history/sidebar"
+import { HookFailed } from "@/ui/hook-failed/hook-failed"
 import { Inbox } from "@/ui/inbox/inbox"
 import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
 import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
@@ -151,6 +153,11 @@ export function App() {
   const discarding = useDialogsStore(s => s.discarding)
   const setDiscarding = useDialogsStore(s => s.setDiscarding)
   const dialogBlocking = useDialogsStore(selectDialogBlocking)
+  const hookFailed = useDialogsStore(s => s.hookFailed)
+  const askHookFailure = useDialogsStore(s => s.askHookFailure)
+  const dismissHookFailed = useDialogsStore(s => s.dismissHookFailed)
+  const commitProgress = useDialogsStore(s => s.commitProgress)
+  const setCommitProgress = useDialogsStore(s => s.setCommitProgress)
 
   const canvasPage = useWorkspaceStore(s => s.canvasPage)
   const setCanvasPage = useWorkspaceStore(s => s.setCanvasPage)
@@ -622,7 +629,34 @@ export function App() {
             return { file: c, include: st.include, selection: st.selection, expectedDiff: st.diff }
           })
         )
-        await ipc.commit(repo, summary, description, options)
+        // Desktop _commitIncludedChanges / withIsCommitting：钩子进度与提交输出只属于这一次提交；
+        // 在 HookFailed 里选了中止，git 随之失败，这时不再报错
+        let aborted = false
+        const { setHookProgress, setSubscribeToCommitOutput } = useChangesStore.getState()
+        setHookProgress(null)
+        setSubscribeToCommitOutput(null)
+        const committed = await ipc
+          .commit(repo, summary, description, options, {
+            onHookProgress: setHookProgress,
+            onHookFailure: (hookName, terminalOutput) =>
+              askHookFailure(hookName, terminalOutput).then(resolution => {
+                if (resolution === "abort") aborted = true
+                return resolution
+              }),
+            onTerminalOutputAvailable: setSubscribeToCommitOutput
+          })
+          .then(
+            () => true,
+            (error: unknown) => {
+              if (aborted) return false
+              throw error
+            }
+          )
+          .finally(() => {
+            setHookProgress(null)
+            setSubscribeToCommitOutput(null)
+          })
+        if (!committed) return false
         if (repo === activeRepository()) {
           setFiles(new Map())
           setSelected(null)
@@ -1202,6 +1236,22 @@ export function App() {
       {askDialog}
       {askTextDialog}
       {stashAndSwitchDialog}
+      {hookFailed && (
+        <HookFailed
+          key="hook-failure-dialog"
+          hookName={hookFailed.hookName}
+          terminalOutput={hookFailed.terminalOutput}
+          resolve={hookFailed.resolve}
+          onDismissed={dismissHookFailed}
+        />
+      )}
+      {commitProgress && (
+        <CommitProgress
+          key="commit-progress-dialog"
+          subscribeToCommitOutput={commitProgress}
+          onDismissed={() => setCommitProgress(null)}
+        />
+      )}
       {repo && repositorySettingsOpen && (
         <RepositorySettings
           key={repo}

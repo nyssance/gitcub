@@ -1,5 +1,5 @@
 /**
- * Dialogs Store —— 应用级弹窗：确认框、填字框、贮藏并切换分支、设置、工作树、新建 PR、发布、丢弃确认。
+ * Dialogs Store —— 应用级弹窗：确认框、填字框、贮藏并切换分支、设置、工作树、新建 PR、发布、丢弃确认、钩子失败、提交进度。
  *
  * 确认与填字不能用 window.confirm / window.prompt：tauri-plugin-dialog 把 confirm 换成了没授权的异步命令，
  * prompt 在 WKWebView 里直接返回 null。ask / askText 把 resolve 存在这里，对话框点了哪个按钮就回哪个答案。
@@ -8,6 +8,7 @@ import { create } from "zustand"
 
 import { resolve, type Updater } from "@/features/effect-runtime"
 import { type PreferencesTab, type Prompt, usePreferencesStore } from "@/features/preferences/store"
+import type { TerminalOutput, TerminalOutputListener } from "@/lib/git-execution"
 
 /** prompt：原版 Prompts 页里对应的那一项；弹窗带「不再显示」，关掉后直接放行 */
 type Asking = { message: string; prompt?: Prompt; dontAskAgain: boolean; resolve: (ok: boolean) => void }
@@ -17,6 +18,12 @@ type StashPrompt = {
   current: string
   hasAssociatedStash: boolean
   resolve: (choice: boolean | "carry") => void
+}
+/** Desktop PopupType.HookFailed */
+type HookFailedPrompt = {
+  hookName: string
+  terminalOutput: TerminalOutput
+  resolve: (value: "abort" | "ignore") => void
 }
 
 interface DialogsStore {
@@ -32,6 +39,9 @@ interface DialogsStore {
   publishing: boolean
   /** 等确认丢弃的文件；丢弃不可逆，照原版问一次 */
   discarding: string[] | null
+  hookFailed: HookFailedPrompt | null
+  /** Desktop PopupType.CommitProgress */
+  commitProgress: TerminalOutputListener | null
   ask: (message: string, prompt?: Prompt) => Promise<boolean>
   setDontAskAgain: (value: boolean) => void
   answer: (ok: boolean) => void
@@ -47,6 +57,10 @@ interface DialogsStore {
   setCreatingPr: (open: boolean) => void
   setPublishing: (open: boolean) => void
   setDiscarding: (next: Updater<string[] | null>) => void
+  /** Desktop AppStore.onHookFailure：弹 HookFailed，等用户选忽略还是中止 */
+  askHookFailure: (hookName: string, terminalOutput: TerminalOutput) => Promise<"abort" | "ignore">
+  dismissHookFailed: () => void
+  setCommitProgress: (subscribeToCommitOutput: TerminalOutputListener | null) => void
 }
 
 export const useDialogsStore = create<DialogsStore>()((set, get) => ({
@@ -60,6 +74,8 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   creatingPr: false,
   publishing: false,
   discarding: null,
+  hookFailed: null,
+  commitProgress: null,
   ask: (message, prompt) => {
     if (prompt && !usePreferencesStore.getState()[prompt]) return Promise.resolve(true)
     return new Promise<boolean>(done => set({ asking: { message, prompt, dontAskAgain: false, resolve: done } }))
@@ -92,7 +108,11 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   setRepositorySettingsOpen: repositorySettingsOpen => set({ repositorySettingsOpen }),
   setCreatingPr: creatingPr => set({ creatingPr }),
   setPublishing: publishing => set({ publishing }),
-  setDiscarding: next => set(store => ({ discarding: resolve(next, store.discarding) }))
+  setDiscarding: next => set(store => ({ discarding: resolve(next, store.discarding) })),
+  askHookFailure: (hookName, terminalOutput) =>
+    new Promise<"abort" | "ignore">(done => set({ hookFailed: { hookName, terminalOutput, resolve: done } })),
+  dismissHookFailed: () => set({ hookFailed: null }),
+  setCommitProgress: commitProgress => set({ commitProgress })
 }))
 
 /** 有弹窗挡在前面时，菜单与快捷键里的仓库操作按忙处理。 */
@@ -104,4 +124,6 @@ export const selectDialogBlocking = (store: DialogsStore) =>
   store.creatingPr ||
   store.publishing ||
   store.worktreesOpen ||
-  store.repositorySettingsOpen
+  store.repositorySettingsOpen ||
+  !!store.hookFailed ||
+  !!store.commitProgress

@@ -465,3 +465,14 @@
 .underline-links a {
   text-decoration: underline;
 }
+
+/* Desktop dialogs/_hook-failed.scss、_commit_progress.scss 与 _dialog.scss#delete-worktree-failed：
+   终端四周留 --spacing（10px） */
+#hook-failed-dialog .xterm,
+#commit-progress-dialog .xterm,
+#delete-worktree-failed .xterm {
+  padding: 10px;
+}
+#delete-worktree-failed .xterm {
+  margin-bottom: 10px;
+}

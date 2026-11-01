@@ -922,6 +922,54 @@ test("multi-file discard uses one confirmation and preserves unselected files", 
     .toBe(indexBefore)
 })
 
+test("hooks environment proxies a failing pre-commit hook and continues after ignoring it", async ({
+  mainWindow: page
+}) => {
+  const head = git("rev-parse", "HEAD")
+  const hook = join(smokeRepoPath, ".git", "hooks", "pre-commit")
+  const marker = join(smokeRepoPath, ".git", "hook-env-marker")
+  writeFileSync(
+    hook,
+    `#!/bin/sh\necho "desktop=$GITHUB_DESKTOP" > '${marker}'\necho "rejected by hook" >&2\nexit 1\n`,
+    {
+      mode: 0o755
+    }
+  )
+  writeFileSync(join(smokeRepoPath, "hooks-env.txt"), "hooks env\n")
+  // Desktop lib/hooks/config.ts：Preferences > Git > Hooks 的开关存在 localStorage
+  await page.evaluate(() => localStorage.setItem("git-hooks-env-enabled", "1"))
+  try {
+    await page.locator('.list-scroller [title="hooks-env.txt"]').waitFor({ state: "visible", timeout: 15000 })
+    await page.locator(".summary-field input").fill("Commit through the hooks proxy")
+    await page.locator("button.commit-button").click()
+    const dialog = page.locator("#hook-failed-dialog")
+    await expect(dialog).toContainText("The pre-commit hook failed. What would you like to do?", { timeout: 30000 })
+    await expect(dialog).toContainText("rejected by hook")
+    await expect(page.locator(".commit-progress")).toContainText("pre-commit hook running…")
+    assert.equal(readFileSync(marker, "utf8"), "desktop=1\n")
+    await dialog.locator('button:has-text("Ignore and Continue")').click()
+    await expect.poll(() => git("log", "-1", "--format=%s")).toBe("Commit through the hooks proxy")
+    assert.equal(git("rev-parse", "HEAD~1"), head)
+  } catch (error) {
+    console.error("Hooks UI at failure:", await page.evaluate(() => document.body.innerText))
+    console.error(
+      "Hooks probe:",
+      await page.evaluate(async (repo: string) => {
+        const started = Date.now()
+        const hooks = await window.__TAURI_INTERNALS__.invoke("repo_hooks", { repo, filter: ["pre-commit"] })
+        return { hooks, enabled: localStorage.getItem("git-hooks-env-enabled"), ms: Date.now() - started }
+      }, smokeRepoPath)
+    )
+    throw error
+  } finally {
+    await page.evaluate(() => localStorage.removeItem("git-hooks-env-enabled"))
+    rmSync(hook, { force: true })
+    rmSync(marker, { force: true })
+    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", head)
+    rmSync(join(smokeRepoPath, "hooks-env.txt"), { force: true })
+  }
+})
+
 test("About exposes the author's GitHub profile", async ({ mainWindow: page }) => {
   await page.evaluate(async () => {
     await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu-event", payload: ["show-about"] })

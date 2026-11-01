@@ -27,6 +27,8 @@ mod gitignore;
 mod graph;
 #[path = "../src/history.rs"]
 mod history;
+#[path = "../src/hooks.rs"]
+mod hooks;
 #[path = "../src/host_url.rs"]
 mod host_url;
 #[path = "../src/image.rs"]

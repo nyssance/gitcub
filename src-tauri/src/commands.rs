@@ -425,10 +425,59 @@ pub async fn apply_selection(repo: String, files: Vec<stage::StageFile>) -> Resu
 #[tauri::command]
 pub async fn commit(
     repo: String, summary: String, description: String, options: net::CommitOptions,
+    hooks: Option<crate::hooks::HooksEnv>, events: tauri::ipc::Channel<crate::hooks::HookEvent>,
+    output: tauri::ipc::Channel<crate::git::TerminalChunk>,
 ) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || net::commit(Path::new(&repo), &summary, &description, options))
+    let callbacks: std::sync::Arc<dyn crate::hooks::HookCallbacks> = std::sync::Arc::new(HookChannel(events));
+    tauri::async_runtime::spawn_blocking(move || {
+        net::commit_with_hooks(Path::new(&repo), &summary, &description, options, hooks, Some(callbacks), |chunk| {
+            let _ = output.send(chunk);
+        })
+        .map(|_| ())
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+/// 原版 onHookProgress / onHookFailure：进度直接发；失败时等前端 HookFailed 的回答（resolve_hook_failure）
+struct HookChannel(tauri::ipc::Channel<crate::hooks::HookEvent>);
+
+impl crate::hooks::HookCallbacks for HookChannel {
+    fn progress(&self, id: u64, hook_name: &str, status: &'static str) {
+        let _ = self.0.send(crate::hooks::HookEvent::Progress { id, hook_name: hook_name.into(), status });
+    }
+
+    fn failure(&self, id: u64, hook_name: &str, terminal_output: &[u8]) -> bool {
+        crate::hooks::wait_for_failure(id, || {
+            self.0
+                .send(crate::hooks::HookEvent::Failure {
+                    id,
+                    hook_name: hook_name.into(),
+                    terminal_output: terminal_output.to_vec(),
+                })
+                .is_ok()
+        })
+    }
+}
+
+/// 原版 getRepoHooks：前端据此决定要不要先取 shell 环境
+#[tauri::command]
+pub async fn repo_hooks(repo: String, filter: Vec<String>) -> Result<Vec<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::hooks::repo_hooks(Path::new(&repo), Some(&filter)))
         .await
-        .map_err(|error| error.to_string())?
+        .map_err(|error| error.to_string())
+}
+
+/// HookFailed 的回答：true 为「忽略并继续」
+#[tauri::command]
+pub fn resolve_hook_failure(id: u64, ignore: bool) {
+    crate::hooks::resolve_failure(id, ignore);
+}
+
+/// HookProgress started 的 abort
+#[tauri::command]
+pub fn abort_hook(id: u64) {
+    crate::hooks::abort(id);
 }
 
 /// token 由后端自己从钥匙串取，**完全不经过前端**。

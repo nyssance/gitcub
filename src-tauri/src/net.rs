@@ -231,11 +231,21 @@ pub fn format_commit_message(
     git.stdin(message).stdout()
 }
 
+#[allow(dead_code)] // Non-streaming entry point used by the upstream conformance bridge and tests.
 pub fn commit(repo: &Path, summary: &str, description: &str, options: CommitOptions) -> Result<(), String> {
     commit_output(repo, summary, description, options).map(|_| ())
 }
 
+#[allow(dead_code)] // Non-streaming entry point used by the upstream conformance bridge.
 pub fn commit_output(repo: &Path, summary: &str, description: &str, options: CommitOptions) -> Result<String, String> {
+    commit_with_hooks(repo, summary, description, options, None, None, |_| {})
+}
+
+/// Desktop createCommit：开了钩子环境时按原版 interceptHooks 交给钩子代理，git 输出逐块给「提交进度」
+pub fn commit_with_hooks(
+    repo: &Path, summary: &str, description: &str, options: CommitOptions, hooks_env: Option<crate::hooks::HooksEnv>,
+    callbacks: Option<std::sync::Arc<dyn crate::hooks::HookCallbacks>>, on_output: impl FnMut(crate::git::TerminalChunk),
+) -> Result<String, String> {
     if summary.trim().is_empty() {
         return Err("提交摘要不能为空".into());
     }
@@ -259,7 +269,13 @@ pub fn commit_output(repo: &Path, summary: &str, description: &str, options: Com
         .collect::<Vec<_>>();
     let message = format_commit_message(repo, summary, Some(description), &trailers)?;
 
-    g.args(["-F", "-"]).stdin(message).stdout()
+    // https://git-scm.com/docs/githooks/2.46.1；改提交走 amend_commit，这里没有 post-rewrite
+    let intercept = ["pre-commit", "prepare-commit-msg", "commit-msg", "post-commit", "pre-auto-gc"];
+    crate::hooks::with_hooks_env(repo, &intercept, hooks_env, callbacks, |env| {
+        let g = env.into_iter().fold(g, |g, (key, value)| g.env(key, value));
+        let out = g.args(["-F", "-"]).stdin(message).output_stream(on_output)?;
+        crate::git::checked_result(Path::new("."), out, &[0], &[]).map(|result| result.stdout)
+    })
 }
 
 #[cfg(test)]

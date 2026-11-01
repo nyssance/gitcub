@@ -28,6 +28,7 @@ mod git_config;
 mod gitignore;
 mod graph;
 mod history;
+mod hooks;
 mod host_api;
 mod host_url;
 mod image;
@@ -81,6 +82,10 @@ fn main() {
     if let Some(answer) = net::askpass_if_invoked() {
         println!("{answer}");
         return;
+    }
+    // 打开钩子环境后，git 调起的钩子是一行脚本，以 `--gitcub-hook-proxy` 重新拉起本程序（见 hooks.rs）
+    if let Some(code) = hooks::proxy_if_invoked() {
+        std::process::exit(code);
     }
 
     let builder = tauri::Builder::default()
@@ -269,6 +274,9 @@ fn main() {
             commands::issues_for_completion,
             commands::mentionables,
             commands::mentionable_user,
+            commands::repo_hooks,
+            commands::resolve_hook_failure,
+            commands::abort_hook,
             commands::fork_repo,
             commands::upstream_of,
             commands::sync_upstream,

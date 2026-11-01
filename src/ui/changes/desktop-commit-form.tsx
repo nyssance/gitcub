@@ -2,6 +2,7 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useMemo, useState } from "react"
 
 import { useAccountsStore } from "../../features/accounts/store"
+import { useChangesStore } from "../../features/changes/store"
 import { useDialogsStore } from "../../features/dialogs/store"
 import { usePreferencesStore } from "../../features/preferences/store"
 import { getHTMLURL } from "../../lib/api"
@@ -63,6 +64,9 @@ export function DesktopCommitForm(props: Props) {
   const showCommitLengthWarning = usePreferencesStore(s => s.showCommitLengthWarning)
   const [options, setOptions] = useState({ skipCommitHooks: false, signOffCommits: false, allowEmptyCommit: false })
   const [busy, setBusy] = useState(false)
+  const hookProgress = useChangesStore(s => s.hookProgress)
+  const subscribeToCommitOutput = useChangesStore(s => s.subscribeToCommitOutput)
+  const setCommitProgress = useDialogsStore(s => s.setCommitProgress)
 
   const [message, setMessage] = useState<ICommitMessage | null>(null)
   const [amending, setAmending] = useState<Commit | null>(null)
@@ -199,8 +203,8 @@ export function DesktopCommitForm(props: Props) {
         commitMessage={message}
         autocompletionProviders={providers}
         isCommitting={busy}
-        hookProgress={null}
-        onShowCommitProgress={undefined}
+        hookProgress={hookProgress}
+        onShowCommitProgress={subscribeToCommitOutput ? () => setCommitProgress(subscribeToCommitOutput) : undefined}
 
         commitToAmend={amending}
         mostRecentLocalCommit={amending}

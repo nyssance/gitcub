@@ -17,6 +17,8 @@ import {
   type LineEndingsChange,
   selectableLines
 } from "@/lib/diff"
+import type { TerminalOutputListener } from "@/lib/git-execution"
+import type { HookProgress } from "@/models/hook-progress"
 import type { RepoStatus } from "@/models/repo-status"
 import type { IRawDiff } from "@/upstream/models/diff"
 import { type DiffSelection, DiffSelectionType } from "@/upstream/models/diff/diff-selection"
@@ -35,11 +37,17 @@ interface ChangesStore {
   diffError: string | null
   /** 正在逐行追溯的文件；非空时右侧显示 blame 而不是 diff */
   blaming: string | null
+  /** Desktop IRepositoryState.hookProgress：提交时钩子的进度，提交开始与结束时清空 */
+  hookProgress: HookProgress | null
+  /** Desktop IRepositoryState.subscribeToCommitOutput：这次提交有输出后才有，「提交进度」据此显示 */
+  subscribeToCommitOutput: TerminalOutputListener | null
   reset: () => void
   setSelected: (next: Updater<string | null>) => void
   setFileSelection: (selection: FileSelection) => void
   setFiles: (next: Updater<Map<string, FileState>>) => void
   setBlaming: (file: string | null) => void
+  setHookProgress: (hookProgress: HookProgress | null) => void
+  setSubscribeToCommitOutput: (subscribeToCommitOutput: TerminalOutputListener | null) => void
   loadDiff: (repo: string | null, selected: string | null, changes: RepoStatus["changes"]) => () => void
 }
 
@@ -52,11 +60,15 @@ export const useChangesStore = create<ChangesStore>()(set => ({
   lineEndings: null,
   diffError: null,
   blaming: null,
+  hookProgress: null,
+  subscribeToCommitOutput: null,
   reset: () => set({ selected: null, files: new Map(), diff: null, tokens: undefined }),
   setSelected: next => set(store => ({ selected: resolve(next, store.selected) })),
   setFileSelection: fileSelection => set({ fileSelection }),
   setFiles: next => set(store => ({ files: resolve(next, store.files) })),
   setBlaming: blaming => set({ blaming }),
+  setHookProgress: hookProgress => set({ hookProgress }),
+  setSubscribeToCommitOutput: subscribeToCommitOutput => set({ subscribeToCommitOutput }),
   // 文件内容可能变了而 Git 状态没变，所以监听刷新（diffKey）也要重新取
   loadDiff: (repo, selected, changes) => {
     set({ diffError: null })

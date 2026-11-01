@@ -61,6 +61,11 @@ fn bundled() -> Option<&'static PathBuf> {
     BUNDLED.get().and_then(|o| o.as_ref())
 }
 
+/// 打包的 git（没打包时为 PATH 上的 git）；钩子代理用它跑 `git hook run`（原版 resolveGitBinary）
+pub fn binary() -> PathBuf {
+    bundled().map(|root| executable(root)).unwrap_or_else(|| PathBuf::from("git"))
+}
+
 /// 打包的 git 读的系统级配置（`GIT_CONFIG_SYSTEM`）；用 PATH 上的 git 时为 `None`。
 /// 进程内快速路径据此判断 gix 读到的系统配置是不是 git 实际会读的那份。
 pub fn bundled_system_config() -> Option<PathBuf> {

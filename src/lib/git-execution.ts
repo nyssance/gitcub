@@ -28,10 +28,8 @@ export interface ExecutionResult extends GitCommandResult {
   gitError: string | null
   gitErrorDescription: string | null
 }
-/** Native execution with a bounded, replayable terminal stream. */
-export async function executeGit(args: string[], repo: string, _name?: string, options?: ExecutionOptions) {
-  if (options?.onHookProgress || options?.onHookFailure)
-    throw new Error("Interactive hook callbacks require the native hook channel")
+/** A bounded, replayable terminal stream for a native command (Desktop core.ts onTerminalOutputAvailable) */
+export function terminalOutputChannel(onTerminalOutputAvailable?: TerminalOutputCallback) {
   const chunks: string[] = []
   const subscribers = new Set<(chunk: TerminalOutput) => void>()
   let started = false
@@ -40,7 +38,7 @@ export async function executeGit(args: string[], repo: string, _name?: string, o
   const emit = (chunk: string) => {
     if (chunk.length === 0) return
     if (!started) {
-      options?.onTerminalOutputAvailable?.(callback => {
+      onTerminalOutputAvailable?.(callback => {
         subscribers.add(callback)
         chunks.forEach(value => {
           callback(value)
@@ -55,6 +53,14 @@ export async function executeGit(args: string[], repo: string, _name?: string, o
     })
   }
   output.onmessage = chunk => emit(decoder.push(chunk))
+  return { output, finish: () => emit(decoder.finish()) }
+}
+
+/** Native execution with a bounded, replayable terminal stream. */
+export async function executeGit(args: string[], repo: string, _name?: string, options?: ExecutionOptions) {
+  if (options?.onHookProgress || options?.onHookFailure)
+    throw new Error("Interactive hook callbacks require the native hook channel")
+  const { output, finish } = terminalOutputChannel(options?.onTerminalOutputAvailable)
   try {
     return await invoke<ExecutionResult>("git_execute", {
       repo,
@@ -66,6 +72,6 @@ export async function executeGit(args: string[], repo: string, _name?: string, o
       output
     })
   } finally {
-    emit(decoder.finish())
+    finish()
   }
 }

@@ -50,7 +50,8 @@ import type { FileChange, Operation, RepoStatus, RepoSummary } from "@/models/re
 import { clone } from "./clone"
 import type { IMentionableUser } from "./databases/github-user-database"
 import { fetch, pull } from "./fetch"
-import { executeGit } from "./git-execution"
+import { executeGit, type HookCallbackOptions, terminalOutputChannel } from "./git-execution"
+import { getHooksEnv, hookEvents } from "./hooks/with-hooks-env"
 import { prepareImageDiff } from "./image-data"
 import { type TerminalChunk, TerminalOutputDecoder } from "./terminal-output-decoder"
 
@@ -88,6 +89,10 @@ export interface DesktopImport {
   externalTerminal: string | null
   skipped: string[]
 }
+// Desktop lib/git/commit.ts（https://git-scm.com/docs/githooks/2.46.1）；Rust net::commit_with_hooks 拦截同一组。
+// 改提交走 amendCommit，所以没有 post-rewrite
+const commitInterceptHooks = ["pre-commit", "prepare-commit-msg", "commit-msg", "post-commit", "pre-auto-gc"]
+
 export const ipc = {
   hasTrackpad: () => invoke<boolean>("has_trackpad"),
   detectDesktopImport: () =>
@@ -304,8 +309,30 @@ export const ipc = {
     invoke<ImageDiff>("image_diff", { repo, file, sha }).then(prepareImageDiff),
   /** 子模块的细节：地址、记录的提交 vs 实际的提交、里面有多少没提交的东西 */
   submoduleInfo: (repo: string, file: string) => invoke<SubmoduleInfo>("submodule_info", { repo, file }),
-  commit: (repo: string, summary: string, description: string, options: CommitOptions) =>
-    invoke<void>("commit", { repo, summary, description, options }),
+  /** Desktop createCommit：钩子环境与「提交进度」照原版 interceptHooks / onTerminalOutputAvailable */
+  commit: async (
+    repo: string,
+    summary: string,
+    description: string,
+    options: CommitOptions,
+    callbacks?: HookCallbackOptions
+  ) => {
+    const { output, finish } = terminalOutputChannel(callbacks?.onTerminalOutputAvailable)
+    try {
+      const hooks = await getHooksEnv(repo, commitInterceptHooks)
+      return await invoke<void>("commit", {
+        repo,
+        summary,
+        description,
+        options,
+        hooks,
+        events: hookEvents(callbacks),
+        output
+      })
+    } finally {
+      finish()
+    }
+  },
   /** token 由后端从钥匙串取，前端不接触 */
   /** setUpstream：远端还没有这条分支时要带；forceWithLease：强推（不是 --force） */
   push: (repo: string, remote: string, refspec: string, setUpstream = false, forceWithLease = false) =>
