@@ -25,6 +25,7 @@ import {
 } from "@/lib/branch-workflows"
 import { getGlobalConfigValue, getRemoteHEAD } from "@/lib/desktop-git"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
+import { ErrorWithMetadata } from "@/lib/error-with-metadata"
 import { fetch as fetchRemote, pull as pullRemote } from "@/lib/fetch"
 import { ForcePushBranchState, getCurrentBranchForcePushState } from "@/lib/force-push-state"
 import { contributesToParent, contributionRepository } from "@/lib/fork-contribution"
@@ -34,6 +35,7 @@ import { ipc } from "@/lib/ipc"
 import { useNativeMenu } from "@/lib/menu/use-native-menu"
 import { parse, routes } from "@/lib/navigate"
 import { desktopStashForBranch } from "@/lib/no-changes-suggestions"
+import { toPresentableError } from "@/lib/presentable-error"
 import { cherryPickToPullRequest, findPullRequestBranch, sameHostedRepository } from "@/lib/pull-request-checkout"
 import { push } from "@/lib/push"
 import { handleShortcut } from "@/lib/shortcuts"
@@ -43,6 +45,8 @@ import type { CommitOptions } from "@/models/app-state"
 import { Branch, BranchType } from "@/models/branch"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import { Repository } from "@/models/repository"
+import { RetryActionType } from "@/models/retry-actions"
+import { AppError } from "@/ui/app-error"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,6 +101,9 @@ import { UncommittedChangesStrategy } from "@/upstream/models/uncommitted-change
 import { Worktrees } from "./worktrees/worktrees"
 
 /** 还没加载 Desktop 的 emoji 表；RichText 按空表渲染（:shortcode: 原样显示） */
+
+/** Desktop dispatcher.postError：进错误对话框；后端回来的 git 输出照 Desktop 识别种类、配上说明 */
+const showError = (error: unknown) => useDialogsStore.getState().pushError(toPresentableError(error))
 const noEmoji = new Map()
 export function App() {
   const { t } = useTranslation()
@@ -119,7 +126,8 @@ export function App() {
   const reloadKey = useRepositoryStore(s => s.reloadKey)
   const diffKey = useRepositoryStore(s => s.diffKey)
   const error = useRepositoryStore(s => s.error)
-  const setError = useRepositoryStore(s => s.setError)
+  const errors = useDialogsStore(s => s.errors)
+  const clearError = useDialogsStore(s => s.clearError)
   const busy = useRepositoryStore(s => s.busy)
   const showProgress = useRepositoryStore(s => s.showProgress)
   const refresh = useRepositoryStore(s => s.refresh)
@@ -296,8 +304,8 @@ export function App() {
     (refresh = false) =>
       useAccountsStore
         .getState()
-        .refreshAccounts(accountHosts, refresh, host => setError(t("prefs.tokenRejectedNotice", { host }))),
-    [accountHosts, setError, t]
+        .refreshAccounts(accountHosts, refresh, host => showError(t("prefs.tokenRejectedNotice", { host }))),
+    [accountHosts, t]
   )
   useEffect(() => refreshAccounts(), [refreshAccounts])
 
@@ -439,12 +447,22 @@ export function App() {
     if (typeof parent !== "string" || !state) return
     const name = sanitizeCloneName(url)
     if (name === null) {
-      setError(t("noRepos.invalidCloneName"))
+      showError(t("noRepos.invalidCloneName"))
       return
     }
-    const dest = `${parent}/${name}`
+    await cloneInto(url, `${parent}/${name}`, name)
+  }
+  /** Desktop _clone：失败时带上 RetryActionType.Clone，错误对话框给「重新克隆」 */
+  const cloneInto = async (url: string, dest: string, name: string) => {
+    if (!state) return
     await run(async () => {
-      await ipc.cloneRepo(url, dest, {}, progress => showProgress(progress.description ?? progress.title))
+      await ipc
+        .cloneRepo(url, dest, {}, progress => showProgress(progress.description ?? progress.title))
+        .catch((error: unknown) => {
+          throw new ErrorWithMetadata(toPresentableError(error), {
+            retryAction: { type: RetryActionType.Clone, name, url, path: dest, options: {} }
+          })
+        })
       setState(current =>
         current
           ? {
@@ -675,6 +693,7 @@ export function App() {
               setNetworkProgress(path, { kind: "push", title, value: 0 })
               // Desktop performPush：带上待推送的标签，推送成功后清空
               const { tagsToPush, clearTagsToPush } = useRepositoryStore.getState()
+              // Desktop performPush 的 RetryActionType.Push：错误对话框标题「推送失败」
               await push(
                 { path },
                 { name: remote },
@@ -683,7 +702,11 @@ export function App() {
                 tagsToPush,
                 { forceWithLease, onHookFailure },
                 progress => setNetworkProgress(path, { ...progress, title, value: pushWeight * progress.value })
-              )
+              ).catch((error: unknown) => {
+                throw new ErrorWithMetadata(toPresentableError(error), {
+                  retryAction: { type: RetryActionType.Push, repository: new Repository(path, -1, null, false) }
+                })
+              })
               clearTagsToPush(path)
               pushedTo = remote
             }
@@ -763,7 +786,13 @@ export function App() {
             return { file: c, include: st.include, selection: st.selection, expectedDiff: st.diff }
           })
         )
-        if (!(await commitWithHooks(callbacks => ipc.commit(repo, summary, description, options, callbacks)))) {
+        // Desktop commit 的 gitContext：错误对话框标题「提交失败」
+        const committed = await commitWithHooks(callbacks =>
+          ipc.commit(repo, summary, description, options, callbacks)
+        ).catch((error: unknown) => {
+          throw new ErrorWithMetadata(toPresentableError(error), { gitContext: { kind: "commit" } })
+        })
+        if (!committed) {
           return false
         }
         if (repo === activeRepository()) {
@@ -926,7 +955,7 @@ export function App() {
       try {
         const p = await ipc.mergePreview(repo, ours, name)
         if (p.unrelated) {
-          setError(t("branch.unrelated", { name }))
+          showError(t("branch.unrelated", { name }))
           return
         }
         if (p.conflicts > 0 && !(await ask(t("branch.willConflict", { count: p.conflicts, name })))) {
@@ -959,7 +988,7 @@ export function App() {
         await ipc.deleteBranch(repo, name)
       })
     } catch (e) {
-      setError(String(e))
+      showError(e)
     }
   }
 
@@ -1051,7 +1080,7 @@ export function App() {
               }
             }
             setCreatingPr(true)
-          })().catch(e => setError(String(e)))
+          })().catch(e => showError(e))
         break
       }
       case "go-to-commit-message":
@@ -1121,7 +1150,7 @@ export function App() {
                   ? `${gitlab ? "/-" : ""}/tree/${encodeURIComponent(status.branch ?? "HEAD")}`
                   : `${gitlab ? "/-" : ""}/compare`
             await openUrl(root + suffix)
-          })().catch(e => setError(String(e)))
+          })().catch(e => showError(e))
         break
       }
       case "show-changes":
@@ -1191,7 +1220,7 @@ export function App() {
         if (hosted && repo)
           void contributionRepository(repo, hosted)
             .then(r => openUrl(`https://${r.host}/${r.owner}/${r.name}`))
-            .catch(e => setError(String(e)))
+            .catch(e => showError(e))
         break
       }
       case "stash-all-changes":
@@ -1384,6 +1413,18 @@ export function App() {
           {prefs}
           {askDialog}
           {askTextDialog}
+          {errors[0] && (
+            <AppError
+              key="app-error"
+              error={errors[0]}
+              onDismissed={() => clearError(errors[0]!)}
+              onShowPreferences={() => openPreferences()}
+              onRetryAction={retryAction => {
+                if (retryAction.type === RetryActionType.Clone)
+                  void cloneInto(retryAction.url, retryAction.path, retryAction.name)
+              }}
+            />
+          )}
           <NoRepositoriesView
             repositories={state.repositories}
             onSelect={r => navigate(routes.repo(r))}
@@ -1404,6 +1445,18 @@ export function App() {
       {askDialog}
       {askTextDialog}
       {stashAndSwitchDialog}
+      {errors[0] && (
+        <AppError
+          key="app-error"
+          error={errors[0]}
+          onDismissed={() => clearError(errors[0]!)}
+          onShowPreferences={() => openPreferences()}
+          onRetryAction={retryAction => {
+            if (retryAction.type === RetryActionType.Clone)
+              void cloneInto(retryAction.url, retryAction.path, retryAction.name)
+          }}
+        />
+      )}
       {multiCommitOperation?.progress && (
         <ProgressDialog
           title={multiCommitProgressTitle(multiCommitOperation.kind)}
@@ -1514,7 +1567,7 @@ export function App() {
               void run(async () => {
                 const upstream = await ipc.upstreamOf(m.host, m.owner, m.name)
                 if (!upstream) {
-                  setError(t("rail.notAFork"))
+                  showError(t("rail.notAFork"))
                   return
                 }
                 await ipc.syncUpstream(r, `https://${m.host}/${upstream}.git`, status.branch ?? "main")

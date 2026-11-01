@@ -16,9 +16,10 @@ export class IpcError extends Schema.TaggedError<IpcError>()("IpcError", {
 /** 分支工作流的业务错误（没有远端、分支不存在……），按 code 走 workflow.* 文案。 */
 export class WorkflowError extends Schema.TaggedError<WorkflowError>()("WorkflowError", { code: Schema.String }) {}
 
-/** 操作回调里抛出的其它错误。 */
+/** 操作回调里抛出的其它错误。error 是原样抛出的值，错误对话框靠它区分 git 错误与普通错误。 */
 export class OperationError extends Schema.TaggedError<OperationError>()("OperationError", {
-  message: Schema.String
+  message: Schema.String,
+  error: Schema.Unknown
 }) {}
 
 export type AppError = IpcError | WorkflowError | OperationError
@@ -42,7 +43,7 @@ export const attempt = <A>(run: () => Promise<A>): Effect.Effect<A, WorkflowErro
     catch: error =>
       error instanceof BranchWorkflowError
         ? new WorkflowError({ code: error.code })
-        : new OperationError({ message: String(error) })
+        : new OperationError({ message: String(error), error })
   })
 
 /** 错误槽里显示的文字。 */

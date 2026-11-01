@@ -40,6 +40,12 @@ interface DialogsStore {
   /** 等确认丢弃的文件；丢弃不可逆，照原版问一次 */
   discarding: string[] | null
   hookFailed: HookFailedPrompt | null
+  /** Desktop PopupType.Error 的那一串：最早的那个先显示，关掉再显示下一个 */
+  errors: readonly Error[]
+  /** Desktop _pushError */
+  pushError: (error: Error) => void
+  /** Desktop _clearError */
+  clearError: (error: Error) => void
   /** Desktop PopupType.CommitProgress */
   commitProgress: TerminalOutputListener | null
   ask: (message: string, prompt?: Prompt) => Promise<boolean>
@@ -75,6 +81,9 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   publishing: false,
   discarding: null,
   hookFailed: null,
+  errors: [],
+  pushError: error => set(state => ({ errors: [...state.errors, error] })),
+  clearError: error => set(state => ({ errors: state.errors.filter(e => e !== error) })),
   commitProgress: null,
   ask: (message, prompt) => {
     if (prompt && !usePreferencesStore.getState()[prompt]) return Promise.resolve(true)

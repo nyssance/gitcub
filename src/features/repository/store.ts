@@ -13,6 +13,7 @@ import { create } from "zustand"
 
 import { useAccountsStore } from "@/features/accounts/store"
 import { activeRepository } from "@/features/app-state/store"
+import { useDialogsStore } from "@/features/dialogs/store"
 import {
   attempt,
   call,
@@ -25,6 +26,7 @@ import {
 import { createCoalescingRunner } from "@/lib/coalescing-runner"
 import type { IMentionableUser } from "@/lib/databases/github-user-database"
 import { contributionRepository } from "@/lib/fork-contribution"
+import { toPresentableError } from "@/lib/presentable-error"
 import type { Issue, LfsState, Remote, StashEntry } from "@/models/app-state"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import type { RepoStatus } from "@/models/repo-status"
@@ -274,14 +276,18 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
     }),
   run: operation => {
     if (locked || get().busy) return Promise.resolve(undefined)
-    const repo = activeRepository()
     locked = true
     set({ busy: true, error: null })
     return runPromise(
       attempt(operation).pipe(
+        // Desktop performFailableOperation → emitError：操作失败一律进错误对话框（不论是不是当前仓库）
         Effect.catch(error =>
           Effect.sync(() => {
-            if (repo === activeRepository()) set({ error: describeError(error) })
+            useDialogsStore
+              .getState()
+              .pushError(
+                error._tag === "OperationError" ? toPresentableError(error.error) : new Error(describeError(error))
+              )
             return undefined
           })
         ),

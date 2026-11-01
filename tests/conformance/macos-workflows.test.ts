@@ -690,7 +690,10 @@ test("failed amendment keeps the draft and excludes concurrent push", async ({ m
       window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "push" })
     )
     await page.evaluate(() => window.__releasePush())
-    await expect(page.locator("body")).toContainText("pre-commit hook rejected amendment")
+    // Desktop performFailableOperation → AppError 对话框
+    await expect(page.locator("#app-error")).toContainText("pre-commit hook rejected amendment")
+    await page.locator('#app-error button:has-text("Close")').click()
+    await page.locator("#app-error").waitFor({ state: "hidden" })
     await expect.poll(() => page.locator("button.commit-button").isEnabled()).toBe(true)
     await expect(page.locator("button.commit-button")).toContainText("Amend")
     assert.equal(await page.locator(".summary-field input").inputValue(), "Preserve rejected amendment")

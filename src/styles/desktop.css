@@ -470,8 +470,23 @@
    终端四周留 --spacing（10px） */
 #hook-failed-dialog .xterm,
 #commit-progress-dialog .xterm,
-#delete-worktree-failed .xterm {
+#delete-worktree-failed .xterm,
+#app-error.raw-git-error .xterm {
   padding: 10px;
+}
+
+/* Desktop _dialog.scss#app-error：错误文字可选中，保留换行但必要时折行；内容区最高 400px 可滚动。
+   原始 git 输出的 750px 宽度在组件里用 Tailwind 类给。 */
+#app-error .dialog-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+#app-error .dialog-content p {
+  user-select: text;
+  cursor: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
 }
 #delete-worktree-failed .xterm {
   margin-bottom: 10px;

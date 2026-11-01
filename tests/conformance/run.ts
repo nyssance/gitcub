@@ -2314,6 +2314,7 @@ try {
     { file: "coalescing-runner.test.ts", local: true, globals: false, imports: {} },
     { file: "feature-stores.test.ts", local: true, globals: false, imports: {} },
     { file: "push-pull-state.test.ts", local: true, globals: false, imports: {} },
+    { file: "app-error.test.ts", local: true, globals: false, imports: {} },
     { file: "device-authorization.test.ts", local: true, globals: false, imports: {} },
     { file: "native-checks-dispatcher.test.ts", local: true, globals: false, imports: {} },
     {
