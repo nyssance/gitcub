@@ -309,7 +309,16 @@
     "copyTags": "Copy Tags",
     "viewOnGitHub": "View on GitHub",
     "viewOnGitHubEnterprise": "View on GitHub Enterprise",
-    "viewOnGitLab": "View on GitLab"
+    "viewOnGitLab": "View on GitLab",
+    "emptyCommitMessage": "Empty commit message",
+    "unknownUser": "Unknown user",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapseCommitDetails": "Collapse commit details",
+    "expandCommitDetails": "Expand commit details",
+    "copyTheFullSha": "Copy the full SHA",
+    "addedLines": "{{count}} added lines",
+    "removedLines": "{{count}} removed lines"
   },
   "noRepos": {
     "title": "Let's get started",

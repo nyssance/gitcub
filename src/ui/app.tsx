@@ -218,6 +218,7 @@ export function App() {
   const localCommits = useHistoryStore(s => s.localCommits)
   const networkProgress = useRepositoryStore(s => s.networkProgress)
   const commitSha = useHistoryStore(s => s.commitSha)
+  const commitDetails = useHistoryStore(s => s.commitDetails)
   const setCommitSha = useHistoryStore(s => s.setCommitSha)
   const commitFiles = useHistoryStore(s => s.commitFiles)
   const commitFile = useHistoryStore(s => s.commitFile)
@@ -2125,6 +2126,7 @@ export function App() {
                     selectedCommit ? (
                       <CommitDetails
                         commit={selectedCommit}
+                        details={commitDetails}
                         remote={remotes[repo ?? ""] ?? null}
                         platform={accounts[remotes[repo ?? ""]?.host ?? ""]?.kind ?? "github"}
                         autolinks={state.autolinks}

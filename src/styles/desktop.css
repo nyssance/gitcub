@@ -591,3 +591,414 @@
     padding-left: 0;
   }
 }
+
+/* —— #expandable-commit-summary（Desktop _expandable-commit-summary.scss）——————————
+ * 变量换成本项目 token：--base-border → 1px --border、--box-alt-background-color → --box-alt、
+ * --text-secondary-color → --muted-foreground、--color-new/-deleted → --status-new/-deleted、
+ * --spacing 10px、--spacing-half 5px、--font-size-md 14px、--font-size-sm 11px */
+#expandable-commit-summary {
+  --no-shadow-top: linear-gradient(#fff, rgba(255, 255, 255, 0));
+  --no-shadow-bottom: linear-gradient(rgba(255, 255, 255, 0), #fff);
+  --top-shadow: linear-gradient(0deg, rgba(255, 255, 255, 0) 0%, rgba(225, 228, 232, 0.6) 90%, #e1e4e8 100%);
+  --bottom-shadow: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(225, 228, 232, 0.6) 90%, #e1e4e8 100%) 0 100%;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+
+  .beneath-summary {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 10px;
+    padding-top: 0;
+    padding-bottom: 5px;
+  }
+
+  .ecs-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 16px;
+    overflow-wrap: break-word;
+    display: flex;
+    padding: 10px;
+    padding-bottom: 5px;
+
+    > .selectable {
+      min-width: 0;
+    }
+
+    &.empty-summary {
+      color: var(--muted-foreground);
+    }
+
+    .expander {
+      background: transparent;
+      padding: 0;
+      border: none;
+      color: var(--foreground);
+      font-size: inherit;
+      font-weight: normal;
+      font-family: inherit;
+      margin-left: 10px;
+      height: auto;
+
+      svg {
+        vertical-align: text-top;
+      }
+    }
+  }
+
+  .ecs-description {
+    display: flex;
+    position: relative;
+    min-height: 10px;
+    padding-bottom: 5px;
+
+    .ecs-description-scroll-view {
+      overflow: hidden;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .ecs-description-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      min-height: 0;
+      background: var(--box-alt);
+      padding: 5px;
+    }
+  }
+
+  .ecs-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    .ecs-meta-item {
+      display: flex;
+      margin-right: 10px;
+      font-size: 11px;
+      align-items: center;
+
+      &.authors {
+        margin-left: 0;
+
+        .avatar {
+          width: 16px;
+          height: 16px;
+        }
+
+        .author .avatar-container {
+          margin-right: 4px;
+        }
+      }
+
+      &.commit-ref {
+        .ref {
+          padding-left: 5px;
+        }
+
+        .copy-button {
+          margin-left: 5px;
+          background: transparent;
+          border: none;
+          padding: 0;
+          height: auto;
+          min-width: 16px;
+
+          &:hover {
+            color: var(--muted-foreground);
+          }
+        }
+      }
+
+      /* 原版全局 .lines-added-deleted { margin-left: auto }（写在 _open-pull-request-header.scss，但未加作用域）也作用在这里，增删数靠右 */
+      &.lines-added-deleted {
+        margin-left: auto;
+
+        div {
+          padding-right: 5px;
+        }
+
+        .lines-added {
+          color: var(--status-new);
+        }
+
+        .lines-deleted {
+          color: var(--status-deleted);
+        }
+      }
+
+      &.tags {
+        flex-shrink: 1;
+        min-width: 0;
+
+        .octicon {
+          padding-right: 5px;
+        }
+
+        span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  &:not(.expanded) .ecs-description-scroll-view {
+    max-height: 80px;
+    min-height: 30px;
+  }
+
+  /* 展开后摘要可以占满历史区，剩下的高度让给文件列表与 diff */
+  &.expanded {
+    flex-shrink: 1;
+
+    .beneath-summary {
+      background:
+        var(--no-shadow-top),
+        var(--no-shadow-bottom) 0 100%,
+        var(--top-shadow),
+        var(--bottom-shadow);
+      background-repeat: no-repeat;
+      background-size:
+        100% 20px,
+        100% 20px,
+        100% 10px,
+        100% 10px;
+      background-attachment: local, local, scroll, scroll;
+    }
+
+    .ecs-meta {
+      display: block;
+
+      .ecs-meta-item {
+        margin-bottom: 5px;
+        align-items: unset;
+        margin-right: 0;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        &.authors {
+          display: block;
+
+          .author {
+            margin-bottom: 2px;
+            display: flex;
+
+            div:last-child {
+              overflow-wrap: anywhere;
+            }
+          }
+        }
+
+        &.commit-ref .ref {
+          overflow-wrap: anywhere;
+        }
+
+        &.lines-added-deleted .lines-added {
+          padding-left: 5px;
+        }
+
+        &.tags span {
+          white-space: normal;
+        }
+      }
+    }
+  }
+
+  .selectable {
+    user-select: text;
+    cursor: text;
+
+    * {
+      user-select: unset;
+      pointer-events: unset;
+      cursor: text;
+    }
+
+    a {
+      cursor: pointer;
+    }
+  }
+}
+
+.dark #expandable-commit-summary {
+  --no-shadow-top: linear-gradient(#24292e, rgba(255, 255, 255, 0));
+  --no-shadow-bottom: linear-gradient(rgba(255, 255, 255, 0), #24292e);
+  --top-shadow: linear-gradient(0deg, rgba(36, 41, 46, 0) 0%, rgba(0, 0, 0, 0.6) 90%, #000 100%);
+  --bottom-shadow: linear-gradient(180deg, rgba(36, 41, 46, 0) 0%, rgba(0, 0, 0, 0.6) 90%, #000 100%) 0 100%;
+}
+
+/* —— AvatarStack / Avatar（Desktop _avatar-stack.scss、_avatar.scss）———————————
+ * --background-color → --background、--text-secondary-color → --muted-foreground、
+ * --box-alt-background-color → --box-alt；$gray-100/200/300 = #f6f8fa/#e1e4e8/#d1d5da。
+ * 本项目的 .avatar 外面多一层 shadcn Avatar（[data-slot="avatar"]），叠放的负边距与阴影放在这层上 */
+.avatar {
+  border-radius: 50%;
+}
+
+.avatar-container {
+  display: flex;
+  align-items: center;
+  line-height: 0;
+}
+
+svg.avatar {
+  fill: var(--muted-foreground);
+  background: var(--box-alt);
+}
+
+.AvatarStack {
+  position: relative;
+  min-width: 26px;
+  height: 20px;
+
+  .AvatarStack-body {
+    position: absolute;
+  }
+
+  &.AvatarStack--two {
+    min-width: 36px;
+  }
+
+  &.AvatarStack--three {
+    min-width: 30px;
+  }
+
+  &.AvatarStack--plus {
+    min-width: 46px;
+  }
+
+  &.AvatarStack--small {
+    height: 16px;
+    min-width: 20px;
+
+    .avatar {
+      width: 16px;
+      height: 16px;
+    }
+
+    &.AvatarStack--two {
+      min-width: 25px;
+    }
+
+    &.AvatarStack--three {
+      min-width: 30px;
+    }
+
+    &.AvatarStack--plus {
+      min-width: 40px;
+    }
+
+    .avatar.avatar-more {
+      &::before,
+      &::after {
+        height: 16px;
+      }
+
+      &::before {
+        width: 13px;
+      }
+    }
+
+    &:hover [data-slot="avatar"] {
+      margin-right: 1px;
+    }
+  }
+}
+
+.AvatarStack-body {
+  display: flex;
+  background: inherit;
+
+  svg.avatar {
+    fill: var(--muted-foreground);
+    background: var(--box-alt);
+  }
+
+  .avatar-container:nth-child(n + 5) [data-slot="avatar"] {
+    display: none;
+    opacity: 0;
+  }
+
+  .avatar-container {
+    &:nth-child(1) {
+      z-index: 3;
+    }
+
+    &:nth-child(2) {
+      z-index: 2;
+    }
+
+    &:nth-child(3) {
+      z-index: 1;
+    }
+
+    &:last-child {
+      box-shadow: none;
+    }
+  }
+
+  [data-slot="avatar"] {
+    position: relative;
+    display: flex;
+    box-sizing: content-box;
+    margin-right: -11px;
+    background-color: inherit;
+    box-shadow: 1px 0 0 var(--background);
+    border-radius: 50%;
+    transition: margin 0.1s ease-in-out;
+
+    img {
+      border-radius: 50%;
+    }
+  }
+
+  &:hover {
+    [data-slot="avatar"] {
+      margin-right: 3px;
+    }
+
+    .avatar-container:nth-child(n + 5) [data-slot="avatar"] {
+      display: flex;
+      opacity: 1;
+    }
+
+    .avatar-more {
+      display: none !important;
+    }
+  }
+}
+
+.avatar.avatar-more {
+  z-index: 1;
+  margin-right: 0;
+  background: #f6f8fa;
+  width: 10px !important;
+
+  &::before,
+  &::after {
+    position: absolute;
+    display: block;
+    height: 20px;
+    content: "";
+    border-radius: 50%;
+  }
+
+  &::before {
+    width: 17px;
+    background: #e1e4e8;
+  }
+
+  &::after {
+    width: 14px;
+    background: #d1d5da;
+  }
+}

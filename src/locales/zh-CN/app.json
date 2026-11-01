@@ -305,7 +305,16 @@
     "copyTags": "复制标签",
     "viewOnGitHub": "在 GitHub 上查看",
     "viewOnGitHubEnterprise": "在 GitHub Enterprise 上查看",
-    "viewOnGitLab": "在 GitLab 上查看"
+    "viewOnGitLab": "在 GitLab 上查看",
+    "emptyCommitMessage": "提交信息为空",
+    "unknownUser": "未知用户",
+    "collapse": "收起",
+    "expand": "展开",
+    "collapseCommitDetails": "收起提交详情",
+    "expandCommitDetails": "展开提交详情",
+    "copyTheFullSha": "复制完整 SHA",
+    "addedLines": "新增 {{count}} 行",
+    "removedLines": "删除 {{count}} 行"
   },
   "noRepos": {
     "title": "开始使用",

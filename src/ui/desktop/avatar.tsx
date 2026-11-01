@@ -2,6 +2,8 @@ import noop from "lodash/noop"
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
+import { Avatar as StandardAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import { API, getDotComAPIEndpoint, getHTMLURL } from "../../lib/api"
 import { getLegacyStealthEmailForUser, getStealthEmailForUser, parseStealthEmail } from "../../lib/email"
 import { isGHE, isGHES, supportsAvatarsAPI } from "../../lib/endpoint-capabilities"
@@ -11,7 +13,6 @@ import { type IKnownBot, knownDotComBots } from "../../models/dot-com-bots"
 import { forceUnwrap } from "../../upstream/lib/fatal-error"
 import { offsetFrom } from "../../upstream/lib/offset-from"
 import { ExpiringOperationCache } from "../../upstream/ui/lib/expiring-operation-cache"
-import { Avatar as StandardAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Octicon, type OcticonSymbolVariant } from "../octicons"
 import { TooltipDirection } from "./tooltip"
 import { TooltippedContent } from "./tooltipped-content"
@@ -145,6 +146,9 @@ interface IAvatarProps {
    * attempt to request, defaults to 64px.
    */
   readonly size?: number
+
+  /** shadcn Avatar 外壳默认 32px；Desktop 按场景用 CSS 定 .avatar 尺寸，这里由调用方传尺寸类 */
+  readonly className?: string
 
   readonly accounts: ReadonlyArray<Account>
 
@@ -376,7 +380,7 @@ export class Avatar extends React.Component<IAvatarProps, IAvatarState> {
     })
 
     return (
-      <StandardAvatar>
+      <StandardAvatar className={this.props.className}>
         <AvatarFallback role="img" aria-label={alt}>
           <Octicon symbol={DefaultAvatarSymbol} className="avatar" />
         </AvatarFallback>

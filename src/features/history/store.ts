@@ -36,6 +36,8 @@ interface HistoryStore {
   mostRecentLocalCommit: Commit | null
   commitSha: string | null
   commitFiles: CommitFile[]
+  /** 选中提交的完整信息（Desktop Commit：提交者、共同作者 trailer），提交摘要用 */
+  commitDetails: Commit | null
   commitFile: string | null
   commitDiff: IRawDiff | null
   commitTokens: DiffTokens | undefined
@@ -83,6 +85,7 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
   localCommits: null,
   mostRecentLocalCommit: null,
   commitSha: null,
+  commitDetails: null,
   commitFiles: [],
   commitFile: null,
   commitDiff: null,
@@ -107,6 +110,7 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
       graphLoading: false,
       commitSha: null,
       commitFiles: [],
+      commitDetails: null,
       commitFile: null,
       commitDiff: null,
       commitTokens: undefined,
@@ -267,22 +271,35 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
   // 从文件历史里选的提交：选中那个文件（改名那一次按旧名也能对上），对不上才退回第一个
   loadCommitFiles: (repo, sha) => {
     if (!repo || !sha) {
-      set({ commitFiles: [] })
+      set({ commitFiles: [], commitDetails: null })
       return () => {}
     }
+    if (get().commitDetails?.sha !== sha) set({ commitDetails: null })
     return forkCancelable(
-      call("commitFiles", ipc => ipc.commitFiles(repo, sha)).pipe(
-        Effect.match({
-          onSuccess: files => {
-            const wanted = preferredFile
-            preferredFile = null
-            set({
-              commitFiles: files,
-              commitFile: (wanted && matchCommitFile(files, wanted)) ?? files[0]?.path ?? null
+      Effect.all(
+        [
+          call("commitFiles", ipc => ipc.commitFiles(repo, sha)).pipe(
+            Effect.match({
+              onSuccess: files => {
+                const wanted = preferredFile
+                preferredFile = null
+                set({
+                  commitFiles: files,
+                  commitFile: (wanted && matchCommitFile(files, wanted)) ?? files[0]?.path ?? null
+                })
+              },
+              onFailure: error => reportError(error.message)
             })
-          },
-          onFailure: error => reportError(error.message)
-        })
+          ),
+          // Desktop 的 commitLookup：提交摘要要提交者与共同作者，走 commit_details 的进程内 gix 路径
+          Effect.tryPromise(() => getCommits({ path: repo }, sha, 1)).pipe(
+            Effect.match({
+              onSuccess: ([commit]) => set({ commitDetails: commit ?? null }),
+              onFailure: () => set({ commitDetails: null })
+            })
+          )
+        ],
+        { concurrency: "unbounded" }
       )
     )
   },

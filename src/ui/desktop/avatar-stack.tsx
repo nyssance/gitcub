@@ -36,7 +36,7 @@ export class AvatarStack extends React.Component<IAvatarStackProps> {
         elems.push(<div key="more" className="avatar-more avatar" />)
       }
 
-      elems.push(<Avatar key={`${i}`} user={users[i]} accounts={accounts} tooltip={tooltip} />)
+      elems.push(<Avatar key={`${i}`} user={users[i]} accounts={accounts} tooltip={tooltip} className="size-4" />)
     }
 
     const className = classNames("AvatarStack", {

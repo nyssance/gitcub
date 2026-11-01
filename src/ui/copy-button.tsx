@@ -11,6 +11,7 @@ import * as octicons from "./octicons/octicons.generated"
 interface ICopyButtonProps {
   readonly copyContent: string
   readonly ariaLabel: string
+  readonly className?: string
 }
 
 interface ICopyButtonState {
@@ -55,7 +56,7 @@ export class CopyButton extends React.Component<ICopyButtonProps, ICopyButtonSta
     const ariaMessage = showCopied ? copiedMessage : null
     return (
       <Button
-        className="copy-button"
+        className={this.props.className ? `copy-button ${this.props.className}` : "copy-button"}
         tooltip={showCopied ? copiedMessage : ariaLabel}
         ariaLabel={ariaLabel}
         onClick={this.onCopy}

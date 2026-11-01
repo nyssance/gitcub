@@ -3,12 +3,14 @@ import { useState } from "react"
 import { fn } from "storybook/test"
 
 import { assertNativeFixtures, withNativeFixtures } from "../.storybook/mocks/native"
+import { Commit } from "../src/models/commit"
 import type { CommitFile } from "../src/models/history"
 import { DiffView } from "../src/ui/diff/diff"
 import { CommitDetails } from "../src/ui/history/commit-details"
 import { HistorySidebar } from "../src/ui/history/sidebar"
 import { RepositorySplit } from "../src/ui/repository/repository-split"
 import { DiffParser } from "../src/upstream/lib/diff-parser"
+import { CommitIdentity } from "../src/upstream/models/commit-identity"
 import { commit, repo } from "./fixtures"
 
 const paths = [
@@ -33,6 +35,18 @@ const commits = Array.from({ length: 15 }, (_, i) => ({
   summary: i === 0 ? "Update plugin content (#104)" : "Merge pull request with a very long title to verify truncation",
   authorName: i % 2 ? "Matt Piccolella" : "Mark Pike"
 }))
+const author = new CommitIdentity(commits[0].authorName, commits[0].authorEmail, new Date(commits[0].time * 1000))
+const details = new Commit(
+  commits[0].sha,
+  commits[0].shortSha,
+  commits[0].summary,
+  commits[0].body,
+  author,
+  author,
+  [],
+  [],
+  commits[0].tags
+)
 const diff = new DiffParser().parse(
   "diff --git a/CLAUDE.md b/CLAUDE.md\n--- a/CLAUDE.md\n+++ b/CLAUDE.md\n@@ -1 +1 @@\n-Previous content\n+Updated content\n"
 )
@@ -75,6 +89,7 @@ function HistoryWindow() {
         <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
           <CommitDetails
             commit={commits[0]}
+            details={details}
             remote={{ host: "github.com", owner: "nyssance", name: "atlas" }}
             files={files}
             selected={selected}
