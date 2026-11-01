@@ -909,7 +909,17 @@ test("multi-file discard uses one confirmation and preserves unselected files", 
   await expect.poll(() => existsSync(join(smokeRepoPath, "batch-a.txt"))).toBe(false)
   await expect.poll(() => existsSync(join(smokeRepoPath, "batch-c.txt"))).toBe(false)
   assert.equal(readFileSync(join(smokeRepoPath, "batch-b.txt"), "utf8"), "keep batch-b.txt\n")
-  assert.equal(git("write-tree"), indexBefore)
+  // Desktop discardChanges 先挪废纸篓、再 reset + checkout-index：文件没了时应用可能还拿着 index.lock，
+  // 等这一步做完再比索引，不和它抢锁
+  await expect
+    .poll(() => {
+      try {
+        return git("write-tree")
+      } catch {
+        return "index busy"
+      }
+    })
+    .toBe(indexBefore)
 })
 
 test("About exposes the author's GitHub profile", async ({ mainWindow: page }) => {
