@@ -55,7 +55,8 @@
 
   --toolbar: var(--background);
   --toolbar-foreground: var(--foreground);
-  --toolbar-muted: var(--muted-foreground);
+  /* 按下或悬停时底色是 accent，muted-foreground 在上面只有 4.3:1，压暗一点到 AA */
+  --toolbar-muted: oklch(0.5 0 0);
   --toolbar-border: var(--border);
   --toolbar-hover: var(--accent);
 
