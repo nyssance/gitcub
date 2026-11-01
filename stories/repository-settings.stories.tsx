@@ -53,7 +53,7 @@ const withRegisteredFork = () => {
   stores.clear()
   const cleanup = withNativeFixtures(forkFixtures)()
   return getDesktopRuntime()
-    .repositoriesStore.addRepository("/preview/repository")
+    .repositoriesStore.addRepository("/preview/repository", undefined)
     .then(() => cleanup)
 }
 
