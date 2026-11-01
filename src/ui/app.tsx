@@ -575,7 +575,8 @@ export function App() {
       const title = t("toolbar.pullingRemote", { remote })
       const { onHookFailure, ignoreAborted } = hookFailureHandling()
       setNetworkProgress(path, { kind: "pull", title, value: 0 })
-      const pulled = await ignoreAborted(
+      // Desktop performPull 用 performFailableOperation：拉取失败或在钩子处中止，照样快进其它分支、刷新，错误另行显示
+      const failure = await ignoreAborted(
         pullRemote(
           { path },
           { name: remote },
@@ -584,11 +585,14 @@ export function App() {
             progressCallback: progress =>
               setNetworkProgress(path, { ...progress, title, value: progress.value * pullWeight })
           }
-        ).then(() => true),
-        false
+        ),
+        undefined
+      ).then(
+        () => null,
+        (error: unknown) => ({ error })
       )
-      if (!pulled) return
       await refreshAfterNetworkOperation(path, pullWeight + fetchWeight)
+      if (failure) throw failure.error
     })
   /** Desktop performFetch：获取占 0.9，刷新 0.1 */
   const doFetch = (path: string) =>
@@ -597,10 +601,15 @@ export function App() {
       if (!remote) return
       const fetchWeight = 0.9
       const title = t("toolbar.fetchingRemote", { remote })
-      await fetchRemote({ path }, { name: remote }, progress =>
+      // Desktop fetchRemotes 用 performFailableOperation：获取失败照样快进、刷新，错误另行显示
+      const failure = await fetchRemote({ path }, { name: remote }, progress =>
         setNetworkProgress(path, { ...progress, title, value: progress.value * fetchWeight })
+      ).then(
+        () => null,
+        (error: unknown) => ({ error })
       )
       await refreshAfterNetworkOperation(path, fetchWeight)
+      if (failure) throw failure.error
     })
   /** Keep confirmation, transport and recovery inside one operation lock. */
   const confirmBranchStash = (name: string, current: string) => ask(t("branch.stashConfirm", { name, current }))
