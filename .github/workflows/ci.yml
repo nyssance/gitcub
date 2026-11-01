@@ -4,8 +4,10 @@
 #      （`#[cfg(windows)]` 的窗口效果就是这种），这一格是唯一的保障。不支持 Linux
 name: CI
 
-# 推送不自动跑：交付以本地完整验证为准，需要时在 Actions 里手动触发
+# 只在打标签时自动跑；平时推送不跑，交付以本地完整验证为准
 on:
+  push:
+    tags: ["v*"]
   workflow_dispatch:
 
 concurrency:
