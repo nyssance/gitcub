@@ -879,5 +879,13 @@
     "detached": "Create or switch to a branch before trying again.",
     "noUpstream": "This branch has no remote to push to.",
     "noRemotes": "The repository has no remotes."
+  },
+  "multiCommitOperation": {
+    "rebaseInProgress": "Rebase in progress",
+    "cherryPickInProgress": "Cherry-pick in progress",
+    "squashInProgress": "Squash in progress",
+    "mergeInProgress": "Merge in progress",
+    "reorderInProgress": "Reorder in progress",
+    "commitPositionOfTotal": "Commit {{position}} of {{total}}"
   }
 }

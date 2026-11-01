@@ -65,7 +65,11 @@ fn commits_since(repo: &Path, last_retained: Option<&str>) -> Result<Vec<(String
 }
 
 /// 跑一次交互式变基。`message` 有值时连提交信息编辑器一起替换掉。
-fn run(repo: &Path, todo: &str, last_retained: Option<&str>, message: Option<&str>) -> Result<(), String> {
+/// `commits` 给进度解析器按序号找摘要（Desktop rebaseInteractive 的 commits），`on_progress` 收到每条进度。
+fn run(
+    repo: &Path, todo: &str, last_retained: Option<&str>, message: Option<&str>,
+    commits: &[crate::history::CommitOneLine], on_progress: &mut dyn FnMut(crate::ops::MultiCommitProgress),
+) -> Result<(), String> {
     let todo_file = Temp::new("todo", todo)?;
     let msg_file = match message {
         Some(m) if !m.trim().is_empty() => Some(Temp::new("msg", m)?),
@@ -78,11 +82,28 @@ fn run(repo: &Path, todo: &str, last_retained: Option<&str>, message: Option<&st
     // 第一个提交没有父，只能用 --root
     let base = last_retained.unwrap_or("--root");
 
-    Git::new(Some(repo))
+    on_progress(crate::ops::initial_progress(commits.first().map(|c| c.summary.as_str()), commits.len()));
+    let mut lines = crate::ops::line_stream(crate::git::TerminalStream::Stderr, |line| {
+        if let Some(progress) = crate::ops::rebase_progress(line, commits) {
+            on_progress(progress);
+        }
+    });
+    let output = Git::new(Some(repo))
         .args(["-c", &format!("sequence.editor={}", todo_file.as_editor())])
         .env("GIT_EDITOR", editor)
         .args(["rebase", "-i", base])
-        .run()
+        .output_raw_stream(|chunk| lines(&chunk))?;
+    drop(lines);
+    crate::git::checked_result(Path::new("."), output, &[0], &[]).map(|_| ())
+}
+
+fn one_lines(
+    commits: &[(String, String)], shas: impl IntoIterator<Item = impl AsRef<str>>,
+) -> Vec<crate::history::CommitOneLine> {
+    shas.into_iter()
+        .filter_map(|sha| commits.iter().find(|c| c.0 == sha.as_ref()))
+        .map(|(sha, summary)| crate::history::CommitOneLine { sha: sha.clone(), summary: summary.clone() })
+        .collect()
 }
 
 /// 把 `to_squash` 压到 `onto` 上。
@@ -91,6 +112,7 @@ fn run(repo: &Path, todo: &str, last_retained: Option<&str>, message: Option<&st
 /// 压到 C 上，结果应该是 B、A-C-E、D —— A 仍在 C 前、E 仍在 C 后。
 pub fn squash(
     repo: &Path, to_squash: &[String], onto: &str, last_retained: Option<&str>, message: &str,
+    on_progress: &mut dyn FnMut(crate::ops::MultiCommitProgress),
 ) -> Result<(), String> {
     if to_squash.is_empty() {
         return Err("没有要压缩的提交".into());
@@ -145,12 +167,15 @@ pub fn squash(
         todo.push_str(&format!("pick {} {}\n", c.0, c.1));
     }
 
-    run(repo, &todo, last_retained, Some(message))
+    // Desktop squash.ts：进度按 [...toSquash, squashOnto] 找摘要
+    let progress_commits = one_lines(&commits, to_squash.iter().map(String::as_str).chain([onto]));
+    run(repo, &todo, last_retained, Some(message), &progress_commits, on_progress)
 }
 
 /// 把 `to_move` 移到 `before` 之前；`before` 为 None 表示移到最后。
 pub fn reorder(
     repo: &Path, to_move: &[String], before: Option<&str>, last_retained: Option<&str>,
+    on_progress: &mut dyn FnMut(crate::ops::MultiCommitProgress),
 ) -> Result<(), String> {
     if to_move.is_empty() {
         return Err("没有要移动的提交".into());
@@ -204,7 +229,9 @@ pub fn reorder(
         todo.push_str(&format!("pick {} {}\n", c.0, c.1));
     }
 
-    run(repo, &todo, last_retained, None)
+    // Desktop reorder.ts：进度按要移动的提交找摘要
+    let progress_commits = one_lines(&commits, to_move);
+    run(repo, &todo, last_retained, None, &progress_commits, on_progress)
 }
 
 #[cfg(test)]
@@ -258,6 +285,22 @@ mod tests {
             .unwrap()
     }
 
+    /// Desktop rebaseInteractive 的进度：先给第 1 个、0%，再按 `Rebasing (n/m)` 边跑边报，到 100% 为止
+    #[test]
+    fn 重排的进度边跑边报() {
+        let (_d, r) = repo_with(&["A", "B", "C", "D"]);
+        let (a, b, d) = (sha_of(&r, "A"), sha_of(&r, "B"), sha_of(&r, "D"));
+        let mut events = Vec::new();
+        reorder(&r, std::slice::from_ref(&d), Some(&b), Some(&a), &mut |p| events.push(p)).unwrap();
+        assert_eq!(summaries(&r), vec!["A", "D", "B", "C"]);
+        let first = &events[0];
+        assert_eq!((first.position, first.total_commit_count, first.value), (1, 1, 0.0));
+        assert_eq!(first.current_commit_summary, "D");
+        let rest: Vec<_> = events[1..].iter().map(|p| (p.position, p.total_commit_count)).collect();
+        assert_eq!(rest, vec![(1, 3), (2, 3), (3, 3)]);
+        assert_eq!(events.last().unwrap().value, 1.0);
+    }
+
     #[test]
     fn 压缩两个提交成一个() {
         let (_d, r) = repo_with(&["A", "B", "C"]);
@@ -265,7 +308,7 @@ mod tests {
         let c = sha_of(&r, "C");
         let a = sha_of(&r, "A");
 
-        squash(&r, &[c], &b, Some(&a), "B 和 C 合起来").unwrap();
+        squash(&r, &[c], &b, Some(&a), "B 和 C 合起来", &mut |_| {}).unwrap();
 
         assert_eq!(summaries(&r), vec!["A", "B 和 C 合起来"]);
         // 两个提交的内容都要在
@@ -278,7 +321,7 @@ mod tests {
         let (_d, r) = repo_with(&["A", "B", "C", "D", "E"]);
         let (a, c, e) = (sha_of(&r, "A"), sha_of(&r, "C"), sha_of(&r, "E"));
 
-        squash(&r, &[a, e], &c, None, "压好的").unwrap();
+        squash(&r, &[a, e], &c, None, "压好的", &mut |_| {}).unwrap();
 
         assert_eq!(summaries(&r), vec!["B", "压好的", "D"]);
         for f in ["A", "B", "C", "D", "E"] {
@@ -292,7 +335,7 @@ mod tests {
         let (a, b, d_) = (sha_of(&r, "A"), sha_of(&r, "B"), sha_of(&r, "D"));
 
         // 把 D 挪到 B 之前
-        reorder(&r, &[d_], Some(&b), Some(&a)).unwrap();
+        reorder(&r, &[d_], Some(&b), Some(&a), &mut |_| {}).unwrap();
 
         assert_eq!(summaries(&r), vec!["A", "D", "B", "C"]);
     }
@@ -302,7 +345,7 @@ mod tests {
         let (_d, r) = repo_with(&["A", "B", "C"]);
         let (a, b) = (sha_of(&r, "A"), sha_of(&r, "B"));
 
-        reorder(&r, &[b], None, Some(&a)).unwrap();
+        reorder(&r, &[b], None, Some(&a), &mut |_| {}).unwrap();
 
         assert_eq!(summaries(&r), vec!["A", "C", "B"]);
     }
@@ -311,6 +354,6 @@ mod tests {
     fn 不许把目标提交也算进要压缩的里面() {
         let (_d, r) = repo_with(&["A", "B"]);
         let b = sha_of(&r, "B");
-        assert!(squash(&r, std::slice::from_ref(&b), &b, None, "x").is_err());
+        assert!(squash(&r, std::slice::from_ref(&b), &b, None, "x", &mut |_| {}).is_err());
     }
 }

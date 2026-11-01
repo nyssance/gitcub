@@ -873,5 +873,13 @@
     "detached": "请先新建或切换到一个分支，再重试。",
     "noUpstream": "这个分支没有可推送的远端。",
     "noRemotes": "这个仓库没有远端。"
+  },
+  "multiCommitOperation": {
+    "rebaseInProgress": "正在变基",
+    "cherryPickInProgress": "正在拣选",
+    "squashInProgress": "正在压缩",
+    "mergeInProgress": "正在合并",
+    "reorderInProgress": "正在重排",
+    "commitPositionOfTotal": "第 {{position}} 个提交，共 {{total}} 个"
   }
 }

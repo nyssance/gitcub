@@ -515,10 +515,11 @@ pub fn revert(repo: &Path, sha: &str, is_merge: bool) -> Result<(), String> {
 /// 摘取提交。`--empty=keep` 保留变成空的提交，与原版一致。
 #[allow(dead_code)] // Non-streaming entry point used by the upstream conformance bridge.
 pub fn cherry_pick(repo: &Path, shas: &[String]) -> Result<(), String> {
-    cherry_pick_stream(repo, shas, |_| {})
+    cherry_pick_stream(repo, shas, |_| {}, |_| {})
 }
 pub fn cherry_pick_stream(
     repo: &Path, shas: &[String], output: impl FnMut(crate::git::TerminalChunk),
+    on_progress: impl FnMut(MultiCommitProgress),
 ) -> Result<(), String> {
     let commits = shas
         .iter()
@@ -530,7 +531,7 @@ pub fn cherry_pick_stream(
             Ok(crate::history::CommitOneLine { sha: commit.sha, summary: commit.summary })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let outcome = cherry_pick_commits_stream(repo, &commits, output)?;
+    let outcome = cherry_pick_commits_stream(repo, &commits, output, on_progress)?;
     if matches!(outcome.result, CherryPickResult::CompletedWithoutError) { Ok(()) } else { Err(outcome.diagnostic) }
 }
 
@@ -936,13 +937,10 @@ fn parse_cherry_pick_output(
     let mut position = count;
     let progress = stdout
         .lines()
-        .filter_map(|line| {
-            let label = line.strip_prefix('[')?.split_once(']')?.0;
-            if !label.contains(char::is_whitespace) {
-                return None;
-            }
+        .filter(|line| is_cherry_picked_line(line))
+        .map(|_| {
             position += 1;
-            Some(progress_at(position, commits.len(), commits))
+            progress_at(position, commits.len(), commits)
         })
         .collect();
     let diagnostic = crate::git::stderr_of(&output);
@@ -965,10 +963,11 @@ fn parse_cherry_pick_output(
 pub fn cherry_pick_commits(
     repo: &Path, commits: &[crate::history::CommitOneLine],
 ) -> Result<CherryPickOutcome, String> {
-    cherry_pick_commits_stream(repo, commits, |_| {})
+    cherry_pick_commits_stream(repo, commits, |_| {}, |_| {})
 }
 pub fn cherry_pick_commits_stream(
-    repo: &Path, commits: &[crate::history::CommitOneLine], on_output: impl FnMut(crate::git::TerminalChunk),
+    repo: &Path, commits: &[crate::history::CommitOneLine], mut on_output: impl FnMut(crate::git::TerminalChunk),
+    mut on_progress: impl FnMut(MultiCommitProgress),
 ) -> Result<CherryPickOutcome, String> {
     if commits.is_empty() {
         return Ok(CherryPickOutcome {
@@ -981,11 +980,23 @@ pub fn cherry_pick_commits_stream(
         .iter()
         .map(|commit| crate::history::resolve_revision(repo, &commit.sha))
         .collect::<Result<Vec<_>, _>>()?;
-    let output = Git::new(Some(repo))
-        .arg("cherry-pick")
-        .args(shas)
-        .args(["--empty=keep", "-m", "1"])
-        .output_raw_stream(on_output)?;
+    // Desktop _initializeCherryPickProgress：初始摘要取最后一个提交
+    on_progress(initial_progress(commits.last().map(|c| c.summary.as_str()), commits.len()));
+    let mut position = 0;
+    let mut lines = line_stream(crate::git::TerminalStream::Stdout, |line| {
+        if is_cherry_picked_line(line) {
+            position += 1;
+            on_progress(progress_at(position, commits.len(), commits));
+        }
+    });
+    let output =
+        Git::new(Some(repo)).arg("cherry-pick").args(shas).args(["--empty=keep", "-m", "1"]).output_raw_stream(
+            |chunk| {
+                lines(&chunk);
+                on_output(chunk);
+            },
+        )?;
+    drop(lines);
     parse_cherry_pick_output(repo, output, commits, 0)
 }
 
@@ -1224,6 +1235,53 @@ pub fn format_rebase_value(value: f64) -> f64 {
     (value.clamp(0.0, 1.0) * 100.0).round() / 100.0
 }
 
+/// Desktop rebase.ts GitRebaseParser：`Rebasing (n/m)` 这一行
+pub fn rebase_progress(line: &str, commits: &[crate::history::CommitOneLine]) -> Option<MultiCommitProgress> {
+    let numbers = line.strip_prefix("Rebasing (")?.split_once(')')?.0;
+    let (position, total) = numbers.split_once('/')?;
+    Some(progress_at(position.trim().parse().ok()?, total.trim().parse().ok()?, commits))
+}
+
+/// Desktop cherry-pick.ts GitCherryPickParser：stdout 里每拣完一个提交有一行 `[分支 sha] 摘要`
+fn is_cherry_picked_line(line: &str) -> bool {
+    line.strip_prefix('[')
+        .and_then(|rest| rest.split_once(']'))
+        .is_some_and(|(label, _)| label.contains(char::is_whitespace))
+}
+
+/// Desktop configureOptionsForRebase 里的 byline：把一路输出按 \r / \n 切成行，边跑边交给 `on_line`
+pub fn line_stream(
+    stream: crate::git::TerminalStream, mut on_line: impl FnMut(&str),
+) -> impl FnMut(&crate::git::TerminalChunk) {
+    let mut pending = Vec::new();
+    move |chunk| {
+        if std::mem::discriminant(&chunk.stream) != std::mem::discriminant(&stream) {
+            return;
+        }
+        for &byte in &chunk.bytes {
+            if matches!(byte, b'\r' | b'\n') {
+                if !pending.is_empty() {
+                    on_line(&String::from_utf8_lossy(&pending));
+                    pending.clear();
+                }
+            } else {
+                pending.push(byte);
+            }
+        }
+    }
+}
+
+/// Desktop _initializeMultiCommitOperation 的初始进度：第 1 个、0%
+pub fn initial_progress(summary: Option<&str>, total: usize) -> MultiCommitProgress {
+    MultiCommitProgress {
+        kind: "multiCommitOperation",
+        current_commit_summary: summary.unwrap_or_default().into(),
+        position: 1,
+        total_commit_count: total,
+        value: 0.0,
+    }
+}
+
 fn progress_at(position: usize, total: usize, commits: &[crate::history::CommitOneLine]) -> MultiCommitProgress {
     MultiCommitProgress {
         kind: "multiCommitOperation",
@@ -1275,14 +1333,7 @@ fn parse_rebase_output(
 ) -> Result<RebaseOutcome, String> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let progress = stderr
-        .split(['\r', '\n'])
-        .filter_map(|line| {
-            let numbers = line.strip_prefix("Rebasing (")?.split_once(')')?.0;
-            let (position, total) = numbers.split_once('/')?;
-            Some(progress_at(position.trim().parse().ok()?, total.trim().parse().ok()?, commits))
-        })
-        .collect();
+    let progress = stderr.split(['\r', '\n']).filter_map(|line| rebase_progress(line, commits)).collect();
     let diagnostic = crate::git::stderr_of(&output);
     let result = if output.status.success() {
         if stdout.trim().starts_with("Current branch ") && stdout.trim().ends_with(" is up to date.") {
@@ -1307,10 +1358,11 @@ fn parse_rebase_output(
 }
 
 pub fn rebase_branch(repo: &Path, base: &str, target: Option<&str>) -> Result<RebaseOutcome, String> {
-    rebase_branch_stream(repo, base, target, |_| {})
+    rebase_branch_stream(repo, base, target, |_| {}, |_| {})
 }
 pub fn rebase_branch_stream(
-    repo: &Path, base: &str, target: Option<&str>, output: impl FnMut(crate::git::TerminalChunk),
+    repo: &Path, base: &str, target: Option<&str>, mut output: impl FnMut(crate::git::TerminalChunk),
+    mut on_progress: impl FnMut(MultiCommitProgress),
 ) -> Result<RebaseOutcome, String> {
     let base_sha = crate::history::resolve_revision(repo, base)?;
     let target_sha = crate::history::resolve_revision(repo, target.unwrap_or("HEAD"))?;
@@ -1320,7 +1372,18 @@ pub fn rebase_branch_stream(
     if let Some(target) = target {
         git = git.arg(target);
     }
-    parse_rebase_output(repo, git.output_raw_stream(output)?, &commits, false)
+    on_progress(initial_progress(commits.first().map(|c| c.summary.as_str()), commits.len()));
+    let mut lines = line_stream(crate::git::TerminalStream::Stderr, |line| {
+        if let Some(progress) = rebase_progress(line, &commits) {
+            on_progress(progress);
+        }
+    });
+    let raw = git.output_raw_stream(|chunk| {
+        lines(&chunk);
+        output(chunk);
+    })?;
+    drop(lines);
+    parse_rebase_output(repo, raw, &commits, false)
 }
 
 pub fn continue_rebase_with_resolutions(
@@ -1380,6 +1443,47 @@ mod tests {
     }
 
     /// Desktop `getStashes` from the reflog in process must equal `git log -g` byte for byte.
+    /// Desktop rebase / cherry-pick 的进度在 git 运行时边跑边报：变基读 stderr 的 `Rebasing (n/m)`，
+    /// 拣选读 stdout 每个提交一行的 `[分支 sha] 摘要`；初始进度变基取第一个提交、拣选取最后一个
+    #[test]
+    fn 变基与拣选的进度边跑边报() {
+        let d = tempfile::tempdir().unwrap();
+        let r = d.path();
+        let g = |args: &[&str]| {
+            crate::test_repo::git(r, &[&["-c", "user.name=t", "-c", "user.email=t@example.com"], args].concat())
+        };
+        g(&["init", "-q", "-b", "main"]);
+        g(&["commit", "-q", "--allow-empty", "-m", "base"]);
+        g(&["checkout", "-qb", "feature"]);
+        for name in ["one", "two", "three"] {
+            std::fs::write(r.join(name), name).unwrap();
+            g(&["add", "."]);
+            g(&["commit", "-qm", name]);
+        }
+        g(&["checkout", "-q", "main"]);
+        std::fs::write(r.join("main"), "main").unwrap();
+        g(&["add", "."]);
+        g(&["commit", "-qm", "on main"]);
+        g(&["checkout", "-q", "feature"]);
+
+        let mut rebased = Vec::new();
+        let outcome = rebase_branch_stream(r, "main", None, |_| {}, |p| rebased.push(p)).unwrap();
+        assert!(matches!(outcome.result, RebaseResult::CompletedWithoutError));
+        let seen: Vec<_> = rebased.iter().map(|p| (p.position, p.value, p.current_commit_summary.as_str())).collect();
+        assert_eq!(seen, vec![(1, 0.0, "one"), (1, 0.33, "one"), (2, 0.67, "two"), (3, 1.0, "three")]);
+
+        g(&["checkout", "-qb", "target", "main"]);
+        let shas: Vec<String> = ["feature~1", "feature"]
+            .iter()
+            .map(|rev| crate::test_repo::git(r, &["rev-parse", rev]).trim().into())
+            .collect();
+        let mut picked = Vec::new();
+        cherry_pick_stream(r, &shas, |_| {}, |p| picked.push(p)).unwrap();
+        let seen: Vec<_> = picked.iter().map(|p| (p.position, p.total_commit_count, p.value)).collect();
+        assert_eq!(seen, vec![(1, 2, 0.0), (1, 2, 0.5), (2, 2, 1.0)]);
+        assert_eq!(picked[0].current_commit_summary, "three");
+    }
+
     #[test]
     fn 进程内贮藏列表与_git_逐字节一致() {
         let d = repo();

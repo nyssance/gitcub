@@ -476,3 +476,49 @@
 #delete-worktree-failed .xterm {
   margin-bottom: 10px;
 }
+
+/* —— 多提交操作进度 ——————————————————————————————————————————
+ * 原版 _progress-dialog.scss：进度条 --dialog-progress-background（$green），
+ * 当前提交前的勾是 --color-new 圆点。 */
+#multi-commit-progress progress {
+  appearance: none;
+  max-width: 100%;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+#multi-commit-progress progress::-webkit-progress-bar {
+  background-color: transparent;
+}
+
+#multi-commit-progress progress::-webkit-progress-value {
+  background-color: #28a745;
+  /* ensure a smooth transition if the rebase goes immediately from 0 to 100% */
+  transition: width 1s ease;
+}
+
+#multi-commit-progress .details {
+  display: flex;
+  flex-flow: row nowrap;
+  padding: 10px 0 20px;
+}
+
+#multi-commit-progress .green-circle {
+  background-color: #28a745;
+  color: var(--background);
+  border-radius: 50%;
+  height: 22px;
+  width: 22px;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  align-items: center;
+}
+
+#multi-commit-progress .summary {
+  padding-left: 10px;
+}
+
+#multi-commit-progress .summary .message {
+  font-weight: bold;
+}

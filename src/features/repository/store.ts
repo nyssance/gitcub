@@ -26,7 +26,9 @@ import { createCoalescingRunner } from "@/lib/coalescing-runner"
 import type { IMentionableUser } from "@/lib/databases/github-user-database"
 import { contributionRepository } from "@/lib/fork-contribution"
 import type { Issue, LfsState, Remote, StashEntry } from "@/models/app-state"
+import type { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import type { RepoStatus } from "@/models/repo-status"
+import type { IMultiCommitOperationProgress } from "@/upstream/models/progress"
 
 export const EMPTY_STATUS: RepoStatus = {
   branch: null,
@@ -81,6 +83,12 @@ interface RepositoryStore {
   /** Desktop branchesState.forcePushBranches：本应用改写过（修订、变基、压缩、重排）的分支 → 改写后的提交。
    *  分支还停在这个提交上且与上游分叉时，推拉按钮建议强推。只在本次运行内记住，按仓库分开 */
   forcePushBranches: Record<string, Record<string, string>>
+  /** Desktop multiCommitOperationState 的 ShowProgress 步骤：进行中的多提交操作与进度，进度为 null 时还没开始报 */
+  multiCommitOperation: { kind: MultiCommitOperationKind; progress: IMultiCommitOperationProgress | null } | null
+  setMultiCommitOperation: (
+    repo: string,
+    operation: { kind: MultiCommitOperationKind; progress: IMultiCommitOperationProgress | null } | null
+  ) => void
   /** 变基停在冲突上时，改写前的 HEAD 先记在这里，「继续」做完再结算 */
   pendingRewrites: Record<string, string | null>
   /** Desktop updatePushPullFetchProgress：只认当前仓库的进度，切走之后旧仓库的进度不再显示 */
@@ -167,6 +175,10 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   lastFetched: null,
   forcePushBranches: {},
   pendingRewrites: {},
+  multiCommitOperation: null,
+  setMultiCommitOperation: (repo, multiCommitOperation) => {
+    if (repo === activeRepository()) set({ multiCommitOperation })
+  },
   setNetworkProgress: (repo, networkProgress) => {
     if (repo === activeRepository()) set({ networkProgress })
   },
@@ -203,7 +215,15 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
     return () => runner.cancel()
   },
   reset: () =>
-    set({ status: EMPTY_STATUS, stashList: [], lfs: null, lastFetched: null, networkProgress: null, error: null }),
+    set({
+      status: EMPTY_STATUS,
+      stashList: [],
+      lfs: null,
+      lastFetched: null,
+      networkProgress: null,
+      multiCommitOperation: null,
+      error: null
+    }),
   run: operation => {
     if (locked || get().busy) return Promise.resolve(undefined)
     const repo = activeRepository()

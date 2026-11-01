@@ -192,7 +192,7 @@ fn execute(request: &Value) -> Result<Value, String> {
             Value::Null
         }
         "cherry-pick/stream" => {
-            ops::cherry_pick_stream(repo, &strings("shas")?, |_| {})?;
+            ops::cherry_pick_stream(repo, &strings("shas")?, |_| {}, |_| {})?;
             Value::Null
         }
         "stash/message" => json!(ops::stash_message(request["branch"].as_str().unwrap())),
@@ -539,11 +539,18 @@ fn execute(request: &Value) -> Result<Value, String> {
                 request["onto"].as_str().unwrap(),
                 request["base"].as_str(),
                 request["message"].as_str().unwrap_or(""),
+                &mut |_| {},
             ),
         ),
         "reorder" => rebase_result(
             repo,
-            interactive::reorder(repo, &strings("shas")?, request["before"].as_str(), request["base"].as_str()),
+            interactive::reorder(
+                repo,
+                &strings("shas")?,
+                request["before"].as_str(),
+                request["base"].as_str(),
+                &mut |_| {},
+            ),
         ),
         "rebase/continue" => {
             rebase_result(repo, ops::continue_rebase(repo, &strings("paths")?, request["editor"].as_str()))

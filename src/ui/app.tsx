@@ -41,6 +41,7 @@ import { applySelection, discardLines } from "@/lib/stage"
 import { applyTheme } from "@/lib/theme"
 import type { CommitOptions } from "@/models/app-state"
 import { Branch, BranchType } from "@/models/branch"
+import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import { Repository } from "@/models/repository"
 import {
   AlertDialog,
@@ -72,6 +73,7 @@ import { headHistory, HistorySidebar } from "@/ui/history/sidebar"
 import { HookFailed } from "@/ui/hook-failed/hook-failed"
 import { Inbox } from "@/ui/inbox/inbox"
 import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
+import { ProgressDialog } from "@/ui/multi-commit-operation/progress-dialog"
 import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
 import { Preferences } from "@/ui/preferences/preferences"
 import { CreatePullRequest } from "@/ui/pull-requests/create"
@@ -89,10 +91,13 @@ import { TitleBar, useIsWindows } from "@/ui/window/title-bar"
 import { sanitizeCloneName } from "@/upstream/lib/remote-parsing"
 import type { IRawDiff } from "@/upstream/models/diff"
 import { DiffSelectionType } from "@/upstream/models/diff/diff-selection"
+import type { IMultiCommitOperationProgress } from "@/upstream/models/progress"
 import { UncommittedChangesStrategy } from "@/upstream/models/uncommitted-changes-strategy"
 
 import { Worktrees } from "./worktrees/worktrees"
 
+/** 还没加载 Desktop 的 emoji 表；RichText 按空表渲染（:shortcode: 原样显示） */
+const noEmoji = new Map()
 export function App() {
   const { t } = useTranslation()
   // 状态按功能分在 features/*/store.ts；这里只订阅、派生和组合。
@@ -102,6 +107,7 @@ export function App() {
   const initialWidth = useAppStateStore(s => s.initialWidth)
 
   const status = useRepositoryStore(s => s.status)
+  const multiCommitOperation = useRepositoryStore(s => s.multiCommitOperation)
   const stashList = useRepositoryStore(s => s.stashList)
   const lfs = useRepositoryStore(s => s.lfs)
   const setLfs = useRepositoryStore(s => s.setLfs)
@@ -769,6 +775,30 @@ export function App() {
     return ask(t(pushed ? "history.rewritePushed" : "history.rewriteConfirm", { what }))
   }
 
+  /** Desktop ProgressDialog 的标题 `${operation} in progress` */
+  const multiCommitProgressTitle = (kind: MultiCommitOperationKind) =>
+    ({
+      [MultiCommitOperationKind.Rebase]: t("multiCommitOperation.rebaseInProgress"),
+      [MultiCommitOperationKind.CherryPick]: t("multiCommitOperation.cherryPickInProgress"),
+      [MultiCommitOperationKind.Squash]: t("multiCommitOperation.squashInProgress"),
+      [MultiCommitOperationKind.Merge]: t("multiCommitOperation.mergeInProgress"),
+      [MultiCommitOperationKind.Reorder]: t("multiCommitOperation.reorderInProgress")
+    })[kind]
+  /** Desktop multiCommitOperation 的 ShowProgress：操作进行时显示进度对话框，结束（成功、冲突或出错）就关掉 */
+  const withMultiCommitProgress = async <T,>(
+    path: string,
+    kind: MultiCommitOperationKind,
+    operation: (onProgress: (progress: IMultiCommitOperationProgress) => void) => Promise<T>
+  ) => {
+    const { setMultiCommitOperation } = useRepositoryStore.getState()
+    setMultiCommitOperation(path, { kind, progress: null })
+    try {
+      return await operation(progress => setMultiCommitOperation(path, { kind, progress }))
+    } finally {
+      setMultiCommitOperation(path, null)
+    }
+  }
+
   /** 修订、变基、压缩、重排：Desktop 在多提交操作完成（与修订提交后）把改写过的分支记进 forcePushBranches */
   const rewrite = async <T,>(operation: () => Promise<T>) => {
     const repository = repo
@@ -789,7 +819,10 @@ export function App() {
         shas,
         {
           ...ipc,
-          cherryPick: (path, commits) => ipc.cherryPick(path, commits, showProgress)
+          cherryPick: (path, commits) =>
+            withMultiCommitProgress(path, MultiCommitOperationKind.CherryPick, onProgress =>
+              ipc.cherryPick(path, commits, showProgress, onProgress)
+            )
         },
         confirmBranchStash
       )
@@ -803,12 +836,15 @@ export function App() {
     const oldest = headCommits.findIndex(c => c.sha === target.sha)
     if (!(await confirmRewrite(oldest, t("history.squashSelected")))) return
     await rewrite(() =>
-      ipc.squashCommits(
-        repo,
-        chosen.slice(0, -1).map(c => c.sha),
-        target.sha,
-        headCommits[oldest + 1]?.sha ?? null,
-        ""
+      withMultiCommitProgress(repo, MultiCommitOperationKind.Squash, onProgress =>
+        ipc.squashCommits(
+          repo,
+          chosen.slice(0, -1).map(c => c.sha),
+          target.sha,
+          headCommits[oldest + 1]?.sha ?? null,
+          "",
+          onProgress
+        )
       )
     )
   }
@@ -820,7 +856,11 @@ export function App() {
     if (!repo || !c || !parent) return
     if (!(await confirmRewrite(index + 1, t("history.squashWhat", { a: c.summary, b: parent.summary })))) return
     // 不给信息 = 用 git 拼好的默认信息（两条摘要都留着）
-    void rewrite(() => ipc.squashCommits(repo, [c.sha], parent.sha, headCommits[index + 2]?.sha ?? null, ""))
+    void rewrite(() =>
+      withMultiCommitProgress(repo, MultiCommitOperationKind.Squash, onProgress =>
+        ipc.squashCommits(repo, [c.sha], parent.sha, headCommits[index + 2]?.sha ?? null, "", onProgress)
+      )
+    )
   }
 
   /** 把第 from 条提交拖到第 to 条的位置上。
@@ -839,7 +879,9 @@ export function App() {
     const oldest = Math.max(from, Math.max(0, beforeAt))
     if (!(await confirmRewrite(oldest, t("history.moveWhat", { a: moving.summary })))) return
     void rewrite(() =>
-      ipc.reorderCommits(repo, [moving.sha], before?.sha ?? null, headCommits[oldest + 1]?.sha ?? null)
+      withMultiCommitProgress(repo, MultiCommitOperationKind.Reorder, onProgress =>
+        ipc.reorderCommits(repo, [moving.sha], before?.sha ?? null, headCommits[oldest + 1]?.sha ?? null, onProgress)
+      )
     )
   }
 
@@ -855,7 +897,11 @@ export function App() {
     const before = headCommits[beforeAt]
     if (!moving || !before) return
     if (!(await confirmRewrite(beforeAt, t("history.moveWhat", { a: moving.summary })))) return
-    void rewrite(() => ipc.reorderCommits(repo, [moving.sha], before.sha, headCommits[beforeAt + 1]?.sha ?? null))
+    void rewrite(() =>
+      withMultiCommitProgress(repo, MultiCommitOperationKind.Reorder, onProgress =>
+        ipc.reorderCommits(repo, [moving.sha], before.sha, headCommits[beforeAt + 1]?.sha ?? null, onProgress)
+      )
+    )
   }
 
   /** 合并分支。先在内存里试合一次，会撞车就把数目摆出来让用户决定——
@@ -1345,6 +1391,13 @@ export function App() {
       {askDialog}
       {askTextDialog}
       {stashAndSwitchDialog}
+      {multiCommitOperation?.progress && (
+        <ProgressDialog
+          title={multiCommitProgressTitle(multiCommitOperation.kind)}
+          progress={multiCommitOperation.progress}
+          emoji={noEmoji}
+        />
+      )}
       {hookFailed && (
         <HookFailed
           key="hook-failure-dialog"
@@ -1505,7 +1558,13 @@ export function App() {
                 }
                 onDeleteBranch={doDeleteBranch}
                 onMergeBranch={(name, squash) => doMerge(name, squash)}
-                onRebaseBranch={name => rewrite(() => ipc.rebaseBranch(repo, name, showProgress))}
+                onRebaseBranch={name =>
+                  rewrite(() =>
+                    withMultiCommitProgress(repo, MultiCommitOperationKind.Rebase, onProgress =>
+                      ipc.rebaseBranch(repo, name, showProgress, onProgress)
+                    )
+                  )
+                }
                 onRenameBranch={from => {
                   void askText(t("branch.renameTo"), from).then(to => {
                     if (to && to !== from) void run(() => ipc.renameBranch(repo, from, to))
@@ -1548,7 +1607,10 @@ export function App() {
                                   shas,
                                   {
                                     ...ipc,
-                                    cherryPick: (path, commits) => ipc.cherryPick(path, commits, showProgress)
+                                    cherryPick: (path, commits) =>
+                                      withMultiCommitProgress(path, MultiCommitOperationKind.CherryPick, onProgress =>
+                                        ipc.cherryPick(path, commits, showProgress, onProgress)
+                                      )
                                   },
                                   (name, current) => ask(t("branch.stashConfirm", { name, current })),
                                   source.kind === "gitlab" ? "mr" : "pr"

@@ -46,6 +46,7 @@ import type {
   SearchQuery
 } from "@/models/history"
 import type { FileChange, Operation, RepoStatus, RepoSummary } from "@/models/repo-status"
+import type { IMultiCommitOperationProgress } from "@/upstream/models/progress"
 
 import { clone } from "./clone"
 import type { IMentionableUser } from "./databases/github-user-database"
@@ -73,6 +74,12 @@ export const FILE_HISTORY_BATCH = 100
  * 刻意不缓存任何东西：状态的唯一来源是仓库本身。
  * GitHub Desktop 的性能问题有一半来自前端那个万行 app-store 缓存了所有状态，
  * 任何操作完成都要全量比对再大面积重渲染。 */
+/** 变基、拣选、压缩、重排的进度通道（ops.rs IMultiCommitOperationProgress） */
+function multiCommitProgress(onProgress?: (progress: IMultiCommitOperationProgress) => void) {
+  const channel = new Channel<IMultiCommitOperationProgress>()
+  channel.onmessage = progress => onProgress?.(progress)
+  return channel
+}
 function operationOutput(onOutput?: (text: string) => void) {
   const channel = new Channel<TerminalChunk>()
   const decoder = new TerminalOutputDecoder()
@@ -369,8 +376,18 @@ export const ipc = {
     invoke<void>("merge_branch", { repo, branch, squash, ...(await hookArgs(repo, mergeInterceptHooks, callbacks)) }),
   continueOperation: (repo: string, operation: Operation) => invoke<void>("continue_operation", { repo, operation }),
   abortOperation: (repo: string, operation: Operation) => invoke<void>("abort_operation", { repo, operation }),
-  rebaseBranch: (repo: string, base: string, onOutput?: (text: string) => void) =>
-    invoke<void>("rebase_branch", { repo, base, output: operationOutput(onOutput) }),
+  rebaseBranch: (
+    repo: string,
+    base: string,
+    onOutput?: (text: string) => void,
+    onProgress?: (progress: IMultiCommitOperationProgress) => void
+  ) =>
+    invoke<void>("rebase_branch", {
+      repo,
+      base,
+      output: operationOutput(onOutput),
+      progress: multiCommitProgress(onProgress)
+    }),
   renameBranch: (repo: string, from: string, to: string) => invoke<void>("rename_branch", { repo, from, to }),
   /** 返回 [领先, 落后] */
   /** 两条分支差在哪些提交上 */
@@ -405,13 +422,43 @@ export const ipc = {
   resetTo: (repo: string, mode: ResetMode, target: string) => invoke<void>("reset_to", { repo, mode, target }),
   revertCommit: (repo: string, sha: string, isMerge = false) => invoke<void>("revert_commit", { repo, sha, isMerge }),
   /** 把若干提交压成一个（重写历史） */
-  squashCommits: (repo: string, toSquash: string[], onto: string, lastRetained: string | null, message: string) =>
-    invoke<void>("squash_commits", { repo, toSquash, onto, lastRetained, message }),
+  squashCommits: (
+    repo: string,
+    toSquash: string[],
+    onto: string,
+    lastRetained: string | null,
+    message: string,
+    onProgress?: (progress: IMultiCommitOperationProgress) => void
+  ) =>
+    invoke<void>("squash_commits", {
+      repo,
+      toSquash,
+      onto,
+      lastRetained,
+      message,
+      progress: multiCommitProgress(onProgress)
+    }),
   /** 把若干提交挪到 before 之前，before 为 null = 挪到最后（重写历史） */
-  reorderCommits: (repo: string, toMove: string[], before: string | null, lastRetained: string | null) =>
-    invoke<void>("reorder_commits", { repo, toMove, before, lastRetained }),
-  cherryPick: (repo: string, shas: string[], onOutput?: (text: string) => void) =>
-    invoke<void>("cherry_pick", { repo, shas, output: operationOutput(onOutput) }),
+  reorderCommits: (
+    repo: string,
+    toMove: string[],
+    before: string | null,
+    lastRetained: string | null,
+    onProgress?: (progress: IMultiCommitOperationProgress) => void
+  ) =>
+    invoke<void>("reorder_commits", { repo, toMove, before, lastRetained, progress: multiCommitProgress(onProgress) }),
+  cherryPick: (
+    repo: string,
+    shas: string[],
+    onOutput?: (text: string) => void,
+    onProgress?: (progress: IMultiCommitOperationProgress) => void
+  ) =>
+    invoke<void>("cherry_pick", {
+      repo,
+      shas,
+      output: operationOutput(onOutput),
+      progress: multiCommitProgress(onProgress)
+    }),
 
   // ── 标签 ────────────────────────────────────────────────────────
   tags: (repo: string) => invoke<string[]>("tags", { repo }),

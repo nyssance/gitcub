@@ -584,11 +584,20 @@ pub async fn merge_branch(
 #[tauri::command]
 pub async fn rebase_branch(
     repo: String, base: String, output: tauri::ipc::Channel<crate::git::TerminalChunk>,
+    progress: tauri::ipc::Channel<ops::MultiCommitProgress>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let outcome = ops::rebase_branch_stream(Path::new(&repo), &base, None, |chunk| {
-            let _ = output.send(chunk);
-        })?;
+        let outcome = ops::rebase_branch_stream(
+            Path::new(&repo),
+            &base,
+            None,
+            |chunk| {
+                let _ = output.send(chunk);
+            },
+            |event| {
+                let _ = progress.send(event);
+            },
+        )?;
         match outcome.result {
             ops::RebaseResult::CompletedWithoutError | ops::RebaseResult::AlreadyUpToDate => Ok(()),
             _ => Err(outcome.diagnostic),
@@ -712,9 +721,12 @@ pub async fn revert_commit(repo: String, sha: String, is_merge: bool) -> Result<
 #[tauri::command]
 pub async fn squash_commits(
     repo: String, to_squash: Vec<String>, onto: String, last_retained: Option<String>, message: String,
+    progress: tauri::ipc::Channel<ops::MultiCommitProgress>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
-        interactive::squash(Path::new(&repo), &to_squash, &onto, last_retained.as_deref(), &message)
+        interactive::squash(Path::new(&repo), &to_squash, &onto, last_retained.as_deref(), &message, &mut |event| {
+            let _ = progress.send(event);
+        })
     })
     .await
     .map_err(|error| error.to_string())?
@@ -724,9 +736,12 @@ pub async fn squash_commits(
 #[tauri::command]
 pub async fn reorder_commits(
     repo: String, to_move: Vec<String>, before: Option<String>, last_retained: Option<String>,
+    progress: tauri::ipc::Channel<ops::MultiCommitProgress>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
-        interactive::reorder(Path::new(&repo), &to_move, before.as_deref(), last_retained.as_deref())
+        interactive::reorder(Path::new(&repo), &to_move, before.as_deref(), last_retained.as_deref(), &mut |event| {
+            let _ = progress.send(event);
+        })
     })
     .await
     .map_err(|error| error.to_string())?
@@ -735,11 +750,19 @@ pub async fn reorder_commits(
 #[tauri::command]
 pub async fn cherry_pick(
     repo: String, shas: Vec<String>, output: tauri::ipc::Channel<crate::git::TerminalChunk>,
+    progress: tauri::ipc::Channel<ops::MultiCommitProgress>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
-        ops::cherry_pick_stream(Path::new(&repo), &shas, |chunk| {
-            let _ = output.send(chunk);
-        })
+        ops::cherry_pick_stream(
+            Path::new(&repo),
+            &shas,
+            |chunk| {
+                let _ = output.send(chunk);
+            },
+            |event| {
+                let _ = progress.send(event);
+            },
+        )
     })
     .await
     .map_err(|error| error.to_string())?
