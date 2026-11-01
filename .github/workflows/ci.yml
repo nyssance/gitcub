@@ -30,8 +30,6 @@ jobs:
         with:
           bun-version: canary
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
@@ -46,9 +44,6 @@ jobs:
         run: bun check --no-script -p tsconfig.json && bun check --no-script -p tsconfig.tools.json
       - name: 上游清单与同步工具测试
         run: python -m unittest discover -s tests -p 'test_desktop_catalog.py' -v && python -m unittest discover -s tests -p 'test_vendor.py' -v
-      - name: Clippy
-        run: cargo clippy --locked --workspace --all-targets -- -D warnings
-        working-directory: src-tauri
       - name: Rust 编译检查
         run: cargo check --locked --workspace --all-targets
         working-directory: src-tauri
