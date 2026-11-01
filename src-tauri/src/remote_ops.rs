@@ -258,12 +258,21 @@ pub fn update_head(repo: &Path, name: &str, token: Option<&str>, user: Option<&s
 /// Remote default branch name, preserving the original Desktop namespace check.
 pub fn head(repo: &Path, remote: &str) -> Result<Option<String>, String> {
     let namespace = format!("refs/remotes/{remote}/");
-    let output = Git::new(Some(repo)).args(["symbolic-ref", "-q", &format!("{namespace}HEAD")]).output()?;
-    if !output.status.success() {
-        return Ok(None);
-    }
-    let value = String::from_utf8_lossy(&output.stdout);
-    Ok(value.trim().strip_prefix(&namespace).filter(|name| !name.is_empty()).map(str::to_owned))
+    let target = match crate::branch::symbolic_ref_in_process(repo, &format!("{namespace}HEAD")) {
+        Some(target) => target,
+        None => {
+            let output = Git::new(Some(repo)).args(["symbolic-ref", "-q", &format!("{namespace}HEAD")]).output()?;
+            if !output.status.success() {
+                return Ok(None);
+            }
+            Some(String::from_utf8_lossy(&output.stdout).trim().to_owned())
+        }
+    };
+    Ok(target
+        .as_deref()
+        .and_then(|value| value.strip_prefix(&namespace))
+        .filter(|name| !name.is_empty())
+        .map(str::to_owned))
 }
 
 #[cfg(test)]

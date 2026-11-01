@@ -875,8 +875,24 @@ Desktop 从 `cli-action` 发出到改动列表出现 308 ms（306–384）。
 剩下的 `show <sha>^:README.md` 是 Desktop 取旧版本内容的同一条请求，根提交没有父提交，git 报错、调用方忽略；
 只在选中根提交时出现。
 
-未覆盖：推送、拉取、提交这些写操作本来就交给 git；没有在大仓库上重测，也没有数长时间运行后的进程数；
-基准进程本身仍用 PATH 上的 git，没有改成读打包的系统配置。
+同日再收三处，并把计数接进基准：
+
+- `bun run bench` 的 GitCub 一侧默认和应用一样认 `resources/git` 里打包的 git 与它的系统配置（`--system-git` 换回
+  PATH 上的 git），报告里记下 `gitcub_git`。合成仓库上两种方式各跑一次，工作区 diff、提交 diff、blame 的比值一致，
+  blame 26/26 与 git 相同、0 次让位，说明打包配置下快速路径确实在作答。
+- `bun run bench:app` 每次启动都设 `GIT_TRACE2_EVENT`，报告「启动到打开仓库后 settle」与「再空闲 settle」两段的
+  顶层 git 进程数。它原来用 `GIT_CONFIG_GLOBAL` 隔离身份，快速路径因此一直让位，打开仓库的耗时量的是回退路径；
+  改为临时 `HOME` 下的 `.gitconfig`（内容不变）。
+- 打开仓库时还剩的进程换成进程内：`branch::symbolic_ref`（`symbolic-ref -q -- HEAD`，每次完整刷新取 tip）与
+  `remote_ops::head`（`refs/remotes/<remote>/HEAD`）由 gix 读一层符号引用，gix 按前缀找到的同名分支不算；
+  `git_config::get` 的全局读取照 `git config --global` 只读一个文件（有 `~/.gitconfig` 就只读它，否则 XDG 那份，
+  `GIT_CONFIG_GLOBAL` 优先，不展开 include）；根提交的 `<sha>^` 不再起进程，直接给出 git 那两条路径各自的原话。
+  三处都有逐个形状对照 git 的单元测试。
+
+`bench:app`（5 万文件合成仓库，debug 包，3 次启动中位数）：启动到打开仓库 8 个 git 进程（`config` 4、
+`symbolic-ref` 3、`var` 1）→ 1 个（`var GIT_ATTR_SYSTEM`，每个进程只问一次）；空闲 0 → 0。
+
+未覆盖：推送、拉取、提交这些写操作本来就交给 git；没有在真实大仓库上数，也没有数长时间运行后的进程数。
 
 ## 复现
 

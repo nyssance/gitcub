@@ -245,6 +245,11 @@ pub fn blob_contents(repo: &Path, revision: &str, file: &str) -> Result<Vec<u8>,
     if let Ok(bytes) = in_process::blob_contents(repo, revision, file) {
         return Ok(bytes);
     }
+    // 选中根提交时高亮要读 `<sha>^` 的旧内容：git 一定报这句，不必起进程（错误原样给调用方）
+    #[cfg(unix)]
+    if in_process::root_without_parent(repo, revision) {
+        return Err(format!("fatal: invalid object name '{revision}'."));
+    }
     let revision = blob_revision(repo, revision)?;
     let output = Git::new(Some(repo)).args(["show", &format!("{revision}:{file}")]).output()?;
     if matches!(output.status.code(), Some(0 | 1)) { Ok(output.stdout) } else { Err(crate::git::stderr_of(&output)) }
@@ -257,6 +262,11 @@ pub fn partial_blob_contents(
     if let Ok(mut bytes) = in_process::blob_contents(repo, revision, file) {
         bytes.truncate(length);
         return Ok(Some(bytes));
+    }
+    // 下面先 `rev-parse --verify`：根提交的 `<sha>^` 在那一步就失败
+    #[cfg(unix)]
+    if in_process::root_without_parent(repo, revision) {
+        return Err("fatal: Needed a single revision".into());
     }
     // Verify first even when a zero-byte preview is requested.
     let revision = crate::history::resolve_revision(repo, revision)?;
@@ -1003,6 +1013,13 @@ pub(crate) mod in_process {
             return Err("不是 blob".into());
         }
         Ok(object.detach().data)
+    }
+
+    /// `<sha>^` 而 `<sha>` 是没有父提交的提交（替换对象、移植、浅克隆照旧让位，见 `commit_trees_in_process`）
+    pub fn root_without_parent(repo_path: &Path, revision: &str) -> bool {
+        revision.strip_suffix('^').is_some_and(|commit| {
+            matches!(crate::history::commit_trees_in_process(repo_path, commit, false), Ok((_, None, _)))
+        })
     }
 
     /// `git show :<stage>:<file>`：索引里这个阶段的 blob 原样输出（和 `git show <rev>:<file>` 一样不做转换）。
@@ -2405,6 +2422,26 @@ mod tests {
                 }
             }
             assert_eq!(fast, 5 * files.len());
+            // 根提交的 `<sha>^`：不起进程，报 git 那两条路径各自的原话
+            let stderr = |args: &[String]| {
+                let out = Command::new("git").arg("-C").arg(&r).args(args).output().unwrap();
+                assert!(!out.status.success());
+                String::from_utf8_lossy(&out.stderr).trim().to_string()
+            };
+            let parent = format!("{root}^");
+            assert!(in_process::root_without_parent(&r, &parent));
+            assert!(
+                !in_process::root_without_parent(&r, &format!("{head}^"))
+                    && !in_process::root_without_parent(&r, &root)
+            );
+            assert_eq!(
+                super::super::blob_contents(&r, &parent, "text.txt").unwrap_err(),
+                stderr(&["show".into(), format!("{parent}:text.txt")])
+            );
+            assert_eq!(
+                super::super::partial_blob_contents(&r, &parent, "text.txt", 10).unwrap_err(),
+                stderr(&["rev-parse".into(), "--verify".into(), "--end-of-options".into(), parent.clone()])
+            );
             // 让位：路径不存在、目录、根提交的父、短 SHA、其他修订号写法、glob 路径
             for (revision, file) in [
                 (head.as_str(), "missing.txt"),

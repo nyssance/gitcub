@@ -274,12 +274,36 @@ pub fn local_ref(name: &str) -> String {
     }
 }
 
+/// `git symbolic-ref -q -- <name>`：是符号引用时给出它指向的完整名（只读一层，git 同样不递归），
+/// 不是符号引用或不存在时为 `None`。打开仓库、每次完整刷新都要读 HEAD，进程内由 gix 作答，读不了才起 git。
 pub fn symbolic_ref(repo: &Path, name: &str) -> Result<Option<String>, String> {
+    if let Some(target) = symbolic_ref_in_process(repo, name) {
+        return Ok(target);
+    }
     let out = Git::new(Some(repo)).args(["symbolic-ref", "-q", "--", name]).output()?;
     match out.status.code() {
         Some(0) => Ok(Some(String::from_utf8_lossy(&out.stdout).trim().into())),
         Some(1 | 128) => Ok(None),
         _ => Err(crate::git::stderr_of(&out)),
+    }
+}
+
+/// `None` 表示交给 git：引用命名空间、名字不是完整引用名、gix 读不了。gix 按名字查找时会再试
+/// `refs/heads/` 等前缀，git 只认原名，所以找到的引用名必须与请求的完全相同。
+pub(crate) fn symbolic_ref_in_process(repo: &Path, name: &str) -> Option<Option<String>> {
+    if std::env::var_os("GIT_NAMESPACE").is_some() || !(name == "HEAD" || name.starts_with("refs/")) {
+        return None;
+    }
+    let repo = gix::open(repo).ok()?;
+    match repo.try_find_reference(name) {
+        Ok(Some(reference)) if reference.name().as_bstr() == name => match reference.target() {
+            gix::refs::TargetRef::Symbolic(target) => {
+                Some(Some(std::str::from_utf8(target.as_bstr()).ok()?.to_owned()))
+            }
+            gix::refs::TargetRef::Object(_) => Some(None),
+        },
+        Ok(_) => Some(None),
+        Err(_) => None,
     }
 }
 
@@ -697,6 +721,57 @@ mod tests {
             let names: Vec<_> = names.lines().collect();
             assert_eq!(fast, serde_json::to_value(parse_records(&git, &names)).unwrap(), "{label} {pattern:?}");
         }
+    }
+
+    /// 进程内的 symbolic-ref 与 `git symbolic-ref -q --` 逐个形状对照：分支、分离、未出生的 HEAD，
+    /// 远端 HEAD 有无，普通引用，打包引用，指向不存在目标的符号引用，与远端 HEAD 同名的本地分支，链接工作树
+    #[test]
+    fn symbolic_ref_in_process_matches_git() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = dir.path().join("repo");
+        let run = |at: &Path, args: &[&str]| {
+            let out = std::process::Command::new("git").args(args).current_dir(at).output().unwrap();
+            assert!(out.status.success(), "{args:?}: {}", String::from_utf8_lossy(&out.stderr));
+        };
+        let via_git = |at: &Path, name: &str| {
+            let out = std::process::Command::new("git")
+                .args(["symbolic-ref", "-q", "--", name])
+                .current_dir(at)
+                .output()
+                .unwrap();
+            out.status.success().then(|| String::from_utf8_lossy(&out.stdout).trim().to_owned())
+        };
+        let names = [
+            "HEAD",
+            "refs/remotes/origin/HEAD",
+            "refs/remotes/up/HEAD",
+            "refs/heads/main",
+            "refs/missing",
+            "refs/dangling",
+        ];
+        let compare = |at: &Path, shape: &str| {
+            for name in names {
+                assert_eq!(symbolic_ref_in_process(at, name), Some(via_git(at, name)), "{shape}: {name}");
+            }
+        };
+        std::fs::create_dir(&r).unwrap();
+        run(&r, &["init", "-q", "-b", "main"]);
+        compare(&r, "unborn");
+        run(&r, &["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "a"]);
+        run(&r, &["update-ref", "refs/remotes/origin/main", "HEAD"]);
+        run(&r, &["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"]);
+        run(&r, &["symbolic-ref", "refs/dangling", "refs/heads/nowhere"]);
+        // 与远端 HEAD 同名的本地分支：gix 按前缀会找到它，git 只认原名
+        run(&r, &["branch", "refs/remotes/up/HEAD"]);
+        compare(&r, "on a branch");
+        run(&r, &["pack-refs", "--all"]);
+        compare(&r, "packed");
+        run(&r, &["checkout", "-q", "--detach"]);
+        compare(&r, "detached");
+        run(&r, &["checkout", "-q", "main"]);
+        run(&r, &["worktree", "add", "-q", "-b", "side", "../linked"]);
+        compare(&dir.path().join("linked"), "linked worktree");
+        assert_eq!(symbolic_ref_in_process(&r, "main"), None, "short names go to git");
     }
 
     #[test]

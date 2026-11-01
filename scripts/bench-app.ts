@@ -10,7 +10,7 @@
 // that appeared with GitCub (launchd starts them, so they are not its children). Both apps run on
 // a fresh profile and get the same repository; nothing of the developer's own data is touched.
 import { type ChildProcess, spawn } from "node:child_process"
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import { basename, join } from "node:path"
@@ -45,6 +45,9 @@ interface Sample {
   changes: number
   /** RSS sum `settle` ms after the changes list rendered, in KiB. */
   rssRepositoryKiB: number
+  /** Top-level git processes GitCub spawned (GIT_TRACE2_EVENT): from launch until `settle` ms after the
+   *  repository opened, then over another `settle` ms of idling; with their subcommands. */
+  gitProcesses?: { repository: number; idle: number; commands: Record<string, number> }
   processes: {
     ready: Array<{ pid: number; rssKiB: number; command: string; helper: boolean }>
     repository: Array<{ pid: number; rssKiB: number; command: string; helper: boolean }>
@@ -262,8 +265,8 @@ async function terminate(child: ChildProcess) {
   if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL")
 }
 
-const gitConfig = (directory: string) => {
-  const config = join(directory, "gitconfig")
+const gitConfig = (directory: string, name = "gitconfig") => {
+  const config = join(directory, name)
   writeFileSync(
     config,
     "[user]\nname = Benchmark\nemail = benchmark@example.invalid\n[commit]\ngpgsign = false\n[core]\nhooksPath = /dev/null\n"
@@ -309,8 +312,11 @@ async function launchGitCub(bundle: string, repository: string, settle: number):
       TAURI_HASGARD_SOCKET: socket,
       TAURI_HASGARD_DISPLAY: process.env.TAURI_HASGARD_DISPLAY ?? "secondary",
       GITCUB_TEST_DATA_DIR: directory,
-      GIT_CONFIG_GLOBAL: gitConfig(directory),
-      GIT_CONFIG_NOSYSTEM: "1"
+      // The same isolated identity as ~/.gitconfig of a throwaway HOME: GIT_CONFIG_GLOBAL would make the in-process
+      // fast paths defer to git (they cannot prove they read the same file), so the launch would time the fallback.
+      HOME: (gitConfig(directory, ".gitconfig"), directory),
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_TRACE2_EVENT: join(directory, "trace2.json")
     },
     stdio: "ignore"
   })
@@ -323,6 +329,7 @@ async function launchGitCub(bundle: string, repository: string, settle: number):
     changes: number
     ready: Awaited<ReturnType<typeof processTree>>
     afterRepository: Awaited<ReturnType<typeof processTree>>
+    git: NonNullable<Sample["gitProcesses"]>
   }
   try {
     await until(
@@ -353,7 +360,17 @@ async function launchGitCub(bundle: string, repository: string, settle: number):
     const repositoryMs = performance.now() - opened
     await sleep(settle)
     const afterRepository = await processTree(child.pid!, helpersBefore)
-    sample = { readyMs, windowMs, repositoryMs, changes, ready, afterRepository }
+    const idleFrom = traceSize(directory)
+    await sleep(settle)
+    sample = {
+      readyMs,
+      windowMs,
+      repositoryMs,
+      changes,
+      ready,
+      afterRepository,
+      git: gitProcesses(directory, idleFrom)
+    }
   } finally {
     stop.done = true
     await terminate(child)
@@ -369,8 +386,44 @@ async function launchGitCub(bundle: string, repository: string, settle: number):
     repositoryMs: sample.repositoryMs,
     changes: sample.changes,
     rssRepositoryKiB: sum(repositoryTree),
+    gitProcesses: sample.git,
     processes: { ready: readyTree, repository: repositoryTree }
   }
+}
+
+const traceSize = (directory: string) => {
+  try {
+    return statSync(join(directory, "trace2.json")).size
+  } catch {
+    return 0
+  }
+}
+
+/** Top-level `start` events (a sid without `/`; git's own children nest under their parent) up to `idleFrom` and after it. */
+function gitProcesses(directory: string, idleFrom: number): NonNullable<Sample["gitProcesses"]> {
+  let text = ""
+  try {
+    text = readFileSync(join(directory, "trace2.json"), "utf8")
+  } catch {}
+  const starts = (from: number, to: number) =>
+    text
+      .slice(from, to)
+      .split("\n")
+      .filter(Boolean)
+      .map(line => JSON.parse(line) as { event: string; sid: string; argv: string[] })
+      .filter(event => event.event === "start" && !event.sid.includes("/"))
+  const repository = starts(0, idleFrom)
+  const idle = starts(idleFrom, text.length)
+  const commands: Record<string, number> = {}
+  for (const event of [...repository, ...idle]) {
+    // argv[0] is git itself; skip `-C <dir>`, `-c <k=v>` and other leading options to the subcommand
+    const args = event.argv.slice(1)
+    let i = 0
+    while (i < args.length && args[i]!.startsWith("-")) i += args[i] === "-C" || args[i] === "-c" ? 2 : 1
+    const name = args[i] ?? "?"
+    commands[name] = (commands[name] ?? 0) + 1
+  }
+  return { repository: repository.length, idle: idle.length, commands }
 }
 
 // ── GitHub Desktop ──────────────────────────────────────────────────────────
@@ -579,7 +632,13 @@ function summarize(samples: Sample[]) {
     rssReadyKiB: median(samples.map(sample => sample.rssReadyKiB)),
     repositoryMs: median(samples.map(sample => sample.repositoryMs)),
     rssRepositoryKiB: median(samples.map(sample => sample.rssRepositoryKiB)),
-    changes: samples[0]?.changes ?? 0
+    changes: samples[0]?.changes ?? 0,
+    gitProcesses: samples[0]?.gitProcesses
+      ? {
+          repository: median(samples.map(sample => sample.gitProcesses?.repository ?? 0)),
+          idle: median(samples.map(sample => sample.gitProcesses?.idle ?? 0))
+        }
+      : null
   }
 }
 
@@ -639,6 +698,10 @@ try {
   console.log("|---|---:|---:|---:|---:|---:|")
   console.log(row("GitCub", summary.gitcub))
   if (summary.desktop) console.log(row("GitHub Desktop", summary.desktop))
+  if (summary.gitcub.gitProcesses)
+    console.log(
+      `\nGitCub git processes (median): launch + open ${summary.gitcub.gitProcesses.repository}, idle ${summary.gitcub.gitProcesses.idle}; first launch by subcommand: ${JSON.stringify(gitcub[0]?.gitProcesses?.commands ?? {})}`
+    )
 
   const directory = join(root, "test-results/benchmark")
   mkdirSync(directory, { recursive: true })

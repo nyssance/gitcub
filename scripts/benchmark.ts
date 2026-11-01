@@ -22,6 +22,7 @@ interface Options {
   files: number
   commits: number
   build: boolean
+  systemGit: boolean
 }
 
 interface Measurement {
@@ -73,7 +74,8 @@ function parseArguments(argv: string[]): Options {
     synthetic: true,
     files: 50_000,
     commits: 200,
-    build: true
+    build: true,
+    systemGit: false
   }
   for (let i = 0; i < argv.length; i++) {
     const argument = argv[i]!
@@ -105,6 +107,10 @@ function parseArguments(argv: string[]): Options {
         break
       case "--no-build":
         options.build = false
+        break
+      // GitCub side uses git from PATH instead of the bundled git and its system config (the app's default)
+      case "--system-git":
+        options.systemGit = true
         break
       default:
         if (argument.startsWith("--")) throw new Error(`Unknown option: ${argument}`)
@@ -228,7 +234,8 @@ try {
         "--limit",
         String(options.limit),
         "--skip",
-        String(options.skip)
+        String(options.skip),
+        ...(options.systemGit ? ["--system-git"] : [])
       ],
       root,
       { ...process.env, GIT_NO_LAZY_FETCH: "1" }

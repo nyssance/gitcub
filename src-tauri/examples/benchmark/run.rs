@@ -121,6 +121,8 @@ struct Options {
     blame_files: Vec<String>,
     /// 分段测量用 `blame <rev>`（默认是 Desktop 的工作区形式）
     blame_revision: Option<String>,
+    /// GitCub 一侧改用 PATH 上的 git（默认和应用一样用 resources/git 里打包的 git 与它的系统配置）
+    system_git: bool,
 }
 
 fn parse_args() -> Options {
@@ -134,6 +136,7 @@ fn parse_args() -> Options {
         blame_only: false,
         blame_files: Vec::new(),
         blame_revision: None,
+        system_git: false,
     };
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
@@ -146,6 +149,7 @@ fn parse_args() -> Options {
             "--status-only" => options.status_only = true,
             "--refs-only" => options.refs_only = true,
             "--blame-only" => options.blame_only = true,
+            "--system-git" => options.system_git = true,
             "--blame-file" => options.blame_files.push(value("--blame-file")),
             "--blame-revision" => options.blame_revision = Some(value("--blame-revision")),
             other => panic!("未知参数: {other}"),
@@ -837,6 +841,11 @@ fn refs_breakdown(repo_path: &Path, iterations: usize) -> Value {
 
 fn main() {
     let options = parse_args();
+    // 和应用启动时一样认打包的 git：快速路径据它的系统配置判断能不能作答，回退时也跑它
+    if !options.system_git {
+        git::set_resource_dir(&Path::new(env!("CARGO_MANIFEST_DIR")).join("resources"));
+        eprintln!("GitCub 一侧用打包的 git：{}", git::binary().display());
+    }
     let repo = options.repo.as_path();
     let iterations = options.iterations;
     if options.status_only {
@@ -1869,6 +1878,7 @@ fn main() {
 
     let report = json!({
         "repo": repo,
+        "gitcub_git": git::binary(),
         "head": head,
         "iterations": iterations,
         "limit": options.limit,
