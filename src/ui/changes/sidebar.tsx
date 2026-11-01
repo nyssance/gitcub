@@ -18,6 +18,7 @@ import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { useChangesStore } from "@/features/changes/store"
 import type { IMentionableUser } from "@/lib/databases/github-user-database"
 import { applyFilters, hasActiveFilters, isCommittingFileHiddenByFilter } from "@/lib/desktop-filter-changes"
 import { appStatus } from "@/lib/desktop-status"
@@ -67,8 +68,6 @@ interface Props {
   /** 当前仓库的托管远端：决定候选头像用哪个账号 */
   remote?: Remote | null
   onCommit: (summary: string, description: string, options: CommitOptions) => Promise<boolean>
-  /** 贮藏全部改动 */
-  onStashAll: () => void
   /** 撤销上一次提交：提交没了，改动退回暂存区 */
   onUndoCommit: () => void
   /** Desktop mostRecentLocalCommit：还没推送的最新提交，底部撤销栏显示它 */
@@ -110,7 +109,6 @@ export function ChangesSidebar({
   onBlame,
   onShowHistory,
   onCommit,
-  onStashAll,
   onUndoCommit,
   mostRecentLocalCommit = null,
   isPushPullFetchInProgress = false,
@@ -121,7 +119,8 @@ export function ChangesSidebar({
   remote = null
 }: Props) {
   const { t } = useTranslation()
-  const [amendRequest, setAmendRequest] = useState(0)
+  const amendRequested = useChangesStore(s => s.amendRequest === repo)
+  const consumeAmendRequest = useChangesStore(s => s.consumeAmendRequest)
   const [amending, setAmending] = useState(false)
   const [isCommitting, setIsCommitting] = useState(false)
   const [filters, setFilters] = useState(emptyChangesFilter)
@@ -187,7 +186,7 @@ export function ChangesSidebar({
     const status = appStatus(file)
     return isConflictedFile(status) && hasUnresolvedConflicts(status)
   })
-  // 筛选选项：原版放在筛选框左侧；筛选框隐藏时它仍要能用（修改上一次提交、贮藏都在里面），挪到全选行右侧
+  // 筛选选项：原版放在筛选框左侧；筛选框隐藏时挪到全选行右侧。Desktop 的筛选菜单只有筛选项与清除
   const filterMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -202,7 +201,6 @@ export function ChangesSidebar({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-52">
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => setAmendRequest(value => value + 1)}>{t("changes.amend")}</DropdownMenuItem>
           {filterOptions.map(key => (
             <DropdownMenuCheckboxItem
               key={key}
@@ -214,9 +212,6 @@ export function ChangesSidebar({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem disabled={changes.length === 0} onClick={onStashAll}>
-            {t("stash.stashAll")}
-          </DropdownMenuItem>
           <DropdownMenuItem disabled={!hasActiveFilters(filters)} onClick={() => setFilters(emptyChangesFilter)}>
             {t("changes.clearFilters")}
           </DropdownMenuItem>
@@ -309,7 +304,8 @@ export function ChangesSidebar({
       )}
       <Separator />
       <DesktopCommitForm
-        amendRequest={amendRequest}
+        amendRequested={amendRequested}
+        onAmendRequestHandled={consumeAmendRequest}
         repo={repo}
         branch={branch}
         changes={changes}

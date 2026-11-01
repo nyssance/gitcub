@@ -13,6 +13,7 @@ import type { TerminalOutput, TerminalOutputListener } from "@/lib/git-execution
 
 /** prompt：原版 Prompts 页里对应的那一项；弹窗带「不再显示」，关掉后直接放行 */
 type Asking = { message: string; prompt?: Prompt; dontAskAgain: boolean; resolve: (ok: boolean) => void }
+type WarnForcePush = { operation: string; resolve: (begin: boolean) => void }
 type AskingText = { message: string; value: string; resolve: (value: string | null) => void }
 type StashPrompt = {
   name: string
@@ -49,12 +50,20 @@ interface DialogsStore {
   clearError: (error: Error) => void
   /** Desktop dispatcher.postError：先过错误处理器，没被处理的才进错误对话框 */
   postError: (error: Error) => void
+  /** Desktop PopupType.DeleteTag */
+  deletingTag: string | null
+  setDeletingTag: (tagName: string | null) => void
   /** Desktop PopupType.LocalChangesOverwritten */
   localChangesOverwritten: LocalChangesOverwrittenPopup | null
   dismissLocalChangesOverwritten: () => void
   /** Desktop PopupType.CommitProgress */
   commitProgress: TerminalOutputListener | null
   ask: (message: string, prompt?: Prompt) => Promise<boolean>
+  /** Desktop MultiCommitOperationStepKind.WarnForcePush / PopupType.WarnForcePush：关了「强推前确认」就直接开始 */
+  warnForcePush: WarnForcePush | null
+  askWarnForcePush: (operation: string) => Promise<boolean>
+  /** Desktop WarnForcePushDialog.onBegin 先 setConfirmForcePushSetting 再开始；取消不改设置 */
+  answerWarnForcePush: (begin: boolean, askForConfirmationOnForcePush?: boolean) => void
   setDontAskAgain: (value: boolean) => void
   answer: (ok: boolean) => void
   askText: (message: string, initial?: string) => Promise<string | null>
@@ -95,9 +104,22 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
     if (localChangesOverwritten) set({ localChangesOverwritten })
     else get().pushError(error)
   },
+  deletingTag: null,
+  setDeletingTag: deletingTag => set({ deletingTag }),
   localChangesOverwritten: null,
   dismissLocalChangesOverwritten: () => set({ localChangesOverwritten: null }),
   commitProgress: null,
+  warnForcePush: null,
+  askWarnForcePush: operation => {
+    if (!usePreferencesStore.getState().confirmForcePush) return Promise.resolve(true)
+    return new Promise<boolean>(done => set({ warnForcePush: { operation, resolve: done } }))
+  },
+  answerWarnForcePush: (begin, askForConfirmationOnForcePush) => {
+    if (begin && askForConfirmationOnForcePush !== undefined)
+      usePreferencesStore.getState().setPrompt("confirmForcePush", askForConfirmationOnForcePush)
+    get().warnForcePush?.resolve(begin)
+    set({ warnForcePush: null })
+  },
   ask: (message, prompt) => {
     if (prompt && !usePreferencesStore.getState()[prompt]) return Promise.resolve(true)
     return new Promise<boolean>(done => set({ asking: { message, prompt, dontAskAgain: false, resolve: done } }))

@@ -41,6 +41,11 @@ interface ChangesStore {
   hookProgress: HookProgress | null
   /** Desktop IRepositoryState.subscribeToCommitOutput：这次提交有输出后才有，「提交进度」据此显示 */
   subscribeToCommitOutput: TerminalOutputListener | null
+  /** Desktop startAmendingRepository：要进入修订的仓库。提交框载入 HEAD 后立即清掉——
+   *  只处理一次，提交框重新挂载（切仓库再切回来）时不会再次进入修订 */
+  amendRequest: string | null
+  requestAmend: (repo: string) => void
+  consumeAmendRequest: () => void
   reset: () => void
   setSelected: (next: Updater<string | null>) => void
   setFileSelection: (selection: FileSelection) => void
@@ -52,6 +57,9 @@ interface ChangesStore {
 }
 
 export const useChangesStore = create<ChangesStore>()(set => ({
+  amendRequest: null,
+  requestAmend: repo => set({ amendRequest: repo }),
+  consumeAmendRequest: () => set({ amendRequest: null }),
   selected: null,
   fileSelection: { repo: null, anchor: null, paths: [] },
   files: new Map(),

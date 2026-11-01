@@ -590,6 +590,38 @@ async function setDiffOption(page: Page, label: string) {
   await page.locator('[data-slot="popover-content"]').waitFor({ state: "hidden" })
 }
 
+/** Desktop：修订从历史页 HEAD 那条提交的右键菜单「Amend Commit…」进入；已推送时先过 WarnForcePush，然后回到 Changes 页 */
+async function startAmendingFromHistory(page: Page) {
+  const summary = git("log", "-1", "--format=%s")
+  const branch = git("branch", "--show-current")
+  await page.locator('[role="tab"]:has-text("History")').click()
+  await page.locator(`.desktop-list [title="${summary}"]`).first().waitFor({ state: "visible", timeout: 15000 })
+  // 提交图列出全部分支，别的分支上可能有同名提交：找带当前分支标记的那一行
+  await page.evaluate(
+    ([summary, branch]: [string, string]) => {
+      const rows = [...document.querySelectorAll(".desktop-list .desktop-list-row")]
+      const row = rows.find(
+        row =>
+          row.querySelector(`[title="${CSS.escape(summary)}"]`) &&
+          [...row.querySelectorAll("*")].some(
+            element => element.children.length === 0 && element.textContent === branch
+          )
+      )!
+      const rect = row.getBoundingClientRect()
+      row.dispatchEvent(
+        new MouseEvent("contextmenu", { bubbles: true, button: 2, clientX: rect.x + 4, clientY: rect.y + 4 })
+      )
+    },
+    [summary, branch] as [string, string]
+  )
+  await page.locator('[role="menuitem"]:has-text("Amend Commit…")').click()
+  const amend = page.locator('button.commit-button:has-text("Amend")')
+  const warning = page.locator("#warn-force-push")
+  await expect.poll(async () => (await amend.isVisible()) || (await warning.isVisible()), { timeout: 15000 }).toBe(true)
+  if (await warning.isVisible()) await page.locator('#warn-force-push button:has-text("Begin Amend")').click()
+  await amend.waitFor({ state: "visible" })
+}
+
 async function clickRailRepository(page: Page, path: string) {
   const button = page.locator(`button[title="${path}"]`)
   if (!(await button.isVisible())) {
@@ -662,9 +694,7 @@ test("finishing an old repository operation cannot replace the newly selected re
 
 test("failed amendment keeps the draft and excludes concurrent push", async ({ mainWindow: page }) => {
   const head = git("rev-parse", "HEAD")
-  await page.locator('.changes-list-container button[aria-label="Filter"]').click()
-  await page.locator('[role="menuitem"]:has-text("Amend last commit")').click()
-  await page.locator('button.commit-button:has-text("Amend")').waitFor({ state: "visible" })
+  await startAmendingFromHistory(page)
   await page.locator(".summary-field input").fill("Preserve rejected amendment")
   await page.evaluate(() => {
     const original = window.fetch.bind(window)
@@ -991,9 +1021,7 @@ test("aborting a failing commit-msg hook while amending keeps the commit and rep
   writeFileSync(hook, '#!/bin/sh\necho "amend rejected by hook" >&2\nexit 1\n', { mode: 0o755 })
   await page.evaluate(() => localStorage.setItem("git-hooks-env-enabled", "1"))
   try {
-    await page.locator('.changes-list-container button[aria-label="Filter"]').click()
-    await page.locator('[role="menuitem"]:has-text("Amend last commit")').click()
-    await page.locator('button.commit-button:has-text("Amend")').waitFor({ state: "visible" })
+    await startAmendingFromHistory(page)
     await page.locator(".summary-field input").fill("Amend through the hooks proxy")
     await page.locator("button.commit-button").click()
     const dialog = page.locator("#hook-failed-dialog")

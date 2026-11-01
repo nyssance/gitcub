@@ -1,5 +1,5 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useAccountsStore } from "../../features/accounts/store"
 import { useChangesStore } from "../../features/changes/store"
@@ -37,7 +37,9 @@ import { UnknownAuthors } from "../unknown-authors/unknown-authors-dialog"
 import { CommitMessage } from "./commit-message"
 
 interface Props {
-  amendRequest: number
+  /** 历史页「Amend Commit…」请求进入修订（Desktop startAmendingRepository）；处理后调 onAmendRequestHandled 清掉 */
+  amendRequested: boolean
+  onAmendRequestHandled: () => void
   repo: string
   branch: string | null
   changes: FileChange[]
@@ -66,6 +68,8 @@ export function DesktopCommitForm(props: Props) {
   const behind = useRepositoryStore(s => s.status.behind)
   const aheadBehind = useMemo(() => (hasUpstream ? { ahead, behind } : null), [hasUpstream, ahead, behind])
   const repository = policy.repository
+  const currentRepository = useRef(repository)
+  currentRepository.current = repository
   const [author, setAuthor] = useState(props.author)
   const [coAuthors, setCoAuthors] = useState<readonly Author[]>([])
   const [showCoAuthors, setShowCoAuthors] = useState(false)
@@ -176,23 +180,22 @@ export function DesktopCommitForm(props: Props) {
       setBusy(false)
     }
   }
+  const { amendRequested, onAmendRequestHandled } = props
   useEffect(() => {
-    if (props.amendRequest === 0) return
-    let active = true
+    if (!amendRequested) return
+    onAmendRequestHandled()
+    // 请求清掉会让这个 effect 重跑，不能拿它来作废结果；换了仓库才作废
     void getCommits(repository, "HEAD", 1)
       .then(([commit]) => {
-        if (active && commit) {
+        if (currentRepository.current === repository && commit) {
           setAmending(commit)
           setMessage({ summary: commit.summary, description: commit.bodyNoCoAuthors, timestamp: Date.now() })
         }
       })
       .catch(error => {
-        if (active) setError(String(error))
+        if (currentRepository.current === repository) setError(String(error))
       })
-    return () => {
-      active = false
-    }
-  }, [props.amendRequest, repository])
+  }, [amendRequested, onAmendRequestHandled, repository])
   return (
     <>
       {error && <InlineError error={error} />}

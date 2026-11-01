@@ -104,7 +104,6 @@
     "skipHooks": "跳过提交钩子",
     "signOff": "添加 Signed-off-by",
     "allowEmpty": "允许空提交",
-    "amend": "修订上次提交",
     "include": "将 {{path}} 选入提交",
     "isIncludedInCommit": "整份选入提交",
     "isExcludedFromCommit": "未选入提交",
@@ -255,21 +254,14 @@
     "squashIntoParent": "压缩进上一个提交",
     "moveOlder": "往前挪一位",
     "moveNewer": "往后挪一位",
-    "rewriteConfirm": "这会重写历史：{{what}}。\n\n改完之后本地和远端就分叉了，得强制推送才能同步。\n\n继续？",
-    "rewritePushed": "这会重写已经推送过的提交：{{what}}。\n\n别人可能已经拉到过它们，改完他们那边会冲突。\n\n真的要改？",
-    "squashWhat": "把「{{a}}」并进「{{b}}」",
-    "moveWhat": "挪动「{{a}}」",
     "empty": "没有提交记录",
     "selectCommit": "选择一个提交查看详情",
     "fileCount_other": "{{count}} 个文件已更改",
-    "revert": "回滚这个提交",
     "cherryPick": "摘取到当前分支",
-    "createTag": "新建标签…",
-    "resetTo": "重置到这个提交…",
+    "createTag": "创建标签…",
     "copySha": "复制 SHA",
     "stashBadge": "贮藏 {{index}}",
     "stashRow": "贮藏的改动 {{ref}}，基于 {{base}}",
-    "openInBrowser": "在浏览器中打开",
     "tagName": "标签名",
     "resetKeepChanges": "保留这些改动到工作区？\n\n「确定」= 只丢提交，改动留下\n「取消」= 连改动一起丢（不可恢复）",
     "searchPlaceholder": "搜索提交：message: author: file: change: #sha",
@@ -301,7 +293,19 @@
     "fileHistoryEmpty": "没有提交改过这个文件",
     "fileHistoryLoading": "正在加载文件历史…",
     "emptySummary": "空的提交信息",
-    "unpushed": "这个提交还没有推送到远端仓库"
+    "unpushed": "这个提交还没有推送到远端仓库",
+    "amendCommit": "修订提交…",
+    "undoCommit": "撤销提交…",
+    "resetToCommit": "重置到此提交…",
+    "revertChangesInCommit": "还原此提交中的更改",
+    "deleteTagName": "删除标签 {{name}}",
+    "deleteTag": "删除标签…",
+    "cherryPickCommit": "拣选提交…",
+    "copyTag": "复制标签",
+    "copyTags": "复制标签",
+    "viewOnGitHub": "在 GitHub 上查看",
+    "viewOnGitHubEnterprise": "在 GitHub Enterprise 上查看",
+    "viewOnGitLab": "在 GitLab 上查看"
   },
   "noRepos": {
     "title": "开始使用",
@@ -553,8 +557,7 @@
   "stash": {
     "title": "贮藏",
     "pop": "恢复",
-    "drop": "丢弃",
-    "stashAll": "贮藏全部改动"
+    "drop": "丢弃"
   },
   "conflicts": {
     "rebaseBase": "变基后的基底",
@@ -977,5 +980,21 @@
     "noResults": "没有结果",
     "noResultsForQuery": "没有找到“{{query}}”",
     "resultCurrentOfTotalForQuery": "“{{query}}”第 {{current}} 处，共 {{total}} 处"
+  },
+  "warnForcePush": {
+    "operationWillRequireForcePush": "{{operation}}后需要强制推送",
+    "areYouSureYouWantToOperation": "确定要{{operation}}吗？",
+    "atTheEndOfTheOperationFlow": "{{operation}}完成后，GitCub 会让你强制推送该分支以更新上游分支。强制推送会改写远端的历史，可能给在这个分支上协作的其他人带来问题。",
+    "doNotShowThisMessageAgain": "不再显示此消息",
+    "beginOperation": "开始{{operation}}",
+    "squash": "压缩",
+    "reorder": "重排",
+    "rebase": "变基",
+    "amend": "修订"
+  },
+  "deleteTag": {
+    "deleteTag": "删除标签",
+    "areYouSureYouWantToDeleteTheTag": "确定要删除标签",
+    "delete": "删除"
   }
 }

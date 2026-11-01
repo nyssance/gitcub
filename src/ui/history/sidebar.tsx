@@ -5,16 +5,6 @@ import { CaseSensitive, CheckCheck, CircleHelp, Regex, SlidersHorizontal, WholeW
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { usePreferencesStore } from "@/features/preferences/store"
-import { avatarUrl } from "@/lib/avatar"
-import { endCommitDrag, startCommitDrag } from "@/lib/commit-drag"
-import { isCoAuthoredByTrailer, parseSingleUnfoldedTrailer } from "@/lib/commit-trailers"
-import { dateFnsLocale } from "@/lib/date-locales"
-import { formatDate } from "@/lib/format-date"
-import { ipc } from "@/lib/ipc"
-import { isUnpushedCommit, type LocalCommits, type PushStatus } from "@/lib/unpushed-commits"
-import { cn } from "@/lib/utils"
-import type { CommitInfo, Comparison, GraphRow } from "@/models/history"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +13,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger
 } from "@/components/ui/context-menu"
 import {
@@ -46,6 +39,16 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { usePreferencesStore } from "@/features/preferences/store"
+import { avatarUrl } from "@/lib/avatar"
+import { endCommitDrag, startCommitDrag } from "@/lib/commit-drag"
+import { isCoAuthoredByTrailer, parseSingleUnfoldedTrailer } from "@/lib/commit-trailers"
+import { dateFnsLocale } from "@/lib/date-locales"
+import { formatDate } from "@/lib/format-date"
+import { ipc } from "@/lib/ipc"
+import { isUnpushedCommit, type LocalCommits, type PushStatus } from "@/lib/unpushed-commits"
+import { cn } from "@/lib/utils"
+import type { CommitInfo, Comparison, GraphRow } from "@/models/history"
 
 import i18n from "../../lib/i18n"
 import { CommitGraph } from "./graph"
@@ -114,6 +117,15 @@ interface Props {
   onSquashMany: (shas: string[]) => void
   onCreateTag: (sha: string) => void
   onResetTo: (sha: string) => void
+  /** Desktop onAmendCommit(commit, isLocalCommit) */
+  onAmendCommit?: (sha: string, isLocal: boolean) => void
+  /** Desktop onUndoCommit */
+  onUndoCommit?: () => void
+  /** Desktop onDeleteTag：只有还没推送的标签（tagsToPush）能删 */
+  onDeleteTag?: (name: string) => void
+  unpushedTags?: readonly string[]
+  /** Desktop「View on GitHub」：GitLab 远端为「View on GitLab」 */
+  viewOnLabel?: string
   /** 改写历史的那几项。index 是在 HEAD 历史（`headHistory(rows, commits)`，新的在前）里的下标：
    *  提交图从全部分支、标签和贮藏遍历，列表里相邻的两行不一定是父子 */
   onSquashIntoParent: (index: number) => void
@@ -166,6 +178,11 @@ export function HistorySidebar({
   onSquashMany,
   onCreateTag,
   onResetTo,
+  onAmendCommit,
+  onUndoCommit,
+  onDeleteTag,
+  unpushedTags = [],
+  viewOnLabel,
   onSquashIntoParent,
   onMove,
   onReorder,
@@ -275,6 +292,11 @@ export function HistorySidebar({
   const head = headHistory(rows, commits)
   const headIndex = new Map(head.map((commit, index) => [commit.sha, index]))
   const unpushed = (sha: string) => isUnpushedCommit(sha, headIndex.get(sha), pushStatus, localCommits)
+  // Desktop commit-list isLocalCommit：localCommitSHAs 里的提交；没有远端的仓库（loadLocalCommits 走
+  // `HEAD --not --remotes`）整条 HEAD 历史都是本地的
+  const isLocal = (sha: string) => (pushStatus?.remote == null ? headIndex.has(sha) : unpushed(sha))
+  // Desktop canAmendCommits 只在 History 模式（不在对比）；这里另外排除搜索结果与文件历史——下标不是 HEAD 历史的下标
+  const inHistory = found === null && !fileHistory
   const stashOf = (index: number) => (filtered ? null : (rows[index]?.stash ?? null))
   // repository and filter changes invalidate the selected range.
   useEffect(() => {
@@ -665,47 +687,33 @@ export function HistorySidebar({
                   </ContextMenuTrigger>
 
                   <ContextMenuContent>
-                    {/* 贮藏行只有复制 SHA：它不在任何分支上，回滚、摘取、打标签、重置都不适用 */}
-                    {stash == null && (
-                      <>
-                        {onHead && (
-                          <ContextMenuItem onClick={() => onRevert(c.sha)}>{t("history.revert")}</ContextMenuItem>
-                        )}
-                        <ContextMenuItem onClick={() => onCherryPick(c.sha)}>{t("history.cherryPick")}</ContextMenuItem>
-                        <ContextMenuItem onClick={() => onCreateTag(c.sha)}>{t("history.createTag")}</ContextMenuItem>
-                        <ContextMenuSeparator />
-                      </>
-                    )}
-                    {/* 下面这几项都会重写历史。只在看的是完整列表、且这一行在 HEAD 历史里时给——
-                    搜索结果、文件历史里的下标不是 log 里的下标，别的分支上的提交也不是 HEAD 的祖先，
-                    照着列表下标算父提交会错位。 */}
-                    {found === null && !fileHistory && h !== undefined && (
-                      <>
-                        <ContextMenuItem disabled={h + 1 >= head.length} onClick={() => onSquashIntoParent(h)}>
-                          {t("history.squashIntoParent")}
-                        </ContextMenuItem>
-                        <ContextMenuItem disabled={h + 1 >= head.length} onClick={() => onMove(h, "older")}>
-                          {t("history.moveOlder")}
-                        </ContextMenuItem>
-                        <ContextMenuItem disabled={h === 0} onClick={() => onMove(h, "newer")}>
-                          {t("history.moveNewer")}
-                        </ContextMenuItem>
-                        <ContextMenuSeparator />
-                      </>
-                    )}
-                    {stash == null && onHead && (
-                      <>
-                        <ContextMenuItem onClick={() => onResetTo(c.sha)}>{t("history.resetTo")}</ContextMenuItem>
-                        <ContextMenuSeparator />
-                      </>
-                    )}
-                    <ContextMenuItem onClick={() => void navigator.clipboard.writeText(c.sha)}>
-                      {t("history.copySha")}
-                    </ContextMenuItem>
-                    {onOpenInBrowser && stash == null && (
-                      <ContextMenuItem onClick={() => onOpenInBrowser(c.sha)}>
-                        {t("history.openInBrowser")}
+                    {stash != null ? (
+                      // 贮藏行只有复制 SHA：它不在任何分支上，Desktop 的历史列表里也没有这种行
+                      <ContextMenuItem onClick={() => void navigator.clipboard.writeText(c.sha)}>
+                        {t("history.copySha")}
                       </ContextMenuItem>
+                    ) : (
+                      <CommitContextMenuItems
+                        commit={c}
+                        headIndex={inHistory ? h : undefined}
+                        isLocal={isLocal(c.sha)}
+                        isResettable={inHistory && h !== undefined && h > 0 && isLocal(head[h - 1]?.sha ?? "")}
+                        canRewrite={inHistory && h !== undefined}
+                        isLastOnHead={h !== undefined && h + 1 >= head.length}
+                        onHead={!!onHead}
+                        unpushedTags={unpushedTags}
+                        viewOnLabel={viewOnLabel}
+                        onAmendCommit={onAmendCommit}
+                        onUndoCommit={onUndoCommit}
+                        onResetTo={onResetTo}
+                        onSquashIntoParent={onSquashIntoParent}
+                        onMove={onMove}
+                        onRevert={onRevert}
+                        onCreateTag={onCreateTag}
+                        onDeleteTag={onDeleteTag}
+                        onCherryPick={onCherryPick}
+                        onOpenInBrowser={onOpenInBrowser}
+                      />
                     )}
                   </ContextMenuContent>
                 </ContextMenu>
@@ -834,5 +842,121 @@ function UnpushedIndicator({ title }: { title: string }) {
         <ArrowUpIcon size={16} />
       </span>
     </span>
+  )
+}
+
+interface CommitContextMenuItemsProps {
+  commit: CommitInfo
+  /** 在 HEAD 历史里的下标；搜索结果、文件历史或不在 HEAD 历史里时为 undefined */
+  headIndex: number | undefined
+  isLocal: boolean
+  isResettable: boolean
+  canRewrite: boolean
+  isLastOnHead: boolean
+  onHead: boolean
+  unpushedTags: readonly string[]
+  viewOnLabel?: string
+  onAmendCommit?: (sha: string, isLocal: boolean) => void
+  onUndoCommit?: () => void
+  onResetTo: (sha: string) => void
+  onSquashIntoParent: (index: number) => void
+  onMove: (index: number, direction: "older" | "newer") => void
+  onRevert: (sha: string) => void
+  onCreateTag: (sha: string) => void
+  onDeleteTag?: (name: string) => void
+  onCherryPick: (sha: string) => void
+  onOpenInBrowser?: (sha: string) => void
+}
+
+/** Desktop commit-list.tsx getContextMenuForSingleCommit：项目顺序与启用条件照原版。
+ *  没有对应实现的两项登记为差异：Checkout Commit、Create Branch from Commit 不显示；
+ *  Reorder Commit（键盘重排模式）由原有的「往前挪 / 往后挪 / 压进上一个」代替。 */
+function CommitContextMenuItems({
+  commit,
+  headIndex: row,
+  isLocal,
+  isResettable,
+  canRewrite,
+  isLastOnHead,
+  onHead,
+  unpushedTags,
+  viewOnLabel,
+  onAmendCommit,
+  onUndoCommit,
+  onResetTo,
+  onSquashIntoParent,
+  onMove,
+  onRevert,
+  onCreateTag,
+  onDeleteTag,
+  onCherryPick,
+  onOpenInBrowser
+}: CommitContextMenuItemsProps) {
+  const { t } = useTranslation()
+  const canBeUndone = onUndoCommit !== undefined && isLocal && row === 0
+  const canBeAmended = onAmendCommit !== undefined && row === 0
+  const tags = commit.tags
+  return (
+    <>
+      {canBeAmended && (
+        <ContextMenuItem onClick={() => onAmendCommit(commit.sha, isLocal)}>{t("history.amendCommit")}</ContextMenuItem>
+      )}
+      {canBeUndone && <ContextMenuItem onClick={onUndoCommit}>{t("history.undoCommit")}</ContextMenuItem>}
+      <ContextMenuItem disabled={!isResettable} onClick={() => onResetTo(commit.sha)}>
+        {t("history.resetToCommit")}
+      </ContextMenuItem>
+      {canRewrite && row !== undefined && (
+        <>
+          <ContextMenuItem disabled={isLastOnHead} onClick={() => onMove(row, "older")}>
+            {t("history.moveOlder")}
+          </ContextMenuItem>
+          <ContextMenuItem disabled={row === 0} onClick={() => onMove(row, "newer")}>
+            {t("history.moveNewer")}
+          </ContextMenuItem>
+          <ContextMenuItem disabled={isLastOnHead} onClick={() => onSquashIntoParent(row)}>
+            {t("history.squashIntoParent")}
+          </ContextMenuItem>
+        </>
+      )}
+      <ContextMenuItem disabled={!onHead} onClick={() => onRevert(commit.sha)}>
+        {t("history.revertChangesInCommit")}
+      </ContextMenuItem>
+      <ContextMenuSeparator />
+      <ContextMenuItem onClick={() => onCreateTag(commit.sha)}>{t("history.createTag")}</ContextMenuItem>
+      {onDeleteTag && tags.length === 1 && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem disabled={!unpushedTags.includes(tags[0])} onClick={() => onDeleteTag(tags[0])}>
+            {t("history.deleteTagName", { name: tags[0] })}
+          </ContextMenuItem>
+        </>
+      )}
+      {onDeleteTag && tags.length > 1 && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>{t("history.deleteTag")}</ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              {tags.map(name => (
+                <ContextMenuItem key={name} disabled={!unpushedTags.includes(name)} onClick={() => onDeleteTag(name)}>
+                  {name}
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        </>
+      )}
+      <ContextMenuItem onClick={() => onCherryPick(commit.sha)}>{t("history.cherryPickCommit")}</ContextMenuItem>
+      <ContextMenuSeparator />
+      <ContextMenuItem onClick={() => void navigator.clipboard.writeText(commit.sha)}>
+        {t("history.copySha")}
+      </ContextMenuItem>
+      <ContextMenuItem disabled={tags.length === 0} onClick={() => void navigator.clipboard.writeText(tags.join(" "))}>
+        {t(tags.length > 1 ? "history.copyTags" : "history.copyTag")}
+      </ContextMenuItem>
+      <ContextMenuItem disabled={isLocal || !onOpenInBrowser} onClick={() => onOpenInBrowser?.(commit.sha)}>
+        {viewOnLabel ?? t("history.viewOnGitHub")}
+      </ContextMenuItem>
+    </>
   )
 }

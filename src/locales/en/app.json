@@ -106,7 +106,6 @@
     "skipHooks": "Bypass commit hooks",
     "signOff": "Add Signed-off-by trailer",
     "allowEmpty": "Allow empty commit",
-    "amend": "Amend last commit",
     "include": "Include {{path}} in commit",
     "isIncludedInCommit": "Fully included in commit",
     "isExcludedFromCommit": "Excluded from commit",
@@ -258,22 +257,15 @@
     "squashIntoParent": "Squash into previous commit",
     "moveOlder": "Move earlier",
     "moveNewer": "Move later",
-    "rewriteConfirm": "This rewrites history: {{what}}.\n\nAfterwards your branch diverges from the remote and needs a force push.\n\nContinue?",
-    "rewritePushed": "This rewrites commits that were already pushed: {{what}}.\n\nOthers may have pulled them; rewriting will conflict on their side.\n\nReally do it?",
-    "squashWhat": "squash “{{a}}” into “{{b}}”",
-    "moveWhat": "move “{{a}}”",
     "empty": "No commits",
     "selectCommit": "Select a commit to view details",
     "fileCount_one": "{{count}} changed file",
     "fileCount_other": "{{count}} changed files",
-    "revert": "Revert this commit",
     "cherryPick": "Cherry-pick onto current branch",
-    "createTag": "Create tag…",
-    "resetTo": "Reset to this commit…",
+    "createTag": "Create Tag…",
     "copySha": "Copy SHA",
     "stashBadge": "Stash {{index}}",
     "stashRow": "Stashed changes {{ref}}, based on {{base}}",
-    "openInBrowser": "Open in browser",
     "tagName": "Tag name",
     "resetKeepChanges": "Keep the changes in the working tree?\n\nOK = drop the commits, keep changes\nCancel = drop changes too (unrecoverable)",
     "searchPlaceholder": "Search commits: message: author: file: change: #sha",
@@ -305,7 +297,19 @@
     "fileHistoryEmpty": "No commits touch this file",
     "fileHistoryLoading": "Loading file history…",
     "emptySummary": "Empty commit message",
-    "unpushed": "This commit has not been pushed to the remote repository"
+    "unpushed": "This commit has not been pushed to the remote repository",
+    "amendCommit": "Amend Commit…",
+    "undoCommit": "Undo Commit…",
+    "resetToCommit": "Reset to Commit…",
+    "revertChangesInCommit": "Revert Changes in Commit",
+    "deleteTagName": "Delete tag {{name}}",
+    "deleteTag": "Delete tag…",
+    "cherryPickCommit": "Cherry-pick Commit…",
+    "copyTag": "Copy Tag",
+    "copyTags": "Copy Tags",
+    "viewOnGitHub": "View on GitHub",
+    "viewOnGitHubEnterprise": "View on GitHub Enterprise",
+    "viewOnGitLab": "View on GitLab"
   },
   "noRepos": {
     "title": "Let's get started",
@@ -557,8 +561,7 @@
   "stash": {
     "title": "Stashes",
     "pop": "Restore",
-    "drop": "Drop",
-    "stashAll": "Stash all changes"
+    "drop": "Drop"
   },
   "conflicts": {
     "rebaseBase": "rebased base",
@@ -982,5 +985,21 @@
     "noResults": "No results",
     "noResultsForQuery": "No results for \"{{query}}\"",
     "resultCurrentOfTotalForQuery": "Result {{current}} of {{total}} for \"{{query}}\""
+  },
+  "warnForcePush": {
+    "operationWillRequireForcePush": "{{operation}} Will Require Force Push",
+    "areYouSureYouWantToOperation": "Are you sure you want to {{operation}}?",
+    "atTheEndOfTheOperationFlow": "At the end of the {{operation}} flow, GitCub will enable you to force push the branch to update the upstream branch. Force pushing will alter the history on the remote and potentially cause problems for others collaborating on this branch.",
+    "doNotShowThisMessageAgain": "Do not show this message again",
+    "beginOperation": "Begin {{operation}}",
+    "squash": "Squash",
+    "reorder": "Reorder",
+    "rebase": "Rebase",
+    "amend": "Amend"
+  },
+  "deleteTag": {
+    "deleteTag": "Delete Tag",
+    "areYouSureYouWantToDeleteTheTag": "Are you sure you want to delete the tag",
+    "delete": "Delete"
   }
 }

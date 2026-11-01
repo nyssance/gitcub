@@ -70,6 +70,7 @@ import { NoChanges } from "@/ui/changes/no-changes"
 import { ChangesSidebar } from "@/ui/changes/sidebar"
 import { Stashes } from "@/ui/changes/stashes"
 import { CommitProgress } from "@/ui/commit-progress/commit-progress"
+import { DeleteTag } from "@/ui/delete-tag/delete-tag-dialog"
 import { DiffView } from "@/ui/diff/lazy-diff"
 import { SubmoduleView } from "@/ui/diff/submodule"
 import { CommitDetails } from "@/ui/history/commit-details"
@@ -79,6 +80,7 @@ import { Inbox } from "@/ui/inbox/inbox"
 import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
 import { LocalChangesOverwrittenDialog } from "@/ui/local-changes-overwritten/local-changes-overwritten-dialog"
 import { ProgressDialog } from "@/ui/multi-commit-operation/progress-dialog"
+import { WarnForcePushDialog } from "@/ui/multi-commit-operation/warn-force-push-dialog"
 import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
 import { Preferences } from "@/ui/preferences/preferences"
 import { CreatePullRequest } from "@/ui/pull-requests/create"
@@ -142,6 +144,11 @@ export function App() {
   const errors = useDialogsStore(s => s.errors)
   const clearError = useDialogsStore(s => s.clearError)
   const localChangesOverwritten = useDialogsStore(s => s.localChangesOverwritten)
+  const warnForcePushPrompt = useDialogsStore(s => s.warnForcePush)
+  const deletingTag = useDialogsStore(s => s.deletingTag)
+  const setDeletingTag = useDialogsStore(s => s.setDeletingTag)
+  const answerWarnForcePush = useDialogsStore(s => s.answerWarnForcePush)
+  const confirmForcePush = usePreferencesStore(s => s.confirmForcePush)
   const dismissLocalChangesOverwritten = useDialogsStore(s => s.dismissLocalChangesOverwritten)
   const busy = useRepositoryStore(s => s.busy)
   const showProgress = useRepositoryStore(s => s.showProgress)
@@ -766,6 +773,19 @@ export function App() {
     await run(() => ipc.undoCommit(repo))
   }
 
+  /** Desktop _startAmendingRepository：已推送的提交先走 WarnForcePush('Amend')，再切到 Changes 页让提交框载入 HEAD */
+  const startAmending = async (isLocalCommit: boolean) => {
+    if (!repo) return
+    if (
+      !isLocalCommit &&
+      !status.unborn &&
+      !(await useDialogsStore.getState().askWarnForcePush(t("warnForcePush.amend")))
+    )
+      return
+    patch({ selectedTab: "changes" })
+    useChangesStore.getState().requestAmend(repo)
+  }
+
   const doCheckout = async (branch: string) => {
     if (!repo) return
     // Desktop _checkoutBranch 的 RetryActionType.Checkout 与 gitContext checkout
@@ -849,9 +869,13 @@ export function App() {
    *
    *  `oldest` 是这次会被重写到的最老那个提交的下标。它要是已经推出去了，
    *  措辞得更重——别人可能已经拉到过这些提交，改完他们那边会冲突。 */
-  const confirmRewrite = async (oldest: number, what: string) => {
-    const pushed = status.hasUpstream && oldest >= status.ahead
-    return ask(t(pushed ? "history.rewritePushed" : "history.rewriteConfirm", { what }))
+  /** Desktop warnAboutRemoteCommits + WarnForcePush：分支有上游，且从最后保留的那条提交到上游之间还有提交
+   *  （这次会改写已推送的提交，或上游有本地没有的提交；改到根提交时只要有上游就算）才警告，其余直接开始。
+   *  oldest 是被改写的最老那条在 HEAD 历史里的下标；不另起 git 进程，按状态里的 ahead/behind 判断 */
+  const warnForcePush = async (oldest: number, operation: string) => {
+    const reachesRoot = graphDone && headCommits[oldest + 1] === undefined
+    const remoteCommits = status.hasUpstream && (reachesRoot || oldest >= status.ahead || status.behind > 0)
+    return !remoteCommits || useDialogsStore.getState().askWarnForcePush(operation)
   }
 
   /** Desktop ProgressDialog 的标题 `${operation} in progress` */
@@ -937,7 +961,7 @@ export function App() {
     const target = chosen.at(-1)
     if (!target) return
     const oldest = headCommits.findIndex(c => c.sha === target.sha)
-    if (!(await confirmRewrite(oldest, t("history.squashSelected")))) return
+    if (!(await warnForcePush(oldest, t("warnForcePush.squash")))) return
     await rewrite(() =>
       withMultiCommitProgress(repo, MultiCommitOperationKind.Squash, onProgress =>
         ipc.squashCommits(
@@ -957,7 +981,7 @@ export function App() {
     const c = headCommits[index]
     const parent = headCommits[index + 1]
     if (!repo || !c || !parent) return
-    if (!(await confirmRewrite(index + 1, t("history.squashWhat", { a: c.summary, b: parent.summary })))) return
+    if (!(await warnForcePush(index + 1, t("warnForcePush.squash")))) return
     // 不给信息 = 用 git 拼好的默认信息（两条摘要都留着）
     void rewrite(() =>
       withMultiCommitProgress(repo, MultiCommitOperationKind.Squash, onProgress =>
@@ -980,7 +1004,7 @@ export function App() {
     const before = headCommits[beforeAt] ?? null
     // 这次重写会碰到的最老那条：落点和原位置里更老的那个
     const oldest = Math.max(from, Math.max(0, beforeAt))
-    if (!(await confirmRewrite(oldest, t("history.moveWhat", { a: moving.summary })))) return
+    if (!(await warnForcePush(oldest, t("warnForcePush.reorder")))) return
     void rewrite(() =>
       withMultiCommitProgress(repo, MultiCommitOperationKind.Reorder, onProgress =>
         ipc.reorderCommits(repo, [moving.sha], before?.sha ?? null, headCommits[oldest + 1]?.sha ?? null, onProgress)
@@ -999,7 +1023,7 @@ export function App() {
     const moving = headCommits[movingAt]
     const before = headCommits[beforeAt]
     if (!moving || !before) return
-    if (!(await confirmRewrite(beforeAt, t("history.moveWhat", { a: moving.summary })))) return
+    if (!(await warnForcePush(beforeAt, t("warnForcePush.reorder")))) return
     void rewrite(() =>
       withMultiCommitProgress(repo, MultiCommitOperationKind.Reorder, onProgress =>
         ipc.reorderCommits(repo, [moving.sha], before.sha, headCommits[beforeAt + 1]?.sha ?? null, onProgress)
@@ -1517,6 +1541,29 @@ export function App() {
       {askDialog}
       {askTextDialog}
       {stashAndSwitchDialog}
+      {deletingTag && repo && (
+        <DeleteTag
+          key="delete-tag"
+          tagName={deletingTag}
+          onDeleteTag={async name => {
+            // Desktop deleteTag：删掉的标签不再待推送
+            await run(async () => {
+              await ipc.deleteTag(repo, name)
+              useRepositoryStore.getState().removeTagToPush(repo, name)
+            })
+          }}
+          onDismissed={() => setDeletingTag(null)}
+        />
+      )}
+      {warnForcePushPrompt && (
+        <WarnForcePushDialog
+          key="warn-force-push"
+          operation={warnForcePushPrompt.operation}
+          askForConfirmationOnForcePush={confirmForcePush}
+          onBegin={ask => answerWarnForcePush(true, ask)}
+          onDismissed={() => answerWarnForcePush(false)}
+        />
+      )}
       {localChangesOverwritten && (
         <LocalChangesOverwrittenDialog
           key="local-changes-overwritten"
@@ -1957,7 +2004,6 @@ export function App() {
                           onBlame={path => setBlaming(path)}
                           onShowHistory={showFileHistory}
                           onCommit={doCommit}
-                          onStashAll={() => void doStashAll()}
                           onUndoCommit={() => void doUndoCommit()}
                           mostRecentLocalCommit={mostRecentLocalCommit}
                           isPushPullFetchInProgress={networkProgress !== null}
@@ -2029,6 +2075,19 @@ export function App() {
                           onSquashIntoParent={i => void doSquashIntoParent(i)}
                           onMove={(i, d) => void doMove(i, d)}
                           onReorder={(from, to) => void doReorder(from, to)}
+                          onAmendCommit={(_sha, isLocal) => void startAmending(isLocal)}
+                          onUndoCommit={() => void doUndoCommit()}
+                          unpushedTags={tagsToPush}
+                          onDeleteTag={setDeletingTag}
+                          viewOnLabel={
+                            selectedRemote
+                              ? accounts[selectedRemote.host]?.kind === "gitlab"
+                                ? t("history.viewOnGitLab")
+                                : selectedRemote.host === "github.com"
+                                  ? t("history.viewOnGitHub")
+                                  : t("history.viewOnGitHubEnterprise")
+                              : undefined
+                          }
                           onResetTo={sha => {
                             // 重置会丢提交，问清楚要哪种：保留改动还是连改动一起丢
                             void ask(t("history.resetKeepChanges")).then(keep =>
