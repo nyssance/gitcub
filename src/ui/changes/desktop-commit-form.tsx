@@ -120,7 +120,11 @@ export function DesktopCommitForm(props: Props) {
       const account = gitlab
         ? undefined
         : accounts.find(account => new URL(getHTMLURL(account.endpoint)).host === remote.host)
-      const source = mentionableUsersSource(props.mentionables, runtime.gitHubUserStore)
+      const source = mentionableUsersSource(
+        props.mentionables,
+        runtime.gitHubUserStore,
+        gitlab ? login => ipc.mentionableUser(remote.host, login).catch(() => null) : undefined
+      )
       providers.push(
         new UserAutocompletionProvider(source, repository, account),
         new CoAuthorAutocompletionProvider(source, repository, account)

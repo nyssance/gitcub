@@ -48,7 +48,10 @@ export type UserHit = KnownUserHit | UnknownUserHit
 
 /** 本项目差异：候选来自 Rust 侧按贡献目标取的列表（GitHub 与 GitLab 共用），不经 Desktop 的用户数据库；
  *  provider 只用到 GitHubUserStore 的这两个方法 */
-export type MentionableUsersSource = Pick<GitHubUserStore, "getMentionableUsersMatching" | "getByLogin">
+export type MentionableUsersSource = Pick<GitHubUserStore, "getMentionableUsersMatching" | "getByLogin"> & {
+  /** 没有 Desktop 账号（GitLab）时按平台接口解析用户名 */
+  readonly getByLoginWithoutAccount?: (login: string) => Promise<IMentionableUser | null>
+}
 
 function userToHit(repository: GitHubRepository, user: IMentionableUser): UserHit {
   return {
@@ -162,7 +165,9 @@ export class UserAutocompletionProvider implements IAutocompletionProvider<UserH
    */
   public async exactMatch(login: string): Promise<UserHit | null> {
     if (this.account === null) {
-      return null
+      // 本项目差异：GitLab 账号不在 Desktop 账号库里，交给候选来源按平台接口解析；GitHub 没有账号时照原版返回 null
+      const user = await this.gitHubUserStore.getByLoginWithoutAccount?.(login)
+      return user ? userToHit(this.repository, user) : null
     }
 
     if (login.toLowerCase() === "copilot" && isDotCom(this.repository.endpoint)) {

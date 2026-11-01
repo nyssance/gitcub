@@ -722,6 +722,25 @@ fn mentionable_user(host: &str, kind: Kind, item: &serde_json::Value) -> Option<
     }
 }
 
+/// 手填共同作者用户名的精确解析。GitHub 由前端 Desktop GitHubUserStore.getByLogin 处理；
+/// GitLab 账号不在 Desktop 账号库里，在这里按用户名查。查不到是 None，不是错误
+pub async fn mentionable_user_by_login(host: &str, login: &str) -> Result<Option<MentionableUser>, String> {
+    let (account, token) = authenticated(host).await?;
+    let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
+    if kind != Kind::Gitlab {
+        return Ok(None);
+    }
+    let url = format!("https://{host}/api/v4/users?username={}", urlencoding(login));
+    let users = crate::host_api::get(&url, &token).await?;
+    Ok(users
+        .as_array()
+        .into_iter()
+        .flatten()
+        // GitLab 的 username 查询不分大小写；只认真正同名的那个
+        .find(|user| user.get("username").and_then(|v| v.as_str()).is_some_and(|v| v.eq_ignore_ascii_case(login)))
+        .and_then(|user| mentionable_user(host, kind, user)))
+}
+
 /// `host[:port][/sub/path]` 里的主机名
 fn hostname(host: &str) -> &str {
     let host = host.split('/').next().unwrap_or(host);

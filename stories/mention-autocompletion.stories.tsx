@@ -5,7 +5,10 @@ import { expect, userEvent, waitFor, within } from "storybook/test"
 import type { IMentionableUser } from "../src/lib/databases/github-user-database"
 import { completionRepository, mentionableUsersSource } from "../src/lib/mentionable-users"
 import { AutocompletingTextArea } from "../src/ui/autocompletion/inputs"
-import { UserAutocompletionProvider } from "../src/ui/autocompletion/user-autocompletion-provider"
+import {
+  CoAuthorAutocompletionProvider,
+  UserAutocompletionProvider
+} from "../src/ui/autocompletion/user-autocompletion-provider"
 
 const users: IMentionableUser[] = [
   { login: "octocat", name: "The Octocat", email: "octocat@users.noreply.github.com", avatarURL: "" },
@@ -81,5 +84,31 @@ export const GitLabHasNoCopilot: Story = {
     await userEvent.type(input, "@cop")
     await new Promise(resolve => setTimeout(resolve, 300))
     await expect(screen.queryByText("Copilot")).not.toBeInTheDocument()
+  }
+}
+
+/** 共同作者手填用户名：GitLab 账号不在 Desktop 账号库里，按平台接口解析成已知作者；没有解析器时照原版是 null */
+export const GitLabResolvesTypedCoAuthor: Story = {
+  args: { host: "gitlab.example", gitlab: true },
+  play: async () => {
+    const repository = completionRepository({ host: "gitlab.example", owner: "gitcub", name: "gitcub" }, true)
+    const dev = { login: "dev", name: "Dev", email: "42-dev@users.noreply.gitlab.example", avatarURL: "" }
+    const resolving = new CoAuthorAutocompletionProvider(
+      mentionableUsersSource(users, { getByLogin: async () => null }, async login => (login === "dev" ? dev : null)),
+      repository
+    )
+    await expect(await resolving.exactMatch("dev")).toEqual({
+      kind: "known-user",
+      username: "dev",
+      name: "Dev",
+      email: "42-dev@users.noreply.gitlab.example",
+      endpoint: "https://gitlab.example/api/v4"
+    })
+    await expect(await resolving.exactMatch("nobody")).toBeNull()
+    const original = new CoAuthorAutocompletionProvider(
+      mentionableUsersSource(users, { getByLogin: async () => null }),
+      repository
+    )
+    await expect(await original.exactMatch("dev")).toBeNull()
   }
 }

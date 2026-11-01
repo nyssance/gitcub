@@ -296,6 +296,9 @@ export const ipc = {
   /** 提交信息 `@` 补全与共同作者候选（Desktop fetchMentionables；GitLab 是项目里能被 @ 的用户） */
   mentionables: (host: string, owner: string, name: string) =>
     invoke<IMentionableUser[]>("mentionables", { host, owner, name }),
+  /** 共同作者手填用户名的精确解析；目前只有 GitLab 需要（GitHub 走 Desktop GitHubUserStore） */
+  mentionableUser: (host: string, login: string) =>
+    invoke<IMentionableUser | null>("mentionable_user", { host, login }),
   /** 两版图片本身。sha 给了是看某次提交，没给是看工作区 */
   imageDiff: (repo: string, file: string, sha?: string) =>
     invoke<ImageDiff>("image_diff", { repo, file, sha }).then(prepareImageDiff),

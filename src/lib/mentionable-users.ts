@@ -24,9 +24,11 @@ export function completionRepository(remote: Remote, gitlab: boolean) {
 
 export function mentionableUsersSource(
   users: readonly IMentionableUser[],
-  gitHubUserStore: Pick<GitHubUserStore, "getByLogin">
+  gitHubUserStore: Pick<GitHubUserStore, "getByLogin">,
+  resolveWithoutAccount?: (login: string) => Promise<IMentionableUser | null>
 ): MentionableUsersSource {
   return {
+    getByLoginWithoutAccount: resolveWithoutAccount,
     // Desktop GitHubUserStore.getMentionableUsers：github.com 上补一个 Copilot
     getMentionableUsersMatching: async (repository, query, maxHits) => {
       let candidates = users

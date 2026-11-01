@@ -794,6 +794,12 @@ pub async fn mentionables(
     cache::get_or_fetch(&app, &key, ttl::LISTS, false, || account::mentionables(&host, &owner, &name)).await
 }
 
+/// 共同作者手填用户名的精确解析（GitLab）
+#[tauri::command]
+pub async fn mentionable_user(host: String, login: String) -> Result<Option<account::MentionableUser>, String> {
+    account::mentionable_user_by_login(&host, &login).await
+}
+
 /// Fork 到自己名下，返回克隆地址。
 #[tauri::command]
 pub async fn fork_repo(host: String, owner: String, name: String) -> Result<String, String> {
