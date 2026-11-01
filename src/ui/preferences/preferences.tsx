@@ -8,12 +8,11 @@ import {
   HomeIcon,
   PaintbrushIcon,
   PersonIcon,
-  QuestionIcon,
-  TrashIcon
+  QuestionIcon
 } from "@primer/octicons-react"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { Touchpad } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { type PreferencesTab, PreferencesTabs } from "@/features/preferences/store"
@@ -32,7 +31,6 @@ import { Input } from "@/ui/base/input"
 import { Separator } from "@/ui/base/separator"
 import { Switch } from "@/ui/base/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/base/tabs"
-import { Textarea } from "@/ui/base/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/ui/base/toggle-group"
 import { sanitizedRefName } from "@/upstream/lib/sanitize-ref-name"
 import { gitAuthorNameIsValid, InvalidGitAuthorNameMessage } from "@/upstream/ui/lib/identifier-rules"
