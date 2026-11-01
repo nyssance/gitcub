@@ -108,6 +108,7 @@ export function App() {
 
   const status = useRepositoryStore(s => s.status)
   const multiCommitOperation = useRepositoryStore(s => s.multiCommitOperation)
+  const tagsToPush = useRepositoryStore(s => s.tagsToPush)
   const stashList = useRepositoryStore(s => s.stashList)
   const lfs = useRepositoryStore(s => s.lfs)
   const setLfs = useRepositoryStore(s => s.setLfs)
@@ -663,15 +664,18 @@ export function App() {
             push: async (path, remote, branch, target, forceWithLease) => {
               const title = t("toolbar.pushingTo", { remote })
               setNetworkProgress(path, { kind: "push", title, value: 0 })
+              // Desktop performPush：带上待推送的标签，推送成功后清空
+              const { tagsToPush, clearTagsToPush } = useRepositoryStore.getState()
               await push(
                 { path },
                 { name: remote },
                 branch,
                 target,
-                null,
+                tagsToPush,
                 { forceWithLease, onHookFailure },
                 progress => setNetworkProgress(path, { ...progress, title, value: pushWeight * progress.value })
               )
+              clearTagsToPush(path)
               pushedTo = remote
             }
           },
@@ -1855,7 +1859,11 @@ export function App() {
                           onSquashMany={shas => void doSquashMany(shas)}
                           onCreateTag={sha => {
                             void askText(t("history.tagName")).then(name => {
-                              if (name) void run(() => ipc.createTag(repo, name, sha))
+                              if (!name) return
+                              void run(async () => {
+                                await ipc.createTag(repo, name, sha)
+                                useRepositoryStore.getState().addTagToPush(repo, name)
+                              })
                             })
                           }}
                           currentBranch={status.branch}
@@ -1941,7 +1949,7 @@ export function App() {
                         branch: status.branch,
                         remote: status.remote,
                         aheadBehind: status.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null,
-                        tagsToPush: null,
+                        tagsToPush,
                         isForcePush: forcePushBranchState === ForcePushBranchState.Recommended,
                         defaultBranch,
                         hasCurrentPullRequest,

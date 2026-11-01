@@ -78,3 +78,26 @@ test("没有挂起的变基时，继续合并或拣选不记强推", () => {
   useRepositoryStore.getState().settleRewrite("/r")
   expect(useRepositoryStore.getState().forcePushBranches).toEqual({})
 })
+
+// Desktop git-store addTagToPush / removeTagToPush / clearTagsToPush 与 tags-to-push-storage：
+// 新建的标签记成待推送并持久化，推送后清空；空列表删掉键。本项目按仓库路径存（Desktop 按仓库 id）
+test("待推送标签按仓库持久化，只更新当前仓库的状态，清空时删掉键", () => {
+  localStorage.clear()
+  useRepositoryStore.setState({ tagsToPush: [] })
+  const store = useRepositoryStore.getState()
+  store.addTagToPush("/r", "v1")
+  store.addTagToPush("/r", "v2")
+  store.addTagToPush("/other", "x")
+  expect(useRepositoryStore.getState().tagsToPush).toEqual(["v1", "v2"])
+  expect(JSON.parse(localStorage.getItem("tags-to-push-/other") ?? "null")).toEqual(["x"])
+  store.removeTagToPush("/r", "v1")
+  expect(useRepositoryStore.getState().tagsToPush).toEqual(["v2"])
+  // 换到仓库时从存储里读回
+  useRepositoryStore.setState({ tagsToPush: [] })
+  const unbind = store.bind("/r")
+  expect(useRepositoryStore.getState().tagsToPush).toEqual(["v2"])
+  unbind()
+  store.clearTagsToPush("/r")
+  expect(useRepositoryStore.getState().tagsToPush).toEqual([])
+  expect(localStorage.getItem("tags-to-push-/r")).toBeNull()
+})

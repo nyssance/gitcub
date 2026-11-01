@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { hookFailureHandling } from "@/features/dialogs/store"
+import { useRepositoryStore } from "@/features/repository/store"
 import { ipc } from "@/lib/ipc"
 
 import { Button } from "../base/button"
@@ -72,8 +73,11 @@ function RepositoryTags({ repo }: { repo: string }) {
       )
         return
       if (lifetime.current !== generation) return
-      if (operation === "delete") await ipc.deleteTag(repo, tag)
-      else {
+      if (operation === "delete") {
+        await ipc.deleteTag(repo, tag)
+        // Desktop deleteTag：删掉的标签不再待推送
+        useRepositoryStore.getState().removeTagToPush(repo, tag)
+      } else {
         // Desktop 推标签也走 _push：pre-push 失败时问，中止就不报错
         const { onHookFailure, ignoreAborted } = hookFailureHandling()
         await ignoreAborted(

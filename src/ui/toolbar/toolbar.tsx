@@ -37,6 +37,7 @@ export function ToolbarRight(props: {
   pullRequestCount?: number
   pullRequestBadge?: ReactNode
 }) {
+  const numTagsToPush = useRepositoryStore(s => s.tagsToPush.length)
   const toolbar = useRef<HTMLDivElement>(null)
   const branchDropdownWidth = useToolbarStore(s => s.branchDropdownWidth)
   const pushPullButtonWidth = useToolbarStore(s => s.pushPullButtonWidth)
@@ -96,7 +97,7 @@ export function ToolbarRight(props: {
           pullWithRebase={status.pullWithRebase ?? undefined}
           rebaseInProgress={status.operation === "rebase"}
           forcePushBranchState={props.forcePushBranchState}
-          numTagsToPush={0}
+          numTagsToPush={numTagsToPush}
           askForConfirmationOnForcePush={askForConfirmationOnForcePush}
           hostedPlatform={props.hostedPlatform}
           disabled={!props.repo || props.busy}

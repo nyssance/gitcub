@@ -28,6 +28,7 @@ import { contributionRepository } from "@/lib/fork-contribution"
 import type { Issue, LfsState, Remote, StashEntry } from "@/models/app-state"
 import type { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import type { RepoStatus } from "@/models/repo-status"
+import { getStringArray, setStringArray } from "@/upstream/lib/local-storage"
 import type { IMultiCommitOperationProgress } from "@/upstream/models/progress"
 
 export const EMPTY_STATUS: RepoStatus = {
@@ -51,6 +52,15 @@ export interface NetworkProgress {
   title: string
   description?: string
   value: number
+}
+
+/** Desktop tags-to-push-storage 的键是 `tags-to-push-${repository.id}`；本项目的仓库以路径为身份（id 恒为 -1），改用路径 */
+const tagsToPushKey = (repo: string) => `tags-to-push-${repo}`
+
+/** Desktop storeTagsToPush：空列表就删掉这个键 */
+function storeTagsToPush(repo: string, tagsToPush: readonly string[]) {
+  if (tagsToPush.length === 0) localStorage.removeItem(tagsToPushKey(repo))
+  else setStringArray(tagsToPushKey(repo), tagsToPush)
 }
 
 /** Desktop git-store updateLastFetched：FETCH_HEAD 为空多半是拉取失败，沿用上一次的时间；没有这个文件就是从没拉取过 */
@@ -93,6 +103,14 @@ interface RepositoryStore {
   pendingRewrites: Record<string, string | null>
   /** Desktop updatePushPullFetchProgress：只认当前仓库的进度，切走之后旧仓库的进度不再显示 */
   setNetworkProgress: (repo: string, progress: NetworkProgress | null) => void
+  /** Desktop git-store _tagsToPush：在本应用里新建、还没推送的标签，下次推送时带上 */
+  tagsToPush: readonly string[]
+  /** Desktop createTag 成功后 addTagToPush */
+  addTagToPush: (repo: string, tagName: string) => void
+  /** Desktop deleteTag 成功后，以及本地已找不到的标签 removeTagToPush */
+  removeTagToPush: (repo: string, tagName: string) => void
+  /** Desktop 推送成功后 clearTagsToPush */
+  clearTagsToPush: (repo: string) => void
   /** Desktop _addBranchToForcePushList：改写前的提交与刷新后的 HEAD 不同才记 */
   addBranchToForcePushList: (repo: string, beforeChangeSha: string | null) => void
   /** 修订、变基、压缩、重排刷新之后调用（Desktop 在多提交操作完成时记）：还停在变基里就先挂起；
@@ -151,6 +169,11 @@ const refreshRepository = (repo: string | null) =>
     const stashes = yield* call("stashes", ipc => ipc.stashes(repo))
     if (repo !== activeRepository()) return
     if (!equal(getState().stashList, stashes)) setState({ stashList: stashes })
+    // Desktop refreshTags：在应用外删掉的未推送标签从待推送里去掉；没有待推送的标签就不必列标签
+    if (getState().tagsToPush.length === 0) return
+    const localTags = new Set(yield* call("tags", ipc => ipc.tags(repo)))
+    if (repo !== activeRepository()) return
+    for (const tag of getState().tagsToPush) if (!localTags.has(tag)) getState().removeTagToPush(repo, tag)
   }).pipe(
     Effect.catch(error =>
       Effect.sync(() => {
@@ -182,6 +205,21 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   setNetworkProgress: (repo, networkProgress) => {
     if (repo === activeRepository()) set({ networkProgress })
   },
+  tagsToPush: [],
+  addTagToPush: (repo, tagName) => {
+    const tagsToPush = [...getStringArray(tagsToPushKey(repo)), tagName]
+    storeTagsToPush(repo, tagsToPush)
+    if (repo === activeRepository()) set({ tagsToPush })
+  },
+  removeTagToPush: (repo, tagName) => {
+    const tagsToPush = getStringArray(tagsToPushKey(repo)).filter(name => name !== tagName)
+    storeTagsToPush(repo, tagsToPush)
+    if (repo === activeRepository()) set({ tagsToPush })
+  },
+  clearTagsToPush: repo => {
+    storeTagsToPush(repo, [])
+    if (repo === activeRepository()) set({ tagsToPush: [] })
+  },
   settleRewrite: (repo, before) => {
     const { status, pendingRewrites } = get()
     const pending = before === undefined ? pendingRewrites[repo] : before
@@ -210,7 +248,8 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   refresh: () => Promise.resolve(),
   bind: repo => {
     const runner = createCoalescingRunner(signal => runPromise(refreshRepository(repo), { signal }))
-    set({ refresh: runner })
+    // Desktop GitStore 构造时 getTagsToPush
+    set({ refresh: runner, tagsToPush: repo ? getStringArray(tagsToPushKey(repo)) : [] })
     void runner()
     return () => runner.cancel()
   },
