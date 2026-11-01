@@ -107,7 +107,7 @@
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],
 
-    "@alwith/module-desktop-shell": ["@alwith/module-desktop-shell@0.5.7", "", { "dependencies": { "@base-ui/react": "^1.9.0", "cn": "^0.5.0", "lucide-react": "^1.64.0" }, "peerDependencies": { "@nyssance/atlas": "^0.1.9", "@tauri-apps/api": "^3.0.0-alpha.3", "react": "^19.0.0", "react-dom": "^19.0.0" }, "optionalPeers": ["@nyssance/atlas"] }, "sha512-Z7aeBfBaJfwB8Ar6gYhHR5V+DDIOJu970QI7MMf2Q8qwpks2ipCzRxQpzwOjo/Vlar/HdHIk6s1SzFiF8EZeeA=="],
+    "@alwith/module-desktop-shell": ["@alwith/module-desktop-shell@0.5.7", "", { "dependencies": { "@base-ui/react": "^1.9.0", "cn": "^0.5.0", "lucide-react": "^1.64.0" }, "peerDependencies": { "@nyssance/atlas": "^0.1.8", "@tauri-apps/api": "^3.0.0-alpha.3", "react": "^19.0.0", "react-dom": "^19.0.0" }, "optionalPeers": ["@nyssance/atlas"] }, "sha512-Z7aeBfBaJfwB8Ar6gYhHR5V+DDIOJu970QI7MMf2Q8qwpks2ipCzRxQpzwOjo/Vlar/HdHIk6s1SzFiF8EZeeA=="],
 
     "@alwith/module-store": ["@alwith/module-store@0.5.0", "", {}, "sha512-k8MVgmKYQ6acIS89XNg9dGFkR9ZGVDUJpKvZxbC5k4/QNAeNPaAfXL/hPgf1xq8kPMr8FyK41M/PTtIxRP8N1g=="],
 
