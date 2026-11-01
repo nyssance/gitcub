@@ -1047,6 +1047,76 @@ test("a failing pre-push hook goes through the proxy and aborting stops the push
   }
 })
 
+/** A side branch off HEAD~1 so merging it into the current branch needs a real merge commit */
+function divergedBranch(name: string) {
+  const head = git("rev-parse", "HEAD")
+  const side = git("commit-tree", "HEAD~1^{tree}", "-p", "HEAD~1", "-m", `${name} side commit`)
+  git("update-ref", `refs/heads/${name}`, side)
+  return { head, side }
+}
+
+async function ignoreFailingPreMergeCommit(page: Page, run: () => Promise<void>) {
+  const hook = join(smokeRepoPath, ".git", "hooks", "pre-merge-commit")
+  writeFileSync(hook, '#!/bin/sh\necho "merge rejected by hook" >&2\nexit 1\n', { mode: 0o755 })
+  await page.evaluate(() => localStorage.setItem("git-hooks-env-enabled", "1"))
+  try {
+    await run()
+    const dialog = page.locator("#hook-failed-dialog")
+    await expect(dialog).toContainText("The pre-merge-commit hook failed. What would you like to do?", {
+      timeout: 30000
+    })
+    await expect(dialog).toContainText("merge rejected by hook")
+    await dialog.locator('button:has-text("Ignore and Continue")').click()
+  } catch (error) {
+    console.error("Merge hooks UI at failure:", await page.evaluate(() => document.body.innerText))
+    throw error
+  } finally {
+    await page.evaluate(() => localStorage.removeItem("git-hooks-env-enabled"))
+    rmSync(hook, { force: true })
+  }
+}
+
+test("merging a branch asks about a failing pre-merge-commit hook and ignoring it completes the merge", async ({
+  mainWindow: page
+}) => {
+  const { head, side } = divergedBranch("hooks-merge-source")
+  try {
+    await ignoreFailingPreMergeCommit(page, async () => {
+      await page.evaluate(async () =>
+        window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "merge-branch" })
+      )
+      const source = page.locator('.branches-list-item .name:has-text("hooks-merge-source")')
+      await source.waitFor({ state: "visible", timeout: 15000 })
+      await source.click()
+    })
+    await expect.poll(() => git("log", "-1", "--format=%P")).toBe(`${head} ${side}`)
+  } finally {
+    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--keep", head)
+    git("branch", "-D", "hooks-merge-source")
+  }
+})
+
+test("pulling asks about a failing pre-merge-commit hook and ignoring it completes the merge", async ({
+  mainWindow: page
+}) => {
+  // The smoke origin is the repository itself; pointing the upstream at a diverged branch makes the pull merge
+  const { head, side } = divergedBranch("hooks-pull-source")
+  const upstream = git("config", "branch.remote-feature.merge")
+  git("config", "branch.remote-feature.merge", "refs/heads/hooks-pull-source")
+  try {
+    await ignoreFailingPreMergeCommit(page, () =>
+      page.evaluate(async () =>
+        window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "pull" })
+      )
+    )
+    await expect.poll(() => git("log", "-1", "--format=%P")).toBe(`${head} ${side}`)
+  } finally {
+    git("config", "branch.remote-feature.merge", upstream)
+    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--keep", head)
+    git("branch", "-D", "hooks-pull-source")
+  }
+})
+
 test("About exposes the author's GitHub profile", async ({ mainWindow: page }) => {
   await page.evaluate(async () => {
     await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu-event", payload: ["show-about"] })
