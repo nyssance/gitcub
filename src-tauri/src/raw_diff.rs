@@ -73,7 +73,8 @@ pub fn working_directory_diff(
 pub fn working_directory_diff_via_git(
     repo: &Path, file: &str, kind: FileKind, hide_whitespace: bool,
 ) -> Result<RawDiff, String> {
-    let mut g = Git::new(Some(repo)).arg("diff");
+    // 只读：`git diff HEAD` 会顺手刷新并回写索引，抢 index.lock 会让用户自己的 git 命令失败（status.rs 同一规则）
+    let mut g = Git::new(Some(repo)).args(["--no-optional-locks", "diff"]);
     if hide_whitespace {
         g = g.arg("-w");
     }
