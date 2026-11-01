@@ -12,7 +12,7 @@
   --ci-font-weight-semibold: 600;
   --background-color: var(--popover);
   --box-alt-background-color: #f6f8fa;
-  --muted-foreground: #626b75;
+  --muted-foreground: #6a737d; /* Desktop --text-secondary-color = gray-500 */
   --text-secondary-color: var(--muted-foreground);
   --base-border: 1px solid var(--border);
   --box-border-color: var(--border);
@@ -450,7 +450,7 @@
 .dark #rerun-check-runs {
   --muted-foreground: #959da5;
   --text-secondary-color: var(--muted-foreground);
-  --box-alt-background-color: #282d33;
+  --box-alt-background-color: #2b3137; /* Desktop dark lighten(gray-900, 3%) */
 }
 .desktop-ci-popover .job-step-duration {
   color: var(--text-secondary-color);

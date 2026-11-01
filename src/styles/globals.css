@@ -67,7 +67,7 @@
 
   /* 文件状态标记 */
   --status-new: #22863a;
-  --status-modified: #b08800;
+  --status-modified: #aa8507;
   --status-deleted: #cb2431;
   --status-renamed: #0366d6;
   --status-conflicted: #c24e00; /* Desktop --color-conflicted = orange-800 */
@@ -94,13 +94,13 @@
   --commit-warning-error: #cb2431; /* red-600 */
   --commit-warning-warning: #b08800; /* yellow-800 */
   --commit-warning-information: #2188ff; /* blue-400 */
-  --file-warning-background: #fff5b1; /* yellow-100 */
-  --file-warning-foreground: #b08800; /* darken(yellow-700, 10%) */
+  --file-warning-background: #fffbdd;
+  --file-warning-foreground: #aa8507;
   --file-warning-border: rgba(219, 171, 9, 0.4); /* rgba(yellow-700, 0.4) */
 
-  /* diff —— 取值全部来自 Desktop 的 _variables.scss */
-  --diff-add: #eaffef; /* darken(green-000, 2%) */
-  --diff-add-gutter: #d5f9de; /* darken(green-100, 3%) */
+  /* diff —— 取值按 GitHub Desktop 3.6.10 编译后的 renderer.css 核对 */
+  --diff-add: #e6ffed;
+  --diff-add-gutter: #cdffd8;
   --diff-add-inner: #acf2bd; /* 词级高亮 */
   --diff-add-foreground: #24292e;
   --diff-del: #ffeef0; /* red-000 */
@@ -125,7 +125,7 @@
   --syntax-header: #0000ff;
   --syntax-quote: #1a7e31;
 
-  --diff-selected: #0366d6; /* blue-400 */
+  --diff-selected: #2188ff;
   --diff-selected-foreground: #ffffff;
   --diff-gutter: #ffffff; /* --diff-gutter-background-color = var(--background-color) */
   --diff-border: #e1e4e8; /* --diff-border-color = gray-200 */
@@ -166,10 +166,10 @@
   --toolbar-progress: var(--accent);
   --toolbar-warning: #e36209;
 
-  --status-new: #85e89d;
-  --status-modified: #ffdf5d;
-  --status-deleted: #f97583;
-  --status-renamed: #79b8ff;
+  --status-new: #28a745;
+  --status-modified: #dbab09;
+  --status-deleted: #d73a49;
+  --status-renamed: #0366d6;
   --status-conflicted: #f66a0a; /* Desktop dark --color-conflicted = orange */
   --list-selected: #444d56; /* gray-700 */
   --list-selected-foreground: #f6f8fa; /* gray-100 = --text-color */
@@ -182,7 +182,7 @@
   --list-selected-badge-foreground: #ffffff;
   --list-selected-active-badge: #ffffff;
   --list-selected-active-badge-foreground: #24292e; /* gray-900 */
-  --suggested-action-primary: #032f62; /* blue-900 */
+  --suggested-action-primary: #05264c; /* primer-support blue-900 */
   --suggested-action-primary-border: #044289; /* blue-700 */
   --suggested-action-icon: #2188ff; /* blue-400 */
   --suggested-action-primary-muted: var(--muted-foreground);
@@ -193,16 +193,16 @@
   --file-warning-foreground: #dbab09; /* yellow-700 */
   --file-warning-border: rgba(176, 136, 0, 0.4); /* rgba(yellow-800, 0.4) */
 
-  --diff-add: #1b2a20;
-  --diff-add-gutter: #223a2a;
-  --diff-add-inner: #2f5d3c;
+  --diff-add: #113a1b;
+  --diff-add-gutter: #0b2611;
+  --diff-add-inner: #22863a;
   --diff-add-foreground: #f6f8fa;
-  --diff-del: #2b1b1e;
-  --diff-del-gutter: #3d2226;
-  --diff-del-inner: #6b2b33;
-  --diff-del-foreground: #f6f8fa;
-  --diff-hunk: #1c2733;
-  --diff-hunk-gutter: #22303f;
+  --diff-del: #450c0f;
+  --diff-del-gutter: #2f090a;
+  --diff-del-inner: #b31d28;
+  --diff-del-foreground: #ffdce0;
+  --diff-hunk: #1d2125;
+  --diff-hunk-gutter: #171a1d;
   --diff-hunk-foreground: #959da5;
   /* 暗色语法高亮 —— Desktop themes/_dark.scss */
   --syntax-variable: #b392f0; /* purple-300 */
@@ -219,13 +219,13 @@
   --syntax-header: #f97583;
   --syntax-quote: #34d058;
 
-  --diff-selected: #0366d6;
-  --diff-selected-foreground: #ffffff;
-  --diff-gutter: #1f2428; /* darken(gray-900, 3%) */
+  --diff-selected: #044289;
+  --diff-selected-foreground: #f6f8fa;
+  --diff-gutter: #1d2125;
   --diff-border: #2f363d; /* gray-800 */
   --diff-selected-border: #005cc5;
   --diff-empty-hunk-handle: #444d56; /* gray-700 */
-  --diff-line-number: #9da5ad;
+  --diff-line-number: #959da5;
 }
 
 /* 工作区浮板是 Desktop 的业务区域：底色、分隔线和次级文字用原版主题的值，
@@ -238,6 +238,7 @@
   --primary: #0366d6;
   --primary-foreground: #ffffff;
   --background: #ffffff;
+  --foreground: #24292e; /* --text-color = gray-900 */
   --box-alt: #f6f8fa; /* --box-alt-background-color = gray-100 */
   --border: #e1e4e8; /* gray-200 */
   --muted-foreground: #6a737d; /* gray-500 */
@@ -247,6 +248,7 @@
   --primary: #0366d6;
   --primary-foreground: #ffffff;
   --background: #24292e; /* gray-900 */
+  --foreground: #f6f8fa; /* --text-color = gray-100 */
   --box-alt: #2b3137; /* lighten(gray-900, 3%) */
   --border: #141414;
   --muted-foreground: #959da5; /* gray-400 */
