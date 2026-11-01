@@ -578,6 +578,11 @@ export function App() {
 
   const doPush = async (force = false) => {
     if (!repo) return
+    // Desktop app-store performPush：仓库没有远端时不推送，改为打开「发布仓库」
+    if (!force && useRepositoryStore.getState().status.remote === null) {
+      setPublishing(true)
+      return
+    }
     await run(async () => {
       // Desktop _push 的 onHookFailure：pre-push 失败时问；选了中止就到此为止，不报错
       const { onHookFailure, ignoreAborted } = hookFailureHandling()

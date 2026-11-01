@@ -42,6 +42,7 @@ import {
   CoAuthorAutocompletionProvider,
   type IAutocompletionProvider
 } from "../autocompletion"
+import { InputGroup, InputGroupAddon } from "../base/input-group"
 import { Separator } from "../base/separator"
 import { Button } from "../desktop/button"
 import { FocusContainer } from "../desktop/focus-container"
@@ -942,15 +943,15 @@ export class CommitMessage extends React.Component<ICommitMessageProps, ICommitM
   private renderActionBar() {
     const { isCommitting } = this.props
 
-    const className = classNames("action-bar flex min-w-0 items-center gap-1 overflow-x-auto", {
+    const className = classNames("action-bar min-w-0 gap-1 overflow-x-auto", {
       disabled: isCommitting === true
     })
 
     return (
-      <div className={className}>
+      <InputGroupAddon align="block-end" className={className}>
         {this.renderCoAuthorToggleButton()}
         {this.renderCommitOptionsButton()}
-      </div>
+      </InputGroupAddon>
     )
   }
 
@@ -1364,7 +1365,7 @@ export class CommitMessage extends React.Component<ICommitMessageProps, ICommitM
 
     // 原版 .with-action-bar .description-field textarea { min-height: 80px }，矮窗口 10px；写在实例上，不覆盖基础控件
     const descriptionClassName = classNames(
-      "description-field min-w-0 [&_textarea]:min-h-20 [@media(max-height:500px)]:[&_textarea]:min-h-2.5",
+      "description-field w-full min-w-0 [&_textarea]:min-h-20 [@media(max-height:500px)]:[&_textarea]:min-h-2.5",
       {
         "with-overflow": this.state.descriptionObscured
       }
@@ -1424,25 +1425,28 @@ export class CommitMessage extends React.Component<ICommitMessageProps, ICommitM
         {this.props.showInputLabels === true && (
           <label htmlFor="commit-message-description">{i18n.t("desktopUI.description")}</label>
         )}
-        <FocusContainer
-          className="description-focus-container flex min-w-0 flex-col gap-1"
-          onClick={this.onFocusContainerClick}>
-          <AutocompletingTextArea
-            inputId="commit-message-description"
-            className={descriptionClassName}
-            screenReaderLabel={this.props.showInputLabels !== true ? "Commit description" : undefined}
-            placeholder={i18n.t("desktopUI.description")}
-            value={this.state.commitMessage.description || ""}
-            onValueChanged={this.onDescriptionChanged}
-            autocompletionProviders={this.state.commitMessageAutocompletionProviders}
-            aria-describedby={ariaDescribedBy}
-            ref={this.onDescriptionFieldRef}
-            onElementRef={this.onDescriptionTextAreaRef}
-            onContextMenu={this.onAutocompletingInputContextMenu}
-            readOnly={isCommitting === true}
-            spellcheck={commitSpellcheckEnabled}
-          />
-          {this.renderActionBar()}
+        {/* 原版 .description-focus-container 是一个「假文本框」：描述与操作栏同在一圈边框里，操作栏贴底。
+            用 shadcn InputGroup + block-end Addon 实现同一结构 */}
+        <FocusContainer className="description-focus-container min-w-0" onClick={this.onFocusContainerClick}>
+          <InputGroup>
+            <AutocompletingTextArea
+              inputId="commit-message-description"
+              inputGroupControl={true}
+              className={descriptionClassName}
+              screenReaderLabel={this.props.showInputLabels !== true ? "Commit description" : undefined}
+              placeholder={i18n.t("desktopUI.description")}
+              value={this.state.commitMessage.description || ""}
+              onValueChanged={this.onDescriptionChanged}
+              autocompletionProviders={this.state.commitMessageAutocompletionProviders}
+              aria-describedby={ariaDescribedBy}
+              ref={this.onDescriptionFieldRef}
+              onElementRef={this.onDescriptionTextAreaRef}
+              onContextMenu={this.onAutocompletingInputContextMenu}
+              readOnly={isCommitting === true}
+              spellcheck={commitSpellcheckEnabled}
+            />
+            {this.renderActionBar()}
+          </InputGroup>
         </FocusContainer>
 
         {this.renderCoAuthorInput()}

@@ -166,7 +166,8 @@ export function ChangesSidebar({
   ] as const
   const states = changes.map(c => includeOf(c.path))
   const on = states.filter(s => s !== DiffSelectionType.None).length
-  const allChecked = changes.length > 0 && states.every(s => s === DiffSelectionType.All)
+  // Desktop getIncludeAllState：没有文件时算全选（勾上、但禁用）
+  const allChecked = states.every(s => s === DiffSelectionType.All)
   const partial = on > 0 && !allChecked
   // 还带着冲突标记的文件不能提交——否则 `<<<<<<<` 就进历史了。原版同理。
   const unresolved = changes.filter(file => {
@@ -233,6 +234,7 @@ export function ChangesSidebar({
             <Checkbox
               checked={allChecked}
               indeterminate={partial}
+              disabled={changes.length === 0 || rebaseConflict}
               onCheckedChange={onToggleAll}
               aria-label={t("changes.toggleAll")}
             />
@@ -247,16 +249,15 @@ export function ChangesSidebar({
       </div>
 
       <div className="list-scroller">
-        {shown.length === 0 && (
+        {/* Desktop renderNoChanges：没有筛选条件时列表留空（右侧 NoChanges 已说明），有筛选才提示并给清除按钮 */}
+        {shown.length === 0 && hasActiveFilters(filters) && (
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>{t(changes.length === 0 ? "changes.noChanges" : "changes.noFilterResults")}</EmptyTitle>
+              <EmptyTitle>{t("changes.noFilterResults")}</EmptyTitle>
             </EmptyHeader>
-            {changes.length > 0 && (
-              <Button size="sm" variant="outline" onClick={() => setFilters(emptyChangesFilter)}>
-                {t("changes.clearFilters")}
-              </Button>
-            )}
+            <Button size="sm" variant="outline" onClick={() => setFilters(emptyChangesFilter)}>
+              {t("changes.clearFilters")}
+            </Button>
           </Empty>
         )}
         {shown.length > 0 && (

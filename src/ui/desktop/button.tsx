@@ -236,7 +236,9 @@ export class Button extends React.Component<React.PropsWithChildren<IButtonProps
   public render() {
     const { disabled, tooltip } = this.props
 
-    const className = classNames("button-component", this.props.className, {
+    // focusableWhenDisabled 让禁用的按钮仍可聚焦（原版禁用按钮也能悬停出提示），于是没有原生 disabled 属性，
+    // shadcn 的 disabled:opacity-50 不生效；按 aria-disabled 补上同样的变暗
+    const className = classNames("button-component aria-disabled:opacity-50", this.props.className, {
       "small-button": this.props.size === "small"
     })
 

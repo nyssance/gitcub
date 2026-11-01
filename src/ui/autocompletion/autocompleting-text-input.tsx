@@ -9,6 +9,7 @@ import { createUniqueId, releaseUniqueId } from "../../lib/ui/id-pool"
 import { fatalError } from "../../upstream/lib/fatal-error"
 import { AriaLiveContainer } from "../accessibility/aria-live-container"
 import { Input } from "../base/input"
+import { InputGroupTextarea } from "../base/input-group"
 import { Textarea } from "../base/textarea"
 import { findNextSelectableRow, List, type SelectionDirection, type SelectionSource } from "../desktop/list"
 import { Popover, PopoverAnchorPosition, PopoverDecoration } from "../desktop/popover"
@@ -31,6 +32,9 @@ interface IAutocompletingTextInputProps<ElementType, AutocompleteItemType> {
 
   /** Element ID for the input field. */
   readonly elementId?: string
+
+  /** 放在 shadcn InputGroup 里：文本框改用无边框、不可拉伸的 InputGroupTextarea，边框与焦点环由外层组给出 */
+  readonly inputGroupControl?: boolean
 
   /** Content of an optional invisible label element for screen readers. */
   readonly screenReaderLabel?: string
@@ -445,6 +449,9 @@ export abstract class AutocompletingTextInput<
       "aria-describedby": this.props.ariaDescribedBy
     }
 
+    if (this.getElementTagName() === "textarea" && this.props.inputGroupControl) {
+      return <InputGroupTextarea {...(props as unknown as React.ComponentProps<typeof InputGroupTextarea>)} />
+    }
     return this.getElementTagName() === "textarea" ? (
       <Textarea {...(props as unknown as React.ComponentProps<typeof Textarea>)} />
     ) : (

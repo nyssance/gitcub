@@ -49,7 +49,8 @@ export function repositoryMenuState(context: NativeMenuContext, defaultBranch?: 
     "create-issue-in-repository-on-github": hosted,
     "create-pull-request": hosted && branch,
     "preview-pull-request": hosted && branch,
-    push: branch && !!status.remote,
+    // Desktop：push 不看有没有远端；没有远端时这条命令打开「发布仓库」（app-store performPush）
+    push: branch,
     pull: published,
     fetch: active && !!status.remote,
     "create-branch": mutable,
