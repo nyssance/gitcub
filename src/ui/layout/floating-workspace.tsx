@@ -36,8 +36,6 @@ export function FloatingWorkspace({
     flickMinIndex: 1,
     direction: i18n.dir(),
     trackpadEnabled,
-    insetTop: 0,
-    insetBottom: 16,
     pagination: false,
     overview: { label: t("canvas.overview") }
   })
@@ -57,10 +55,12 @@ export function FloatingWorkspace({
 
   return (
     <div className="bg-muted/40 flex min-h-0 min-w-0 flex-1 flex-col" data-floating-workspace data-page={page}>
-      <div className="h-8 shrink-0" data-tauri-drag-region />
+      {/* Atlas 的标准上下边距（32px，与 ALwith Desktop 相同）就是标题栏高度；视口自身可拖窗口，
+          Tauri 只在按下的正是这个元素时拖动，面板里的点击不受影响 */}
       <div
         ref={viewport}
         className="min-h-0 flex-1 overflow-hidden"
+        data-tauri-drag-region
         data-canvas-viewport
         data-atlas
         data-atlas-layout="navigation"
