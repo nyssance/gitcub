@@ -1,5 +1,7 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import { type ITerminalInitOnlyOptions, type ITerminalOptions, Terminal as XTermTerminal } from "@xterm/xterm"
+// Desktop _vendor.scss imports the same stylesheet globally; it ships with this lazily loaded chunk here
+import "@xterm/xterm/css/xterm.css"
 import React from "react"
 
 import type { TerminalOutput } from "../lib/git-execution"
