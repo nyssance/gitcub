@@ -46,6 +46,10 @@ export type UnknownUserHit = {
 
 export type UserHit = KnownUserHit | UnknownUserHit
 
+/** 本项目差异：候选来自 Rust 侧按贡献目标取的列表（GitHub 与 GitLab 共用），不经 Desktop 的用户数据库；
+ *  provider 只用到 GitHubUserStore 的这两个方法 */
+export type MentionableUsersSource = Pick<GitHubUserStore, "getMentionableUsersMatching" | "getByLogin">
+
 function userToHit(repository: GitHubRepository, user: IMentionableUser): UserHit {
   return {
     kind: "known-user",
@@ -60,7 +64,7 @@ function userToHit(repository: GitHubRepository, user: IMentionableUser): UserHi
 export class UserAutocompletionProvider implements IAutocompletionProvider<UserHit> {
   public readonly kind = "user"
 
-  private readonly gitHubUserStore: GitHubUserStore
+  private readonly gitHubUserStore: MentionableUsersSource
   private readonly repository: GitHubRepository
   private readonly account: Account | null
 
@@ -71,7 +75,7 @@ export class UserAutocompletionProvider implements IAutocompletionProvider<UserH
     return account ? [account] : []
   })
 
-  public constructor(gitHubUserStore: GitHubUserStore, repository: GitHubRepository, account?: Account) {
+  public constructor(gitHubUserStore: MentionableUsersSource, repository: GitHubRepository, account?: Account) {
     this.gitHubUserStore = gitHubUserStore
     this.repository = repository
     this.account = account ?? null

@@ -1,6 +1,6 @@
 /**
  * Desktop 的 fork 行为（workflowPreferences.forkContributionTarget）：fork 默认为上游贡献，
- * PR 列表、新建 Issue、「在网页查看」和新分支的默认基点都指向上游；选了「自用」就都回到 fork 本身。
+ * PR 列表、新建 Issue、「在网页查看」、新分支的默认基点和 `#`／`@` 补全都指向上游；选了「自用」就都回到 fork 本身。
  * 偏好按路径存在 Desktop 仓库库里，和原版一样跟着仓库走。
  */
 import type { Remote } from "@/models/app-state"

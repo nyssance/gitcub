@@ -267,6 +267,7 @@ fn main() {
             commands::rerun_failed_jobs,
             commands::rerun_check,
             commands::issues_for_completion,
+            commands::mentionables,
             commands::fork_repo,
             commands::upstream_of,
             commands::sync_upstream,

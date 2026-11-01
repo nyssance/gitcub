@@ -467,7 +467,8 @@
     "pullRequestsTargetingWillBeShown": "Pull requests targeting <strong>{{name}}</strong> will be shown in the pull request list.",
     "issuesWillBeCreatedIn": "Issues will be created in <strong>{{name}}</strong>.",
     "viewOnWebWillOpen": "“View on {{platform}}” will open <strong>{{name}}</strong> in the browser.",
-    "newBranchesWillBeBasedOn": "New branches will be based on <strong>{{name}}</strong>'s default branch."
+    "newBranchesWillBeBasedOn": "New branches will be based on <strong>{{name}}</strong>'s default branch.",
+    "autocompletionOfUserAndIssuesWillBeBasedOn": "Autocompletion of user and issues will be based on <strong>{{name}}</strong>."
   },
   "unknownAuthors": {
     "title": "Unknown Co-Authors",

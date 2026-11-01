@@ -785,6 +785,15 @@ pub async fn issues_for_completion(
     cache::get_or_fetch(&app, &key, ttl::LISTS, false, || account::issues(&host, &owner, &name)).await
 }
 
+/// 提交信息 `@` 补全与共同作者候选，和 Issue 一样按列表缓存
+#[tauri::command]
+pub async fn mentionables(
+    app: tauri::AppHandle, host: String, owner: String, name: String,
+) -> Result<Vec<account::MentionableUser>, String> {
+    let key = format!("mentionables-{host}-{owner}-{name}");
+    cache::get_or_fetch(&app, &key, ttl::LISTS, false, || account::mentionables(&host, &owner, &name)).await
+}
+
 /// Fork 到自己名下，返回克隆地址。
 #[tauri::command]
 pub async fn fork_repo(host: String, owner: String, name: String) -> Result<String, String> {

@@ -23,6 +23,8 @@ import {
   type Updater
 } from "@/features/effect-runtime"
 import { createCoalescingRunner } from "@/lib/coalescing-runner"
+import type { IMentionableUser } from "@/lib/databases/github-user-database"
+import { contributionRepository } from "@/lib/fork-contribution"
 import type { Issue, LfsState, Remote, StashEntry } from "@/models/app-state"
 import type { RepoStatus } from "@/models/repo-status"
 
@@ -44,6 +46,8 @@ interface RepositoryStore {
   lfs: LfsState | null
   /** 写提交信息时 `#` 能补全的 issue 号；没远端或没登录时为空 */
   issues: Issue[]
+  /** 提交信息 `@` 补全与共同作者候选 */
+  mentionables: IMentionableUser[]
   author: { name: string; email: string } | undefined
   /** 每次刷新加一：提交图、文件历史、LFS 跟着重新查询 */
   reloadKey: number
@@ -66,7 +70,8 @@ interface RepositoryStore {
   setAuthor: (author: { name: string; email: string }) => void
   setStatus: (next: Updater<RepoStatus>) => void
   loadLfs: (repo: string | null) => () => void
-  loadIssues: (remote: Remote | null | undefined) => () => void
+  /** Desktop buildAutocompletionProviders：Issue 与用户都取贡献目标（fork 为上游贡献时是上游） */
+  loadCompletions: (repo: string | null, remote: Remote | null | undefined) => () => void
   loadAuthor: () => void
 }
 
@@ -106,6 +111,7 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   stashList: [],
   lfs: null,
   issues: [],
+  mentionables: [],
   author: undefined,
   reloadKey: 0,
   diffKey: 0,
@@ -192,15 +198,28 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
     )
   },
   // 取不到（没远端/没登录）就是空的，补全什么都不弹，不该因为这个跳错误
-  loadIssues: remote => {
-    if (!remote) {
-      set({ issues: [] })
-      return () => {}
-    }
+  loadCompletions: (repo, remote) => {
+    set({ issues: [], mentionables: [] })
+    if (!repo || !remote) return () => {}
     return forkCancelable(
-      call("issuesForCompletion", ipc => ipc.issuesForCompletion(remote.host, remote.owner, remote.name)).pipe(
-        Effect.match({ onFailure: () => set({ issues: [] }), onSuccess: issues => set({ issues }) })
-      )
+      Effect.gen(function* () {
+        const target = yield* call("contributionRepository", () => contributionRepository(repo, remote))
+        // 两样各自失败各自空：Issue 取不到不该连带 @ 补全也没有
+        yield* Effect.all(
+          [
+            call("issuesForCompletion", ipc => ipc.issuesForCompletion(target.host, target.owner, target.name)).pipe(
+              Effect.match({ onFailure: () => set({ issues: [] }), onSuccess: issues => set({ issues }) })
+            ),
+            call("mentionables", ipc => ipc.mentionables(target.host, target.owner, target.name)).pipe(
+              Effect.match({
+                onFailure: () => set({ mentionables: [] }),
+                onSuccess: mentionables => set({ mentionables })
+              })
+            )
+          ],
+          { concurrency: "unbounded" }
+        )
+      }).pipe(Effect.catch(() => Effect.void))
     )
   },
   loadAuthor: () => {

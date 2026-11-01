@@ -663,6 +663,71 @@ pub async fn issues(host: &str, owner: &str, name: &str) -> Result<Vec<Issue>, S
         .collect())
 }
 
+/// 提交信息里 `@` 补全和共同作者候选：Desktop `IAPIMentionableUser` 的字段
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct MentionableUser {
+    pub login: String,
+    pub name: Option<String>,
+    /// 写进 Co-authored-by 的地址；平台没给公开邮箱时是它的 noreply 地址
+    pub email: String,
+    #[serde(rename = "avatarURL")]
+    pub avatar_url: String,
+}
+
+/// Desktop `API.fetchMentionables`：GitHub 走 mentionables 接口；GitLab 对应的是项目里能被 @ 的用户
+pub async fn mentionables(host: &str, owner: &str, name: &str) -> Result<Vec<MentionableUser>, String> {
+    let (account, token) = authenticated(host).await?;
+    let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
+    let items = match kind {
+        Kind::Github => {
+            let url =
+                format!("{}/repos/{}/{}/mentionables/users", github_base(host), urlencoding(owner), urlencoding(name));
+            crate::host_api::list_accepting(&url, &token, None, "application/vnd.github.jerry-maguire-preview").await?
+        }
+        Kind::Gitlab => {
+            let path = urlencoding(&format!("{owner}/{name}"));
+            crate::host_api::list(&format!("https://{host}/api/v4/projects/{path}/users?per_page=100"), &token, None)
+                .await?
+        }
+    };
+    Ok(items.iter().filter_map(|item| mentionable_user(host, kind, item)).collect())
+}
+
+fn mentionable_user(host: &str, kind: Kind, item: &serde_json::Value) -> Option<MentionableUser> {
+    let text = |key: &str| item.get(key).and_then(|v| v.as_str()).filter(|v| !v.is_empty()).map(str::to_string);
+    let avatar_url = text("avatar_url").unwrap_or_default();
+    match kind {
+        Kind::Github => {
+            let login = text("login")?;
+            // Desktop GitHubUserStore.updateMentionables：没有可归属的邮箱就用旧式 noreply；
+            // getStealthEmailHostForEndpoint 只给 GHES 用自己的主机名，github.com 和 *.ghe.com 都是 github.com
+            let email = text("email").unwrap_or_else(|| {
+                let server = hostname(host);
+                let ghes = server != "github.com" && !server.ends_with(".ghe.com");
+                let noreply = if ghes { format!("users.noreply.{server}") } else { "users.noreply.github.com".into() };
+                format!("{login}@{noreply}")
+            });
+            Some(MentionableUser { login, name: text("name"), email, avatar_url })
+        }
+        Kind::Gitlab => {
+            let login = text("username")?;
+            // GitLab 私有提交邮箱：<id>-<username>@users.noreply.<实例主机名>
+            let email = text("public_email").or_else(|| {
+                let id = item.get("id")?.as_u64()?;
+                Some(format!("{id}-{login}@users.noreply.{}", hostname(host)))
+            })?;
+            Some(MentionableUser { login, name: text("name"), email, avatar_url })
+        }
+    }
+}
+
+/// `host[:port][/sub/path]` 里的主机名
+fn hostname(host: &str) -> &str {
+    let host = host.split('/').next().unwrap_or(host);
+    host.rsplit_once(':').filter(|(_, port)| port.chars().all(|c| c.is_ascii_digit())).map_or(host, |(h, _)| h)
+}
+
 /// Fork 一个仓库到自己名下，返回克隆地址。
 pub async fn fork_repo(host: &str, owner: &str, name: &str) -> Result<String, String> {
     let (account, token) = authenticated(host).await?;
@@ -1357,6 +1422,34 @@ async fn github_branch_rules(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn mentionable_users_fall_back_to_platform_noreply_addresses() {
+        let github =
+            serde_json::json!({"login": "octo", "name": "Octo Cat", "email": null, "avatar_url": "https://a/1"});
+        let user = mentionable_user("github.com", Kind::Github, &github).unwrap();
+        assert_eq!(user.email, "octo@users.noreply.github.com");
+        assert_eq!(user.name.as_deref(), Some("Octo Cat"));
+        assert_eq!(
+            mentionable_user("acme.ghe.com", Kind::Github, &github).unwrap().email,
+            "octo@users.noreply.github.com"
+        );
+        assert_eq!(
+            mentionable_user("git.example:8443", Kind::Github, &github).unwrap().email,
+            "octo@users.noreply.git.example"
+        );
+        let public = serde_json::json!({"login": "octo", "email": "octo@example.test"});
+        assert_eq!(mentionable_user("github.com", Kind::Github, &public).unwrap().email, "octo@example.test");
+
+        let gitlab = serde_json::json!({"id": 42, "username": "dev", "name": "Dev", "public_email": ""});
+        assert_eq!(
+            mentionable_user("gitlab.example:8443/sub/path", Kind::Gitlab, &gitlab).unwrap().email,
+            "42-dev@users.noreply.gitlab.example"
+        );
+        let shown = serde_json::json!({"id": 42, "username": "dev", "public_email": "dev@example.test"});
+        assert_eq!(mentionable_user("gitlab.com", Kind::Gitlab, &shown).unwrap().email, "dev@example.test");
+        assert!(mentionable_user("gitlab.com", Kind::Gitlab, &serde_json::json!({"id": 1})).is_none());
+    }
+
     #[test]
     fn identity_requests_coalesce_and_changed_credentials_bypass_cache() {
         use super::*;

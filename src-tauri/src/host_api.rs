@@ -80,6 +80,11 @@ fn next_page(current: &Url, headers: &HeaderMap) -> Result<Option<Url>, String> 
 
 /// field 为 None 时响应是数组；GitHub 搜索/check-runs 等使用指定的数组字段。
 pub async fn list(url: &str, token: &str, field: Option<&str>) -> Result<Vec<Value>, String> {
+    list_accepting(url, token, field, "application/json").await
+}
+
+/// 同 `list`，但带指定的 `Accept`：GitHub 的 mentionables 接口只认它自己的预览媒体类型
+pub async fn list_accepting(url: &str, token: &str, field: Option<&str>, accept: &str) -> Result<Vec<Value>, String> {
     let mut url = Url::parse(url).map_err(|_| "无效 API 地址")?;
     let mut visited = HashSet::new();
     let mut items = Vec::new();
@@ -87,7 +92,7 @@ pub async fn list(url: &str, token: &str, field: Option<&str>) -> Result<Vec<Val
         if visited.len() >= 1000 || !visited.insert(url.to_string()) {
             return Err("API 分页重复或超过 1000 页，未返回不完整结果".into());
         }
-        let response = read_response(&url, token).await?;
+        let response = read_response(&url, token, accept).await?;
         let status = response.status();
         let next = next_page(response.url(), response.headers())?;
         let value: Value = response.json().await.map_err(|_| format!("API 返回无效 JSON（HTTP {status}）"))?;
@@ -112,7 +117,7 @@ pub async fn list(url: &str, token: &str, field: Option<&str>) -> Result<Vec<Val
 type Cooldowns = HashMap<(String, String), (Instant, String)>;
 static COOLDOWNS: LazyLock<Mutex<Cooldowns>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-async fn read_response(url: &Url, token: &str) -> Result<reqwest::Response, String> {
+async fn read_response(url: &Url, token: &str, accept: &str) -> Result<reqwest::Response, String> {
     let key = (url.origin().ascii_serialization(), token.to_owned());
     {
         let mut cooldowns = COOLDOWNS.lock().map_err(|_| "API cooldown lock unavailable")?;
@@ -124,7 +129,7 @@ async fn read_response(url: &Url, token: &str) -> Result<reqwest::Response, Stri
     let response = client()
         .get(url.clone())
         .bearer_auth(token)
-        .header("Accept", "application/json")
+        .header("Accept", accept)
         .send()
         .await
         .map_err(|e| format!("请求失败: {}", e.without_url()))?;
@@ -164,7 +169,7 @@ async fn read_response(url: &Url, token: &str) -> Result<reqwest::Response, Stri
 }
 
 pub async fn get(url: &str, token: &str) -> Result<Value, String> {
-    let response = read_response(&Url::parse(url).map_err(|_| "无效 API 地址")?, token).await?;
+    let response = read_response(&Url::parse(url).map_err(|_| "无效 API 地址")?, token, "application/json").await?;
     let status = response.status();
     response.json().await.map_err(|_| format!("API 返回无效 JSON（HTTP {status}）"))
 }

@@ -2,9 +2,10 @@ import { AlertIcon, FilterIcon } from "@primer/octicons-react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import type { IMentionableUser } from "@/lib/databases/github-user-database"
 import { applyFilters, hasActiveFilters, isCommittingFileHiddenByFilter } from "@/lib/desktop-filter-changes"
 import { appStatus } from "@/lib/desktop-status"
-import type { CommitOptions, Issue } from "@/models/app-state"
+import type { CommitOptions, Issue, Remote } from "@/models/app-state"
 import { emptyChangesFilter, type IChangesListItem } from "@/models/changes-filter"
 import type { FileChange } from "@/models/repo-status"
 import { Button } from "@/ui/base/button"
@@ -58,6 +59,10 @@ interface Props {
   author?: { name: string; email: string }
   /** 写提交信息时 `#` 能补全的 issue 号 */
   issues: Issue[]
+  /** `@` 补全与共同作者候选 */
+  mentionables?: IMentionableUser[]
+  /** 当前仓库的托管远端：决定候选头像用哪个账号 */
+  remote?: Remote | null
   onCommit: (summary: string, description: string, options: CommitOptions) => Promise<boolean>
   /** 贮藏全部改动 */
   onStashAll: () => void
@@ -100,7 +105,9 @@ export function ChangesSidebar({
   onUndoCommit,
   onAmend,
   author,
-  issues
+  issues,
+  mentionables = [],
+  remote = null
 }: Props) {
   const { t } = useTranslation()
   const [amendRequest, setAmendRequest] = useState(0)
@@ -297,6 +304,8 @@ export function ChangesSidebar({
         selectionOf={selectionOf}
         author={author}
         issues={issues}
+        mentionables={mentionables}
+        remote={remote}
         hiddenSelected={hiddenSelected}
         unresolved={unresolved.length > 0}
         onCommit={onCommit}

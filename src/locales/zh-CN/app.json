@@ -460,7 +460,8 @@
     "pullRequestsTargetingWillBeShown": "拉取请求列表显示以 <strong>{{name}}</strong> 为目标的拉取请求。",
     "issuesWillBeCreatedIn": "Issue 会建在 <strong>{{name}}</strong>。",
     "viewOnWebWillOpen": "「在 {{platform}} 上查看」会在浏览器打开 <strong>{{name}}</strong>。",
-    "newBranchesWillBeBasedOn": "新分支基于 <strong>{{name}}</strong> 的默认分支。"
+    "newBranchesWillBeBasedOn": "新分支基于 <strong>{{name}}</strong> 的默认分支。",
+    "autocompletionOfUserAndIssuesWillBeBasedOn": "用户和 Issue 的自动补全基于 <strong>{{name}}</strong>。"
   },
   "unknownAuthors": {
     "title": "未知的共同作者",

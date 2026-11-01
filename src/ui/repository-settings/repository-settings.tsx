@@ -421,7 +421,8 @@ export function RepositorySettings({
                         "pullRequestsTargetingWillBeShown",
                         "issuesWillBeCreatedIn",
                         "viewOnWebWillOpen",
-                        "newBranchesWillBeBasedOn"
+                        "newBranchesWillBeBasedOn",
+                        "autocompletionOfUserAndIssuesWillBeBasedOn"
                       ] as const
                     ).map(key => {
                       const target = forkContributionTarget === ForkContributionTarget.Self ? hosted : parent

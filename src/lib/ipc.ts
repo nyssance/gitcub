@@ -48,6 +48,7 @@ import type {
 import type { FileChange, Operation, RepoStatus, RepoSummary } from "@/models/repo-status"
 
 import { clone } from "./clone"
+import type { IMentionableUser } from "./databases/github-user-database"
 import { fetch, pull } from "./fetch"
 import { executeGit } from "./git-execution"
 import { prepareImageDiff } from "./image-data"
@@ -292,6 +293,9 @@ export const ipc = {
   /** 写提交信息时 `#` 补全用的 issue 号 */
   issuesForCompletion: (host: string, owner: string, name: string) =>
     invoke<Issue[]>("issues_for_completion", { host, owner, name }),
+  /** 提交信息 `@` 补全与共同作者候选（Desktop fetchMentionables；GitLab 是项目里能被 @ 的用户） */
+  mentionables: (host: string, owner: string, name: string) =>
+    invoke<IMentionableUser[]>("mentionables", { host, owner, name }),
   /** 两版图片本身。sha 给了是看某次提交，没给是看工作区 */
   imageDiff: (repo: string, file: string, sha?: string) =>
     invoke<ImageDiff>("image_diff", { repo, file, sha }).then(prepareImageDiff),

@@ -101,6 +101,7 @@ export function App() {
   const lfs = useRepositoryStore(s => s.lfs)
   const setLfs = useRepositoryStore(s => s.setLfs)
   const issues = useRepositoryStore(s => s.issues)
+  const mentionables = useRepositoryStore(s => s.mentionables)
   const author = useRepositoryStore(s => s.author)
   const setAuthor = useRepositoryStore(s => s.setAuthor)
   const reloadKey = useRepositoryStore(s => s.reloadKey)
@@ -354,7 +355,7 @@ export function App() {
   useEffect(() => useRepositoryStore.getState().loadLfs(repo), [repo, reloadKey])
 
   const currentRemote = remotes[repo ?? ""]
-  useEffect(() => useRepositoryStore.getState().loadIssues(currentRemote), [repo, currentRemote])
+  useEffect(() => useRepositoryStore.getState().loadCompletions(repo, currentRemote), [repo, currentRemote])
 
   // 提交人：头像用它的首字母
   useEffect(() => useRepositoryStore.getState().loadAuthor(), [])
@@ -1551,6 +1552,8 @@ export function App() {
                           }
                           author={author}
                           issues={issues}
+                          mentionables={mentionables}
+                          remote={currentRemote ?? null}
                           onDiscard={path => setDiscarding([path])}
                           // Desktop _appendIgnoreFile / _appendIgnoreRule：写完 .gitignore 后刷新仓库
                           onIgnore={(kind, patterns) =>

@@ -1,18 +1,22 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useMemo, useState } from "react"
 
+import { useAccountsStore } from "../../features/accounts/store"
 import { useDialogsStore } from "../../features/dialogs/store"
 import { usePreferencesStore } from "../../features/preferences/store"
+import { getHTMLURL } from "../../lib/api"
 import { getCommits } from "../../lib/commit-history"
 import { getPlaceholderMessage } from "../../lib/commit-placeholder"
+import type { IMentionableUser } from "../../lib/databases/github-user-database"
 import { getDesktopRuntime } from "../../lib/desktop-runtime"
 import { appStatus } from "../../lib/desktop-status"
 import { EMOJI } from "../../lib/emoji"
 import i18n from "../../lib/i18n"
 import { ipc } from "../../lib/ipc"
+import { completionRepository, mentionableUsersSource } from "../../lib/mentionable-users"
 import { emitMenuEvent } from "../../lib/menu/native-menu"
 import { useRepositoryPolicy } from "../../lib/use-repository-policy"
-import type { CommitOptions, Issue } from "../../models/app-state"
+import type { CommitOptions, Issue, Remote } from "../../models/app-state"
 import type { Commit, ICommitContext } from "../../models/commit"
 import type { FileChange } from "../../models/repo-status"
 import type { Author, UnknownAuthor } from "../../upstream/models/author"
@@ -22,6 +26,10 @@ import { DiffSelection, DiffSelectionType } from "../../upstream/models/diff"
 import { WorkingDirectoryFileChange } from "../../upstream/models/status"
 import { EmojiAutocompletionProvider } from "../autocompletion/emoji-autocompletion-provider"
 import type { IAutocompletionProvider } from "../autocompletion/provider-contract"
+import {
+  CoAuthorAutocompletionProvider,
+  UserAutocompletionProvider
+} from "../autocompletion/user-autocompletion-provider"
 import { InlineError } from "../shared/inline-error"
 import { UnknownAuthors } from "../unknown-authors/unknown-authors-dialog"
 import { CommitMessage } from "./commit-message"
@@ -35,6 +43,8 @@ interface Props {
   selectionOf(path: string): DiffSelection | null
   author?: { name: string; email: string }
   issues: Issue[]
+  mentionables: IMentionableUser[]
+  remote: Remote | null
   hiddenSelected: boolean
   unresolved: boolean
   onCommit(summary: string, description: string, options: CommitOptions): Promise<boolean>
@@ -43,6 +53,7 @@ interface Props {
 export function DesktopCommitForm(props: Props) {
   const runtime = getDesktopRuntime()
   const [accounts, setAccounts] = useState(runtime.appStore.getState().accounts)
+  const platformAccounts = useAccountsStore(s => s.accounts)
   const policy = useRepositoryPolicy(props.repo, props.branch, accounts)
   const repository = policy.repository
   const [author, setAuthor] = useState(props.author)
@@ -95,13 +106,28 @@ export function DesktopCommitForm(props: Props) {
         </div>
       )
     }
-    return [
+    const providers: IAutocompletionProvider<object>[] = [
       issues,
       new EmojiAutocompletionProvider(
         new Map(Object.entries(EMOJI).map(([name, emoji]) => [name, { emoji, aliases: [name], url: "" }]))
       )
     ]
-  }, [props.issues])
+    // Desktop buildAutocompletionProviders：托管仓库再加 `@` 用户与共同作者补全，账号按仓库所在实例找
+    if (props.remote) {
+      const remote = props.remote
+      const gitlab = platformAccounts[remote.host]?.kind === "gitlab"
+      const repository = completionRepository(remote, gitlab)
+      const account = gitlab
+        ? undefined
+        : accounts.find(account => new URL(getHTMLURL(account.endpoint)).host === remote.host)
+      const source = mentionableUsersSource(props.mentionables, runtime.gitHubUserStore)
+      providers.push(
+        new UserAutocompletionProvider(source, repository, account),
+        new CoAuthorAutocompletionProvider(source, repository, account)
+      )
+    }
+    return providers
+  }, [props.issues, props.mentionables, props.remote, accounts, platformAccounts, runtime])
   async function commit(context: ICommitContext) {
     if (props.unresolved || busy) return false
     setBusy(true)
