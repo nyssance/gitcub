@@ -321,7 +321,10 @@ test("diff layout, whitespace projection and search work through the native rend
   await setDiffOption(page, "Unified")
   // Desktop：⌘F 才弹出搜索框，回车开始搜，结果经 aria-live 播报
   await page.keyboard.press("Meta+f")
-  await page.locator(".diff-search input").fill("new")
+  // 搜索框挂载后才自动聚焦；先点一下确保回车落在输入框上
+  const search = page.locator(".diff-search input")
+  await search.click()
+  await search.fill("new")
   await page.keyboard.press("Enter")
   await expect(page.locator(".diff-container")).toContainText('Result 1 of 1 for "new"')
   await page.keyboard.press("Escape")
@@ -1221,6 +1224,36 @@ test("history context menu checks out a commit and creates a branch from it", as
       // 用例在建分支之前就失败了
     }
     if (stashed) git("stash", "pop", "-q")
+  }
+})
+
+test("rebasing a branch whose upstream would be rewritten warns about force push first", async ({
+  mainWindow: page
+}) => {
+  // Desktop startRebase → warnAboutRemoteCommits：上游有目标分支里没有的提交，变基后必须强推
+  const head = git("rev-parse", "HEAD")
+  assert.notEqual(git("rev-parse", "--abbrev-ref", "@{upstream}"), "")
+  const orphan = git("commit-tree", "-m", "rebase probe target", git("hash-object", "-t", "tree", "/dev/null"))
+  git("branch", "rebase-probe-target", orphan)
+  try {
+    await page.evaluate(async () =>
+      window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "rebase-branch" })
+    )
+    // 下拉进了「选分支变基」模式再点，否则点到的是普通检出
+    await page.locator(".branches-action-hint").waitFor({ state: "visible", timeout: 15000 })
+    // 前面的用例留下不少分支，先过滤，目标一定在列表可见区里
+    await page.locator(".branches-container .filter-list-filter-field input").fill("rebase-probe-target")
+    const target = page.locator('.branches-list-item .name:has-text("rebase-probe-target")')
+    await target.waitFor({ state: "visible", timeout: 15000 })
+    await target.click()
+    const warning = page.locator("#warn-force-push")
+    await expect(warning).toContainText("Rebase Will Require Force Push", { timeout: 15000 })
+    await warning.locator('button:has-text("Cancel")').click()
+    await warning.waitFor({ state: "hidden" })
+    assert.equal(git("rev-parse", "HEAD"), head)
+  } finally {
+    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--keep", head)
+    git("branch", "-D", "rebase-probe-target")
   }
 })
 

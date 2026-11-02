@@ -57,8 +57,8 @@ import { handleShortcut } from "@/lib/shortcuts"
 import { applySelection, discardLines } from "@/lib/stage"
 import { applyTheme } from "@/lib/theme"
 import type { CommitOptions } from "@/models/app-state"
-import type { CommitOneLine } from "@/models/commit"
 import { Branch, BranchType } from "@/models/branch"
+import type { CommitOneLine } from "@/models/commit"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import { Repository } from "@/models/repository"
 import { type RetryAction, RetryActionType } from "@/models/retry-actions"
@@ -70,6 +70,7 @@ import { Conflicts } from "@/ui/changes/conflicts"
 import { NoChanges } from "@/ui/changes/no-changes"
 import { ChangesSidebar } from "@/ui/changes/sidebar"
 import { Stashes } from "@/ui/changes/stashes"
+import { ConfirmCheckoutCommitDialog } from "@/ui/checkout/confirm-checkout-commit"
 import { CommitProgress } from "@/ui/commit-progress/commit-progress"
 import { DeleteTag } from "@/ui/delete-tag/delete-tag-dialog"
 import { DiffView } from "@/ui/diff/lazy-diff"
@@ -82,7 +83,6 @@ import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
 import { LocalChangesOverwrittenDialog } from "@/ui/local-changes-overwritten/local-changes-overwritten-dialog"
 import { ProgressDialog } from "@/ui/multi-commit-operation/progress-dialog"
 import { WarnForcePushDialog } from "@/ui/multi-commit-operation/warn-force-push-dialog"
-import { ConfirmCheckoutCommitDialog } from "@/ui/checkout/confirm-checkout-commit"
 import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
 import { Preferences } from "@/ui/preferences/preferences"
 import { CreatePullRequest } from "@/ui/pull-requests/create"
@@ -800,6 +800,19 @@ export function App() {
       { gitContext: { kind: "checkout", branchToCheckout: branchNamed(branch) } }
     )
     await run(() => checkoutWithStash(repo, branch, ipc, checkoutPrompts, checkoutStrategy()).catch(retry))
+  }
+
+  /** Desktop startRebase → warnAboutRemoteCommits(baseBranch, targetBranch.tip)：当前分支有上游跟踪引用，
+   *  且上游有变基目标里没有的提交，变基后就得强推，先问一次（关了「强推前确认」直接开始）。
+   *  上游由 git 当场解析 `@{upstream}`：没有上游或跟踪引用不在时 rev-list 失败，按原版不提示 */
+  const warnForcePushOnRebase = async (target: string) => {
+    if (!repo) return true
+    const remoteCommits = await ipc.commitsInRange(repo, `${target}..@{upstream}`).catch(() => null)
+    return (
+      remoteCommits === null ||
+      remoteCommits.length === 0 ||
+      useDialogsStore.getState().askWarnForcePush(t("warnForcePush.rebase"))
+    )
   }
 
   /** Desktop _checkoutCommit：已经在这个提交上就什么都不做；git checkout <sha> 得到游离 HEAD，失败照常报错 */
@@ -1773,13 +1786,14 @@ export function App() {
                 }
                 onDeleteBranch={doDeleteBranch}
                 onMergeBranch={(name, squash) => doMerge(name, squash)}
-                onRebaseBranch={name =>
-                  rewrite(() =>
+                onRebaseBranch={async name => {
+                  if (!(await warnForcePushOnRebase(name))) return
+                  await rewrite(() =>
                     withMultiCommitProgress(repo, MultiCommitOperationKind.Rebase, onProgress =>
                       ipc.rebaseBranch(repo, name, showProgress, onProgress)
                     )
                   )
-                }
+                }}
                 onRenameBranch={from => {
                   void askText(t("branch.renameTo"), from).then(to => {
                     if (to && to !== from) void run(() => ipc.renameBranch(repo, from, to))
