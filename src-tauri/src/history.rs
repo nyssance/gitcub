@@ -1227,7 +1227,13 @@ fn details_via_gix(
             None => return Ok(Vec::new()),
             Some(id) => vec![(id, false)],
         },
-        _ => revision_tips(&log.repo, &log.decorations, revision, additional)?,
+        _ => match revision_tips(&log.repo, &log.decorations, revision, additional) {
+            // 修订号里要用 HEAD 而 HEAD 未出生：git 报 `bad revision 'HEAD'` 以 128 退出，调用方当作空。
+            Err(_) if matches!(log.decorations.head, HeadState::Unborn) && names_head(revision) => {
+                return Ok(Vec::new());
+            }
+            tips => tips?,
+        },
     };
     if limit == Some(0) {
         return Ok(Vec::new());
@@ -1358,6 +1364,17 @@ fn revision_tips(
         tips.push((resolve_name(repo, decorations, revision)?, false));
     }
     Ok(tips)
+}
+
+/// 修订号的某一端是 HEAD：`HEAD` 本身，或 `A..B` 里省略的一端（revision.c `handle_dotdot` 补成 HEAD）。
+fn names_head(revision: Option<&str>) -> bool {
+    match revision {
+        None => true,
+        Some(revision) => match revision.split_once("..") {
+            Some((a, b)) => [a, b.trim_start_matches('.')].iter().any(|end| end.is_empty() || *end == "HEAD"),
+            None => revision == "HEAD",
+        },
+    }
 }
 
 /// object-name.c `get_oid_basic` 的子集：完整十六进制对象名，或按 refs.c
@@ -2874,6 +2891,20 @@ mod tests {
         assert_eq!(details_via_gix(&r, None, None, None, &[]).unwrap(), Vec::new());
         assert_eq!(details_via_git(&r, None, None, None, &[]).unwrap(), Vec::new());
         assert_eq!(query_details(&r, None, Some(10), None, &[]).unwrap(), Vec::new());
+        // Desktop 的未推送提交（`HEAD --not --remotes`）和范围查询在刚 init 的仓库里同样是空，且不起 git
+        let not_remotes = ["--not".to_string(), "--remotes".to_string()];
+        for (revision, additional) in
+            [("HEAD", &not_remotes[..]), ("HEAD", &[][..]), ("main..HEAD", &[][..]), ("..", &[][..])]
+        {
+            assert_eq!(details_via_git(&r, Some(revision), Some(1), None, additional).unwrap(), Vec::new());
+            assert_eq!(
+                details_via_gix(&r, Some(revision), Some(1), None, additional).unwrap(),
+                Vec::new(),
+                "{revision}"
+            );
+        }
+        // 不涉及 HEAD 的名字解析失败照旧让位给 git
+        assert!(details_via_gix(&r, Some("missing"), Some(1), None, &[]).is_err());
     }
 
     #[test]

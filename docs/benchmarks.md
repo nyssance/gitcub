@@ -944,6 +944,55 @@ git 进程：三个仓库从启动到打开后 settle 都只起 1 个（`var GIT
 
 未覆盖：冷启动（两边二进制都在页缓存里）；GitCub 通过系统选择框添加仓库的整条路径。
 
+## release 包内存、diff 打开与滚动（2026-11-02）
+
+`bun run bench:app -- --launches 5 --app src-tauri/target/bench/release/bundle/macos/GitCub.app`（main 7521a6f 加本节改动，
+release 包编法同上节；GitHub Desktop 3.6.10；5 万文件合成仓库，602 处改动；同一次运行交替启动，中位数，括号里是最小–最大；
+运行时 load 6.7，绝对值偏高，只比同一次运行里的两侧）。
+
+| 应用 | 启动到就绪 (ms) | 就绪后 RSS (MiB) | 打开仓库 (ms) | 打开仓库后 RSS (MiB) |
+|---|---:|---:|---:|---:|
+| GitCub（release 包） | 711（519–1586） | 293（236–296） | 110（101–124） | 587（481–623） |
+| GitHub Desktop 3.6.10 | 855（802–1494） | 413（346–497） | 140（134–154） | 473（439–545） |
+
+| 应用 | 打开 5 000 行 diff (ms) | 滚到末行 (ms) | diff 后 RSS (MiB) |
+|---|---:|---:|---:|
+| GitCub（release 包） | 43（42–51） | 14（11–17） | 579（434–628） |
+| GitHub Desktop 3.6.10 | 42（36–62） | 3（3–8） | 489（461–519） |
+
+结论按数据：
+
+- 启动和打开仓库 GitCub 快；**打开仓库后的 RSS GitCub 反而多约 110 MiB**（就绪时少 120 MiB），release 包也一样，
+  不是 debug 开销。10-29 那次「打开仓库后 GitCub 434 / Desktop 535」是 debug 包、且列表没加载完就取样，不成立。
+- 打开 5 000 行 diff 两边持平（差异在波动内），不宣称更快。
+- 把 diff 滚到末行 GitCub 慢：14 ms 对 3 ms，是本节唯一明确落后的计时，原因尚未定位。
+
+方法：
+
+- 合成仓库里再提交 `0-first.txt` 与 `1-bench-diff.txt` 两个文件，然后改 `0-first.txt` 一行、给 `1-bench-diff.txt`
+  加 `--diff-lines`（默认 5 000）行。两边打开仓库都会自动选中第一个改动，被测文件排第二，它的 diff 只在计时的那次点击时加载。
+  被测文件必须是已跟踪的：未跟踪文件排在全部已跟踪改动之后，不在第一屏。
+- 打开：在 `.changes-list-container` 里点被测文件那一行（GitCub 按行的 `title`，Desktop 按文件名所在的叶节点），
+  到 `.diff-container` 的文本出现第 0 行为止。滚动：再等 500 ms，把 `.diff-container` 里可滚动高度最大的元素
+  （Desktop 是 react-virtualized 的 Grid，GitCub 是 diff 视口）直接设到底，到最后一行出现为止。两边都虚拟化，
+  量的是一次跳到底的重绘，不是连续滚动的帧率。
+- 计时同样放在页面里，由 `MutationObserver` 停表。**更正**：脚本最初没有断开上一步的 observer，「打开仓库」那个条件
+  一直成立，新的计时在第一次 DOM 变动就停了（GitCub 停在「载入中…」，Desktop 停在第一个文件），读到 2–18 ms 的假数；
+  现在每次计时前断开旧的，点击前还检查被测内容尚未出现。
+- 「diff 后 RSS」在滚到底再静置 settle 后取，口径与上节相同。
+
+同一次测量发现并修掉的问题：被切走的小仓库是刚 `git init`、HEAD 未出生的仓库，`history::query_details` 处理 Desktop
+的未推送提交查询（`HEAD --not --remotes`）时解析不到 HEAD 就让位 git，每次切换多起 2 个 `git log`（git 自己也报
+`bad revision 'HEAD'`，调用方当作空）。改为 HEAD 未出生且修订号的一端是 HEAD（含 `A..B` 省略的一端）时直接返回空；
+单元测试对 `HEAD --not --remotes`、`HEAD`、`main..HEAD`、`..` 四种形状逐个对照 git，不涉及 HEAD 的解析失败仍让位。
+改后从启动到打开仓库回到 1 个 git 进程（`var GIT_ATTR_SYSTEM`）。
+
+未覆盖：
+
+- 冷启动：要清页缓存（`sudo purge`）才算冷，脚本不提权，两边的二进制都在页缓存里。
+- 打开仓库后 RSS 多出的部分归属哪个进程（WebContent 还是主进程）尚未拆开；只有 RSS，没有 `phys_footprint`。
+- 连续滚动帧率、历史页 diff、长时间运行后的内存。
+
 ## 复现
 
 ```sh
@@ -951,5 +1000,5 @@ bun run bench                      # 合成仓库 + 可选的真实仓库路径�
 bun run bench -- --no-synthetic /path/to/repo
 bun run bench -- --iterations 20 --files 100000 --commits 500
 bun scripts/prepare-e2e.ts         # 带 hasgard-testing 的 debug 包，bench:app 要用
-bun run bench:app                  # 启动与内存，5 次；--launches、--repo、--no-desktop、--settle 可调
+bun run bench:app                  # 启动、内存与 diff，5 次；--launches、--repo、--no-desktop、--settle、--diff-lines 可调
 ```

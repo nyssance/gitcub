@@ -42,6 +42,8 @@ interface Options {
   commits: number
   /** Working-tree changes made in the synthetic repository: half modified tracked files, half new untracked ones. */
   dirty: number
+  /** Lines added to the tracked `1-bench-diff.txt` whose diff is timed (synthetic repository only; 0 skips it). */
+  diffLines: number
 }
 
 interface Sample {
@@ -59,7 +61,12 @@ interface Sample {
   rssRepositoryKiB: number
   /** Top-level git processes GitCub spawned (GIT_TRACE2_EVENT): from launch until `settle` ms after the
    *  repository opened, then over another `settle` ms of idling; with their subcommands. */
-  gitProcesses?: { repository: number; idle: number; commands: Record<string, number> }
+  gitProcesses?: { repository: number; idle: number; commands: Record<string, number>; argv: string[][] }
+  /** Click on `0-bench-diff.txt` in the changes list → its first line shown in the diff; then scrolling the diff to
+   *  the end → its last line shown. Timed inside the page like repositoryMs. Null when the probe is skipped. */
+  diff: { openMs: number; scrollMs: number } | null
+  /** RSS sum `settle` ms after the diff was scrolled to the end, in KiB. */
+  rssDiffKiB: number | null
   processes: {
     ready: Array<{ pid: number; rssKiB: number; command: string; helper: boolean }>
     repository: Array<{ pid: number; rssKiB: number; command: string; helper: boolean }>
@@ -75,7 +82,8 @@ function parseArguments(argv: string[]): Options {
     settle: 3000,
     files: 50_000,
     commits: 200,
-    dirty: 0
+    dirty: 0,
+    diffLines: 5000
   }
   for (let i = 0; i < argv.length; i++) {
     const argument = argv[i]!
@@ -111,6 +119,9 @@ function parseArguments(argv: string[]): Options {
         break
       case "--commits":
         options.commits = integer()
+        break
+      case "--diff-lines":
+        options.diffLines = integer()
         break
       case "--dirty":
         options.dirty = integer()
@@ -310,6 +321,8 @@ const submitEnabledExpression = `(() => {
 // Polling from outside costs differently per app (a hasgard process per poll against one DevTools socket), so it
 // only collects the result.
 const armExpression = (count: string, expected: number) => `(() => {
+  // One clock at a time: an earlier observer whose condition still holds would stop this one at the first mutation.
+  window.__benchObserver?.disconnect();
   window.__benchStart = null;
   window.__benchDone = null;
   const check = () => {
@@ -317,12 +330,71 @@ const armExpression = (count: string, expected: number) => `(() => {
     const value = ${count};
     if (value === ${expected}) window.__benchDone = [performance.now() - window.__benchStart, value];
   };
-  new MutationObserver(check).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true });
+  window.__benchObserver = new MutationObserver(check);
+  window.__benchObserver.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true });
   return true;
 })()`
 const clickExpression = (click: string) =>
   `(() => { window.__benchStart = performance.now(); ${click}; return true })()`
 const finishedExpression = "window.__benchDone"
+
+// The diff probe: both apps list changes in `.changes-list-container` and draw the selected file's diff in
+// `.diff-container` (Desktop changes/changes.tsx, GitCub ui/diff/diff.tsx); both virtualize the diff rows.
+// Both apps select the first changed file when the repository opens, so a small tracked change sorts first and the
+// probe second: its diff loads only on the timed click.
+const firstChange = "0-first.txt"
+const diffProbe = "1-bench-diff.txt"
+const diffLine = (n: number) => `bench diff line ${n}`
+const diffShowsExpression = (text: string) =>
+  `(document.querySelector('.diff-container')?.textContent ?? '').includes(${JSON.stringify(text)}) ? 1 : 0`
+const diffRowExpression = `(() => {
+  const list = document.querySelector('.changes-list-container');
+  // GitCub's rows carry the path as a title (its label splits name and directory); Desktop's leaf holds the name.
+  const label = list && ([...list.querySelectorAll('[title]')].find(el => el.getAttribute('title') === ${JSON.stringify(diffProbe)})
+    ?? [...list.querySelectorAll('*')].find(el => el.childElementCount === 0 && el.textContent.trim() === ${JSON.stringify(diffProbe)}));
+  return label ? (label.closest('[role="option"]') ?? label) : null;
+})()`
+const clickDiffRow = `(() => {
+  const row = ${diffRowExpression};
+  for (const type of ['mousedown', 'mouseup', 'click']) row.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0 }));
+})()`
+// The scrollable element under the diff with the most to scroll: Desktop's react-virtualized grid, GitCub's viewport.
+const scrollDiffToEnd = `(() => {
+  const scrollers = [...document.querySelectorAll('.diff-container *')].filter(el => el.scrollHeight > el.clientHeight + 1);
+  const target = scrollers.toSorted((a, b) => b.scrollHeight - a.scrollHeight)[0];
+  target.scrollTop = target.scrollHeight;
+  target.dispatchEvent(new Event('scroll'));
+})()`
+
+/** Opens the probe file's diff and scrolls it to the end, both timed in the page. */
+async function measureDiff(evaluate: (expression: string) => Promise<unknown>, lines: number) {
+  await until(
+    () => evaluate(`!!${diffRowExpression}`).catch(() => false),
+    shown => shown === true,
+    60,
+    "diff probe row",
+    100
+  )
+  const finished = () =>
+    until(
+      () => evaluate(finishedExpression).catch(() => null) as Promise<[number, number] | null>,
+      done => done !== null,
+      60,
+      "diff probe",
+      50
+    ).then(done => done![0])
+  // The probe must not be on screen yet, or the clock would stop at the next unrelated mutation.
+  if ((await evaluate(diffShowsExpression(diffLine(0)))) !== 0) throw new Error(`${diffProbe} was already shown`)
+  await evaluate(armExpression(diffShowsExpression(diffLine(0)), 1))
+  await evaluate(clickExpression(clickDiffRow))
+  const openMs = await finished()
+  // Let the first paint settle so the scroll timing does not include the open.
+  await sleep(500)
+  await evaluate(armExpression(diffShowsExpression(diffLine(lines - 1)), 1))
+  await evaluate(clickExpression(scrollDiffToEnd))
+  const scrollMs = await finished()
+  return { openMs, scrollMs }
+}
 
 // The header (`sidebar.tsx`, locales `changes.fileCount` / `fileCountFiltered`) counts every change, rows only the
 // ones rendered: "603 changed files", "3 of 603 changed files"; "603 个文件已更改", "603 个中的 3 个".
@@ -337,7 +409,13 @@ const gitcubChangesExpression = `(() => {
   return -1;
 })()`
 
-async function launchGitCub(bundle: string, repository: string, settle: number, expected: number): Promise<Sample> {
+async function launchGitCub(
+  bundle: string,
+  repository: string,
+  settle: number,
+  expected: number,
+  diffLines: number
+): Promise<Sample> {
   const directory = mkdtempSync(join(tmpdir(), "gitcub-bench-app-"))
   const socket = join(directory, "hasgard.sock")
   // GitCub adds repositories through the system folder picker (`app.tsx` pickRepo), which a script cannot drive, so it is
@@ -382,6 +460,8 @@ async function launchGitCub(bundle: string, repository: string, settle: number, 
     ready: Awaited<ReturnType<typeof processTree>>
     afterRepository: Awaited<ReturnType<typeof processTree>>
     git: NonNullable<Sample["gitProcesses"]>
+    diff: Sample["diff"]
+    afterDiff: Awaited<ReturnType<typeof processTree>> | null
   }
   try {
     await until(
@@ -430,6 +510,9 @@ async function launchGitCub(bundle: string, repository: string, settle: number, 
     const afterRepository = await processTree(child.pid!, helpersBefore)
     const idleFrom = traceSize(directory)
     await sleep(settle)
+    const git = gitProcesses(directory, idleFrom)
+    const diff = diffLines > 0 ? await measureDiff(expression => hasgard(socket, expression), diffLines) : null
+    if (diff) await sleep(settle)
     sample = {
       readyMs,
       windowMs,
@@ -437,7 +520,9 @@ async function launchGitCub(bundle: string, repository: string, settle: number, 
       changes,
       ready,
       afterRepository,
-      git: gitProcesses(directory, idleFrom)
+      git,
+      diff,
+      afterDiff: diff ? await processTree(child.pid!, helpersBefore) : null
     }
   } finally {
     stop.done = true
@@ -447,6 +532,7 @@ async function launchGitCub(bundle: string, repository: string, settle: number, 
   await sleep(1000)
   const readyTree = await ownProcesses(sample.ready)
   const repositoryTree = await ownProcesses(sample.afterRepository)
+  const diffTree = sample.afterDiff ? await ownProcesses(sample.afterDiff) : null
   return {
     readyMs: sample.readyMs,
     windowMs: sample.windowMs,
@@ -454,6 +540,8 @@ async function launchGitCub(bundle: string, repository: string, settle: number, 
     repositoryMs: sample.repositoryMs,
     changes: sample.changes,
     rssRepositoryKiB: sum(repositoryTree),
+    diff: sample.diff,
+    rssDiffKiB: diffTree ? sum(diffTree) : null,
     gitProcesses: sample.git,
     processes: { ready: readyTree, repository: repositoryTree }
   }
@@ -491,7 +579,8 @@ function gitProcesses(directory: string, idleFrom: number): NonNullable<Sample["
     const name = args[i] ?? "?"
     commands[name] = (commands[name] ?? 0) + 1
   }
-  return { repository: repository.length, idle: idle.length, commands }
+  // Full argv of each one, so a fast path that deferred to git can be traced to its call.
+  return { repository: repository.length, idle: idle.length, commands, argv: [...repository, ...idle].map(e => e.argv) }
 }
 
 // ── GitHub Desktop ──────────────────────────────────────────────────────────
@@ -574,7 +663,7 @@ const desktopChangesExpression = `(() => {
   return document.querySelectorAll('.changes-list-container .list-item').length;
 })()`
 
-async function launchDesktop(repository: string, settle: number, expected: number): Promise<Sample> {
+async function launchDesktop(repository: string, settle: number, expected: number, diffLines: number): Promise<Sample> {
   const directory = mkdtempSync(join(tmpdir(), "github-desktop-bench-app-"))
   const profile = join(directory, "profile")
   mkdirSync(profile)
@@ -660,6 +749,9 @@ async function launchDesktop(repository: string, settle: number, expected: numbe
     ).then(done => done!)
     await sleep(settle)
     const afterRepository = await processTree(child.pid!, helpersBefore)
+    const diff = diffLines > 0 ? await measureDiff(expression => devtools.evaluate(expression), diffLines) : null
+    if (diff) await sleep(settle)
+    const afterDiff = diff ? await processTree(child.pid!, helpersBefore) : null
     return {
       readyMs,
       windowMs,
@@ -667,6 +759,8 @@ async function launchDesktop(repository: string, settle: number, expected: numbe
       repositoryMs,
       changes,
       rssRepositoryKiB: sum(afterRepository),
+      diff,
+      rssDiffKiB: afterDiff ? sum(afterDiff) : null,
       processes: { ready, repository: afterRepository }
     }
   } finally {
@@ -693,6 +787,11 @@ function summarize(samples: Sample[]) {
     rssReadyKiB: median(samples.map(sample => sample.rssReadyKiB)),
     repositoryMs: median(samples.map(sample => sample.repositoryMs)),
     rssRepositoryKiB: median(samples.map(sample => sample.rssRepositoryKiB)),
+    diffOpenMs: samples.every(sample => sample.diff) ? median(samples.map(sample => sample.diff!.openMs)) : null,
+    diffScrollMs: samples.every(sample => sample.diff) ? median(samples.map(sample => sample.diff!.scrollMs)) : null,
+    rssDiffKiB: samples.every(sample => sample.rssDiffKiB !== null)
+      ? median(samples.map(sample => sample.rssDiffKiB!))
+      : null,
     changes: samples[0]?.changes ?? 0,
     gitProcesses: samples[0]?.gitProcesses
       ? {
@@ -749,7 +848,27 @@ try {
       for (let i = modified; i < options.dirty; i++) writeFileSync(join(repository, `untracked/new-${i}.ts`), `${i}\n`)
       console.log(`Dirtied: ${modified} modified, ${options.dirty - modified} untracked`)
     }
+    if (options.diffLines > 0) {
+      // Tracked and modified, so status (and both lists) put it first: untracked files come after every tracked change.
+      writeFileSync(join(repository, diffProbe), "probe\n")
+      writeFileSync(join(repository, firstChange), "first\n")
+      // `--only` commits just the probe; the synthetic repository's other staged changes stay staged.
+      for (const args of [
+        ["add", "--", diffProbe, firstChange],
+        [
+          ...["-c", "user.name=Bench", "-c", "user.email=bench@example.invalid", "-c", "commit.gpgsign=false"],
+          ...["commit", "-q", "-m", "Diff probe", "--only", "--", diffProbe, firstChange]
+        ]
+      ]) {
+        const result = Bun.spawnSync(["git", "-C", repository, ...args])
+        if (result.exitCode !== 0) throw new Error(`diff probe: git ${args.join(" ")}: ${result.stderr.toString()}`)
+      }
+      const lines = Array.from({ length: options.diffLines }, (_, n) => `${diffLine(n)}\n`)
+      writeFileSync(join(repository, diffProbe), lines.join(""))
+      writeFileSync(join(repository, firstChange), "first changed\n")
+    }
   } else if (options.dirty > 0) throw new Error("--dirty only applies to the synthetic repository")
+  const diffLines = options.repo ? 0 : options.diffLines
   // The list counts as rendered only once it shows every change: a 0 drawn before status lands would stop the clock early
   const status = Bun.spawnSync([
     "git",
@@ -769,11 +888,11 @@ try {
   console.log(`Expected changes: ${expected}`)
   for (let launch = 1; launch <= options.launches; launch++) {
     console.log(`Launch ${launch}/${options.launches}: GitCub…`)
-    gitcub.push(await launchGitCub(bundle, repository, options.settle, expected))
+    gitcub.push(await launchGitCub(bundle, repository, options.settle, expected, diffLines))
     await sleep(1000)
     if (compareDesktop) {
       console.log(`Launch ${launch}/${options.launches}: GitHub Desktop…`)
-      desktop.push(await launchDesktop(repository, options.settle, expected))
+      desktop.push(await launchDesktop(repository, options.settle, expected, diffLines))
       await sleep(1000)
     }
   }
@@ -786,6 +905,15 @@ try {
   console.log("|---|---:|---:|---:|---:|---:|")
   console.log(row("GitCub", summary.gitcub))
   if (summary.desktop) console.log(row("GitHub Desktop", summary.desktop))
+  const ms = (value: number | null) => (value === null ? "—" : value.toFixed(0))
+  const diffRow = (name: string, s: ReturnType<typeof summarize>) =>
+    `| ${name} | ${ms(s.diffOpenMs)} | ${ms(s.diffScrollMs)} | ${s.rssDiffKiB === null ? "—" : mib(s.rssDiffKiB)} |`
+  if (summary.gitcub.diffOpenMs !== null) {
+    console.log(`\n| 应用 | 打开 ${diffLines} 行 diff (ms) | 滚到末行 (ms) | diff 后 RSS (MiB) |`)
+    console.log("|---|---:|---:|---:|")
+    console.log(diffRow("GitCub", summary.gitcub))
+    if (summary.desktop) console.log(diffRow("GitHub Desktop", summary.desktop))
+  }
   if (summary.gitcub.gitProcesses)
     console.log(
       `\nGitCub git processes (median): launch + open ${summary.gitcub.gitProcesses.repository}, idle ${summary.gitcub.gitProcesses.idle}; first launch by subcommand: ${JSON.stringify(gitcub[0]?.gitProcesses?.commands ?? {})}`
