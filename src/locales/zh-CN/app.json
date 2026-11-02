@@ -488,7 +488,15 @@
     "gitlabIssue": "在 GitLab 打开 Issue #{{num}}",
     "gitlabIssueDescription": "GitLab Issue #{{num}}",
     "gitlabMergeRequest": "在 GitLab 打开合并请求 !{{num}}",
-    "gitlabMergeRequestDescription": "GitLab 合并请求 !{{num}}"
+    "gitlabMergeRequestDescription": "GitLab 合并请求 !{{num}}",
+    "openIssueOrPullRequestOnGitHub": "在 GitHub 打开 Issue 或拉取请求 #{{num}}",
+    "gitHubIssueOrPullRequest": "GitHub Issue 或拉取请求 #{{num}}",
+    "openIssueOrPullRequestFromRepositoryOnGitHub": "在 GitHub 打开 {{repository}} 的 Issue 或拉取请求 #{{num}}",
+    "gitHubIssueOrPullRequestInRepository": "GitHub Issue 或拉取请求 {{repository}}#{{num}}",
+    "openIssueFromRepositoryOnGitLab": "在 GitLab 打开 {{repository}} 的 Issue #{{num}}",
+    "gitLabIssueInRepository": "GitLab Issue {{repository}}#{{num}}",
+    "openMergeRequestFromRepositoryOnGitLab": "在 GitLab 打开 {{repository}} 的合并请求 !{{num}}",
+    "gitLabMergeRequestInRepository": "GitLab 合并请求 {{repository}}!{{num}}"
   },
   "repositorySettings": {
     "title": "仓库设置",

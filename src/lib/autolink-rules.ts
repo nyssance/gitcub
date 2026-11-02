@@ -1,9 +1,12 @@
 import type { AutolinkRule, Remote } from "../models/app-state"
 import {
-  type CacheableAutolinkReference,
+  type Autolink,
+  type AutolinkReference,
+  type DynamicAutolinkReference,
   ensureCachedRegex,
   getAutolinks,
   isCacheable,
+  isDynamic,
   numRegex,
   type RefSet
 } from "./autolinks"
@@ -27,9 +30,64 @@ export type HostingPlatform = "github" | "gitlab"
 
 export type Translate = (key: string, options?: Record<string, string>) => string
 
-/** GitLens packages/git/src/remotes/gitlab.ts (c1f6e5f3c) 的内置引用：`#<num>` issue 与 `!<num>` 合并请求。
- * 上游的 `owner/repo#1` / `owner/repo!1` 动态引用没有搬。 */
-export function gitlabAutolinks(remote: Remote, t: Translate): CacheableAutolinkReference[] {
+// GitLens packages/git/src/remotes/github.ts / gitlab.ts (b87331422)
+const autolinkFullIssuesRegex = /\b([^/\s]+\/[^/\s]+?)(?:\\)?#([0-9]+)\b(?!]\()/g
+const autolinkFullMergeRequestsRegex = /\b([^/\s]+\/[^/\s]+?)(?:\\)?!([0-9]+)\b(?!]\()/g
+
+/** GitLens 的 `owner/repo#1` 动态引用：parse 进结果表，descriptor 供渲染定位链接 */
+function fullReference(
+  regex: RegExp,
+  url: (repo: string, num: string) => string,
+  title: (repo: string, num: string) => string,
+  label: (repo: string, num: string) => string,
+  separator: "#" | "!",
+  type?: Autolink["type"]
+): DynamicAutolinkReference {
+  return {
+    descriptors: [{ regex, url, title, label }],
+    parse: (text: string, autolinks: Map<string, Autolink>) => {
+      let match
+      while ((match = regex.exec(text))) {
+        const [, ownerAndRepo, num] = match
+        autolinks.set(num, {
+          id: num,
+          prefix: `${ownerAndRepo}${separator}`,
+          url: url(ownerAndRepo, num),
+          alphanumeric: false,
+          ignoreCase: true,
+          title: title(ownerAndRepo, "<num>"),
+          type,
+          description: label(ownerAndRepo, num)
+        })
+      }
+    }
+  }
+}
+
+/** GitLens github.ts 的内置引用：`GH-<num>` 与 `owner/repo#<num>`；`#<num>` 留给 Desktop 的分词器 */
+export function githubAutolinks(remote: Remote, t: Translate): (AutolinkReference | DynamicAutolinkReference)[] {
+  const baseUrl = `https://${remote.host}/${remote.owner}/${remote.name}`
+  return [
+    {
+      prefix: "gh-",
+      url: `${baseUrl}/issues/<num>`,
+      alphanumeric: false,
+      ignoreCase: true,
+      title: t("autolinks.openIssueOrPullRequestOnGitHub", { num: "<num>" }),
+      description: t("autolinks.gitHubIssueOrPullRequest", { num: "<num>" })
+    },
+    fullReference(
+      autolinkFullIssuesRegex,
+      (repo, num) => `https://${remote.host}/${repo}/issues/${num}`,
+      (repo, num) => t("autolinks.openIssueOrPullRequestFromRepositoryOnGitHub", { num, repository: repo }),
+      (repo, num) => t("autolinks.gitHubIssueOrPullRequestInRepository", { num, repository: repo }),
+      "#"
+    )
+  ]
+}
+
+/** GitLens gitlab.ts 的内置引用：`#<num>` issue、`!<num>` 合并请求，以及 `owner/repo#<num>` / `owner/repo!<num>` */
+export function gitlabAutolinks(remote: Remote, t: Translate): (AutolinkReference | DynamicAutolinkReference)[] {
   const baseUrl = `https://${remote.host}/${remote.owner}/${remote.name}`
   return [
     {
@@ -49,11 +107,27 @@ export function gitlabAutolinks(remote: Remote, t: Translate): CacheableAutolink
       title: t("autolinks.gitlabMergeRequest", { num: "<num>" }),
       type: "pullrequest",
       description: t("autolinks.gitlabMergeRequestDescription", { num: "<num>" })
-    }
+    },
+    fullReference(
+      autolinkFullIssuesRegex,
+      (repo, num) => `https://${remote.host}/${repo}/-/issues/${num}`,
+      (repo, num) => t("autolinks.openIssueFromRepositoryOnGitLab", { num, repository: repo }),
+      (repo, num) => t("autolinks.gitLabIssueInRepository", { num, repository: repo }),
+      "#",
+      "issue"
+    ),
+    fullReference(
+      autolinkFullMergeRequestsRegex,
+      (repo, num) => `https://${remote.host}/${repo}/-/merge_requests/${num}`,
+      (repo, num) => t("autolinks.openMergeRequestFromRepositoryOnGitLab", { num, repository: repo }),
+      (repo, num) => t("autolinks.gitLabMergeRequestInRepository", { num, repository: repo }),
+      "!",
+      "pullrequest"
+    )
   ]
 }
 
-/** 用户规则在前，GitLab 远端再追加内置引用；GitHub 的 `#1` 由 Desktop 的分词器处理，这里不重复。 */
+/** 用户规则在前，再追加远端平台的内置引用；GitHub 的 `#1` 由 Desktop 的分词器处理，这里不重复。 */
 export function autolinkRefSets(
   rules: ReadonlyArray<AutolinkRule>,
   remote: Remote | null,
@@ -76,6 +150,8 @@ export function autolinkRefSets(
   }
   if (remote && platform === "gitlab") {
     refsets.push([{ id: "gitlab", name: "GitLab", domain: remote.host, icon: "gitlab" }, gitlabAutolinks(remote, t)])
+  } else if (remote) {
+    refsets.push([{ id: "github", name: "GitHub", domain: remote.host, icon: "github" }, githubAutolinks(remote, t)])
   }
   return refsets
 }
@@ -89,12 +165,27 @@ export interface AutolinkSpan {
 }
 
 /** 文本里每个可链接引用的位置。匹配规则与 `getAutolinks` 相同：同一个缓存的 messageRegex、
- * 同样跳过非提交引用；位置按引用顺序先到先得，重叠的后者丢弃。 */
+ * 同样跳过非提交引用；动态引用照 GitLens autolinksProvider 的 linkify 用 descriptor 的正则定位。
+ * 位置按引用顺序先到先得，重叠的后者丢弃。 */
 export function findAutolinkSpans(text: string, refsets: Readonly<RefSet[]>): AutolinkSpan[] {
   if (!text || getAutolinks(text, refsets).size === 0) return []
   const spans: AutolinkSpan[] = []
   for (const [, refs] of refsets) {
     for (const ref of refs) {
+      if (isDynamic(ref)) {
+        for (const desc of ref.descriptors ?? []) {
+          desc.regex.lastIndex = 0
+          let match
+          while ((match = desc.regex.exec(text))) {
+            const [linkText, repo, num] = match
+            const start = match.index
+            const end = start + linkText.length
+            if (spans.some(span => start < span.end && end > span.start)) continue
+            spans.push({ start, end, text: linkText, url: desc.url(repo, num), title: desc.title(repo, num) })
+          }
+        }
+        continue
+      }
       if (!isCacheable(ref) || (ref.referenceType && ref.referenceType !== "commit")) continue
       ensureCachedRegex(ref, "plaintext")
       const regex = ref.messageRegex

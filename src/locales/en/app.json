@@ -492,7 +492,15 @@
     "gitlabIssue": "Open Issue #{{num}} on GitLab",
     "gitlabIssueDescription": "GitLab Issue #{{num}}",
     "gitlabMergeRequest": "Open Merge Request !{{num}} on GitLab",
-    "gitlabMergeRequestDescription": "GitLab Merge Request !{{num}}"
+    "gitlabMergeRequestDescription": "GitLab Merge Request !{{num}}",
+    "openIssueOrPullRequestOnGitHub": "Open Issue or Pull Request #{{num}} on GitHub",
+    "gitHubIssueOrPullRequest": "GitHub Issue or Pull Request #{{num}}",
+    "openIssueOrPullRequestFromRepositoryOnGitHub": "Open Issue or Pull Request #{{num}} from {{repository}} on GitHub",
+    "gitHubIssueOrPullRequestInRepository": "GitHub Issue or Pull Request {{repository}}#{{num}}",
+    "openIssueFromRepositoryOnGitLab": "Open Issue #{{num}} from {{repository}} on GitLab",
+    "gitLabIssueInRepository": "GitLab Issue {{repository}}#{{num}}",
+    "openMergeRequestFromRepositoryOnGitLab": "Open Merge Request !{{num}} from {{repository}} on GitLab",
+    "gitLabMergeRequestInRepository": "GitLab Merge Request {{repository}}!{{num}}"
   },
   "repositorySettings": {
     "title": "Repository Settings",
