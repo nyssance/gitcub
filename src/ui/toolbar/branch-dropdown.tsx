@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import { canDropCommits } from "@/lib/commit-drag"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import { ipc } from "@/lib/ipc"
+import { useDialogsStore } from "@/features/dialogs/store"
 import { useRepositoryPolicy } from "@/lib/use-repository-policy"
 import type { Worktree } from "@/models/app-state"
 import { Button as StandardButton } from "@/components/ui/button"
@@ -15,6 +16,7 @@ import { shouldShowWorktreeDropdown } from "@/upstream/lib/worktree-dropdown"
 import { getBranches } from "../../lib/desktop-git"
 import { findDefaultBranch } from "../../lib/find-default-branch"
 import { Branch as DesktopBranch, BranchType } from "../../models/branch"
+import type { CommitOneLine } from "../../models/commit"
 import { type Tip, TipState } from "../../models/tip"
 import { BranchList } from "../branches/branch-list"
 import { getDefaultAriaLabelForBranch, renderDefaultBranch } from "../branches/branch-renderer"
@@ -109,9 +111,10 @@ export function BranchDropdown({
     branches: readonly DesktopBranch[]
     tip: Exclude<Tip, { kind: TipState.Unknown }>
     defaultBranch: DesktopBranch | null
+    targetCommit?: CommitOneLine
   } | null>(null)
   const [createName, setCreateName] = useState("")
-  const showCreateDialog = async (name = "") => {
+  const showCreateDialog = async (name = "", targetCommit?: CommitOneLine) => {
     if (!repo) return
     try {
       const [branches, tip] = await Promise.all([getBranches(repository), ipc.repositoryTip(repo)])
@@ -134,6 +137,7 @@ export function BranchDropdown({
       setCreateDialog({
         branches,
         tip: currentTip,
+        targetCommit,
         defaultBranch: await findDefaultBranch(
           repository,
           branches,
@@ -161,6 +165,14 @@ export function BranchDropdown({
       setOpen(true)
     }
   })
+  // 历史右键「Create Branch from Commit」：对话框在这里，提交从 dialogs store 传过来
+  const createBranchFromCommit = useDialogsStore(s => s.createBranchFromCommit)
+  const onCreateBranchFromCommit = useEffectEvent((commit: CommitOneLine) => void showCreateDialog("", commit))
+  useEffect(() => {
+    if (!createBranchFromCommit) return
+    useDialogsStore.getState().setCreateBranchFromCommit(null)
+    onCreateBranchFromCommit(createBranchFromCommit)
+  }, [createBranchFromCommit])
   useEffect(() => {
     const subscription = listen<string>("menu", event => onMenu(event.payload))
     return () => {
@@ -426,6 +438,7 @@ export function BranchDropdown({
           accounts={accounts}
           cachedRepoRulesets={policy.rulesets}
           initialName={createName}
+          targetCommit={createDialog.targetCommit}
           onDismissed={() => setCreateDialog(null)}
           dispatcher={{
             createBranch: async (_repository, name, startPoint, noTrack) => {

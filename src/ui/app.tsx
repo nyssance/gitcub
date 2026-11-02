@@ -57,6 +57,7 @@ import { handleShortcut } from "@/lib/shortcuts"
 import { applySelection, discardLines } from "@/lib/stage"
 import { applyTheme } from "@/lib/theme"
 import type { CommitOptions } from "@/models/app-state"
+import type { CommitOneLine } from "@/models/commit"
 import { Branch, BranchType } from "@/models/branch"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import { Repository } from "@/models/repository"
@@ -81,6 +82,7 @@ import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
 import { LocalChangesOverwrittenDialog } from "@/ui/local-changes-overwritten/local-changes-overwritten-dialog"
 import { ProgressDialog } from "@/ui/multi-commit-operation/progress-dialog"
 import { WarnForcePushDialog } from "@/ui/multi-commit-operation/warn-force-push-dialog"
+import { ConfirmCheckoutCommitDialog } from "@/ui/checkout/confirm-checkout-commit"
 import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
 import { Preferences } from "@/ui/preferences/preferences"
 import { CreatePullRequest } from "@/ui/pull-requests/create"
@@ -146,6 +148,8 @@ export function App() {
   const localChangesOverwritten = useDialogsStore(s => s.localChangesOverwritten)
   const warnForcePushPrompt = useDialogsStore(s => s.warnForcePush)
   const deletingTag = useDialogsStore(s => s.deletingTag)
+  const checkingOutCommit = useDialogsStore(s => s.checkingOutCommit)
+  const confirmCheckoutCommit = usePreferencesStore(s => s.confirmCheckoutCommit)
   const setDeletingTag = useDialogsStore(s => s.setDeletingTag)
   const answerWarnForcePush = useDialogsStore(s => s.answerWarnForcePush)
   const confirmForcePush = usePreferencesStore(s => s.confirmForcePush)
@@ -796,6 +800,12 @@ export function App() {
       { gitContext: { kind: "checkout", branchToCheckout: branchNamed(branch) } }
     )
     await run(() => checkoutWithStash(repo, branch, ipc, checkoutPrompts, checkoutStrategy()).catch(retry))
+  }
+
+  /** Desktop _checkoutCommit：已经在这个提交上就什么都不做；git checkout <sha> 得到游离 HEAD，失败照常报错 */
+  const doCheckoutCommit = async (commit: CommitOneLine) => {
+    if (!repo || commit.sha === status.head) return
+    await run(() => ipc.checkout(repo, commit.sha))
   }
 
   /** Desktop _commitIncludedChanges / withIsCommitting：钩子进度与提交输出只属于这一次提交（改提交同样），
@@ -1556,6 +1566,17 @@ export function App() {
           onDismissed={() => setDeletingTag(null)}
         />
       )}
+      {checkingOutCommit && (
+        <ConfirmCheckoutCommitDialog
+          key="confirm-checkout-commit-dialog"
+          askForConfirmationOnCheckoutCommit={confirmCheckoutCommit}
+          onCheckoutCommit={async ask => {
+            usePreferencesStore.getState().setPrompt("confirmCheckoutCommit", ask)
+            await doCheckoutCommit(checkingOutCommit)
+          }}
+          onDismissed={() => useDialogsStore.getState().setCheckingOutCommit(null)}
+        />
+      )}
       {warnForcePushPrompt && (
         <WarnForcePushDialog
           key="warn-force-push"
@@ -2080,6 +2101,16 @@ export function App() {
                           onUndoCommit={() => void doUndoCommit()}
                           unpushedTags={tagsToPush}
                           onDeleteTag={setDeletingTag}
+                          onCheckoutCommit={commit => {
+                            const oneLine = { sha: commit.sha, summary: commit.summary }
+                            if (confirmCheckoutCommit) useDialogsStore.getState().setCheckingOutCommit(oneLine)
+                            else void doCheckoutCommit(oneLine)
+                          }}
+                          onCreateBranchFromCommit={commit =>
+                            useDialogsStore
+                              .getState()
+                              .setCreateBranchFromCommit({ sha: commit.sha, summary: commit.summary })
+                          }
                           viewOnLabel={
                             selectedRemote
                               ? accounts[selectedRemote.host]?.kind === "gitlab"

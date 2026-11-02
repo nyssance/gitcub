@@ -10,6 +10,7 @@ import { resolve, type Updater } from "@/features/effect-runtime"
 import { type PreferencesTab, type Prompt, usePreferencesStore } from "@/features/preferences/store"
 import { localChangesOverwrittenHandler, type LocalChangesOverwrittenPopup } from "@/lib/error-handlers"
 import type { TerminalOutput, TerminalOutputListener } from "@/lib/git-execution"
+import type { CommitOneLine } from "@/models/commit"
 
 /** prompt：原版 Prompts 页里对应的那一项；弹窗带「不再显示」，关掉后直接放行 */
 type Asking = { message: string; prompt?: Prompt; dontAskAgain: boolean; resolve: (ok: boolean) => void }
@@ -53,6 +54,12 @@ interface DialogsStore {
   /** Desktop PopupType.DeleteTag */
   deletingTag: string | null
   setDeletingTag: (tagName: string | null) => void
+  /** Desktop PopupType.ConfirmCheckoutCommit */
+  checkingOutCommit: CommitOneLine | null
+  setCheckingOutCommit: (commit: CommitOneLine | null) => void
+  /** Desktop PopupType.CreateBranch 带 targetCommit：新建分支对话框归分支下拉管，这里只传要从哪个提交建 */
+  createBranchFromCommit: CommitOneLine | null
+  setCreateBranchFromCommit: (commit: CommitOneLine | null) => void
   /** Desktop PopupType.LocalChangesOverwritten */
   localChangesOverwritten: LocalChangesOverwrittenPopup | null
   dismissLocalChangesOverwritten: () => void
@@ -106,6 +113,10 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   },
   deletingTag: null,
   setDeletingTag: deletingTag => set({ deletingTag }),
+  checkingOutCommit: null,
+  setCheckingOutCommit: checkingOutCommit => set({ checkingOutCommit }),
+  createBranchFromCommit: null,
+  setCreateBranchFromCommit: createBranchFromCommit => set({ createBranchFromCommit }),
   localChangesOverwritten: null,
   dismissLocalChangesOverwritten: () => set({ localChangesOverwritten: null }),
   commitProgress: null,

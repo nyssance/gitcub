@@ -47,11 +47,12 @@ function CheckboxField({
 }
 
 /** 原版 Prompts 里本项目有对应行为的几项，顺序照原版。
- *  「永久丢弃」（移到废纸篓失败时）与「检出提交」本项目没有对应操作，不列。 */
+ *  「永久丢弃」（移到废纸篓失败时）本项目没有对应操作，不列。 */
 const PROMPTS: [Prompt, string][] = [
   ["confirmRepoRemoval", "prefs.removingRepositories"],
   ["confirmDiscardChanges", "prefs.discardingChanges"],
   ["confirmDiscardStash", "prefs.discardingStash"],
+  ["confirmCheckoutCommit", "prefs.checkingOutACommit"],
   ["confirmForcePush", "prefs.forcePushing"],
   ["confirmUndoCommit", "prefs.undoCommit"],
   ["confirmWorktreeRemoval", "prefs.removingWorktrees"],

@@ -47,6 +47,7 @@ export const PromptKeys = {
   confirmRepoRemoval: ["confirmRepoRemoval", true],
   confirmDiscardChanges: ["confirmDiscardChanges", true],
   confirmDiscardStash: ["confirmDiscardStash", true],
+  confirmCheckoutCommit: ["confirmCheckoutCommit", true],
   confirmForcePush: ["confirmForcePush", true],
   confirmUndoCommit: ["confirmUndoCommit", true],
   confirmCommitFilteredChanges: ["confirmCommitFilteredChangesKey", true],

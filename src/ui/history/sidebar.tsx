@@ -123,6 +123,10 @@ interface Props {
   onUndoCommit?: () => void
   /** Desktop onDeleteTag：只有还没推送的标签（tagsToPush）能删 */
   onDeleteTag?: (name: string) => void
+  /** Desktop onCheckoutCommit：检出成游离 HEAD */
+  onCheckoutCommit?: (commit: CommitInfo) => void
+  /** Desktop onCreateBranch：以这个提交为起点新建分支 */
+  onCreateBranchFromCommit?: (commit: CommitInfo) => void
   unpushedTags?: readonly string[]
   /** Desktop「View on GitHub」：GitLab 远端为「View on GitLab」 */
   viewOnLabel?: string
@@ -181,6 +185,8 @@ export function HistorySidebar({
   onAmendCommit,
   onUndoCommit,
   onDeleteTag,
+  onCheckoutCommit,
+  onCreateBranchFromCommit,
   unpushedTags = [],
   viewOnLabel,
   onSquashIntoParent,
@@ -711,6 +717,9 @@ export function HistorySidebar({
                         onRevert={onRevert}
                         onCreateTag={onCreateTag}
                         onDeleteTag={onDeleteTag}
+                        isCurrent={head[0]?.sha === c.sha}
+                        onCheckoutCommit={onCheckoutCommit}
+                        onCreateBranchFromCommit={onCreateBranchFromCommit}
                         onCherryPick={onCherryPick}
                         onOpenInBrowser={onOpenInBrowser}
                       />
@@ -864,12 +873,15 @@ interface CommitContextMenuItemsProps {
   onRevert: (sha: string) => void
   onCreateTag: (sha: string) => void
   onDeleteTag?: (name: string) => void
+  /** 是不是当前检出的提交：原版 canBeCheckedOut = row > 0 */
+  isCurrent: boolean
+  onCheckoutCommit?: (commit: CommitInfo) => void
+  onCreateBranchFromCommit?: (commit: CommitInfo) => void
   onCherryPick: (sha: string) => void
   onOpenInBrowser?: (sha: string) => void
 }
 
 /** Desktop commit-list.tsx getContextMenuForSingleCommit：项目顺序与启用条件照原版。
- *  没有对应实现的两项登记为差异：Checkout Commit、Create Branch from Commit 不显示；
  *  Reorder Commit（键盘重排模式）由原有的「往前挪 / 往后挪 / 压进上一个」代替。 */
 function CommitContextMenuItems({
   commit,
@@ -889,6 +901,9 @@ function CommitContextMenuItems({
   onRevert,
   onCreateTag,
   onDeleteTag,
+  isCurrent,
+  onCheckoutCommit,
+  onCreateBranchFromCommit,
   onCherryPick,
   onOpenInBrowser
 }: CommitContextMenuItemsProps) {
@@ -904,6 +919,11 @@ function CommitContextMenuItems({
       {canBeUndone && <ContextMenuItem onClick={onUndoCommit}>{t("history.undoCommit")}</ContextMenuItem>}
       <ContextMenuItem disabled={!isResettable} onClick={() => onResetTo(commit.sha)}>
         {t("history.resetToCommit")}
+      </ContextMenuItem>
+      <ContextMenuItem
+        disabled={isCurrent || onCheckoutCommit === undefined}
+        onClick={() => onCheckoutCommit?.(commit)}>
+        {t("history.checkoutCommit")}
       </ContextMenuItem>
       {canRewrite && row !== undefined && (
         <>
@@ -922,6 +942,9 @@ function CommitContextMenuItems({
         {t("history.revertChangesInCommit")}
       </ContextMenuItem>
       <ContextMenuSeparator />
+      <ContextMenuItem onClick={() => onCreateBranchFromCommit?.(commit)}>
+        {t("history.createBranchFromCommit")}
+      </ContextMenuItem>
       <ContextMenuItem onClick={() => onCreateTag(commit.sha)}>{t("history.createTag")}</ContextMenuItem>
       {onDeleteTag && tags.length === 1 && (
         <>

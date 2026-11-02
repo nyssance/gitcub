@@ -314,7 +314,9 @@
     "expandCommitDetails": "展开提交详情",
     "copyTheFullSha": "复制完整 SHA",
     "addedLines": "新增 {{count}} 行",
-    "removedLines": "删除 {{count}} 行"
+    "removedLines": "删除 {{count}} 行",
+    "checkoutCommit": "检出提交",
+    "createBranchFromCommit": "从提交创建分支"
   },
   "noRepos": {
     "title": "开始使用",
@@ -462,7 +464,8 @@
     "loadGitHookEnvironmentVariablesFromShell": "从 shell 加载 Git 钩子的环境变量",
     "whenEnabledGitCubWillAttemptToLoadEnvironmentVariablesFromYourShell": "开启后，GitCub 执行 Git 钩子时会尝试从你的 shell 加载环境变量。如果钩子依赖 shell 配置文件里设置的环境变量（nvm、rbenv、asdf 等版本管理工具的常见做法），这会很有用。",
     "cacheGitHookEnvironmentVariables": "缓存 Git 钩子的环境变量",
-    "cacheHookEnvironmentVariablesToImprovePerformance": "缓存钩子的环境变量以提升速度。如果钩子依赖经常变化的环境变量，请关闭。"
+    "cacheHookEnvironmentVariablesToImprovePerformance": "缓存钩子的环境变量以提升速度。如果钩子依赖经常变化的环境变量，请关闭。",
+    "checkingOutACommit": "检出提交"
   },
   "autolinks": {
     "gitlabIssue": "在 GitLab 打开 Issue #{{num}}",
@@ -1005,5 +1008,11 @@
     "deleteTag": "删除标签",
     "areYouSureYouWantToDeleteTheTag": "确定要删除标签",
     "delete": "删除"
+  },
+  "confirmCheckoutCommit": {
+    "checkoutCommit": "检出提交？",
+    "checkingOutACommitWillCreateADetachedHead": "检出提交会让 HEAD 处于游离状态，你将不在任何分支上。确定要检出这个提交吗？",
+    "doNotShowThisMessageAgain": "不再显示此消息",
+    "checkout": "检出"
   }
 }

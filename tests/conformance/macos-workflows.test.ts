@@ -1170,6 +1170,60 @@ test("About exposes the author's GitHub profile", async ({ mainWindow: page }) =
     .toBe(false)
 })
 
+test("history context menu checks out a commit and creates a branch from it", async ({ mainWindow: page }) => {
+  const branch = git("branch", "--show-current")
+  const head = git("rev-parse", "HEAD")
+  const stashed = git("status", "--porcelain") !== ""
+  if (stashed) git("stash", "push", "-u", "-q")
+  git("-c", "commit.gpgsign=false", "commit", "-q", "--allow-empty", "-m", "checkout probe base")
+  const base = git("rev-parse", "HEAD")
+  git("-c", "commit.gpgsign=false", "commit", "-q", "--allow-empty", "-m", "checkout probe tip")
+  const tip = git("rev-parse", "HEAD")
+  const openMenu = async (summary: string) => {
+    await page.locator('[role="tab"]:has-text("History")').click()
+    const row = page.locator(`.desktop-list .desktop-list-row:has([title="${summary}"])`).first()
+    await row.waitFor({ state: "visible", timeout: 15000 })
+    await row.evaluate(element => {
+      const rect = element.getBoundingClientRect()
+      element.dispatchEvent(
+        new MouseEvent("contextmenu", { bubbles: true, button: 2, clientX: rect.x + 4, clientY: rect.y + 4 })
+      )
+    })
+  }
+  try {
+    // Desktop getContextMenuForSingleCommit：当前提交不能检出，较早的可以，检出前先确认
+    await openMenu("checkout probe tip")
+    const checkoutItem = page.locator('[role="menuitem"]:has-text("Checkout Commit")')
+    await checkoutItem.waitFor({ state: "visible" })
+    assert.equal(await checkoutItem.evaluate(element => element.hasAttribute("data-disabled")), true)
+    await page.keyboard.press("Escape")
+    await openMenu("checkout probe base")
+    await page.locator('[role="menuitem"]:has-text("Checkout Commit")').click()
+    await expect(page.locator("#checkout-commit")).toContainText("detached HEAD")
+    await page.locator('#checkout-commit button:has-text("Checkout")').click()
+    await expect.poll(() => git("rev-parse", "HEAD"), { timeout: 15000 }).toBe(base)
+    assert.equal(git("branch", "--show-current"), "")
+    await page.locator("#checkout-commit").waitFor({ state: "hidden" })
+
+    await openMenu("checkout probe tip")
+    await page.locator('[role="menuitem"]:has-text("Create Branch from Commit")').click()
+    await expect(page.locator("#create-branch")).toContainText("checkout probe tip")
+    await page.locator("#create-branch input").fill("checkout-probe")
+    await page.locator('#create-branch button[type="submit"]').click()
+    await expect.poll(() => git("branch", "--show-current"), { timeout: 15000 }).toBe("checkout-probe")
+    assert.equal(git("rev-parse", "HEAD"), tip)
+  } finally {
+    git("checkout", "-q", branch)
+    git("reset", "-q", "--hard", head)
+    try {
+      git("branch", "-q", "-D", "checkout-probe")
+    } catch {
+      // 用例在建分支之前就失败了
+    }
+    if (stashed) git("stash", "pop", "-q")
+  }
+})
+
 test("saved Chinese language applies to welcome and Git identity before onboarding", async ({ mainWindow: page }) => {
   await page.evaluate(async () => {
     await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "preferences" })
