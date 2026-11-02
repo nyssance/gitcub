@@ -50,7 +50,7 @@ export function withoutRemovedCopilot(file: string, source: string): string {
     // The checked-in example still lists Desktop's Copilot measures and dimension; compare the rest byte for byte.
     return source.replace(
       "const checkedInExample = await readFile(examplePath, 'utf8')",
-      "const checkedInExample = (await readFile(examplePath, 'utf8')).replace(/^ *\"(?:copilot\\w*|openInCopilotAppCount|initiateResolveConflictsWithCopilotCount|generateCommitMessage\\w*)\": [^\\n]*\\n/gm, '')"
+      String.raw`const checkedInExample = (await readFile(examplePath, 'utf8')).replace(/^ *"(?:copilot\w*|openInCopilotAppCount|initiateResolveConflictsWithCopilotCount|generateCommitMessage\w*)": [^\n]*\n/gm, '')`
     )
   }
   return source

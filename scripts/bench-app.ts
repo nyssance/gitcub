@@ -2,6 +2,7 @@
 // and, when it is installed, GitHub Desktop, driven the same way on the same repository.
 //
 //   bun run bench:app [--launches 5] [--app <GitCub.app>] [--repo <path>] [--no-desktop] [--settle 3000]
+//                     [--heap-snapshot <dir>]
 //
 // Readiness is Desktop's own E2E definition (`tests/conformance/upstream/desktop/e2e/app-launch-test.ts`): the React root
 // `#desktop-app-container` has rendered, read through tauri-hasgard for GitCub and through the
@@ -22,7 +23,7 @@ import {
 } from "node:fs"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
-import { basename, dirname, join } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { machine } from "./bench-machine.ts"
@@ -44,6 +45,9 @@ interface Options {
   dirty: number
   /** Lines added to the tracked `1-bench-diff.txt` whose diff is timed (synthetic repository only; 0 skips it). */
   diffLines: number
+  /** Directory for GitCub JavaScript heap snapshots (tauri-hasgard `heap-snapshot`), taken after each memory sample of
+   *  the first launch: `ready.heap.json` and `repository.heap.json`. Null skips them. */
+  heapSnapshot: string | null
 }
 
 interface Sample {
@@ -86,7 +90,8 @@ function parseArguments(argv: string[]): Options {
     files: 50_000,
     commits: 200,
     dirty: 0,
-    diffLines: 5000
+    diffLines: 5000,
+    heapSnapshot: null
   }
   for (let i = 0; i < argv.length; i++) {
     const argument = argv[i]!
@@ -110,6 +115,10 @@ function parseArguments(argv: string[]): Options {
         break
       case "--repo":
         options.repo = text()
+        break
+      case "--heap-snapshot":
+        options.heapSnapshot = text()
+        mkdirSync(options.heapSnapshot, { recursive: true })
         break
       case "--no-desktop":
         options.desktop = false
@@ -325,6 +334,21 @@ const gitConfig = (directory: string, name = "gitconfig") => {
 
 // ── GitCub ──────────────────────────────────────────────────────────────────
 
+// The engine collects garbage before building the snapshot, so it holds live objects only.
+async function writeHeapSnapshot(socket: string, output: string) {
+  const { stdout, exitCode } = await exec([
+    "tauri-hasgard",
+    "--socket",
+    socket,
+    "--json",
+    "heap-snapshot",
+    "--output",
+    resolve(output)
+  ])
+  if (exitCode !== 0) throw new Error(`heap-snapshot failed: ${stdout}`)
+  console.log(`Heap snapshot: ${output}`)
+}
+
 async function hasgard(socket: string, expression: string) {
   const { stdout, exitCode } = await exec(["tauri-hasgard", "--socket", socket, "--json", "eval", expression])
   if (exitCode !== 0) throw new Error("hasgard unavailable")
@@ -436,7 +460,8 @@ async function launchGitCub(
   repository: string,
   settle: number,
   expected: number,
-  diffLines: number
+  diffLines: number,
+  heapSnapshot: string | null
 ): Promise<Sample> {
   const directory = mkdtempSync(join(tmpdir(), "gitcub-bench-app-"))
   const socket = join(directory, "hasgard.sock")
@@ -500,6 +525,7 @@ async function launchGitCub(
     stop.done = true
     await sleep(settle)
     const ready = await processTree(child.pid!, helpersBefore)
+    if (heapSnapshot) await writeHeapSnapshot(socket, join(heapSnapshot, "ready.heap.json"))
     const target = `document.querySelector(${JSON.stringify(`button[title="${repository}"]`)})`
     await until(
       () =>
@@ -521,6 +547,7 @@ async function launchGitCub(
     ).then(done => done!)
     await sleep(settle)
     const afterRepository = await processTree(child.pid!, helpersBefore)
+    if (heapSnapshot) await writeHeapSnapshot(socket, join(heapSnapshot, "repository.heap.json"))
     const idleFrom = traceSize(directory)
     await sleep(settle)
     const git = gitProcesses(directory, idleFrom)
@@ -918,7 +945,8 @@ try {
   console.log(`Expected changes: ${expected}`)
   for (let launch = 1; launch <= options.launches; launch++) {
     console.log(`Launch ${launch}/${options.launches}: GitCub…`)
-    gitcub.push(await launchGitCub(bundle, repository, options.settle, expected, diffLines))
+    const heapSnapshot = launch === 1 ? options.heapSnapshot : null
+    gitcub.push(await launchGitCub(bundle, repository, options.settle, expected, diffLines, heapSnapshot))
     await sleep(1000)
     if (compareDesktop) {
       console.log(`Launch ${launch}/${options.launches}: GitHub Desktop…`)
