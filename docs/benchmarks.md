@@ -1000,10 +1000,17 @@ Renderer 103–108 MiB，GitCub 的 WebContent 179–211 MiB；主进程反而 G
   GitCub 270 / Desktop 204 MiB，差距仍在。GitCub 的「就绪」从此是主界面而不是欢迎页，那一列不再与 Desktop 互比。
 - 不是泄漏或空转：空仓库主界面 2 分钟内稳定在约 130 MiB，空闲 5 秒内没有 DOM 变动、页面定时器、CSS 动画或 IPC，
   WebContent CPU 为 0。
-- 不是图层：`footprint` 分类里 WebContent 的增量几乎全是 `WebKit Malloc`（JS 堆与 DOM），graphics 只有十几 MiB；
-  空仓库主界面只有 254 个 DOM 节点，所以是 JS 对象。空仓库主界面已比欢迎页多约 65 MiB，大仓库再多约 25–75 MiB。
+- 不是图层：`footprint` 分类里 WebContent 的增量几乎全是 `WebKit Malloc`，graphics 只有十几 MiB。空仓库主界面
+  已比欢迎页多约 65 MiB，大仓库再多约 25–75 MiB。
+- 不是存活的 JS 对象（此前据 254 个 DOM 节点推断是 JS 对象，推断有误）：`bench:app --heap-snapshot`
+  （tauri-hasgard 0.6.3 之后的 `heap-snapshot`，引擎先做一次完整回收）显示主界面存活 JS 对象 9.5 MiB（14.6 万个节点），
+  打开大仓库后 12.7 MiB（20.8 万个），函数、字节码与结构体合计约 5 MiB。同一时刻 `vmmap -summary` 的 WebContent
+  footprint 187 MB，其中 WebKit Malloc 脏页 144 MB、可回收 54 MB，JIT 代码 13 MB；20 秒后 WebKit Malloc 驻留降到约
+  113 MB（另约 32 MB 换出）。高亮 worker 首次给 diff 上色才创建，主界面的差距与它无关；主包 2.3 MB、CSS 274 KB。
 
-哪些 JS 对象占的还没定位：hasgard 不提供堆快照，下一步按组件二分（每次改前端都要重编 release 包）。
+**未定位（记账，暂不处理）**：多出的部分最可能是 WebKit 分配器留着已释放、尚未归还的内存（可回收 54 MB），
+来自启动与打开仓库时的大块临时分配，但没有实测证实；也没有用不带 `hasgard-testing` 的包对照排除插件的原生开销。
+拍快照会接上检查器，那次运行的内存数字只用于分析，不计入上表。
 
 同一次测量发现并修掉的问题：被切走的小仓库是刚 `git init`、HEAD 未出生的仓库，`history::query_details` 处理 Desktop
 的未推送提交查询（`HEAD --not --remotes`）时解析不到 HEAD 就让位 git，每次切换多起 2 个 `git log`（git 自己也报
@@ -1014,7 +1021,11 @@ Renderer 103–108 MiB，GitCub 的 WebContent 179–211 MiB；主进程反而 G
 未覆盖：
 
 - 冷启动：要清页缓存（`sudo purge`）才算冷，脚本不提权，两边的二进制都在页缓存里。
-- 页面一侧多出的约 50 MiB 由哪些 JS 对象占用（见上）。
+- 页面一侧多出的约 50 MiB 落在 WebKit Malloc 的哪一块（见上，记账未做）。
+- diff 滚到末行 GitCub 12–13 ms、Desktop 3 ms（记账，暂不处理）：页面内拆分计时显示两边都在 scroll 事件里同步渲染到末行
+  （GitCub 行号 48 → 5001，单次同步渲染 13 ms；Desktop 2.8 ms），差距在单次渲染本身，不是调度或等帧。Desktop 同样每行
+  `CellMeasurer` 测高、行组件是原版移植；把「量最宽行」从 state 改为直接写样式（省一次重渲染）实测仍 12 ms，已撤回。
+  React 渲染与排版各占多少要用性能分析器才能拆开，未做。两边都在一帧（16 ms）以内。
 - 连续滚动帧率、历史页 diff、长时间运行后的内存。
 
 ## 复现
