@@ -130,6 +130,19 @@ fn main() {
 
     #[cfg(feature = "hasgard-testing")]
     let builder = builder.plugin(tauri_plugin_hasgard::init());
+    // 测试窗口是 incognito，localStorage 不落盘；基准要在不重载的情况下直接进主界面，就在页面脚本之前写好欢迎页标记。
+    #[cfg(feature = "hasgard-testing")]
+    let builder = if std::env::var_os("GITCUB_TEST_SKIP_WELCOME").is_some() {
+        builder.plugin(
+            tauri::plugin::Builder::<_, ()>::new("gitcub-test-welcome")
+                .initialization_script(
+                    "if (location.protocol === 'tauri:') localStorage.setItem('has-shown-welcome-flow', '1')",
+                )
+                .build(),
+        )
+    } else {
+        builder
+    };
 
     #[cfg_attr(not(feature = "hasgard-testing"), expect(unused_mut))]
     let mut context = tauri::generate_context!();

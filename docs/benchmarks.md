@@ -994,7 +994,10 @@ Renderer 103–108 MiB，GitCub 的 WebContent 179–211 MiB；主进程反而 G
 **结论：打开仓库后 GitCub 多约 50 MiB，全在页面一侧，是真实差距。** 用临时探针（不入库）排除了几项：
 
 - 不是 Trending 内嵌网页：子 webview 只在左侧浮板可见时创建，整个过程只有一个 WebContent 进程，页面内没有 GitHub 内容。
-- 不是 `location.reload()` 的残留：欢迎页原地重载前后 68 / 67 MiB。
+- 不是 `location.reload()` 的残留：欢迎页原地重载前后 68 / 67 MiB。此后 `bench:app` 改为不重载：测试构建设
+  `GITCUB_TEST_SKIP_WELCOME` 时由 `main.rs` 的初始化脚本在页面脚本之前写好欢迎页标记（测试窗口是 incognito，
+  localStorage 不落盘，两次启动的办法不行），GitCub 一启动就是主界面。同机 5 次、静置 10 秒：打开仓库后 footprint
+  GitCub 270 / Desktop 204 MiB，差距仍在。GitCub 的「就绪」从此是主界面而不是欢迎页，那一列不再与 Desktop 互比。
 - 不是泄漏或空转：空仓库主界面 2 分钟内稳定在约 130 MiB，空闲 5 秒内没有 DOM 变动、页面定时器、CSS 动画或 IPC，
   WebContent CPU 为 0。
 - 不是图层：`footprint` 分类里 WebContent 的增量几乎全是 `WebKit Malloc`（JS 堆与 DOM），graphics 只有十几 MiB；

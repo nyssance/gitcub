@@ -464,6 +464,9 @@ async function launchGitCub(
       TAURI_HASGARD_SOCKET: socket,
       TAURI_HASGARD_DISPLAY: process.env.TAURI_HASGARD_DISPLAY ?? "secondary",
       GITCUB_TEST_DATA_DIR: directory,
+      // Straight into the main window like a returning user (`main.rs` writes the welcome marker before page scripts):
+      // a `location.reload()` from the welcome page would leave the first page's heap to the measured one.
+      GITCUB_TEST_SKIP_WELCOME: "1",
       // The same isolated identity as ~/.gitconfig of a throwaway HOME: GIT_CONFIG_GLOBAL would make the in-process
       // fast paths defer to git (they cannot prove they read the same file), so the launch would time the fallback.
       HOME: (gitConfig(directory, ".gitconfig"), directory),
@@ -497,18 +500,6 @@ async function launchGitCub(
     stop.done = true
     await sleep(settle)
     const ready = await processTree(child.pid!, helpersBefore)
-    // The fresh profile shows the welcome flow; mark it complete and reload like a returning user
-    // (tests/macos/live-account-errors.ts does the same). The marker lives on the old page only.
-    await hasgard(
-      socket,
-      "(() => { window.__benchReloading = true; localStorage.setItem('has-shown-welcome-flow', '1'); location.reload(); return true })()"
-    )
-    await until(
-      () => hasgard(socket, `!window.__benchReloading && ${readyExpression}`).catch(() => false),
-      ready => ready === true,
-      60,
-      "GitCub reloaded"
-    )
     const target = `document.querySelector(${JSON.stringify(`button[title="${repository}"]`)})`
     await until(
       () =>
