@@ -86,7 +86,9 @@ fn may_use_lfs(repo: &Path, untracked: Option<&[String]>) -> Result<bool, String
     }
     match untracked {
         // 刚做完的 status（`-uall`、不含被忽略的）已经列出了全部未跟踪文件，不必再遍历一遍工作区
-        Some(paths) => files.extend(paths.iter().filter(|path| is_attributes(path.as_bytes())).map(|path| workdir.join(path))),
+        Some(paths) => {
+            files.extend(paths.iter().filter(|path| is_attributes(path.as_bytes())).map(|path| workdir.join(path)))
+        }
         None => {
             let options = repo
                 .dirwalk_options()

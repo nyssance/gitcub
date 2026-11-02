@@ -605,7 +605,9 @@ function gitProcesses(directory: string, idleFrom: number): NonNullable<Sample["
   let text = ""
   try {
     text = readFileSync(join(directory, "trace2.json"), "utf8")
-  } catch {}
+  } catch {
+    // No trace file means git never started: zero processes.
+  }
   const starts = (from: number, to: number) =>
     text
       .slice(from, to)
