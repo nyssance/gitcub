@@ -1,0 +1,74 @@
+// Desktop MIT port; platform imports adapted to Tauri.
+
+import type { Branch } from "../models/branch"
+import type { CloningRepository } from "../models/cloning-repository"
+import type { Repository } from "../models/repository"
+import { type RetryAction, RetryActionType } from "../models/retry-actions"
+import type { WorkingDirectoryFileChange } from "../upstream/models/status"
+import type { GitErrorContext } from "./git-error-context"
+
+export interface IErrorMetadata {
+  /** Was the action which caused this error part of a background task? */
+  readonly backgroundTask?: boolean
+
+  /** The repository from which this error originated. */
+  readonly repository?: Repository | CloningRepository
+
+  /** The action to retry if applicable. */
+  readonly retryAction?: RetryAction
+
+  /** Additional context that specific actions can provide fields for */
+  readonly gitContext?: GitErrorContext
+}
+
+/** An error which contains additional metadata. */
+export class ErrorWithMetadata extends Error {
+  /** The error's metadata. */
+  public readonly metadata: IErrorMetadata
+
+  /** The underlying error to which the metadata is being attached. */
+  public readonly underlyingError: Error
+
+  public constructor(error: Error, metadata: IErrorMetadata) {
+    super(error.message)
+
+    this.name = error.name
+    this.stack = error.stack
+    this.underlyingError = error
+    this.metadata = metadata
+  }
+}
+
+/**
+ * An error thrown when a failure occurs while checking out a branch.
+ * Technically just a convience class on top of ErrorWithMetadata
+ */
+export class CheckoutError extends ErrorWithMetadata {
+  public constructor(error: Error, repository: Repository, branch: Branch) {
+    super(error, {
+      gitContext: { kind: "checkout", branchToCheckout: branch },
+      retryAction: { type: RetryActionType.Checkout, branch, repository },
+      repository
+    })
+  }
+}
+
+/**
+ * An error thrown when a failure occurs while discarding changes to trash.
+ * Technically just a convenience class on top of ErrorWithMetadata
+ */
+export class DiscardChangesError extends ErrorWithMetadata {
+  public constructor(error: Error, repository: Repository, files: ReadonlyArray<WorkingDirectoryFileChange>) {
+    super(error, {
+      retryAction: { type: RetryActionType.DiscardChanges, files, repository }
+    })
+  }
+}
+
+export class CreateRepositoryError extends ErrorWithMetadata {
+  public constructor(error: Error) {
+    super(error, {
+      gitContext: { kind: "create-repository" }
+    })
+  }
+}

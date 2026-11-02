@@ -1,0 +1,5 @@
+随包分发的 git 放在这个目录下，由 `fab git-download` 下载，不进版本库。
+
+这个占位文件的作用是让目录本身存在：tauri.conf.json 把 resources/git/ 声明成
+打包资源，路径不存在时 tauri-build 的构建脚本会直接失败——CI 只想 cargo check，
+不该为此下载 28MB 的 git。

@@ -1,0 +1,342 @@
+[
+  {
+    "name": "Atom",
+    "bundleId": "com.github.atom",
+    "kind": "editor"
+  },
+  {
+    "name": "Aptana Studio",
+    "bundleId": "aptana.studio",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for Java Developers",
+    "bundleId": "epp.package.java",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for Enterprise Java and Web Developers",
+    "bundleId": "epp.package.jee",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for C/C++ Developers",
+    "bundleId": "epp.package.cpp",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for Eclipse Committers",
+    "bundleId": "epp.package.committers",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for Embedded C/C++ Developers",
+    "bundleId": "epp.package.embedcpp",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for PHP Developers",
+    "bundleId": "epp.package.php",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for Java and DSL Developers",
+    "bundleId": "epp.package.dsl",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for RCP and RAP Developers",
+    "bundleId": "epp.package.rcp",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse Modeling Tools",
+    "bundleId": "epp.package.modeling",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for Scientific Computing",
+    "bundleId": "epp.package.parallel",
+    "kind": "editor"
+  },
+  {
+    "name": "Eclipse IDE for Scout Developers",
+    "bundleId": "epp.package.scout",
+    "kind": "editor"
+  },
+  {
+    "name": "MacVim",
+    "bundleId": "org.vim.MacVim",
+    "kind": "editor"
+  },
+  {
+    "name": "Neovide",
+    "bundleId": "com.neovide.neovide",
+    "kind": "editor"
+  },
+  {
+    "name": "VimR",
+    "bundleId": "com.qvacua.VimR",
+    "kind": "editor"
+  },
+  {
+    "name": "Visual Studio Code",
+    "bundleId": "com.microsoft.VSCode",
+    "kind": "editor"
+  },
+  {
+    "name": "Visual Studio Code (Insiders)",
+    "bundleId": "com.microsoft.VSCodeInsiders",
+    "kind": "editor"
+  },
+  {
+    "name": "VSCodium",
+    "bundleId": "com.visualstudio.code.oss",
+    "kind": "editor"
+  },
+  {
+    "name": "VSCodium",
+    "bundleId": "com.vscodium",
+    "kind": "editor"
+  },
+  {
+    "name": "Sublime Text",
+    "bundleId": "com.sublimetext.4",
+    "kind": "editor"
+  },
+  {
+    "name": "Sublime Text",
+    "bundleId": "com.sublimetext.3",
+    "kind": "editor"
+  },
+  {
+    "name": "Sublime Text",
+    "bundleId": "com.sublimetext.2",
+    "kind": "editor"
+  },
+  {
+    "name": "BBEdit",
+    "bundleId": "com.barebones.bbedit",
+    "kind": "editor"
+  },
+  {
+    "name": "PhpStorm",
+    "bundleId": "com.jetbrains.PhpStorm",
+    "kind": "editor"
+  },
+  {
+    "name": "PyCharm",
+    "bundleId": "com.jetbrains.PyCharm",
+    "kind": "editor"
+  },
+  {
+    "name": "PyCharm Community Edition",
+    "bundleId": "com.jetbrains.pycharm.ce",
+    "kind": "editor"
+  },
+  {
+    "name": "DataSpell",
+    "bundleId": "com.jetbrains.DataSpell",
+    "kind": "editor"
+  },
+  {
+    "name": "RubyMine",
+    "bundleId": "com.jetbrains.RubyMine",
+    "kind": "editor"
+  },
+  {
+    "name": "RustRover",
+    "bundleId": "com.jetbrains.RustRover",
+    "kind": "editor"
+  },
+  {
+    "name": "RStudio",
+    "bundleId": "org.rstudio.RStudio",
+    "kind": "editor"
+  },
+  {
+    "name": "RStudio",
+    "bundleId": "com.rstudio.desktop",
+    "kind": "editor"
+  },
+  {
+    "name": "TextMate",
+    "bundleId": "com.macromates.TextMate",
+    "kind": "editor"
+  },
+  {
+    "name": "Brackets",
+    "bundleId": "io.brackets.appshell",
+    "kind": "editor"
+  },
+  {
+    "name": "WebStorm",
+    "bundleId": "com.jetbrains.WebStorm",
+    "kind": "editor"
+  },
+  {
+    "name": "CLion",
+    "bundleId": "com.jetbrains.CLion",
+    "kind": "editor"
+  },
+  {
+    "name": "Typora",
+    "bundleId": "abnerworks.Typora",
+    "kind": "editor"
+  },
+  {
+    "name": "CodeRunner",
+    "bundleId": "com.krill.CodeRunner",
+    "kind": "editor"
+  },
+  {
+    "name": "SlickEdit",
+    "bundleId": "com.slickedit.SlickEditPro2018",
+    "kind": "editor"
+  },
+  {
+    "name": "SlickEdit",
+    "bundleId": "com.slickedit.SlickEditPro2017",
+    "kind": "editor"
+  },
+  {
+    "name": "SlickEdit",
+    "bundleId": "com.slickedit.SlickEditPro2016",
+    "kind": "editor"
+  },
+  {
+    "name": "SlickEdit",
+    "bundleId": "com.slickedit.SlickEditPro2015",
+    "kind": "editor"
+  },
+  {
+    "name": "IntelliJ",
+    "bundleId": "com.jetbrains.intellij",
+    "kind": "editor"
+  },
+  {
+    "name": "IntelliJ Community Edition",
+    "bundleId": "com.jetbrains.intellij.ce",
+    "kind": "editor"
+  },
+  {
+    "name": "Xcode",
+    "bundleId": "com.apple.dt.Xcode",
+    "kind": "editor"
+  },
+  {
+    "name": "GoLand",
+    "bundleId": "com.jetbrains.goland",
+    "kind": "editor"
+  },
+  {
+    "name": "Android Studio",
+    "bundleId": "com.google.android.studio",
+    "kind": "editor"
+  },
+  {
+    "name": "Rider",
+    "bundleId": "com.jetbrains.rider",
+    "kind": "editor"
+  },
+  {
+    "name": "Nova",
+    "bundleId": "com.panic.Nova",
+    "kind": "editor"
+  },
+  {
+    "name": "Emacs",
+    "bundleId": "org.gnu.Emacs",
+    "kind": "editor"
+  },
+  {
+    "name": "Lite XL",
+    "bundleId": "com.lite-xl",
+    "kind": "editor"
+  },
+  {
+    "name": "Fleet",
+    "bundleId": "Fleet.app",
+    "kind": "editor"
+  },
+  {
+    "name": "Pulsar",
+    "bundleId": "dev.pulsar-edit.pulsar",
+    "kind": "editor"
+  },
+  {
+    "name": "Zed",
+    "bundleId": "dev.zed.Zed",
+    "kind": "editor"
+  },
+  {
+    "name": "Zed (Preview)",
+    "bundleId": "dev.zed.Zed-Preview",
+    "kind": "editor"
+  },
+  {
+    "name": "Cursor",
+    "bundleId": "com.todesktop.230313mzl4w4u92",
+    "kind": "editor"
+  },
+  {
+    "name": "Windsurf",
+    "bundleId": "com.exafunction.windsurf",
+    "kind": "editor"
+  },
+  {
+    "name": "Terminal",
+    "bundleId": "com.apple.Terminal",
+    "kind": "terminal"
+  },
+  {
+    "name": "iTerm2",
+    "bundleId": "com.googlecode.iterm2",
+    "kind": "terminal"
+  },
+  {
+    "name": "Hyper",
+    "bundleId": "co.zeit.hyper",
+    "kind": "terminal"
+  },
+  {
+    "name": "PowerShellCore",
+    "bundleId": "com.microsoft.powershell",
+    "kind": "terminal"
+  },
+  {
+    "name": "Kitty",
+    "bundleId": "net.kovidgoyal.kitty",
+    "kind": "terminal"
+  },
+  {
+    "name": "Alacritty",
+    "bundleId": "org.alacritty",
+    "kind": "terminal"
+  },
+  {
+    "name": "Alacritty",
+    "bundleId": "io.alacritty",
+    "kind": "terminal"
+  },
+  {
+    "name": "Tabby",
+    "bundleId": "org.tabby",
+    "kind": "terminal"
+  },
+  {
+    "name": "WezTerm",
+    "bundleId": "com.github.wez.wezterm",
+    "kind": "terminal"
+  },
+  {
+    "name": "Warp",
+    "bundleId": "dev.warp.Warp-Stable",
+    "kind": "terminal"
+  },
+  {
+    "name": "Ghostty",
+    "bundleId": "com.mitchellh.ghostty",
+    "kind": "terminal"
+  }
+]

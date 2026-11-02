@@ -1,0 +1,22 @@
+%YAML 1.2
+---
+# comment
+key: value
+"quoted": 'single'
+number: 12.5
+bool: true
+nil: ~
+list:
+  - one
+  - &anchor two
+  - *anchor
+  - [a, b, {c: d}]
+map: !!map { x: 1, y: 2 }
+multi: |
+  literal
+  block
+folded: >-
+  folded
+  text
+date: 2001-12-14t21:59:43.10-05:00
+...

@@ -1,0 +1,19 @@
+{
+  "_note": "工作区 ../Vendor/ 的参考源码仓库。fab vendor 提供查看、并发同步和 blobless 单分支压缩，直接移植 ALwith Desktop 实现。项目内源码的同步清单另见 fabfile.py。",
+  "vendors": {
+    "desktop": {
+      "author": "desktop",
+      "url": "https://github.com/desktop/desktop.git",
+      "purpose": "GitHub Desktop：Git 操作与界面行为对照，部分纯函数同步到 src/upstream",
+      "sizeMiB": 72,
+      "gitMiB": 47
+    },
+    "vscode-gitlens": {
+      "author": "gitkraken",
+      "url": "https://github.com/gitkraken/vscode-gitlens.git",
+      "purpose": "GitLens：历史、分支图和 blame 等功能的源码参考，不机械复制进项目",
+      "sizeMiB": 138,
+      "gitMiB": 60
+    }
+  }
+}

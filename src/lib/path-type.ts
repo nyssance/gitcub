@@ -1,0 +1,18 @@
+// Desktop MIT implementation extracted unchanged from ui/lib/app-proxy.ts.
+export type PathType =
+  | "home"
+  | "appData"
+  | "userData"
+  | "temp"
+  | "exe"
+  | "module"
+  | "desktop"
+  | "documents"
+  | "downloads"
+  | "music"
+  | "pictures"
+  | "videos"
+  | "recent"
+  | "logs"
+  | "crashDumps"
+  | "sessionData"

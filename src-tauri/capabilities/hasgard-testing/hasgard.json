@@ -1,0 +1,7 @@
+{
+  "$schema": "../../gen/schemas/desktop-schema.json",
+  "identifier": "hasgard-testing",
+  "description": "开发构建的 WebView 自动化权限，仅随 hasgard-testing feature 编译",
+  "windows": ["main"],
+  "permissions": ["hasgard:default"]
+}

@@ -1,0 +1,41 @@
+/* ALwith Desktop 494518376bf1f21ad9bde2cde6952ccff46ac5e6
+ * src/styles/global-utilities.css: native scrollbar and Base UI overlay rules. */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 9999px;
+  }
+  :hover::-webkit-scrollbar-thumb {
+    background: oklch(0.7 0 0 / 0.35);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.55 0 0 / 0.5);
+  }
+
+  [data-slot="scroll-area-viewport"] {
+    scrollbar-width: none;
+  }
+  [data-slot="scroll-area-viewport"]::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  /* shadcn ScrollArea(Base UI)自动隐藏:平时透明,滚动 / hover 时淡入(macOS overlay 风) */
+  [data-slot="scroll-area-scrollbar"] {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  [data-slot="scroll-area-scrollbar"][data-hovering],
+  [data-slot="scroll-area-scrollbar"][data-scrolling] {
+    opacity: 1;
+    transition-duration: 0.1s;
+  }
+}

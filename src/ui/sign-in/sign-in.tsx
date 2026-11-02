@@ -1,0 +1,267 @@
+import { platform } from "@tauri-apps/plugin-os"
+// Desktop MIT port; platform imports adapted to Tauri.
+import * as React from "react"
+
+import { getHTMLURL } from "../../lib/api"
+import {
+  type IAuthenticationState,
+  type IEndpointEntryState,
+  type IExistingAccountWarning,
+  type SignInState,
+  SignInStep
+} from "../../lib/stores/sign-in-store"
+import { assertNever } from "../../upstream/lib/fatal-error"
+import { Dialog, DialogContent, DialogError, DialogFooter } from "../desktop/dialog"
+import { OkCancelButtonGroup } from "../desktop/dialog/ok-cancel-button-group"
+import { Ref } from "../desktop/ref"
+import { Row } from "../desktop/row"
+import { TextBox } from "../desktop/text-box"
+import type { SignInDispatcher as Dispatcher } from "../sign-in-contract"
+import {
+  EnterpriseServerConfirmation,
+  enterpriseServerConfirmationDescriptionId
+} from "./enterprise-server-confirmation"
+
+interface ISignInProps {
+  readonly dispatcher: Dispatcher
+  readonly signInState: SignInState | null
+  readonly onDismissed: () => void
+  readonly isCredentialHelperSignIn?: boolean
+  readonly credentialHelperUrl?: string
+}
+
+interface ISignInState {
+  readonly endpoint: string
+}
+
+const SignInWithBrowserTitle = platform() === "macos" ? "Sign in Using Your Browser" : "Sign in using your browser"
+
+const DefaultTitle = "Sign in"
+
+const browserSignInInfoContent = (
+  <p>
+    Your browser will redirect you back to GitHub Desktop once you've signed in. If your browser asks for your
+    permission to launch GitHub Desktop, please allow it.
+  </p>
+)
+
+export class SignIn extends React.Component<ISignInProps, ISignInState> {
+  private readonly dialogRef = React.createRef<Dialog>()
+
+  public constructor(props: ISignInProps) {
+    super(props)
+
+    this.state = {
+      endpoint: ""
+    }
+  }
+
+  public componentDidUpdate(prevProps: ISignInProps) {
+    // Whenever the sign in step changes we replace the dialog contents which
+    // means we need to re-focus the first suitable child element as it's
+    // essentially a "new" dialog we're showing only the dialog component itself
+    // doesn't know that.
+    if (prevProps.signInState !== null && this.props.signInState !== null) {
+      if (prevProps.signInState.kind !== this.props.signInState.kind) {
+        this.dialogRef.current?.focusFirstSuitableChild()
+      }
+    }
+  }
+
+  public componentWillReceiveProps(nextProps: ISignInProps) {
+    if (nextProps.signInState !== this.props.signInState) {
+      if (nextProps.signInState?.kind === SignInStep.Success) {
+        this.onDismissed()
+      }
+    }
+  }
+
+  private onSubmit = () => {
+    const state = this.props.signInState
+
+    if (!state) {
+      return
+    }
+
+    const stepKind = state.kind
+
+    switch (state.kind) {
+      case SignInStep.EndpointEntry:
+        this.props.dispatcher.setSignInEndpoint(this.state.endpoint)
+        break
+      case SignInStep.ExistingAccountWarning:
+        this.props.dispatcher
+          .removeAccount(state.existingAccount)
+          .then(() => this.props.dispatcher.setSignInEndpoint(state.endpoint))
+        break
+      case SignInStep.Authentication:
+        this.props.dispatcher.requestBrowserAuthentication()
+        break
+      case SignInStep.Success:
+        this.onDismissed()
+        break
+      default:
+        assertNever(state, `Unknown sign in step ${stepKind}`)
+    }
+  }
+
+  private onEndpointChanged = (endpoint: string) => {
+    this.setState({ endpoint })
+  }
+
+  private renderFooter(): React.JSX.Element | null {
+    const state = this.props.signInState
+
+    if (!state || state.kind === SignInStep.Success) {
+      return null
+    }
+
+    let disableSubmit = false
+
+    let primaryButtonText: string
+    const stepKind = state.kind
+    const continueWithBrowserLabel = platform() === "macos" ? "Continue With Browser" : "Continue with browser"
+
+    switch (state.kind) {
+      case SignInStep.EndpointEntry:
+        disableSubmit = this.state.endpoint.length === 0
+        primaryButtonText = "Continue"
+        break
+      case SignInStep.ExistingAccountWarning:
+        primaryButtonText = continueWithBrowserLabel
+        break
+      case SignInStep.Authentication:
+        primaryButtonText = continueWithBrowserLabel
+        break
+      default:
+        return assertNever(state, `Unknown sign in step ${stepKind}`)
+    }
+
+    return (
+      <DialogFooter>
+        <OkCancelButtonGroup
+          okButtonText={primaryButtonText}
+          okButtonDisabled={disableSubmit || state.loading}
+          cancelButtonDisabled={false}
+          onCancelButtonClick={this.onDismissed}
+        />
+      </DialogFooter>
+    )
+  }
+
+  private renderExistingAccountWarningStep(state: IExistingAccountWarning) {
+    return (
+      <DialogContent>
+        <p className="existing-account-warning">
+          You're already signed in to <Ref>{new URL(getHTMLURL(state.endpoint)).host}</Ref> with the account{" "}
+          <Ref>{state.existingAccount.login}</Ref>. If you continue, you will first be signed out.
+        </p>
+        {browserSignInInfoContent}
+      </DialogContent>
+    )
+  }
+
+  private renderEndpointEntryStep(_state: IEndpointEntryState) {
+    return (
+      <DialogContent>
+        <Row>
+          <TextBox
+            label="Enterprise address"
+            value={this.state.endpoint}
+            onValueChanged={this.onEndpointChanged}
+            placeholder="https://example.ghe.com"
+          />
+        </Row>
+      </DialogContent>
+    )
+  }
+
+  private renderAuthenticationStep(state: IAuthenticationState) {
+    if (state.isUnrecognizedEnterpriseServer) {
+      return (
+        <DialogContent>
+          <EnterpriseServerConfirmation endpoint={state.endpoint} />
+          {browserSignInInfoContent}
+        </DialogContent>
+      )
+    }
+
+    const credentialHelperInfo =
+      this.props.isCredentialHelperSignIn && this.props.credentialHelperUrl ? (
+        <p>
+          Git requesting credentials to access <Ref>{this.props.credentialHelperUrl}</Ref>.
+        </p>
+      ) : undefined
+
+    return (
+      <DialogContent>
+        {credentialHelperInfo}
+        {browserSignInInfoContent}
+      </DialogContent>
+    )
+  }
+
+  private renderStep(): React.JSX.Element | null {
+    const state = this.props.signInState
+
+    if (!state) {
+      return null
+    }
+
+    const stepKind = state.kind
+
+    switch (state.kind) {
+      case SignInStep.EndpointEntry:
+        return this.renderEndpointEntryStep(state)
+      case SignInStep.ExistingAccountWarning:
+        return this.renderExistingAccountWarningStep(state)
+      case SignInStep.Authentication:
+        return this.renderAuthenticationStep(state)
+      case SignInStep.Success:
+        return null
+      default:
+        return assertNever(state, `Unknown sign in step ${stepKind}`)
+    }
+  }
+
+  public render() {
+    const state = this.props.signInState
+
+    if (!state || state.kind === SignInStep.Success) {
+      return null
+    }
+
+    const errors = state.error ? <DialogError>{state.error.message}</DialogError> : null
+
+    const title = state.kind === SignInStep.Authentication ? SignInWithBrowserTitle : DefaultTitle
+
+    const confirmationDialogProps =
+      state.kind === SignInStep.Authentication && state.isUnrecognizedEnterpriseServer
+        ? {
+            role: "alertdialog" as const,
+            ariaDescribedBy: enterpriseServerConfirmationDescriptionId
+          }
+        : {}
+
+    return (
+      <Dialog
+        id="sign-in"
+        title={title}
+        disabled={false}
+        onDismissed={this.onDismissed}
+        onSubmit={this.onSubmit}
+        loading={state.loading}
+        ref={this.dialogRef}
+        {...confirmationDialogProps}>
+        {errors}
+        {this.renderStep()}
+        {this.renderFooter()}
+      </Dialog>
+    )
+  }
+
+  private onDismissed = () => {
+    this.props.dispatcher.resetSignInState()
+    this.props.onDismissed()
+  }
+}

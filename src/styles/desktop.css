@@ -1,0 +1,1122 @@
+/* 从 GitHub Desktop 移植的布局规则（MIT License, github.com/desktop/desktop）。
+ *
+ * 来源文件：
+ *   app/styles/ui/_repository.scss
+ *   app/styles/ui/_list.scss
+ *   app/styles/ui/_tab-bar.scss
+ *   app/styles/ui/changes/_changes-list.scss
+ *
+ * 原样照搬而不是自己拼 Tailwind：这些规则里有几处不显眼但必需的组合，
+ * 比如 .panel 同时要 height:100% + flex:1 1 auto + min-height:0，
+ * 少写 height:100% 滚动就会失效。SCSS 变量已换成本项目的 token。 */
+
+/* —— #repository ———————————————————————————————————————————— */
+.repository {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+}
+
+.repository-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Desktop 原文是 overflow-y:auto —— 因为它的 .list 外面套 AutoSizer，
+ * 量出像素高度后永远不会溢出 .panel，所以 .panel 自己滚不滚都无所谓。
+ * 我们没有那一层：.panel 一旦是滚动容器，子元素就被允许撑开，
+ * 结果变成整个侧栏（含提交框）一起滚。改成 hidden，由内部列表滚。 */
+.repository-sidebar .panel {
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* —— .changes-list-container ———————————————————————————————— */
+.changes-list-container {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* —— .list ————————————————————————————————————————————————— */
+.list {
+  flex-grow: 1;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Desktop 的 .list 是 overflow:hidden —— 因为真正滚动的是它内部
+ * react-virtualized 的 Grid。我们没有那一层，所以需要一个自己滚动的容器。
+ * 同样放在无层级作用域，免得和 Tailwind 工具类互相压制。 */
+.list-scroller {
+  flex: 1 1 auto;
+  min-height: 0; /* 不能写 height:100%：那会按父元素高度撑开而不是收缩 */
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* —— .changes-interstitial / .suggested-action ——————————————————————————
+ * Desktop app/styles/ui/changes/_changes-interstitial.scss 与 ui/suggested-actions/_suggested-action*.scss：
+ * 没有本地改动时内容区的空白页。四周 40px（--spacing-quad）、内容最宽 600px；标题 32px light；
+ * 图 73×70 贴底；建议卡片 20px 内边距、上下相连、首尾圆角 6px，首要建议蓝底蓝边；
+ * 标题 12px semibold、说明 12px、发现方式次级色，kbd 照 _globals.scss。按钮是 shadcn 基础控件，不改尺寸。 */
+.changes-interstitial {
+  padding: 40px;
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.changes-interstitial .interstitial-header {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 20px;
+}
+.changes-interstitial .interstitial-header .text {
+  flex-grow: 1;
+  margin-right: 20px;
+}
+.changes-interstitial .interstitial-header h1 {
+  padding: 0;
+  margin: 0;
+  font-size: 32px;
+  font-weight: 300;
+}
+.changes-interstitial .interstitial-header p {
+  margin: 0;
+}
+.changes-interstitial .blankslate-image {
+  flex: 0;
+  height: 70px;
+  width: 73px;
+  min-width: 70px;
+  min-height: 73px;
+  align-self: flex-end;
+}
+.changes-interstitial .content {
+  width: 100%;
+  max-width: 600px;
+}
+@media screen and (max-width: 640px) {
+  .changes-interstitial {
+    padding: 20px;
+  }
+}
+@media screen and (max-width: 550px) {
+  .changes-interstitial .interstitial-header .blankslate-image {
+    display: none;
+  }
+}
+
+.suggested-action-group {
+  display: flex;
+  flex-direction: column;
+}
+.suggested-action-group.primary {
+  margin-bottom: 10px;
+}
+.suggested-action {
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.suggested-action:first-child {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.suggested-action:last-child {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.suggested-action.primary {
+  background: var(--suggested-action-primary);
+  border-color: var(--suggested-action-primary-border);
+}
+.suggested-action .text-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-right: 20px;
+}
+.suggested-action .image-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+.suggested-action .image-wrapper .octicon {
+  height: 100%;
+  width: 100%;
+  color: var(--suggested-action-icon);
+}
+.suggested-action h2 {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.suggested-action p.description {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.suggested-action p.discoverability {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.suggested-action p.discoverability kbd {
+  color: var(--foreground);
+}
+.suggested-action.primary p.discoverability {
+  color: var(--suggested-action-primary-muted);
+}
+.suggested-action > button {
+  flex-shrink: 0;
+}
+@media screen and (max-width: 768px) {
+  .suggested-action {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .suggested-action .text-wrapper {
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+}
+
+/* Desktop _globals.scss kbd：全局，空白页建议和重排提示都用 */
+kbd {
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: inline-block;
+  padding: 1px 2px;
+  line-height: 1;
+  min-height: 16px;
+  font-family: var(--font-sans);
+  text-align: center;
+  min-width: 1.5em;
+}
+kbd:not(:last-child) {
+  margin-right: 2px;
+}
+
+/* —— .list-item.selected / .list-focus-container.focus-within ——————————
+ * Desktop _list.scss：选中行无焦点时用 --box-selected-*（浅灰底、正文色），列表内有焦点时用
+ * --box-selected-active-*（蓝底白字），次级色跟着换成同色；悬停 --list-item-hover-background-color
+ * 后写、同权重，所以无焦点的选中行悬停时显示悬停色，和原版一样。
+ * 只用于改动列表、历史列表和提交文件列表；PR 列表和侧栏仍是 shadcn accent。
+ * Desktop 的 List 由 FocusContainer 在 JS 里加 .focus-within；历史列表是自家的虚拟滚动容器，
+ * 用同义的 :focus-within。 */
+.desktop-list-row[data-selected] {
+  --muted-foreground: var(--list-selected-foreground);
+  color: var(--list-selected-foreground);
+  background: var(--list-selected);
+}
+.desktop-list-row:hover {
+  background: var(--list-hover);
+}
+:is(.list-focus-container.focus-within, .desktop-list:focus-within) .desktop-list-row[data-selected] {
+  --muted-foreground: var(--list-selected-active-foreground);
+  color: var(--list-selected-active-foreground);
+  background: var(--list-selected-active);
+}
+/* _file-list.scss：状态图标只在「有焦点且选中」时用正文色，其余时候保留状态色 */
+:is(.list-focus-container.focus-within, .desktop-list:focus-within) .desktop-list-row[data-selected] svg {
+  color: currentColor;
+}
+/* _commit-list.scss .tag-name / .unpushed-indicator：徽章底色按普通、选中、焦点选中三档 */
+.desktop-list-row .list-badge {
+  background: var(--list-badge);
+  color: var(--list-badge-foreground);
+}
+.desktop-list-row[data-selected] .list-badge {
+  background: var(--list-selected-badge);
+  color: var(--list-selected-badge-foreground);
+}
+:is(.list-focus-container.focus-within, .desktop-list:focus-within) .desktop-list-row[data-selected] .list-badge {
+  background: var(--list-selected-active-badge);
+  color: var(--list-selected-active-badge-foreground);
+}
+
+/* —— 语法高亮 ————————————————————————————————————————————————
+ * Lezer 的 classHighlighter 产出 `tok-*` 类，这里映射到原版的 --syntax-* 色。
+ * token 来自对**两侧完整文件**分别做的词法分析（lib/highlighter），
+ * 不是把统一 diff 喂给解析器——那样删除行和新增行相邻，token 会被切错。 */
+.side-by-side-diff-container .cm-tok-keyword,
+.side-by-side-diff-container .cm-tok-modifier,
+.side-by-side-diff-container .cm-tok-controlKeyword,
+.side-by-side-diff-container .cm-tok-operatorKeyword {
+  color: var(--syntax-keyword);
+}
+
+.side-by-side-diff-container .cm-tok-string,
+.side-by-side-diff-container .cm-tok-string2,
+.side-by-side-diff-container .cm-tok-special {
+  color: var(--syntax-string);
+}
+
+.side-by-side-diff-container .cm-tok-comment,
+.side-by-side-diff-container .cm-tok-lineComment,
+.side-by-side-diff-container .cm-tok-blockComment,
+.side-by-side-diff-container .cm-tok-docComment {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+.side-by-side-diff-container .cm-tok-number,
+.side-by-side-diff-container .cm-tok-atom,
+.side-by-side-diff-container .cm-tok-bool,
+.side-by-side-diff-container .cm-tok-literal,
+.side-by-side-diff-container .cm-tok-null {
+  color: var(--syntax-atom);
+}
+
+.side-by-side-diff-container .cm-tok-macroName {
+  color: var(--syntax-variable);
+}
+
+.side-by-side-diff-container .cm-tok-typeName,
+.side-by-side-diff-container .cm-tok-className,
+.side-by-side-diff-container .cm-tok-namespace {
+  color: var(--syntax-type);
+}
+
+.side-by-side-diff-container .cm-tok-tagName,
+.side-by-side-diff-container .cm-tok-angleBracket {
+  color: var(--syntax-tag);
+}
+
+.side-by-side-diff-container .cm-tok-attributeName,
+.side-by-side-diff-container .cm-tok-propertyName {
+  color: var(--syntax-attribute);
+}
+
+.side-by-side-diff-container .cm-tok-variableName {
+  color: var(--syntax-alt-variable);
+}
+
+/* 函数/方法定义是紫色（原版 --syntax-variable-color）。
+   Lezer 给的是 `tok-variableName tok-definition` 两个类，
+   必须用复合选择器，否则会被上面单类的 tok-variableName 盖掉。 */
+.side-by-side-diff-container .cm-tok-variableName.cm-tok-definition,
+.side-by-side-diff-container .cm-tok-variableName.cm-tok-function,
+.side-by-side-diff-container .cm-tok-function.cm-tok-definition {
+  color: var(--syntax-variable);
+}
+
+.side-by-side-diff-container .cm-tok-link,
+.side-by-side-diff-container .cm-tok-url {
+  color: var(--syntax-link);
+}
+
+.side-by-side-diff-container .cm-tok-heading {
+  color: var(--syntax-header);
+}
+
+.side-by-side-diff-container .cm-tok-quote {
+  color: var(--syntax-quote);
+}
+
+/* —— 标题栏 ——————————————————————————————————————————————————
+ * 结构来自原版 _title-bar.scss。
+ * macOS: --darwin-title-bar-height: 22px（红绿灯浮在上面）
+ * Windows: --win32-title-bar-height: 28px（自绘图标 + 按钮） */
+#title-bar {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--title-bar-height);
+  background: var(--toolbar);
+  position: relative;
+}
+
+/* 高度定义在 :root 上，不在 #title-bar 上 —— 原版也是挂在 #desktop-app-chrome
+   的 .platform-darwin / .platform-win32 上的。挂在标题栏自己身上时，
+   内容区那句 calc(100vh - var(--title-bar-height)) 取不到值，
+   整页就比窗口高出一个标题栏（实测提交按钮被切在窗口外）。 */
+:root {
+  --title-bar-height: 22px; /* 原版 --darwin-title-bar-height */
+}
+
+:root[data-platform="windows"] {
+  --title-bar-height: 28px; /* 原版 --win32-title-bar-height */
+}
+
+/* frame:false 之后系统的缩放边框没了，自己补 —— 原版 .resize-handle */
+#title-bar .resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#title-bar .resize-handle.top {
+  width: 100%;
+  height: 3px;
+}
+
+#title-bar .resize-handle.left {
+  width: 3px;
+  height: var(--title-bar-height);
+}
+
+.window-controls {
+  margin-left: auto;
+  display: flex;
+  height: 100%;
+}
+
+.window-control {
+  width: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--toolbar-foreground);
+}
+
+.window-control svg path {
+  fill: currentColor;
+}
+
+.window-control:hover {
+  background: var(--toolbar-hover);
+}
+
+.window-control.close:hover {
+  background: #e81123; /* Windows 关闭按钮的标准红 */
+  color: #fff;
+}
+
+/* —— 侧栏毛玻璃 ————————————————————————————————————————————
+ * 窗口整体开了 Effect::Sidebar（macOS）/ Mica（Windows），效果作用在整窗，
+ * 分区靠这里：侧栏透明让材质透出来，右侧内容区盖不透明底色。
+ * 这也是 Finder / Mail / Xcode 的做法。
+ * 注意：GitHub Desktop 本身没有毛玻璃（它是 backgroundColor: '#fff'），
+ * 这一条来自 alwith-desktop 与 Codex 客户端。 */
+:root {
+  --title-bar-height: 22px;
+}
+
+/* 透出原生材质的只有最左边那条仓库栏；右边（工具栏 + 更改栏 + diff）
+   必须不透明，否则整窗都糊。 */
+.repository-content {
+  background: var(--background);
+}
+
+/* Split diff uses the same wrap preference as the unified editor. */
+.diff-container .side-by-side-diff-container .row .content {
+  white-space: var(--split-white-space, pre-wrap);
+}
+
+/* _resizable.scss：工具栏按钮右缘 6px 的拖动把手 */
+.resizable-component {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+
+  /* This is for the absolutely positioned resize handle */
+  position: relative;
+
+  .resize-handle {
+    position: absolute;
+    right: -3px;
+    top: 0px;
+    height: 100%;
+    width: 6px;
+    padding: 0;
+    /* _variables.scss --drag-overlay-z-index */
+    z-index: 15;
+    cursor: ew-resize;
+
+    /* remove button styles */
+    background: none;
+    border: none;
+  }
+}
+
+/* Desktop _type.scss：「无障碍 › 链接加下划线」在应用根节点加 underline-links */
+.underline-links a {
+  text-decoration: underline;
+}
+
+/* Desktop dialogs/_hook-failed.scss、_commit_progress.scss 与 _dialog.scss#delete-worktree-failed：
+   终端四周留 --spacing（10px） */
+#hook-failed-dialog .xterm,
+#commit-progress-dialog .xterm,
+#delete-worktree-failed .xterm,
+#app-error.raw-git-error .xterm {
+  padding: 10px;
+}
+
+/* Desktop _dialog.scss#app-error：错误文字可选中，保留换行但必要时折行；内容区最高 400px 可滚动。
+   原始 git 输出的 750px 宽度在组件里用 Tailwind 类给。 */
+#app-error .dialog-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+#app-error .dialog-content p {
+  user-select: text;
+  cursor: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+#delete-worktree-failed .xterm {
+  margin-bottom: 10px;
+}
+
+/* —— 多提交操作进度 ——————————————————————————————————————————
+ * 原版 _progress-dialog.scss：进度条 --dialog-progress-background（$green），
+ * 当前提交前的勾是 --color-new 圆点。 */
+#multi-commit-progress progress {
+  appearance: none;
+  max-width: 100%;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+#multi-commit-progress progress::-webkit-progress-bar {
+  background-color: transparent;
+}
+
+#multi-commit-progress progress::-webkit-progress-value {
+  background-color: #28a745;
+  /* ensure a smooth transition if the rebase goes immediately from 0 to 100% */
+  transition: width 1s ease;
+}
+
+#multi-commit-progress .details {
+  display: flex;
+  flex-flow: row nowrap;
+  padding: 10px 0 20px;
+}
+
+#multi-commit-progress .green-circle {
+  background-color: #28a745;
+  color: var(--background);
+  border-radius: 50%;
+  height: 22px;
+  width: 22px;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  align-items: center;
+}
+
+#multi-commit-progress .summary {
+  padding-left: 10px;
+}
+
+#multi-commit-progress .summary .message {
+  font-weight: bold;
+}
+
+/* Desktop _local-changes-overwritten.scss：会被覆盖的文件列表等宽、最高 175px 可滚动 */
+#local-changes-overwritten .dialog-content .files-list {
+  max-height: 175px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  margin-bottom: 10px;
+}
+#local-changes-overwritten .dialog-content .files-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#local-changes-overwritten .dialog-content .files-list li {
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+/* —— #undo-commit（Desktop _undo-commit.scss）———————————————————
+ * 变量换成本项目 token：--base-border → 1px --border、--box-alt-background-color → --box-alt、
+ * --spacing 10px、--spacing-half 5px、--font-size-sm 11px、--text-secondary-color → --muted-foreground */
+#undo-commit {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  background: var(--box-alt);
+
+  .commit-info {
+    padding: 5px 10px;
+    padding-right: 0;
+    margin-right: 5px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+
+    .summary,
+    .ago {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ago {
+      color: var(--muted-foreground);
+    }
+  }
+
+  /* 包一层才能给按钮留边距：padding 放在 #undo-commit 上，展开收起的动画就带不上它 */
+  .actions {
+    padding: 10px;
+    padding-left: 0;
+  }
+}
+
+/* —— #expandable-commit-summary（Desktop _expandable-commit-summary.scss）——————————
+ * 变量换成本项目 token：--base-border → 1px --border、--box-alt-background-color → --box-alt、
+ * --text-secondary-color → --muted-foreground、--color-new/-deleted → --status-new/-deleted、
+ * --spacing 10px、--spacing-half 5px、--font-size-md 14px、--font-size-sm 11px */
+#expandable-commit-summary {
+  --no-shadow-top: linear-gradient(#fff, rgba(255, 255, 255, 0));
+  --no-shadow-bottom: linear-gradient(rgba(255, 255, 255, 0), #fff);
+  --top-shadow: linear-gradient(0deg, rgba(255, 255, 255, 0) 0%, rgba(225, 228, 232, 0.6) 90%, #e1e4e8 100%);
+  --bottom-shadow: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(225, 228, 232, 0.6) 90%, #e1e4e8 100%) 0 100%;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+
+  .beneath-summary {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 10px;
+    padding-top: 0;
+    padding-bottom: 5px;
+  }
+
+  .ecs-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 16px;
+    overflow-wrap: break-word;
+    display: flex;
+    padding: 10px;
+    padding-bottom: 5px;
+
+    > .selectable {
+      min-width: 0;
+    }
+
+    &.empty-summary {
+      color: var(--muted-foreground);
+    }
+
+    .expander {
+      background: transparent;
+      padding: 0;
+      border: none;
+      color: var(--foreground);
+      font-size: inherit;
+      font-weight: normal;
+      font-family: inherit;
+      margin-left: 10px;
+      height: auto;
+
+      svg {
+        vertical-align: text-top;
+      }
+    }
+  }
+
+  .ecs-description {
+    display: flex;
+    position: relative;
+    min-height: 10px;
+    padding-bottom: 5px;
+
+    .ecs-description-scroll-view {
+      overflow: hidden;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .ecs-description-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      min-height: 0;
+      background: var(--box-alt);
+      padding: 5px;
+    }
+  }
+
+  .ecs-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    .ecs-meta-item {
+      display: flex;
+      margin-right: 10px;
+      font-size: 11px;
+      align-items: center;
+
+      &.authors {
+        margin-left: 0;
+
+        .avatar {
+          width: 16px;
+          height: 16px;
+        }
+
+        .author .avatar-container {
+          margin-right: 4px;
+        }
+      }
+
+      &.commit-ref {
+        .ref {
+          padding-left: 5px;
+        }
+
+        .copy-button {
+          margin-left: 5px;
+          background: transparent;
+          border: none;
+          padding: 0;
+          height: auto;
+          min-width: 16px;
+
+          &:hover {
+            color: var(--muted-foreground);
+          }
+        }
+      }
+
+      /* 原版全局 .lines-added-deleted { margin-left: auto }（写在 _open-pull-request-header.scss，但未加作用域）也作用在这里，增删数靠右 */
+      &.lines-added-deleted {
+        margin-left: auto;
+
+        div {
+          padding-right: 5px;
+        }
+
+        .lines-added {
+          color: var(--status-new);
+        }
+
+        .lines-deleted {
+          color: var(--status-deleted);
+        }
+      }
+
+      &.tags {
+        flex-shrink: 1;
+        min-width: 0;
+
+        .octicon {
+          padding-right: 5px;
+        }
+
+        span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  &:not(.expanded) .ecs-description-scroll-view {
+    max-height: 80px;
+    min-height: 30px;
+  }
+
+  /* 展开后摘要可以占满历史区，剩下的高度让给文件列表与 diff */
+  &.expanded {
+    flex-shrink: 1;
+
+    .beneath-summary {
+      background:
+        var(--no-shadow-top),
+        var(--no-shadow-bottom) 0 100%,
+        var(--top-shadow),
+        var(--bottom-shadow);
+      background-repeat: no-repeat;
+      background-size:
+        100% 20px,
+        100% 20px,
+        100% 10px,
+        100% 10px;
+      background-attachment: local, local, scroll, scroll;
+    }
+
+    .ecs-meta {
+      display: block;
+
+      .ecs-meta-item {
+        margin-bottom: 5px;
+        align-items: unset;
+        margin-right: 0;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        &.authors {
+          display: block;
+
+          .author {
+            margin-bottom: 2px;
+            display: flex;
+
+            div:last-child {
+              overflow-wrap: anywhere;
+            }
+          }
+        }
+
+        &.commit-ref .ref {
+          overflow-wrap: anywhere;
+        }
+
+        &.lines-added-deleted .lines-added {
+          padding-left: 5px;
+        }
+
+        &.tags span {
+          white-space: normal;
+        }
+      }
+    }
+  }
+
+  .selectable {
+    user-select: text;
+    cursor: text;
+
+    * {
+      user-select: unset;
+      pointer-events: unset;
+      cursor: text;
+    }
+
+    a {
+      cursor: pointer;
+    }
+  }
+}
+
+.dark #expandable-commit-summary {
+  --no-shadow-top: linear-gradient(#24292e, rgba(255, 255, 255, 0));
+  --no-shadow-bottom: linear-gradient(rgba(255, 255, 255, 0), #24292e);
+  --top-shadow: linear-gradient(0deg, rgba(36, 41, 46, 0) 0%, rgba(0, 0, 0, 0.6) 90%, #000 100%);
+  --bottom-shadow: linear-gradient(180deg, rgba(36, 41, 46, 0) 0%, rgba(0, 0, 0, 0.6) 90%, #000 100%) 0 100%;
+}
+
+/* —— AvatarStack / Avatar（Desktop _avatar-stack.scss、_avatar.scss）———————————
+ * --background-color → --background、--text-secondary-color → --muted-foreground、
+ * --box-alt-background-color → --box-alt；$gray-100/200/300 = #f6f8fa/#e1e4e8/#d1d5da。
+ * 本项目的 .avatar 外面多一层 shadcn Avatar（[data-slot="avatar"]），叠放的负边距与阴影放在这层上 */
+.avatar {
+  border-radius: 50%;
+}
+
+.avatar-container {
+  display: flex;
+  align-items: center;
+  line-height: 0;
+}
+
+svg.avatar {
+  fill: var(--muted-foreground);
+  background: var(--box-alt);
+}
+
+.AvatarStack {
+  position: relative;
+  min-width: 26px;
+  height: 20px;
+
+  .AvatarStack-body {
+    position: absolute;
+  }
+
+  &.AvatarStack--two {
+    min-width: 36px;
+  }
+
+  &.AvatarStack--three {
+    min-width: 30px;
+  }
+
+  &.AvatarStack--plus {
+    min-width: 46px;
+  }
+
+  &.AvatarStack--small {
+    height: 16px;
+    min-width: 20px;
+
+    .avatar {
+      width: 16px;
+      height: 16px;
+    }
+
+    &.AvatarStack--two {
+      min-width: 25px;
+    }
+
+    &.AvatarStack--three {
+      min-width: 30px;
+    }
+
+    &.AvatarStack--plus {
+      min-width: 40px;
+    }
+
+    .avatar.avatar-more {
+      &::before,
+      &::after {
+        height: 16px;
+      }
+
+      &::before {
+        width: 13px;
+      }
+    }
+
+    &:hover [data-slot="avatar"] {
+      margin-right: 1px;
+    }
+  }
+}
+
+.AvatarStack-body {
+  display: flex;
+  background: inherit;
+
+  svg.avatar {
+    fill: var(--muted-foreground);
+    background: var(--box-alt);
+  }
+
+  .avatar-container:nth-child(n + 5) [data-slot="avatar"] {
+    display: none;
+    opacity: 0;
+  }
+
+  .avatar-container {
+    &:nth-child(1) {
+      z-index: 3;
+    }
+
+    &:nth-child(2) {
+      z-index: 2;
+    }
+
+    &:nth-child(3) {
+      z-index: 1;
+    }
+
+    &:last-child {
+      box-shadow: none;
+    }
+  }
+
+  [data-slot="avatar"] {
+    position: relative;
+    display: flex;
+    box-sizing: content-box;
+    margin-right: -11px;
+    background-color: inherit;
+    box-shadow: 1px 0 0 var(--background);
+    border-radius: 50%;
+    transition: margin 0.1s ease-in-out;
+
+    img {
+      border-radius: 50%;
+    }
+  }
+
+  &:hover {
+    [data-slot="avatar"] {
+      margin-right: 3px;
+    }
+
+    .avatar-container:nth-child(n + 5) [data-slot="avatar"] {
+      display: flex;
+      opacity: 1;
+    }
+
+    .avatar-more {
+      display: none !important;
+    }
+  }
+}
+
+.avatar.avatar-more {
+  z-index: 1;
+  margin-right: 0;
+  background: #f6f8fa;
+  width: 10px !important;
+
+  &::before,
+  &::after {
+    position: absolute;
+    display: block;
+    height: 20px;
+    content: "";
+    border-radius: 50%;
+  }
+
+  &::before {
+    width: 17px;
+    background: #e1e4e8;
+  }
+
+  &::after {
+    width: 14px;
+    background: #d1d5da;
+  }
+}
+
+/* —— 键盘重排 ——————————————————————————————————————————————————————————————
+ * Desktop _list-item-insertion-overlay.scss（darwin 指示：左端 10px 圆圈 + 横线，--focus-color = $blue）、
+ * _list.scss .overlay（--overlay-background-color、--drag-overlay-z-index 15）与 .keyboard-insertion-element、
+ * history/_commit-list.scss .reorder-commits-hint-popover 与 selected-for-keyboard-insertion、
+ * drag-elements/_commit-drag-element.scss。浮层挂在 body 下，坐标用 fixed。 */
+.list-item-insertion-indicator {
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+.list-item-insertion-indicator.darwin-line {
+  left: 10px;
+  right: 0;
+  height: 2px;
+  background-color: var(--primary);
+}
+.list-item-insertion-indicator.darwin-line.top {
+  top: -1px;
+}
+.list-item-insertion-indicator.darwin-line.bottom {
+  bottom: -1px;
+}
+.list-item-insertion-indicator.darwin-circle {
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+}
+.list-item-insertion-indicator.darwin-circle.top {
+  top: -5px;
+}
+.list-item-insertion-indicator.darwin-circle.bottom {
+  bottom: -5px;
+}
+.selected-for-keyboard-insertion .desktop-list-row {
+  --muted-foreground: var(--list-selected-foreground);
+  color: var(--list-selected-foreground);
+  background: var(--list-selected);
+}
+.keyboard-insertion-overlay {
+  position: fixed;
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.4);
+}
+.dark .keyboard-insertion-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+.reorder-commits-hint-popover {
+  position: fixed;
+  z-index: 20;
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+}
+.reorder-commits-hint-popover h4 {
+  font-weight: 600;
+}
+.reorder-commits-hint-popover p {
+  margin: 5px 0;
+}
+.reorder-commits-hint-popover p:last-child {
+  margin-bottom: 0;
+}
+.keyboard-insertion-element {
+  display: block;
+  position: fixed;
+  z-index: 1000;
+}
+#commit-drag-element {
+  display: block;
+  position: relative;
+  height: 50px;
+  min-width: 300px;
+  padding: 0;
+}
+#commit-drag-element .commit-box {
+  box-shadow: 2px 1px 1px 0 var(--border);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--background);
+}
+#commit-drag-element .commit-box .commit {
+  max-width: 300px;
+}
+#commit-drag-element .commit-box .count {
+  /* linear-gradient(#d73a49, darken(#d73a49, 5%)) */
+  background-image: linear-gradient(#d73a49, #ce2a39);
+  color: white;
+  width: 18px;
+  height: 18px;
+  font-weight: 500;
+  font-size: 11px;
+  position: absolute;
+  top: -22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100%;
+}
+#commit-drag-element.multiple-selected::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--background);
+  z-index: -1;
+  left: 7px;
+  top: 5px;
+  box-shadow: 1px 1px 1px 1px var(--border);
+}

@@ -1,0 +1,43 @@
+// Desktop MIT port; platform imports adapted to Tauri.
+import type { Branch } from "../models/branch"
+import type { IMultiCommitOperationState, IRepositoryState } from "../models/desktop-changes-state"
+import { type ChooseBranchStep, conflictSteps, MultiCommitOperationStepKind } from "../models/multi-commit-operation"
+import { TipState } from "../models/tip"
+
+/**
+ * Setup the multi commit operation state when the user needs to select a branch as the
+ * base for the operation.
+ */
+export function getMultiCommitOperationChooseBranchStep(
+  state: IRepositoryState,
+  initialBranch?: Branch | null
+): ChooseBranchStep {
+  const { defaultBranch, allBranches, recentBranches, tip } = state.branchesState
+  let currentBranch: Branch | null
+
+  if (tip.kind === TipState.Valid) {
+    currentBranch = tip.branch
+  } else {
+    throw new Error("Tip is not in a valid state, which is required to start the multi commit operation")
+  }
+
+  return {
+    kind: MultiCommitOperationStepKind.ChooseBranch,
+    defaultBranch,
+    currentBranch,
+    allBranches,
+    recentBranches,
+    initialBranch: initialBranch !== null ? initialBranch : undefined
+  }
+}
+
+export function isConflictsFlow(
+  isMultiCommitOperationPopupOpen: boolean,
+  multiCommitOperationState: IMultiCommitOperationState | null
+): boolean {
+  return (
+    isMultiCommitOperationPopupOpen &&
+    multiCommitOperationState !== null &&
+    conflictSteps.includes(multiCommitOperationState.step.kind)
+  )
+}
