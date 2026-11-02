@@ -767,7 +767,9 @@ gix-blame 候选行的归属比对：合成与冲突仓库全部相同，Desktop
     读不到的对象（blobless 克隆缺少改名检测要读的 blob 时，git 会按需联网取）。Desktop 检出与 Homebrew 各抽 61 个
     文件逐字节比对全量历史全部一致；加上游标后在完整克隆上重抽各 41 个文件，全量一致，并按每页 100 条与 37 条
     带游标逐页翻到底：Desktop 21 页、Homebrew 39 页与 git 全量切片逐页一致（其中 13 / 19 页接着游标走）；更早用顺序版本跑的 327 个 Desktop 文件里 326 个一致，1 个因 blob 缺失让位。
-- 未覆盖：冷缓存下首次打开仓库（无法在进程内可重复测量）、`A...B`、`HEAD~n`、短 SHA 等其余修订号写法（仍起 git 进程）、
+- 未覆盖：冷缓存下首次打开仓库（无法在进程内可重复测量）、`A...B`、`HEAD~n`、短 SHA 等其余修订号写法（`history::query_details` 遇到时仍起 git 进程；
+  2026-11-02 核对调用方：`getCommits` 只传 `HEAD`、完整 SHA、`A..B` 与 `HEAD --not --remotes`，`A...B` 只给 `getAheadBehind`（已由 `left_right_counts` 在进程内作答），
+  `revRangeInclusive`（`from^..to`）没有调用方，所以这几种写法不在应用的任何路径上，不算热路径缺陷）、
   推送/拉取等网络操作、FSEvents 触发的状态刷新节流，以及 WebView 渲染。没有测过的路径不做更快的声明。
   应用整体的启动时间与常驻内存另见下面「应用启动与内存」。
 
