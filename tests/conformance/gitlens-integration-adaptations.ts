@@ -50,6 +50,8 @@ export const gitLensIntegrationAdaptations: Record<string, Adaptation> = {
       "ConfigSubProvider — gk branch sections": "GitLens gk 分支元数据（.git/gk/config），GitCub 无此存储",
       "ConfigSubProvider — held config lock": "GitLens gk 配置写入的锁重试",
       "ConfigSubProvider — concurrent gk config writes": "GitLens gk 配置写入合并",
+      "ConfigSubProvider strict association persistence":
+        "GitLens 工作树与 issue 关联的严格读写（.git/gk 存储），Desktop/GitCub 无此功能",
       "each worktree reads its own config.worktree value, whichever read first":
         "getConfigRegex 无 GitCub 对应（应用只按键读取）",
       "a worktree read first does not leak its config.worktree value to the others":

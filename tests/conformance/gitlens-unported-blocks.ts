@@ -49,14 +49,16 @@ const unported: Record<string, Unported> = {
     suites: ["parseUpstream", "parseRefName", "getRemoteNameSlashIndex", "isDetachedHead", "upstream remote"],
     tests: ["strips a leading remotes/", "keeps a leading remotes/ that belongs to the remote name"]
   },
-  // 缓存、空树 sha 与限定路径的文件/树列表在 GitCub 没有对应 API。空树只有 Desktop 的 SHA-1 常量
+  // 缓存、空树 sha、限定路径的文件/树列表，以及 getBlobIds / exists / getTreeEntryForRevision 在 GitCub 没有对应 API。空树只有 Desktop 的 SHA-1 常量
   // NullTreeSHA（Desktop app/src/lib/git/diff-index.ts:71，GitCub src/lib/git/diff-index.ts:71），不按仓库对象格式求值。
   "gitlens/revision.test.ts": {
     imports: ["import { isCancellationError } from '@gitlens/utils/cancellation.js';\n"],
     suites: [
       "RevisionSubProvider.resolveRevision — force bypasses the cache",
       "RevisionSubProvider.getEmptyTreeSha",
-      "RevisionSubProvider scoped listings"
+      "RevisionSubProvider scoped listings",
+      "RevisionSubProvider glob-like file names",
+      "RevisionSubProvider.getBlobIds (working) with paths hash-object cannot read"
     ]
   },
   // Desktop getRepositoryType 把 git 退出码 128（含无权进入目录）一律当作 missing。

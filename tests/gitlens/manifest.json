@@ -1,9 +1,9 @@
 {
   "project": "gitlens",
   "repository": "https://github.com/gitkraken/vscode-gitlens",
-  "commit": "efffd14e1ea755f9075a820780a7d385e93f72d1",
+  "commit": "b87331422fe75f845ad32f581d2f500f72f84523",
   "note": "Source-file inventory only. All entries remain pending until upstream scenarios and assertions are verified against GitCub. Reference features do not imply test coverage or equivalent behavior. Entries marked excluded are VS Code extension host / webview / E2E or GitKraken Plus suites that the user ruled out on 2026-10-27; they are not product gaps. See tests/conformance/README.md. Files in or under any \"plus\" directory are covered by GitLens Pro License (LICENSE.plus) and are excluded from porting on 2026-10-27 regardless of their subject. On 2026-10-27 every remaining pending file was triaged one by one: suites that test GitLens's own infrastructure (exec queue, command classifier, caches, watcher sessions, health monitors, its own parsers and models) or GitLens-only features that Desktop does not have and the user has not authorized are excluded with the reason and the Desktop source or grep used to decide; they are not product gaps. The remaining pending files assert Git behaviour of capabilities GitCub has.",
-  "support_sha256": "08c683ca73750b4d9733a0e2b25836e88ec2ecca988ca5542692c730e0f105d6",
+  "support_sha256": "eb2e71f037d0dfee61fcf4f2fcea1074873e7e7864ebb55435d8238531dd0c20",
   "features": [
     {
       "name": "blame",
@@ -439,15 +439,15 @@
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：统计 gk 配置批量读取与 watcher 回声的 git 进程数，属 GitLens 性能/缓存基础设施。"
     },
     "packages/git-cli/src/providers/__tests__/integration/config.test.ts": {
-      "sha256": "5a8e1bbadc9cda747180493b6faee960c7f22056fddb9f96666bbee86fb39e6f",
+      "sha256": "5fa47829bee963cdfc678f378b312694ea30ac72738abd04cb688553d7676419",
       "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/config.test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "原始测试文件与 integration/helpers.ts 逐字节保留（helpers.ts 快照登记在 sources.json support），仓库夹具仍由 helpers 的 git CLI 构造；只把 helpers 导入的 CliGitProvider/findGitPath/createCliGitService/verifyBaseRemeasure/Logger 重定向到 `tests/conformance/gitlens-integration.ts`，该适配只把 GitLens provider 的参数与返回形状翻译到 Rust JSON 桥上的生产函数，未映射的成员访问即抛 NotMappedError；Mocha TDD 全局量与排除块由 `gitlens-integration-adaptations.ts` 在加载时处理（排除标题不存在即加载失败）。6 项运行：getConfig → 生产 `git_config::get`（不加 --local/--type）；getRepositoryInfo → 生产 `repository::repository_type`，Regular 映射为 repoPath/gitDir（经 GitLens normalizePath），Missing 映射为 []；repository_type 不报告 common gitDir 与 superproject，因此 commonGitDir/superprojectPath 两项 undefined 断言只说明字段缺省，不构成证据。保留的 worktreeConfig 用例在 setup 中调用 cache.registerRepoPath/getCommonPath 与 config.getGitDir：GitCub 不按 checkout 缓存，登记为空操作；getCommonPath 取生产 `ops::worktrees` 的主工作树路径，getGitDir 取 repository_type 的 gitDir。排除（标题与理由见 gitlens-integration-adaptations.ts）：'ConfigSubProvider — gk branch sections'；'ConfigSubProvider — held config lock'；'ConfigSubProvider — concurrent gk config writes'；'each worktree reads its own config.worktree value, whichever read first'；'a worktree read first does not leak its config.worktree value to the others'；'getSigningConfig and getCurrentUser read the linked worktree's own values after the main checkout read first'；'a shared write clears every worktree's cached read, not just the one that wrote'；'a write from one worktree clears the others' cached read of the key it changed'；'getConfigRegexAll serves the shared value to every worktree, never a config.worktree value'。"
+        "adaptation": "原始测试文件与 integration/helpers.ts 逐字节保留（helpers.ts 快照登记在 sources.json support），仓库夹具仍由 helpers 的 git CLI 构造；只把 helpers 导入的 CliGitProvider/findGitPath/createCliGitService/verifyBaseRemeasure/Logger 重定向到 `tests/conformance/gitlens-integration.ts`，该适配只把 GitLens provider 的参数与返回形状翻译到 Rust JSON 桥上的生产函数，未映射的成员访问即抛 NotMappedError；Mocha TDD 全局量与排除块由 `gitlens-integration-adaptations.ts` 在加载时处理（排除标题不存在即加载失败）。6 项运行：getConfig → 生产 `git_config::get`（不加 --local/--type）；getRepositoryInfo → 生产 `repository::repository_type`，Regular 映射为 repoPath/gitDir（经 GitLens normalizePath），Missing 映射为 []；repository_type 不报告 common gitDir 与 superproject，因此 commonGitDir/superprojectPath 两项 undefined 断言只说明字段缺省，不构成证据。保留的 worktreeConfig 用例在 setup 中调用 cache.registerRepoPath/getCommonPath 与 config.getGitDir：GitCub 不按 checkout 缓存，登记为空操作；getCommonPath 取生产 `ops::worktrees` 的主工作树路径，getGitDir 取 repository_type 的 gitDir。排除（标题与理由见 gitlens-integration-adaptations.ts）：'ConfigSubProvider — gk branch sections'；'ConfigSubProvider — held config lock'；'ConfigSubProvider — concurrent gk config writes'；'ConfigSubProvider strict association persistence'；'each worktree reads its own config.worktree value, whichever read first'；'a worktree read first does not leak its config.worktree value to the others'；'getSigningConfig and getCurrentUser read the linked worktree's own values after the main checkout read first'；'a shared write clears every worktree's cached read, not just the one that wrote'；'a write from one worktree clears the others' cached read of the key it changed'；'getConfigRegexAll serves the shared value to every worktree, never a config.worktree value'。"
       },
-      "exclusion": "gk 元数据、锁重试、写入合并、getConfigRegex/getConfigRegexAll、getSigningConfig/getCurrentUser 不移植。 Excluded blocks: ConfigSubProvider — gk branch sections; ConfigSubProvider — held config lock; ConfigSubProvider — concurrent gk config writes; each worktree reads its own config.worktree value, whichever read first; a worktree read first does not leak its config.worktree value to the others; getSigningConfig and getCurrentUser read the linked worktree's own values after the main checkout read first; a shared write clears every worktree's cached read, not just the one that wrote; a write from one worktree clears the others' cached read of the key it changed; getConfigRegexAll serves the shared value to every worktree, never a config.worktree value. All other assertions are retained."
+      "exclusion": "gk 元数据、锁重试、写入合并、工作树与 issue 关联的严格读写、getConfigRegex/getConfigRegexAll、getSigningConfig/getCurrentUser 不移植。 Excluded blocks: ConfigSubProvider — gk branch sections; ConfigSubProvider — held config lock; ConfigSubProvider — concurrent gk config writes; ConfigSubProvider strict association persistence; each worktree reads its own config.worktree value, whichever read first; a worktree read first does not leak its config.worktree value to the others; getSigningConfig and getCurrentUser read the linked worktree's own values after the main checkout read first; a shared write clears every worktree's cached read, not just the one that wrote; a write from one worktree clears the others' cached read of the key it changed; getConfigRegexAll serves the shared value to every worktree, never a config.worktree value. All other assertions are retained."
     },
     "packages/git-cli/src/providers/__tests__/integration/config.upstreamKeys.test.ts": {
       "sha256": "e48673b201563a65a4eb608ae60252764c461ea24e31d2366d285f4851c6b2a9",
@@ -549,7 +549,7 @@
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：列出被忽略的目录（GitLens 用于文件监听排除与资源管理器）；Desktop/GitCub 不列出被忽略条目。"
     },
     "packages/git-cli/src/providers/__tests__/integration/ignoredEntries.test.ts": {
-      "sha256": "51c8313a06811f5e36cbbea4c6ca3e30f9faf9a1d089e962eabd9afa2f569373",
+      "sha256": "844a36993659e609b9d326e7d24580bb16c842329a9ddcde3191c4499c930422",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：列出被忽略的条目/路径（status --ignored 等价）；Desktop/GitCub 状态不展示忽略文件，无此 API。"
@@ -666,6 +666,12 @@
       },
       "exclusion": "GitLens 计数缓存刷新用例不移植。 Excluded blocks: adding a remote with fetch, then removing it, refreshes a count that excludes remote-tracking branches. All other assertions are retained."
     },
+    "packages/git-cli/src/providers/__tests__/integration/repositoryRoot.test.ts": {
+      "sha256": "b5149943dee425cb19756db7c8aec6a513b19c8500a9fe819269252791876444",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "同一功能上游预期不同，采用 Desktop（2026-11-02 逐文件分诊）：GitCub 添加仓库走 Desktop getRepositoryType（app/src/lib/git/rev-parse.ts 的 `rev-parse --is-bare-repository --show-cdup --git-dir`）。实测在 core.bare 未设置的 .git 与 .git/refs 里该命令报告 is-bare=true，Desktop 按裸仓库处理（kind: bare，不支持添加）；GitLens 这组测试要求从 git 目录内部解析到工作树，与 Desktop 相反，不采用。已移植的 revParseGitDir 部分覆盖 GitCub 的 repository_type。"
+    },
     "packages/git-cli/src/providers/__tests__/integration/revParseGitDir.test.ts": {
       "sha256": "5576f39d0d01338bd097c47e6bb492059b84f07728f871f33ad6f5545ebab267",
       "status": "partial",
@@ -678,15 +684,15 @@
       "exclusion": "Desktop's getRepositoryType treats every git exit code 128, including an unreadable directory, as 'missing'; GitCub follows Desktop, so 'rejects when git cannot read the directory' is removed at load time."
     },
     "packages/git-cli/src/providers/__tests__/integration/revision.test.ts": {
-      "sha256": "b07785c2b12f9d1807c9dc77292ed328c6a7241417692615a601a3cca1bb0dc9",
+      "sha256": "475c31331a04943125ac61554a43eab4ccd6279cf29db2a7ef77c66d509f4f9d",
       "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/revision.test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "25 项中运行 suite 'RevisionSubProvider.resolveShas' 全部 7 项，断言不变。integration/helpers.ts 原样快照（upstream/gitlens/packages/git-cli/src/providers/__tests__/integration/helpers.ts，登记在 sources.json support）仍用 git CLI 准备仓库；它导入的 CliGitProvider、exec/locator、service、shadowCheck、@gitlens/utils/logger 按套件的 gitlensHelperImports 换成 tests/conformance/gitlens-integration-local.ts，@gitlens/utils/uri 用已有快照。适配类只经 Rust JSON 桥调用 GitCub 生产函数并把结果放进套件读取的 GitLens 字段，不计算预期值；套件未用到的入口一律报错。Mocha 的 suiteSetup/suiteTeardown/setup/teardown 映射为 node:test 的 before/after/beforeEach/afterEach。provider.revision.resolveShas → 生产 `history::resolve_shas`（commit: 搜索使用，GitLens resolveShas 的移植：4–40 位十六进制经 rev-parse --disambiguate 展开并经 cat-file 只留 commit，其余原样通过）。加载时删除 suite 'RevisionSubProvider.resolveRevision — force bypasses the cache'（GitLens 的修订缓存，GitCub 每次直接 rev-parse）、'RevisionSubProvider.getEmptyTreeSha'、'RevisionSubProvider scoped listings'（getTrackedFiles/getTreeForRevision，GitCub 没有这些 API）以及只被后者使用的 `@gitlens/utils/cancellation.js` 导入。"
+        "adaptation": "31 项中运行 suite 'RevisionSubProvider.resolveShas' 全部 7 项，断言不变。integration/helpers.ts 原样快照（upstream/gitlens/packages/git-cli/src/providers/__tests__/integration/helpers.ts，登记在 sources.json support）仍用 git CLI 准备仓库；它导入的 CliGitProvider、exec/locator、service、shadowCheck、@gitlens/utils/logger 按套件的 gitlensHelperImports 换成 tests/conformance/gitlens-integration-local.ts，@gitlens/utils/uri 用已有快照。适配类只经 Rust JSON 桥调用 GitCub 生产函数并把结果放进套件读取的 GitLens 字段，不计算预期值；套件未用到的入口一律报错。Mocha 的 suiteSetup/suiteTeardown/setup/teardown 映射为 node:test 的 before/after/beforeEach/afterEach。provider.revision.resolveShas → 生产 `history::resolve_shas`（commit: 搜索使用，GitLens resolveShas 的移植：4–40 位十六进制经 rev-parse --disambiguate 展开并经 cat-file 只留 commit，其余原样通过）。加载时删除 suite 'RevisionSubProvider.resolveRevision — force bypasses the cache'（GitLens 的修订缓存，GitCub 每次直接 rev-parse）、'RevisionSubProvider.getEmptyTreeSha'、'RevisionSubProvider scoped listings'（getTrackedFiles/getTreeForRevision，GitCub 没有这些 API）、'RevisionSubProvider glob-like file names' 与 'RevisionSubProvider.getBlobIds (working) with paths hash-object cannot read'（getBlobIds/exists/getTreeEntryForRevision，GitCub 没有这些 API）以及只被后者使用的 `@gitlens/utils/cancellation.js` 导入。"
       },
-      "exclusion": "The resolveRevision cache, getEmptyTreeSha and the scoped getTrackedFiles/getTreeForRevision listings have no GitCub counterpart; those 3 suites (18 cases) are removed at load time. The only empty-tree id GitCub has is Desktop's SHA-1 constant NullTreeSHA (Desktop app/src/lib/git/diff-index.ts:71, GitCub src/lib/git/diff-index.ts:71), which does not depend on the repository's object format, so the SHA-256 case could not hold."
+      "exclusion": "The resolveRevision cache, getEmptyTreeSha, the scoped getTrackedFiles/getTreeForRevision listings and getBlobIds / exists / getTreeEntryForRevision (glob-like file names, hash-object fallback for submodules and directories) have no GitCub counterpart; those 5 suites (24 cases) are removed at load time. GitCub's own Git commands that take file paths pass --literal-pathspecs (or GIT_LITERAL_PATHSPECS), so a file named like [id]/page.ts does not glob-match siblings there. The only empty-tree id GitCub has is Desktop's SHA-1 constant NullTreeSHA (Desktop app/src/lib/git/diff-index.ts:71, GitCub src/lib/git/diff-index.ts:71), which does not depend on the repository's object format, so the SHA-256 case could not hold."
     },
     "packages/git-cli/src/providers/__tests__/integration/selfWriteFence.test.ts": {
       "sha256": "7a9c88e01b0732ab4ca1b7c1a1ecbf9d407268daae15da19dc25518b4f61bcf5",
@@ -774,6 +780,12 @@
       "rust_tests": [],
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：把远端探测（ls-remote）失败 stderr 归类为原因与提示，服务于 GitLens 的远端连通性检查；Desktop 无远端探测功能（app/src/lib/git/remote.ts 无 probe）。"
     },
+    "packages/git-cli/src/providers/__tests__/revision.getBlobIds.test.ts": {
+      "sha256": "74299153ca69d2241d64ddc0c906da4264969e07d25b746bcded1c4304661f3f",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens 内部实现，GitCub 无对应 API（2026-11-02 逐文件分诊）：测试 RevisionGitSubProvider.getBlobIds 批量 hash-object / ls-files --stage 与 stub 进程的输出对齐、重试和取消；Desktop/GitCub 没有按路径批量取 blob id 的入口。"
+    },
     "packages/git-cli/src/providers/__tests__/revision.getEmptyTreeSha.test.ts": {
       "sha256": "8cfa32dbcfedaca1a44a1b2397cda093472f5017dc0d75568b098af163418835",
       "status": "excluded",
@@ -823,7 +835,7 @@
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：测试仓库健康报告与优化建议（松散对象、MIDX、fsmonitor、sparse index、后台维护横幅）；Desktop 无此功能。"
     },
     "packages/git/src/__tests__/serialization.test.ts": {
-      "sha256": "194ed6d82ea92b990e887a9cc328a9f8e47a8bb9596b734f66f9fde89904e8f9",
+      "sha256": "9c1c194758782fa2a295656a46c6baecbd3b9aced6bcac791fda028bdc440b3f",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：测试 GitLens PR/Issue 模型序列化，属其内部数据传输。"
@@ -871,13 +883,13 @@
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：多平台远端提供方匹配（Bitbucket/Azure/Gitea/Gerrit/Google Source、自定义正则配置）；GitCub 按已登录账号的 endpoint 识别 GitHub/GitLab（Desktop 按账号匹配），不做域名启发式。"
     },
     "packages/git/src/utils/__tests__/autolink.utils.test.ts": {
-      "sha256": "eecd0f84adde2de0d294dd9659165cd25642582945ff297aed53d981b7abf1ea",
+      "sha256": "dc6e72037ca176567a18186c23f20dc41448558ea454afc71be873378f37d837",
       "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/autolink.utils.test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "29 项原始断言不变，仅把 `../autolink.utils.js` 重定向到生产 `src/lib/autolinks.ts`、`../../models/autolink.js` 重定向到类型快照 `upstream/gitlens/packages/git/src/models/autolink.ts`。`src/lib/autolinks.ts` 是 packages/git/src/utils/autolink.utils.ts（c1f6e5f3c）的一比一 TypeScript 移植：serializeAutolink、isDynamic、isCacheable、ensureCachedRegex（plaintext/html/markdown 三套正则缓存在引用对象上）、ensureCachedBranchNameRegexes（前缀规则 1 与无前缀的规则 2/3.1/3.2/3.3）、numRegex 的 `<num>` 替换、getAutolinks（跳过非 commit 引用、动态引用走 parse）、getBranchAutolinks（priorityProviderIds 排序、跳过 pullrequest、首个匹配即返回）；models/autolink.ts 的类型与 packages/utils/src/string.ts 的 encodeHtmlWeak/escapeRegex 逐字复制，三份上游文件快照登记在 sources.json support。这是前端覆盖，不是 Rust 覆盖。应用侧：提交详情 `ui/history/commit-summary.tsx` 与 Desktop RichText `ui/desktop/rich-text.tsx` 在 Desktop 分词之后经 `lib/autolink-rules.ts` 用同一 messageRegex 把设置里的规则（前缀、含 `<num>` 的 URL、字母数字、忽略大小写、标题；设置 › 高级，持久化在 AppState.autolinks）以及 GitLab 远端的 `#<num>` issue、`!<num>` 合并请求内置引用（packages/git/src/remotes/gitlab.ts）渲染成链接，链接标题取 GitLens 的 title，点击走系统浏览器。getBranchAutolinks 已移植并由测试覆盖，但应用界面尚未使用；html/markdown 输出格式只在测试里执行，应用只用 plaintext。未对应：GitLab 的 `owner/repo#1`/`owner/repo!1` 动态引用，GitHub 内置引用（`#<num>` 由 Desktop 分词器处理，`GH-<num>` 未加），AutolinksProvider 的 issue 富化、脚注与 html/markdown 转义渲染。独立回归在 `tests/conformance/autolinks.test.ts`。"
+        "adaptation": "36 项原始断言不变，仅把 `../autolink.utils.js` 重定向到生产 `src/lib/autolinks.ts`、`../../models/autolink.js` 重定向到类型快照 `upstream/gitlens/packages/git/src/models/autolink.ts`。`src/lib/autolinks.ts` 是 packages/git/src/utils/autolink.utils.ts（b87331422）的一比一 TypeScript 移植：serializeAutolink、isDynamic、isCacheable、ensureCachedRegex（plaintext/html/markdown 三套正则缓存在引用对象上）、ensureCachedBranchNameRegexes（转义后的显式前缀接任意位数字与无前缀的规则 2/3.1/3.2/3.3）、numRegex 的 `<num>` 替换、getAutolinks（跳过非 commit 引用、动态引用走 parse，maxResults 结果预算）、getBranchAutolinks（priorityProviderIds 排序、跳过 pullrequest、首个匹配即返回）；models/autolink.ts 的类型与 packages/utils/src/string.ts 的 encodeHtmlWeak/escapeRegex 逐字复制，三份上游文件快照登记在 sources.json support。这是前端覆盖，不是 Rust 覆盖。应用侧：提交详情 `ui/history/commit-summary.tsx` 与 Desktop RichText `ui/desktop/rich-text.tsx` 在 Desktop 分词之后经 `lib/autolink-rules.ts` 用同一 messageRegex 把设置里的规则（前缀、含 `<num>` 的 URL、字母数字、忽略大小写、标题；设置 › 高级，持久化在 AppState.autolinks）以及 GitLab 远端的 `#<num>` issue、`!<num>` 合并请求内置引用（packages/git/src/remotes/gitlab.ts）渲染成链接，链接标题取 GitLens 的 title，点击走系统浏览器。getBranchAutolinks 已移植并由测试覆盖，但应用界面尚未使用；html/markdown 输出格式只在测试里执行，应用只用 plaintext。未对应：GitLab 的 `owner/repo#1`/`owner/repo!1` 动态引用，GitHub 内置引用（`#<num>` 由 Desktop 分词器处理，`GH-<num>` 未加），AutolinksProvider 的 issue 富化、脚注与 html/markdown 转义渲染。独立回归在 `tests/conformance/autolinks.test.ts`。"
       }
     },
     "packages/git/src/utils/__tests__/blame.utils.test.ts": {
@@ -1071,6 +1083,12 @@
       "rust_tests": [],
       "exclusion": "VS Code extension IPC/discovery (@gitlens/ipc) — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
+    "packages/ipc/src/__tests__/ipcServer.test.ts": {
+      "sha256": "025f89aa281c3107dafb0af114547523d09986c88890f7fe91c32a8c7747bfca",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "VS Code extension IPC/discovery (@gitlens/ipc) — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
+    },
     "packages/ipc/src/__tests__/sweepStaleDiscoveryFiles.test.ts": {
       "sha256": "ae6f6402cdffe3f0da68780fbfe76bc24346053277a5ba9fb56369bd18b383f0",
       "status": "excluded",
@@ -1108,13 +1126,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/ai/src/__tests__/errors.test.ts": {
-      "sha256": "7c19046c1b57318dbd2e7746329369ef4711accea5750b9229325d6b8a63ce72",
+      "sha256": "6dce77657e53d42994b6157f61b0a379b9eaeeca455758c75011a84f5676748a",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/ai/src/providers/__tests__/anthropicProvider.test.ts": {
-      "sha256": "5629990bb80d0a6088c3261005ae4e8e3028dd68e14b836d7e98e1834209fd6c",
+      "sha256": "0517c8d566c2bf54e581fe50741f28b46dbb4fa00e31745f5328eb16ad1c06d2",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1126,13 +1144,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/ai/src/providers/__tests__/mistralProvider.test.ts": {
-      "sha256": "fc180084c57a60c0bce04935b14cabf19e29debe0458b376090d9a08fc0b3a26",
+      "sha256": "cedac42e50a745040e2e2cb70b3a48497f230bc7047c8b9306744ff208f1b5d5",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/ai/src/providers/__tests__/openAICompatibleProviderBase.test.ts": {
-      "sha256": "ef2a341486bd288e39f8b9f4a913a155492f1ab0c0434e8724fdc5de9e8dd372",
+      "sha256": "949df8d80bcd6ddd03e8e31432fdf3a5e471e4a02cdd69048a966dbcd6463015",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1156,7 +1174,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/ai/src/utils/__tests__/results.utils.test.ts": {
-      "sha256": "e45e9471a4b5648107a1cdb7e2a49cee18bb4e0a5eee7686324babf963e11917",
+      "sha256": "daf8c9b3b111b7afb390e371c8ca352f4dbbedfb479e5f1bccc26ccd9072283a",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1348,7 +1366,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/git-github/src/api/__tests__/issueSearch.test.ts": {
-      "sha256": "4907598ba2578fd6d79dad0b75274ca2f971ea859b354b1cf3ec625acbafc003",
+      "sha256": "13036fd36a2efedc8c5fc4b974274ccc544aca9d35b7686a62bf2b8eb02b8a97",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1403,6 +1421,18 @@
     },
     "packages/plus/integrations/src/__tests__/accountWideSelfManagedHosts.test.ts": {
       "sha256": "272415fc97f114b119cc64c9b382a509df7372ff394398d12e29e415aafb7a4e",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "packages/plus/integrations/src/__tests__/autolinkCustomAuthentication.test.ts": {
+      "sha256": "698e0b183b53bda004867e145602cc0877c0f2001f39feb3c6f9799dc4dd8a99",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "packages/plus/integrations/src/__tests__/autolinkReferences.test.ts": {
+      "sha256": "31d7ded2efdf36dd7eef146ed449bf996741432365b68ef12f3089e41f9fbfe6",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1479,6 +1509,12 @@
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "packages/plus/integrations/src/__tests__/bitbucketServerRepoPullRequests.test.ts": {
+      "sha256": "b9642041036654e15dcaa83e04b2d9707579880918b4419dd2e5fae08532129d",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "packages/plus/integrations/src/__tests__/branchIssueAssociationHost.test.ts": {
       "sha256": "ec56f4c67c8fc251ff43ed3b78cee4fccb0c1d05fa9ce81b24d0e68db5f5bcea",
       "status": "excluded",
@@ -1515,6 +1551,12 @@
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "packages/plus/integrations/src/__tests__/connectionFailureBudget.test.ts": {
+      "sha256": "4a1b77679876000f6b4ece496c5ea0d6df612fdc4552ae7d10d45bbe63da6ec8",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "packages/plus/integrations/src/__tests__/currentAccount.test.ts": {
       "sha256": "92345060d98dceffb02d2692c1c0d399f699a033087bed1d5332c7da0e3cbcc0",
       "status": "excluded",
@@ -1534,13 +1576,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/etag.test.ts": {
-      "sha256": "54f7d79153d1e70b9122b8c254d3022a075882a516cd6e2b8a09138073910cc2",
+      "sha256": "dbe07f9471b395a0e2e9ed1f7fec3ad4f2a556de61b47a0993c6829f771cba46",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/facadeContract.test.ts": {
-      "sha256": "63bffc5d4d454dd907774bbb9788912b840717356d5c090a2c4b66c474595ed7",
+      "sha256": "fc4c61836e1a719a773bb19e6a8d235b7287234a1e5a90ebba8112d42013df01",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1624,13 +1666,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/issueTrackerStates.test.ts": {
-      "sha256": "0089bbc231bef61256b18d5ebf3f886728f3446e9542b855782f630eb9c2ebe0",
+      "sha256": "1bccc0ce255d29e8a4ec4bf48513afb47a76ee922846e695b4be156c1f4eec44",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/jira-server.test.ts": {
-      "sha256": "5b0ce62dcba7367740cb81bd33491a1940df858bd2188c186212ac4d1a462285",
+      "sha256": "90f6613608695b6a73c972b6ca2406c37e9ad71556fb318d69c9f8792749ece0",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1671,6 +1713,12 @@
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "packages/plus/integrations/src/__tests__/jiraServerAutolinks.test.ts": {
+      "sha256": "3fb65338c8dadfe101fb9201fa11ec986adf9fe2dd921c3a467b3ededb8a62dc",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "packages/plus/integrations/src/__tests__/jiraServerProjectSearches.test.ts": {
       "sha256": "c351b611de462b5e0e9e92e143b854f02df6199dc034a10e5f8466e455d6311d",
       "status": "excluded",
@@ -1696,13 +1744,19 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/linearEtag.test.ts": {
-      "sha256": "aa4d1fd3f6762d3a80b3200c8b7bae9e456eedebd72ea1c0e3987018f3035c18",
+      "sha256": "1f959a4aa67a7c04ab8ba11ad03a8a2030e068e4e371cbcb8b252e27e4f49921",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "packages/plus/integrations/src/__tests__/linearProjects.test.ts": {
+      "sha256": "ca1cae5fc2b9d0599a0246d8a50cb1ac3618156e79f3b8000a8397b903734226",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/linearTeamSearches.test.ts": {
-      "sha256": "a4fc254ddf8e515d2351285bcde94fa7ea8ea7d306b3e5e5f6dec61b3bf0ecdf",
+      "sha256": "1962d0f9fa80ef687c23160b7b566ff8775db3be58d33e3d2f70453e5cfe0692",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1821,6 +1875,12 @@
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "packages/plus/integrations/src/__tests__/scopeConcurrency.test.ts": {
+      "sha256": "c5c15d9e25bbcb17e1da2d4ec349da5e3c6b572dd79ddc627abe66e4a6a1d32d",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "packages/plus/integrations/src/__tests__/scopedAuthConfirmation.test.ts": {
       "sha256": "e8674128cea9ac8229404959667ba7836fec2f89aa7a49de720c0459538626a4",
       "status": "excluded",
@@ -1852,7 +1912,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/sweepTargets.test.ts": {
-      "sha256": "9e571e318284d9836325e0b69e273d20ded8b324a646c8d019b376239edf3ccd",
+      "sha256": "dd26760af6b8f42e554d45bfa3b089a639e96c0dc35f1748ba927255b22a21d2",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1876,13 +1936,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/trackerIssueBatch.test.ts": {
-      "sha256": "c5c10daf753a033cc34d0b4ff7db484796195ead1bb3ce86f0bbc5da60f3e206",
+      "sha256": "8badcdf0b5d5eb5b053925ad75a202033e3c8a0dc28f7c498197a07eb1db7376",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/__tests__/trackerProjectCache.test.ts": {
-      "sha256": "32e242d290c6945bd8a0b05199376253d956576c619d7de551b39c7e7ce2ca9a",
+      "sha256": "3c356ec3cc8a8b6cb665bc247562848b723b8b7cb663292d93488342a5b85c6b",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -1947,6 +2007,12 @@
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "packages/plus/integrations/src/providers/__tests__/githubGraphQLRateLimit.test.ts": {
+      "sha256": "5c6958f2e3695c0cc59f1a049ed8f2e8360c07275d00e6eaaaa549a30a2c67ce",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "packages/plus/integrations/src/providers/__tests__/gitlabSearchMyIssuesRouting.test.ts": {
       "sha256": "ed222c5128e760ce6f9e2e30e3a16ce279ee247be6cc48a896ee7d46553e3293",
       "status": "excluded",
@@ -1983,14 +2049,32 @@
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "packages/plus/integrations/src/providers/__tests__/issueProject.test.ts": {
+      "sha256": "91cd2940c85fef92c505fb3acf3166fadfbfc2104e4cd42714a73534b920893c",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "packages/plus/integrations/src/providers/__tests__/issueStateCategory.test.ts": {
       "sha256": "b659605ab7ea28531a217dc4231eaa188415878723040be0bc4129da3a6a0e5d",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "packages/plus/integrations/src/providers/__tests__/issueSyncedWith.test.ts": {
+      "sha256": "650d593949bcced09f28cf16fcbd881445167d31d811242c285b9e47b9a7fcd4",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "packages/plus/integrations/src/providers/__tests__/jiraIssueDrains.test.ts": {
       "sha256": "039e135c5e938ef12e515a9b126f00c186d5c1ea12028b37e4279b2dd4f2885e",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "packages/plus/integrations/src/providers/__tests__/jiraIssueNotFound.test.ts": {
+      "sha256": "197f705923e27360a14e7e8ecf7f4f9a283e463db7fd44d4e5a21a955834a86a",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -2014,7 +2098,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/providers/__tests__/prFilters.test.ts": {
-      "sha256": "1964c21828ab5ce4eb072afb04c44ef36382d38d3396492e97b21003d7a0f82a",
+      "sha256": "65dc2b496a86a014e4e9396f2bd007d89c5c478f6e298cefe283417889cc7aad",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -2056,7 +2140,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "packages/plus/integrations/src/providers/__tests__/selfHostedApiBaseUrl.test.ts": {
-      "sha256": "74c2a57cdb409fe621f76dd609b0d4c154c04c388e21a46e0cf0bfdf081aeef8",
+      "sha256": "a8b8843181dd2bbba79d6a4574896e556309914dd565413e0af48d020ed7fbf3",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -2213,6 +2297,12 @@
     },
     "packages/utils/src/__tests__/dedupedAsyncCache.test.ts": {
       "sha256": "8caed344887278d7db8d6ded7cd55c904a3645af7e9e777664f60f59c3454cdc",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "VS Code extension runtime utilities (@gitlens/utils), not Git behaviour — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
+    },
+    "packages/utils/src/__tests__/diff.test.ts": {
+      "sha256": "5d18a5d73c74964a767fe669da4eb30f222fac9835f35ef020d92a7c7f4f3663",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension runtime utilities (@gitlens/utils), not Git behaviour — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -2503,6 +2593,12 @@
       "rust_tests": [],
       "exclusion": "VS Code extension host code (commands, container, decorators, views, quick picks, terminal, virtual FS); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
+    "src/commands/__tests__/runPromptInAgent.test.ts": {
+      "sha256": "b2e0167da5d8b17d7721f80e7ba5f83fc538ce8271014c744ceb5f64192f036e",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitKraken Plus / AI / agent feature of the VS Code extension; outside GitCub scope — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
+    },
     "src/commands/__tests__/startAgentSession.test.ts": {
       "sha256": "e97f7d2520be362c7d794f773f9a06ff68d270d01d5249602e113276660371cf",
       "status": "excluded",
@@ -2511,6 +2607,12 @@
     },
     "src/commands/__tests__/stashSave.test.ts": {
       "sha256": "2a0e3bd64a4fb38f01c4edc99a7f9bd8ca17c86aa1383098d0d09e196cf08038",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "VS Code extension host code (commands, container, decorators, views, quick picks, terminal, virtual FS); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
+    },
+    "src/commands/__tests__/worktreeIssueAssociation.test.ts": {
+      "sha256": "2ba199c278658ff5895d2379c0a5651d3969c601734420a3fe2638da3600c291",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension host code (commands, container, decorators, views, quick picks, terminal, virtual FS); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -2564,7 +2666,7 @@
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：测试 VS Code 命令层继续操作的进行中标志与事件（依赖 vscode window），属扩展宿主逻辑。"
     },
     "src/git/utils/-webview/__tests__/branch.issue.utils.test.ts": {
-      "sha256": "d5c34ea35cad1e096b004cef9d463a1718a479e885d1cafe13dc52824ee1f20d",
+      "sha256": "f1db1a0c9778e7dc1fe18d12e63300d1d17293169256a1934a6ead57e44da559",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：分支与 Issue 关联的存储/迁移；Desktop 无分支-Issue 关联。"
@@ -2636,7 +2738,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/plus/ai/actions/__tests__/generateSearchQuery.test.ts": {
-      "sha256": "4ca6cf5d284a8e070cef00746b127ff93efd0a2001e7dea8e8f3b8b706159ef9",
+      "sha256": "87f6d7d161ebabba3d4115fbcbc47a97696575a581fe6ef2d4a6689117fecb31",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -2666,7 +2768,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/plus/coretools/conflict/__tests__/autoRebaseCore.test.ts": {
-      "sha256": "b60fc955f6324a29caa6814a0ce1099155f1ea1a893e57ac389a44ee44e346a5",
+      "sha256": "cc91d9a761786ef55cceecf667bf9a77d2032a7aa0d38760c305c1ae05340720",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -2935,6 +3037,12 @@
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
+    "src/webviews/apps/plus/graph/components/__tests__/anchorKey.test.ts": {
+      "sha256": "15247e9876f75ac470739cb4a2605929f72511830dae0109bbf6fccf902180a0",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "src/webviews/apps/plus/graph/components/__tests__/branchSheet.utils.test.ts": {
       "sha256": "15bc16eaaddcabd87e4be0cc6019bd055c6586d349888a448ea22c29fe027343",
       "status": "excluded",
@@ -2942,7 +3050,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/webviews/apps/plus/graph/components/__tests__/detailsActions.test.ts": {
-      "sha256": "70c96074162a971246750c64df39d9aa0aab807326b8883ff4b8bb6c786e716d",
+      "sha256": "92598593bfccce4fcaf7383d9c41a2c72980a387e2c081f94b4d0e7eb73b2094",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "src/webviews/apps/plus/graph/components/__tests__/detailsModes.test.ts": {
+      "sha256": "f86c114e738c02d3061b10726391b82d21fb7dc933b8afd6b6ac07da8740fa85",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -2960,13 +3074,19 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/webviews/apps/plus/graph/components/__tests__/detailsWorkflowController.test.ts": {
-      "sha256": "b7dd720379d195cd0d2655597b4112c4cd917aae49388041619cfc111909ffcf",
+      "sha256": "022c011c6e39672272e303044bf2fdb96c45541b62385c402650933a6d31cf08",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/webviews/apps/plus/graph/components/__tests__/gl-commits-scope-pane.utils.test.ts": {
       "sha256": "cdecbe9e3c9cf816c9d802846b3ac3d0e1b9b0889bc84cf7f567caa8611c6682",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "src/webviews/apps/plus/graph/components/__tests__/gl-details-review-mode-panel.test.ts": {
+      "sha256": "99a63dc06c9a4a24d641421df19d32709dfcbc3481e10f86e8c6f99a7ad5f928",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -2978,7 +3098,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/webviews/apps/plus/graph/components/__tests__/reviewFormat.test.ts": {
-      "sha256": "47c545843086f989263a46f01165a2ae006b5bd791d0aea40ab013256d21f892",
+      "sha256": "75732b04cd38ababafb7823628a2e415266e80ceeb64a8c60039cbd66912c1b9",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "src/webviews/apps/plus/graph/components/__tests__/reviewSession.test.ts": {
+      "sha256": "bf49bc9cc501d18e26e336e745eabf18a5170713402303642c41c093180654cc",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -3283,6 +3409,12 @@
       "rust_tests": [],
       "exclusion": "VS Code webview UI/RPC; GitCub has no VS Code extension host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
+    "src/webviews/apps/shared/components/__tests__/copy-container.test.ts": {
+      "sha256": "f8c5f69d77c576cb18d4d4a8e48d6cdf7f6a8c09d2a8c4917c54b326756b4f3f",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "VS Code webview UI/RPC; GitCub has no VS Code extension host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
+    },
     "src/webviews/apps/shared/components/__tests__/signal-utils.test.ts": {
       "sha256": "228e71f800f664f7f7955191f9b6509f9a160a1fb2225f7c322d1e7e7fb05ef2",
       "status": "excluded",
@@ -3315,6 +3447,12 @@
     },
     "src/webviews/apps/shared/components/tree/__tests__/fileTreeUtils.test.ts": {
       "sha256": "17368e660e420ab932d58b980034256e3388f5995fd8f2e04017ad0579e70fd9",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "VS Code webview UI/RPC; GitCub has no VS Code extension host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
+    },
+    "src/webviews/apps/shared/components/tree/__tests__/treeView.test.ts": {
+      "sha256": "ebe11e851d1b9c62bedd6dd0421b5e9f223050b0a7d68c2a0f03fb1e3310ce92",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code webview UI/RPC; GitCub has no VS Code extension host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -3397,6 +3535,12 @@
       "rust_tests": [],
       "exclusion": "VS Code webview UI/RPC; GitCub has no VS Code extension host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
+    "src/webviews/plus/graph/__tests__/deepReview.test.ts": {
+      "sha256": "b63258e54b9a511acdb0ac16d762f05f3d4c10d522c37c626e892c87bbe92a38",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
     "src/webviews/plus/graph/__tests__/graphComposeVirtualContentProvider.test.ts": {
       "sha256": "dced26cd1a4ffeb9a9cc5c394b6e3f65c38eae12865ecdf110fa82e3402e39e4",
       "status": "excluded",
@@ -3404,7 +3548,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/webviews/plus/graph/__tests__/graphInspectServices.test.ts": {
-      "sha256": "6ab1b895267ea8ffde611de58d57c2a174a655e9feb60dd47f61adcb6afc18f8",
+      "sha256": "adad99bd8e794990287306d5f34f02a6639451782430cdb9c6c56984a2160aba",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -3435,6 +3579,12 @@
     },
     "src/webviews/plus/graph/__tests__/graphRowsSplice.test.ts": {
       "sha256": "afff0d908c889b3d28e33d499e25500d99bd801eeae9232fdabb1b00fab32c2b",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "src/webviews/plus/graph/__tests__/graphScopeService.test.ts": {
+      "sha256": "229bc1b18922e9bcaed97ccc8bf189f8097809db052df90b3f5a5b2bc0d7ddad",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -3471,6 +3621,18 @@
     },
     "src/webviews/plus/graph/__tests__/graphWipService.test.ts": {
       "sha256": "11e065552649a6fcc1d50069bd6b0b2ba300ec2d116041fe5fe1730bf8251918",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "src/webviews/plus/graph/__tests__/resolveAIUnavailable.test.ts": {
+      "sha256": "a4d4c15892198b58b8d6de4dcccb7adb8e22686de910e4985f381dd1f25318dc",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
+    },
+    "src/webviews/plus/graph/__tests__/reviewThreads.test.ts": {
+      "sha256": "e0ed3b2277d83fe43fc83aae3d0a45eb80694a5057605261f63ca486f668a76b",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -3596,7 +3758,7 @@
       "exclusion": "VS Code webview UI/RPC; GitCub has no VS Code extension host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "src/webviews/rpc/services/__tests__/notifications.test.ts": {
-      "sha256": "d3e468c63a06f5f8f36e5da495b491d1031faae739951d2092834b8564c49f12",
+      "sha256": "3abdee8a9c1a198b0fae65138901d7bff4818161010aad0c24639d0c8e31e0d5",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code webview UI/RPC; GitCub has no VS Code extension host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -3686,7 +3848,7 @@
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/kepler.test.ts": {
-      "sha256": "759615df515d8aee6a019bd866cc33bc6a6b0c18e60a779b59f5b43ed9848c12",
+      "sha256": "5514abeded274f4c060ffb6c5ada7e51d1d416c2352393f66a99c3b8a76f0f78",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -3776,5 +3938,5 @@
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     }
   },
-  "support_review": "efffd14e1: support drift since 5c1708ecab59 is package.json / packages/core/package.json / packages/git-cli/package.json (integration runs with --parallel --jobs 4) / pnpm-lock.yaml / pnpm-workspace.yaml, scripts/esbuild.tests.mjs, integration rootHooks.ts (unhandled rejections now fail the run from root hooks) and git-cli exec/git.ts (default spawner moved to @gitlens/utils spawnProcess). GitCub's bun runner does not load rootHooks.ts or Git's spawner; helpers.ts, shadowCheck.ts and every other snapshot under tests/conformance/upstream/gitlens are byte-identical, so ported suites keep their status. branch.utils.ts/test.ts resynced: getBranchTrackingWithoutRemote returns undefined for remote-tracking refs (#4950) and its new test sits in the deleted 'upstream remote' suite; splitRemoteBranchName (the 8 run tests) is unchanged (reviewed 2026-10-30). Earlier: 5c1708ecab59: support drift since 020cfc1b7daf is confined to package.json (new check:colors script wired into check / lint:css) and scripts/build.mjs (runs scripts/check-color-tokens.mjs); packages/git-cli integration helpers.ts, rootHooks.ts, shadowCheck.ts and every snapshot under tests/conformance/upstream/gitlens are byte-identical to 020cfc1b7daf, so no ported or partial suite changes (reviewed 2026-10-29). Earlier: c1f6e5f3c: support drift since a9bc0f000 is confined to package.json / packages/core/package.json / pnpm-lock.yaml / pnpm-workspace.yaml, packages/git-cli integration helpers.ts, rootHooks.ts, shadowCheck.ts, packages/plus/integrations sweepHelpers.ts and azure fixtures.ts, and packages/utils log.benchmark.ts. None is imported by the three ported parser suites; upstream/gitlens/packages/git/src/models/fileStatus.ts and both LICENSE snapshots are byte-identical at HEAD, so blameParser/indexParser keep their ports unchanged (reviewed 2026-10-27)."
+  "support_review": "b87331422: support drift since efffd14e1 is package.json (new gitlens.review.* command contributions), packages/core/package.json (version 0.20.1 → 0.24.0), pnpm-lock.yaml and pnpm-workspace.yaml (@gitkraken/provider-apis 0.65.5 → 0.65.7); no helper, fixture, rootHooks or test-runner change, so the 31 runner suites whose own snapshot is unchanged keep their status. Three suites changed and were resynced (reviewed 2026-11-02): autolink.utils.test.ts (+7: escaped explicit prefixes match single-digit branch issues; getAutolinks maxResults budget) — src/lib/autolinks.ts re-ported from autolink.utils.ts at b87331422, 36/36 pass; integration/config.test.ts (+15 in suite 'ConfigSubProvider strict association persistence', GitKraken worktree/issue association storage, excluded), 6 still run; integration/revision.test.ts (+6 in suites 'RevisionSubProvider glob-like file names' and 'RevisionSubProvider.getBlobIds (working) with paths hash-object cannot read', no GitCub API, excluded), 7 still run. Support snapshot packages/git/src/errors.ts resynced (reportRequestFailure connectionId, integrations only). 27 new test files triaged: 22 under plus (license), repositoryRoot (Desktop getRepositoryType semantics adopted), revision.getBlobIds (no GitCub API), utils diff, ipcServer, two commands and two shared webview components (VS Code scope). Earlier: efffd14e1: support drift since 5c1708ecab59 is package.json / packages/core/package.json / packages/git-cli/package.json (integration runs with --parallel --jobs 4) / pnpm-lock.yaml / pnpm-workspace.yaml, scripts/esbuild.tests.mjs, integration rootHooks.ts (unhandled rejections now fail the run from root hooks) and git-cli exec/git.ts (default spawner moved to @gitlens/utils spawnProcess). GitCub's bun runner does not load rootHooks.ts or Git's spawner; helpers.ts, shadowCheck.ts and every other snapshot under tests/conformance/upstream/gitlens are byte-identical, so ported suites keep their status. branch.utils.ts/test.ts resynced: getBranchTrackingWithoutRemote returns undefined for remote-tracking refs (#4950) and its new test sits in the deleted 'upstream remote' suite; splitRemoteBranchName (the 8 run tests) is unchanged (reviewed 2026-10-30). Earlier: 5c1708ecab59: support drift since 020cfc1b7daf is confined to package.json (new check:colors script wired into check / lint:css) and scripts/build.mjs (runs scripts/check-color-tokens.mjs); packages/git-cli integration helpers.ts, rootHooks.ts, shadowCheck.ts and every snapshot under tests/conformance/upstream/gitlens are byte-identical to 020cfc1b7daf, so no ported or partial suite changes (reviewed 2026-10-29). Earlier: c1f6e5f3c: support drift since a9bc0f000 is confined to package.json / packages/core/package.json / pnpm-lock.yaml / pnpm-workspace.yaml, packages/git-cli integration helpers.ts, rootHooks.ts, shadowCheck.ts, packages/plus/integrations sweepHelpers.ts and azure fixtures.ts, and packages/utils log.benchmark.ts. None is imported by the three ported parser suites; upstream/gitlens/packages/git/src/models/fileStatus.ts and both LICENSE snapshots are byte-identical at HEAD, so blameParser/indexParser keep their ports unchanged (reviewed 2026-10-27)."
 }

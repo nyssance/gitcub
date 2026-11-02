@@ -285,7 +285,7 @@ behavior merely to silence them.
   `GITCUB_UPDATE_PUBLIC_KEY`；测试地址只在 `hasgard-testing` 编译功能中可用。
 - `test-results/desktop-e2e/` 保存真实 WebView 命令、日志、截图和 trace；`test:upstream`
   自动重建 `.app`，避免用旧二进制验证新代码。
-- GitLens 独立登记（5c1708eca，v19.5.0；与 020cfc1b7 相比夹具只变了 package.json 的 check:colors 脚本与 scripts/build.mjs，已移植套件及 helpers.ts 逐字节未变）：579 个文件中 14 个完整移植、20 个部分移植、0 个未接入、545 个明确排除（含 `plus` 目录因 GitLens Pro License 排除的文件），不计入 Desktop 的 256 个文件。
+- GitLens 独立登记（b87331422；与 efffd14e1 相比夹具只变了 package.json、pnpm 锁文件与 workspace，autolink.utils、integration/config、integration/revision 三个套件已重新同步，见 manifest 的 support_review）：612 个文件中 14 个完整移植、20 个部分移植、0 个未接入、578 个明确排除（含 `plus` 目录因 GitLens Pro License 排除的文件），不计入 Desktop 的 256 个文件。
   上游 c54e108f4 新增的 `branches.applyConflicts.test.ts` 与 `providers/__tests__/branches.test.ts` 两项打桩用例测的是 GitLens 变基/cherry-pick 冲突预测（给 `merge-tree` 传树，需 git 2.45）；
   Desktop 变基预览只数提交（`app/src/ui/lib/update-branch.ts`），GitCub 只有照 `determineMergeability` 的合并预览 `ops::merge_preview`，两文件登记 excluded；
   该提交「merge-tree 退出 1 且无输出是错误、不是干净」的规则在 `merge_preview` 同步落地，由 Rust 回归 `合并预览找不到分支要报错不能当干净` 覆盖。

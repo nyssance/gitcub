@@ -69,8 +69,8 @@
     "gitlens/autolink.utils.test.ts": {
       "project": "gitlens",
       "source": "packages/git/src/utils/__tests__/autolink.utils.test.ts",
-      "commit": "5c1708ecab59236c2b9ae7e2b38ce876b9262394",
-      "sha256": "eecd0f84adde2de0d294dd9659165cd25642582945ff297aed53d981b7abf1ea"
+      "commit": "b87331422fe75f845ad32f581d2f500f72f84523",
+      "sha256": "dc6e72037ca176567a18186c23f20dc41448558ea454afc71be873378f37d837"
     },
     "gitlens/autolinks.test.ts": {
       "project": "gitlens",
@@ -1641,8 +1641,8 @@
     "gitlens/revision.test.ts": {
       "project": "gitlens",
       "source": "packages/git-cli/src/providers/__tests__/integration/revision.test.ts",
-      "commit": "5c1708ecab59236c2b9ae7e2b38ce876b9262394",
-      "sha256": "b07785c2b12f9d1807c9dc77292ed328c6a7241417692615a601a3cca1bb0dc9"
+      "commit": "b87331422fe75f845ad32f581d2f500f72f84523",
+      "sha256": "475c31331a04943125ac61554a43eab4ccd6279cf29db2a7ef77c66d509f4f9d"
     },
     "gitlens/revParseGitDir.test.ts": {
       "project": "gitlens",
@@ -1683,8 +1683,8 @@
     "gitlens/integration/config.test.ts": {
       "project": "gitlens",
       "source": "packages/git-cli/src/providers/__tests__/integration/config.test.ts",
-      "commit": "5c1708ecab59236c2b9ae7e2b38ce876b9262394",
-      "sha256": "5a8e1bbadc9cda747180493b6faee960c7f22056fddb9f96666bbee86fb39e6f"
+      "commit": "b87331422fe75f845ad32f581d2f500f72f84523",
+      "sha256": "5fa47829bee963cdfc678f378b312694ea30ac72738abd04cb688553d7676419"
     },
     "gitlens/integration/config.upstreamKeys.test.ts": {
       "project": "gitlens",
@@ -9290,7 +9290,8 @@
     "upstream/gitlens/packages/git/src/errors.ts": {
       "project": "gitlens",
       "source": "packages/git/src/errors.ts",
-      "sha256": "8957e9400fcdc0d394f293ac652386452948b8cdf5710f87f4835e93f2549862"
+      "sha256": "abb28f222dd162b2eba95ed41dacc4ae4001e37f03869c525db9f4ef21c5e51f",
+      "commit": "b87331422fe75f845ad32f581d2f500f72f84523"
     },
     "upstream/gitlens/packages/git/src/utils/reference.utils.ts": {
       "project": "gitlens",
