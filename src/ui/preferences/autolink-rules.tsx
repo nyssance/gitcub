@@ -2,11 +2,11 @@ import { PlusIcon, TrashIcon } from "@primer/octicons-react"
 import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { type AutolinkRuleErrors, validateAutolinkRule } from "@/lib/autolink-rules"
-import type { AutolinkRule } from "@/models/app-state"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { type AutolinkRuleErrors, validateAutolinkRule } from "@/lib/autolink-rules"
+import type { AutolinkRule } from "@/models/app-state"
 
 const emptyRule: AutolinkRule = { prefix: "", url: "", alphanumeric: false, ignoreCase: false, title: "" }
 

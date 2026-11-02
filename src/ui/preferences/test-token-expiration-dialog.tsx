@@ -2,10 +2,11 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
+import { Input } from "@/components/ui/input"
+
 import type { Dispatcher } from "../../lib/account-dialog-contract"
 import type { IAccountTokenExpiration } from "../../lib/credential-sessions"
 import type { Account } from "../../models/account"
-import { Input } from "@/components/ui/input"
 import { Button } from "../desktop/button"
 import { Dialog, DialogContent, DialogError, DialogFooter } from "../desktop/dialog"
 import { OkCancelButtonGroup } from "../desktop/dialog/ok-cancel-button-group"

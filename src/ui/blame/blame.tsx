@@ -3,11 +3,11 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { Button, Button as StandardButton } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { ipc } from "@/lib/ipc"
 import { cn } from "@/lib/utils"
 import type { BlameLine } from "@/models/history"
-import { Button, Button as StandardButton } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
 
 /** 逐行追溯。
  *

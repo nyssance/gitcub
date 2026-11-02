@@ -3,6 +3,8 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
 import { autolinkRefSets, type HostingPlatform, linkifyTokens } from "@/lib/autolink-rules"
 import type { RefSet } from "@/lib/autolinks"
 import { avatarUrl } from "@/lib/avatar"
@@ -11,8 +13,6 @@ import { type TokenResult, TokenType } from "@/lib/text-token-parser"
 import { cn } from "@/lib/utils"
 import type { AutolinkRule, Remote } from "@/models/app-state"
 import type { CommitFile, CommitInfo } from "@/models/history"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
 
 /** 提交摘要，横跨右侧整宽，位于文件列表和 diff 之上。
  *

@@ -1,9 +1,9 @@
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { Button } from "@/components/ui/button"
 import { ipc } from "@/lib/ipc"
 import type { AppState } from "@/models/app-state"
-import { Button } from "@/components/ui/button"
 
 /** First-run only: Application mounts this gate only while the welcome flow is active. */
 export function DesktopImportWelcome({

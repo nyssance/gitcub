@@ -3,12 +3,13 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 
+import { Spinner } from "@/components/ui/spinner"
+
 import { coerceToString } from "../lib/coerce-to-string"
 import { DugiteError } from "../lib/dugite-errors"
 import { isAuthFailureError } from "../lib/git-error-description"
 import { getFileFromExceedsError } from "../lib/helpers/regex"
 import { type RetryAction, RetryActionType } from "../models/retry-actions"
-import { Spinner } from "@/components/ui/spinner"
 import { getUnderlyingError, isErrorWithMetaData, isGitError, isRawGitError } from "./desktop-error"
 import { DefaultDialogFooter, Dialog, DialogContent, DialogFooter, OkCancelButtonGroup } from "./desktop/dialog"
 import { LinkButton } from "./desktop/link-button"

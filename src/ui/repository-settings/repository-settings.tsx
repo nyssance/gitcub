@@ -3,6 +3,20 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useState } from "react"
 import { Trans, useTranslation } from "react-i18next"
 
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 import { useAccountsStore } from "@/features/accounts/store"
 import {
   addRemote,
@@ -18,13 +32,6 @@ import { forkParent, readForkContributionTarget, writeForkContributionTarget } f
 import { ipc } from "@/lib/ipc"
 import type { Remote } from "@/models/app-state"
 import { Repository } from "@/models/repository"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
 import type { IRemote } from "@/upstream/models/remote"
 import { ForkContributionTarget } from "@/upstream/models/workflow-preferences"
 import { gitAuthorNameIsValid, InvalidGitAuthorNameMessage } from "@/upstream/ui/lib/identifier-rules"

@@ -2,10 +2,11 @@ import classNames from "classnames"
 import * as React from "react"
 // Desktop MIT port; platform imports adapted to Tauri.
 
-import { createUniqueId, releaseUniqueId } from "../../lib/ui/id-pool"
-import { AriaLiveContainer } from "../accessibility/aria-live-container"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+
+import { createUniqueId, releaseUniqueId } from "../../lib/ui/id-pool"
+import { AriaLiveContainer } from "../accessibility/aria-live-container"
 import { Octicon } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
 

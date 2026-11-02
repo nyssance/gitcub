@@ -3,11 +3,11 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { ipc } from "@/lib/ipc"
-import { mapLimit } from "@/lib/map-limit"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Spinner } from "@/components/ui/spinner"
+import { ipc } from "@/lib/ipc"
+import { mapLimit } from "@/lib/map-limit"
 
 /** 待我处理。
  *

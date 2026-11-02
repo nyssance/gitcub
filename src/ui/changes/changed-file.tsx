@@ -1,11 +1,6 @@
 import { ArrowRightIcon } from "@primer/octicons-react"
 import { useTranslation } from "react-i18next"
 
-import { shell } from "@/lib/app-shell"
-import { changesContextMenu, type ChangesMenuEntry, type MenuPlatform } from "@/lib/changes-context-menu"
-import { ipc } from "@/lib/ipc"
-import { __DARWIN__, __WIN32__ } from "@/lib/platform-flags"
-import type { FileChange } from "@/models/repo-status"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   ContextMenu,
@@ -18,6 +13,11 @@ import {
   ContextMenuTrigger
 } from "@/components/ui/context-menu"
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { shell } from "@/lib/app-shell"
+import { changesContextMenu, type ChangesMenuEntry, type MenuPlatform } from "@/lib/changes-context-menu"
+import { ipc } from "@/lib/ipc"
+import { __DARWIN__, __WIN32__ } from "@/lib/platform-flags"
+import type { FileChange } from "@/models/repo-status"
 import { Path } from "@/ui/shared/path"
 import { ChangeStatusIcon } from "@/ui/shared/status-icon"
 import { DiffSelectionType } from "@/upstream/models/diff/diff-selection"

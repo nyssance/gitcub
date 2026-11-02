@@ -2649,8 +2649,6 @@
       "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     }
   },
-  "gitcub_regressions": [
-    "empty_repository_can_exclude_a_file"
-  ],
+  "gitcub_regressions": ["empty_repository_can_exclude_a_file"],
   "support_sha256": "8dbc7a207ee1b46e0012ffffd4d3864092a97bcdded369bb88c3ed097d1a2a0b"
 }

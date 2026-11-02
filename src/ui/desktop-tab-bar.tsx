@@ -1,9 +1,10 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { dragAndDropManager } from "../lib/drag-and-drop-manager"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList } from "@/components/ui/tabs"
+
+import { dragAndDropManager } from "../lib/drag-and-drop-manager"
 import { TabBarItem } from "./tab-bar-item"
 import { TabBarType } from "./tab-bar-type"
 

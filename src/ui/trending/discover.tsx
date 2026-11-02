@@ -2,9 +2,9 @@ import { RefreshCwIcon } from "lucide-react"
 import { useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
-import { type Route, routes } from "@/lib/navigate"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { type Route, routes } from "@/lib/navigate"
 
 import { RemoteRepoList } from "./stars"
 

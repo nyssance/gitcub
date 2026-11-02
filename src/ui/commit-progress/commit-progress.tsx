@@ -2,8 +2,9 @@
 
 import * as React from "react"
 
-import type { TerminalOutputListener } from "../../lib/git-execution"
 import { Spinner } from "@/components/ui/spinner"
+
+import type { TerminalOutputListener } from "../../lib/git-execution"
 import { Dialog, DialogContent, DialogFooter } from "../desktop/dialog"
 import { OkCancelButtonGroup } from "../desktop/dialog/ok-cancel-button-group"
 import type { Terminal as TerminalComponent } from "../terminal"

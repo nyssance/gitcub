@@ -1,7 +1,5 @@
 import { useTranslation } from "react-i18next"
 
-import type { UnknownAuthor } from "@/upstream/models/author"
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
+import type { UnknownAuthor } from "@/upstream/models/author"
 
 /** Don't list more than this number of authors. */
 const MaxAuthorsToList = 10

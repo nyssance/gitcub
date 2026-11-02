@@ -2,9 +2,10 @@ import classNames from "classnames"
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
+import { Button as StandardButton } from "@/components/ui/button"
+
 import type { AriaHasPopupType } from "../../lib/ui/aria-types"
 import { createObservableRef } from "../../lib/ui/observable-ref"
-import { Button as StandardButton } from "@/components/ui/button"
 import { Tooltip, TooltipDirection } from "./tooltip"
 
 export interface IButtonProps {

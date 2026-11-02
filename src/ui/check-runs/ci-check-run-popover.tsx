@@ -2,6 +2,9 @@ import type { Disposable } from "event-kit"
 // Desktop bebc062 MIT port. Native dispatcher and standard controls are platform adapters.
 import * as React from "react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+
 import type { IAPIWorkflowJobStep } from "../../lib/api"
 import { APICheckConclusion, APICheckStatus } from "../../lib/api"
 import type { ICombinedRefCheck, IRefCheck } from "../../lib/ci-checks/ci-checks"
@@ -10,8 +13,6 @@ import { getCombinedStatusSummary } from "../../lib/ci-checks/status-summary"
 import i18n from "../../lib/i18n"
 import type { GitHubRepository } from "../../models/github-repository"
 import { getPullRequestCommitRef } from "../../models/pull-request"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import { Popover, PopoverAnchorPosition, PopoverDecoration } from "../desktop/popover"
 import { Donut } from "../donut"
 import { Octicon, syncClockwise } from "../octicons"

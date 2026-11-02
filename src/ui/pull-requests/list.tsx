@@ -4,12 +4,6 @@ import type { TFunction } from "i18next"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { usePullRequestsStore } from "@/features/pull-requests/store"
-import { canDropCommits, takeCommitDrag } from "@/lib/commit-drag"
-import type { IFilterListItem } from "@/lib/filter-list"
-import { formatDate } from "@/lib/format-date"
-import type { PullRequest, Remote } from "@/models/app-state"
-import { getPreferAbsoluteDates } from "@/models/formatting-preferences"
 import { Button } from "@/components/ui/button"
 import {
   ContextMenu,
@@ -19,6 +13,12 @@ import {
   ContextMenuTrigger
 } from "@/components/ui/context-menu"
 import { Spinner } from "@/components/ui/spinner"
+import { usePullRequestsStore } from "@/features/pull-requests/store"
+import { canDropCommits, takeCommitDrag } from "@/lib/commit-drag"
+import type { IFilterListItem } from "@/lib/filter-list"
+import { formatDate } from "@/lib/format-date"
+import type { PullRequest, Remote } from "@/models/app-state"
+import { getPreferAbsoluteDates } from "@/models/formatting-preferences"
 import { NoPullRequests } from "@/ui/branches/no-pull-requests"
 import { HighlightText } from "@/ui/desktop/highlight-text"
 import { SectionFilterList } from "@/ui/desktop/section-filter-list"

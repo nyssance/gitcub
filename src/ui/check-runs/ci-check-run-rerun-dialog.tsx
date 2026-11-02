@@ -1,11 +1,12 @@
 // Desktop bebc062 MIT port. Native dispatcher and standard controls are platform adapters.
 import * as React from "react"
 
+import { Button } from "@/components/ui/button"
+
 import { APICheckConclusion } from "../../lib/api"
 import type { IRefCheck } from "../../lib/ci-checks/ci-checks"
 import i18n from "../../lib/i18n"
 import type { GitHubRepository } from "../../models/github-repository"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "../desktop/dialog"
 import { OkCancelButtonGroup } from "../desktop/dialog/ok-cancel-button-group"
 import { Octicon } from "../octicons"

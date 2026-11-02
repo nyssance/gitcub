@@ -3,10 +3,11 @@
 import { platform } from "@tauri-apps/plugin-os"
 import * as React from "react"
 
+import { Spinner } from "@/components/ui/spinner"
+
 import * as Path from "../../lib/platform-path"
 import type { Repository } from "../../models/repository"
 import type { IDeleteWorktreeOptions, WorktreeEntry } from "../../models/worktree"
-import { Spinner } from "@/components/ui/spinner"
 import { getUnderlyingError, isRawGitError } from "../desktop-error"
 import { Dialog, DialogContent, DialogFooter } from "../desktop/dialog"
 import { OkCancelButtonGroup } from "../desktop/dialog/ok-cancel-button-group"

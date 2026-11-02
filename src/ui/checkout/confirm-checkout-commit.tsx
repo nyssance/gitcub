@@ -47,7 +47,9 @@ export function ConfirmCheckoutCommitDialog({
       ariaDescribedBy="checking-out-commit-confirmation"
       role="alertdialog">
       <DialogContent>
-        <Row id="checking-out-commit-confirmation">{t("confirmCheckoutCommit.checkingOutACommitWillCreateADetachedHead")}</Row>
+        <Row id="checking-out-commit-confirmation">
+          {t("confirmCheckoutCommit.checkingOutACommitWillCreateADetachedHead")}
+        </Row>
         <Row>
           <Checkbox
             label={t("confirmCheckoutCommit.doNotShowThisMessageAgain")}

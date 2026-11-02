@@ -1,9 +1,10 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
-import { orderedTutorialSteps, type ValidTutorialStep } from "../../upstream/models/tutorial-step"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+
+import { orderedTutorialSteps, type ValidTutorialStep } from "../../upstream/models/tutorial-step"
 import { Octicon } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
 

@@ -2,10 +2,10 @@ import { AlertIcon, CheckIcon } from "@primer/octicons-react"
 import type { TFunction } from "i18next"
 import { useTranslation } from "react-i18next"
 
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Resolution } from "@/models/app-state"
 import type { FileChange, Operation } from "@/models/repo-status"
-import { Button } from "@/components/ui/button"
 
 /** 一个取舍按钮上该写什么。
  *

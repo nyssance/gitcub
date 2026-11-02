@@ -4,11 +4,11 @@
 import classNames from "classnames"
 import React from "react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button as StandardButton } from "@/components/ui/button"
 
 import { createObservableRef } from "../../../lib/ui/observable-ref"
 import { type Author, isKnownAuthor } from "../../../upstream/models/author"
-import { Badge } from "@/components/ui/badge"
 import { Tooltip } from "../../desktop/tooltip"
 import { Octicon, syncClockwise } from "../../octicons"
 import * as octicons from "../../octicons/octicons.generated"

@@ -15,19 +15,12 @@
         "src-tauri/src/blame_model.rs",
         "src/ui/blame/blame.tsx"
       ],
-      "tests": [
-        "packages/git-cli/src/parsers/__tests__/blameParser.test.ts",
-        "tests/e2e/specs/blame.test.ts"
-      ],
+      "tests": ["packages/git-cli/src/parsers/__tests__/blameParser.test.ts", "tests/e2e/specs/blame.test.ts"],
       "difference": "17 original synchronous parser tests execute against the Rust model used by GitCub. UI still consumes porcelain content lines; async stream parsing, GitCommit class APIs and VS Code E2E remain uncovered. The porcelain itself (Desktop's `git blame --porcelain -- <file>`) is now produced in process by blame_engine.rs, a port of git blame.c (assign_blame / pass_blame / find_origin / find_rename / pass_blame_to_parent, fake_working_tree_commit, emit_porcelain) that falls back to git whenever byte identity is not guaranteed. That identity is checked by GitCub-only differential tests against git (hand-built shapes, random histories both loose and repacked, 1600 sampled files from two real repositories), not by GitLens tests. Commit-graph changed-path Bloom filters (changed_paths.rs, a port of git v2.54 bloom.c / commit-graph.c reading: BIDX/BDAT, split chains, commitGraph.changedPathsVersion and readChangedPaths, version 1 hashing with signed char, mixed-settings and generation checks) are trusted exactly as git's maybe_changed_path does, so even wrong filters give git's output; the differential test covers v1/v2, non-ASCII paths, a v2 file relabelled v1, zeroed and randomly damaged filters, out-of-range and decreasing indexes, split chains with zeroed layers, generation zero, renames and merges, a deleted-and-restored path that a false negative carries into a commit without it (git dies there; the engine falls back), and 17 planted mutants of which 15 are killed and 2 are equivalent (filter checks on non-first parents; an unused layer offset since removed). GitLens's own blame options (-M/-C, ignore-revs, line ranges) are not covered."
     },
     {
       "name": "commit-search-and-comparison",
-      "gitcub": [
-        "src-tauri/src/search_query.rs",
-        "src-tauri/src/history.rs",
-        "src/ui/history/sidebar.tsx"
-      ],
+      "gitcub": ["src-tauri/src/search_query.rs", "src-tauri/src/history.rs", "src/ui/history/sidebar.tsx"],
       "tests": [
         "packages/git/src/utils/__tests__/search.utils.test.ts",
         "packages/git-cli/src/providers/__tests__/integration/commits.searchTypeMerge.test.ts",
@@ -39,10 +32,7 @@
     },
     {
       "name": "commit-graph",
-      "gitcub": [
-        "src-tauri/src/graph.rs",
-        "src/ui/history/graph.tsx"
-      ],
+      "gitcub": ["src-tauri/src/graph.rs", "src/ui/history/graph.tsx"],
       "tests": [
         "packages/plus/commit-graph/src/engine/__tests__/edges.test.ts",
         "packages/git-cli/src/providers/__tests__/integration/graph.ancestry.test.ts",
@@ -54,9 +44,7 @@
     },
     {
       "name": "inbox-launchpad",
-      "gitcub": [
-        "src/ui/inbox/inbox.tsx"
-      ],
+      "gitcub": ["src/ui/inbox/inbox.tsx"],
       "tests": [
         "src/plus/launchpad/__tests__/hostIdentity.test.ts",
         "src/plus/launchpad/__tests__/viewerIdentity.test.ts",
@@ -82,13 +70,8 @@
     },
     {
       "name": "worktree",
-      "gitcub": [
-        "src-tauri/src/ops.rs",
-        "src/models/app-state.ts"
-      ],
-      "tests": [
-        "packages/git-cli/src/parsers/__tests__/worktreeParser.test.ts"
-      ],
+      "gitcub": ["src-tauri/src/ops.rs", "src/models/app-state.ts"],
+      "tests": ["packages/git-cli/src/parsers/__tests__/worktreeParser.test.ts"],
       "difference": "Original tests cover locked/prunable reasons and the porcelain branch name rule (refs/heads only). GitLens workspace resolution and model methods are not implemented by this adapter."
     },
     {
@@ -101,10 +84,7 @@
         "src/ui/app.tsx",
         "src/ui/history/sidebar.tsx"
       ],
-      "tests": [
-        "packages/git-cli/src/parsers/__tests__/logParser.test.ts",
-        "tests/e2e/specs/smoke.test.ts"
-      ],
+      "tests": ["packages/git-cli/src/parsers/__tests__/logParser.test.ts", "tests/e2e/specs/smoke.test.ts"],
       "difference": "Reference: getLogForPath -> getLogForPathCore -> getLogCore (packages/git-cli/src/providers/commits.ts @ commit in this manifest), called from src/views/nodes/fileHistoryNode.ts. GitLens has no test for getLogForPath; logParser.test.ts (its own --raw/--numstat record format) and the file-history view smoke test (VS Code host) are excluded, so nothing here is ported. Adopted GitLens semantics with defaults fileHistoryFollowsRenames=true, ShowMergeCommits=false, ShowAllBranches=false: git log --follow --no-merges with diff.renameLimit=0 from HEAD; pages of limit with hasMore from fetching limit+1; when the path has no history, retry with the staged rename's original path (GitLens getStatusForFile originalPath). Deliberate differences: load more continues the same git-order walk instead of GitLens's '<last sha>^ -- <originalPath>', because restarting from the last commit's parent drops side-branch commits that git's date order shows after it. Each page returns an opaque in-memory cursor (date queue, seen set, followed path, the unconsumed probed batch and the lookahead commit; single use, at most 4 kept for 10 minutes, one per repository and file); the next page resumes from it only when repository, file, page offset, peeled HEAD and log.showRoot match and every queued commit re-resolves with the same sort date (commit-graph rewrites are tolerated), otherwise it re-walks the first skip+limit+1 commits from HEAD, so every page equals the matching slice of the full git log either way; walks whose rename detection consulted gitattributes keep no cursor; commits are rendered on the page that shows them, so decorations follow ref changes; no isTracked precheck (GitCub always walks HEAD, so deleted files keep their history); a path that is a directory or submodule in some revision falls back to git instead of GitLens's renames=false submodule special case; -M, --numstat, --raw and --use-mailmap are not requested because the list shows Desktop's commit fields only (no per-file stats, raw author identity as in Desktop history). The in-process walk (gix, git's date order, tree-diff pathspec compare, diffcore-rename exact/inexact single_follow with find_copies_harder, diff driver binary rules, log.showRoot) must equal the git command byte for byte; anything outside the checked conditions (replace refs, grafts, shallow, pathspec magic, unreadable or promisor-missing objects) falls back to git. GitCub-own regressions in src-tauri/src/file_history.rs compare against git: rename paging, rename/copy/merge/root, staged rename, directory and submodule fallback, similarity thresholds, hash_chars, 1200-commit batched walk with three renames (also paged with cursors at limits 1, 2, 3, 7, 50, 100 and with page edges exactly before and after each rename commit), cursor paging over a merged side branch older than the page edge plus root commit and log.showRoot on/off, cursor invalidation (unknown, wrong offset, other file, expired, reused, HEAD moved with and without touching the file, branch switch, showRoot changed) and survival (commit-graph written or deleted between pages, tags and branches moved without HEAD), the store bound, no cursor after a gitattributes-dependent rename, and an ignored sampled run over real repositories (full clone of desktop/desktop and /opt/homebrew, 41 files each identical in full and paged with cursors at limits 100 and 37: 21 and 39 pages identical, 13 and 19 of them resumed from cursors). Not covered: GitLens's line-range history, ref/branch-scoped history, all-branches mode, merge-commit mode and the GitLens-specific rename display in the node tree."
     }
   ],

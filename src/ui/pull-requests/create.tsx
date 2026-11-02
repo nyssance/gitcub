@@ -2,13 +2,13 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
 import { hookFailureHandling } from "@/features/dialogs/store"
 import { ipc } from "@/lib/ipc"
 import { pullRequestCreationURL, type PullRequestTargets } from "@/lib/pull-request-navigation"
 import type { Remote } from "@/models/app-state"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Spinner } from "@/components/ui/spinner"
 
 import { Select } from "../desktop/select"
 

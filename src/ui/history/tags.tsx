@@ -3,15 +3,15 @@ import { confirm } from "@tauri-apps/plugin-dialog"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { hookFailureHandling } from "@/features/dialogs/store"
-import { useRepositoryStore } from "@/features/repository/store"
-import { ipc } from "@/lib/ipc"
-
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { hookFailureHandling } from "@/features/dialogs/store"
+import { useRepositoryStore } from "@/features/repository/store"
+import { ipc } from "@/lib/ipc"
+
 import { Select } from "../desktop/select"
 
 export function Tags({ repo }: { repo: string }) {

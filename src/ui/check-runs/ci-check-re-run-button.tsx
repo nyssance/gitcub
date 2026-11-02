@@ -1,7 +1,3 @@
-// Desktop bebc062: same failed/all choice and keyboard behavior, using Base UI.
-import { APICheckConclusion } from "../../lib/api"
-import type { IRefCheck } from "../../lib/ci-checks/ci-checks"
-import i18n from "../../lib/i18n"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -10,6 +6,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+
+// Desktop bebc062: same failed/all choice and keyboard behavior, using Base UI.
+import { APICheckConclusion } from "../../lib/api"
+import type { IRefCheck } from "../../lib/ci-checks/ci-checks"
+import i18n from "../../lib/i18n"
 import { Octicon, syncClockwise } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
 

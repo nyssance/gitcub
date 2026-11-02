@@ -2,11 +2,11 @@ import { FileSubmoduleIcon, GitCommitIcon, InfoIcon, PencilIcon } from "@primer/
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { ipc } from "@/lib/ipc"
 import type { SubmoduleInfo } from "@/models/app-state"
 import type { FileChange } from "@/models/repo-status"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
 
 /** 子模块的「diff」。
  *

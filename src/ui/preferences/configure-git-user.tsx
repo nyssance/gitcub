@@ -2,6 +2,8 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
 
+import { FieldGroup } from "@/components/ui/field"
+
 import { isConfigFileLockError, parseConfigLockFilePathFromError } from "../../lib/config-lock-error"
 import { setGlobalConfigValue } from "../../lib/desktop-git"
 import { lookupPreferredEmail } from "../../lib/email"
@@ -9,7 +11,6 @@ import i18n from "../../lib/i18n"
 import { type Account, isDotComAccount } from "../../models/account"
 import { Commit } from "../../models/commit"
 import { CommitIdentity } from "../../upstream/models/commit-identity"
-import { FieldGroup } from "@/components/ui/field"
 import { Button } from "../desktop/button"
 import { Form } from "../desktop/form"
 import { RadioButton } from "../desktop/radio-button"

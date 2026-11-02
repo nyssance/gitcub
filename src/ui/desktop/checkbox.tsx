@@ -1,9 +1,10 @@
 // Desktop value contract, rendered by standard shadcn Checkbox.
 import * as React from "react"
 
-import { cn } from "../../lib/utils"
 import { Checkbox as StandardCheckbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel } from "@/components/ui/field"
+
+import { cn } from "../../lib/utils"
 export enum CheckboxValue {
   On,
   Off,

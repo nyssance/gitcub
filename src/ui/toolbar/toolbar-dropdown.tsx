@@ -1,9 +1,9 @@
 import { ChevronDownIcon } from "@primer/octicons-react"
 import type { CSSProperties, ReactNode } from "react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface Props {
   icon?: ReactNode
