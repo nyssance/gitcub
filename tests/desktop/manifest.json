@@ -1866,8 +1866,9 @@
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stats-store-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Original suite unchanged; complete production Desktop store and native transport boundaries. StatsStore requires explicit telemetry transport; original collector URLs supplied only by the test constructor. Usage AST helper source path adapted to standard Tauri layout, original example JSON unchanged."
-      }
+        "adaptation": "Original suite unchanged; complete production Desktop store and native transport boundaries. StatsStore requires explicit telemetry transport; original collector URLs supplied only by the test constructor. Usage AST helper source path adapted to standard Tauri layout, original example JSON unchanged. Copilot removal: drops the GitHub Copilot app handoff case (openInCopilotAppCount no longer exists)."
+      },
+      "exclusion": "Copilot-only cases intentionally removed with the feature; all remaining assertions retained."
     },
     "app/test/unit/status-parser-test.ts": {
       "sha256": "59b282b3a4a7537e73880da8fe72eba2c744f631ed08fc3899d0f54c35256d58",
@@ -2504,8 +2505,9 @@
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/usage-data-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Original suite unchanged; complete production Desktop store and native transport boundaries. StatsStore requires explicit telemetry transport; original collector URLs supplied only by the test constructor. Usage AST helper source path adapted to standard Tauri layout, original example JSON unchanged."
-      }
+        "adaptation": "Original suite unchanged; complete production Desktop store and native transport boundaries. StatsStore requires explicit telemetry transport; original collector URLs supplied only by the test constructor. Usage AST helper source path adapted to standard Tauri layout, original example JSON unchanged. Copilot removal: Copilot measures and the copilotConflictResolutionModel dimension are stripped from the checked-in example before the byte comparison."
+      },
+      "exclusion": "Copilot-only cases intentionally removed with the feature; all remaining assertions retained."
     },
     "app/test/unit/welcome-test.ts": {
       "sha256": "99fd92883f51e0423a09e88615ad1950c0582ce33dbd813190e671d9fa9a1143",

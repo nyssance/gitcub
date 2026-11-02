@@ -85,7 +85,6 @@ const DefaultDailyMeasures: IDailyMeasures = {
   commits: 0,
   partialCommits: 0,
   openShellCount: 0,
-  openInCopilotAppCount: 0,
   tokenRefreshAttemptCount: 0,
   tokenRefreshSuccessCount: 0,
   tokenRefreshTransientFailureCount: 0,
@@ -255,9 +254,6 @@ const DefaultDailyMeasures: IDailyMeasures = {
   appliesClearAllChangesListFilterCount: 0,
   adjustedFiltersForHiddenChangesCount: 0,
   enterpriseAccountCount: 0,
-  generateCommitMessageButtonClickCount: 0,
-  generateCommitMessageCount: 0,
-  generateCommitMessageUsedVerbatimCount: 0,
   pushBlockedBySecretScanningCount: 0,
   secretsDetectedOnPushCount: 0,
   secretsDetectedOnPushBypassedCount: 0,
@@ -269,20 +265,7 @@ const DefaultDailyMeasures: IDailyMeasures = {
   worktreeSwitchCount: 0,
   worktreeCreatedCount: 0,
   worktreeDeletedCount: 0,
-  worktreeMaxCount: 0,
-  initiateResolveConflictsWithCopilotCount: 0,
-  copilotConflictResolutionAcceptedCount: 0,
-  copilotConflictResolutionWithOverridesCount: 0,
-  copilotConflictResolutionSwitchToManualCount: 0,
-  copilotConflictResolutionStoppedCount: 0,
-  copilotConflictResolutionNoConflictStateCount: 0,
-  copilotConflictResolutionNoConflictedFilesCount: 0,
-  copilotConflictResolutionAllFilesSkippedCount: 0,
-  copilotConflictResolutionErrorCount: 0,
-  copilotConflictResolutionOver15sCount: 0,
-  copilotConflictResolutionOver30sCount: 0,
-  copilotConflictResolutionOver60sCount: 0,
-  copilotConflictResolutionOver120sCount: 0
+  worktreeMaxCount: 0
 }
 
 // A subtype of IDailyMeasures filtered to contain only its numeric properties
@@ -458,9 +441,6 @@ interface ICalculatedStats {
 
   /** Whether or not the user has the git hooks environment enabled */
   readonly gitHooksEnvEnabled: boolean
-
-  /** Legacy payload compatibility; new sessions do not select an AI model. */
-  readonly copilotConflictResolutionModel?: string
 }
 
 type DailyStats = ICalculatedStats & ILaunchStats & Omit<IDailyMeasures, "id"> & IOnboardingStats
@@ -549,7 +529,6 @@ export function buildStatsPayload(body: StatsPayload): ITelemetryPayload {
     useExternalCredentialHelper,
     filteringChangesEnabled,
     gitHooksEnvEnabled,
-    copilotConflictResolutionModel,
     active,
     tutorialStarted,
     tutorialRepoCreated,
@@ -588,7 +567,6 @@ export function buildStatsPayload(body: StatsPayload): ITelemetryPayload {
     useExternalCredentialHelper: useExternalCredentialHelper ?? null,
     filteringChangesEnabled,
     gitHooksEnvEnabled,
-    ...(copilotConflictResolutionModel === undefined ? {} : { copilotConflictResolutionModel }),
     active,
     tutorialStarted,
     tutorialRepoCreated,

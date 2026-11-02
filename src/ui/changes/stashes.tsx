@@ -1,8 +1,8 @@
 import { ArchiveIcon, TrashIcon } from "@primer/octicons-react"
 import { useTranslation } from "react-i18next"
 
-import type { StashEntry } from "@/models/app-state"
 import { Button, Button as StandardButton } from "@/components/ui/button"
+import type { StashEntry } from "@/models/app-state"
 
 /** 贮藏列表。
  *
@@ -31,7 +31,7 @@ export function Stashes({
       {stashes.map(s => (
         <div key={s.name} className="group/stash hover:bg-accent/50 flex h-8 items-center gap-2 px-3">
           <span className="min-w-0 flex-1 truncate text-xs" title={s.message}>
-            {/* 本客户端建的贮藏消息是 `!!GitCub<分支>`，直接显示不好看，
+            {/* 本客户端建的贮藏消息是 Desktop 的 `!!GitHub_Desktop<分支>`，直接显示不好看，
                 换成分支名；手工建的就原样显示 */}
             {s.ours ? s.message.replace(/^.*<(.*)>$/, "$1") : s.message}
           </span>

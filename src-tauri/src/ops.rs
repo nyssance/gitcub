@@ -368,10 +368,9 @@ fn parse_stash_records(records: &str) -> Vec<StashEntry> {
             let name = parts.next()?.trim_start_matches("refs/").to_string();
             let sha = parts.next()?.to_string();
             let message = parts.next()?.to_string();
-            let branch_name = [STASH_MARKER, "!!GitCub", "!!Quipu"].iter().find_map(|marker| {
-                let (_, rest) = message.split_once(&format!("{marker}<"))?;
-                rest.strip_suffix('>').filter(|name| !name.is_empty()).map(str::to_string)
-            });
+            let branch_name = message
+                .split_once(&format!("{STASH_MARKER}<"))
+                .and_then(|(_, rest)| rest.strip_suffix('>').filter(|name| !name.is_empty()).map(str::to_string));
             let tree = parts.next()?.to_string();
             let parents = parts.next()?.split_whitespace().map(str::to_string).collect();
             Some(StashEntry { name, sha, message, ours: branch_name.is_some(), branch_name, tree, parents })

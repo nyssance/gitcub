@@ -25,29 +25,11 @@ impl NamedStoreState {
 /// 缓存域 store 的子目录名 —— 单独一层，清缓存时整个删掉即可。
 pub const CACHE_STORE_DIRECTORY: &str = "stores";
 
-/// 2026-10-30 存储名从 quipu-* 改成 gitcub-*：老文件原地改名一次，新文件已存在就不动旧的。
-fn migrate_renamed_stores(data_directory: &std::path::Path) {
-    let Ok(entries) = std::fs::read_dir(data_directory) else { return };
-    for entry in entries.flatten() {
-        let name = entry.file_name();
-        let Some(name) = name.to_str() else { continue };
-        let Some(rest) = name.strip_prefix("quipu-") else { continue };
-        let target = data_directory.join(format!("gitcub-{rest}"));
-        if target.exists() {
-            continue;
-        }
-        if let Err(error) = std::fs::rename(entry.path(), &target) {
-            log::warn!("迁移存储文件 {name} 失败: {error}");
-        }
-    }
-}
-
 pub fn init(app: &AppHandle) -> Result<(), String> {
     let data_directory = app.path().app_data_dir().map_err(|error| error.to_string())?;
     let cache_directory = app.path().app_cache_dir().map_err(|error| error.to_string())?.join(CACHE_STORE_DIRECTORY);
     std::fs::create_dir_all(&data_directory).map_err(|error| error.to_string())?;
     std::fs::create_dir_all(&cache_directory).map_err(|error| error.to_string())?;
-    migrate_renamed_stores(&data_directory);
     let state = NamedStoreState { stores: ScopedStores::new(data_directory, cache_directory) };
     // 所有命名存储的变更走同一条通道，订阅一次即可 —— 不是每开一个 store 各挂一个转发任务。
     let (mut receiver, mut cache_receiver) = state.stores.subscribe();

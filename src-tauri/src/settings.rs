@@ -10,8 +10,6 @@ use serde::Serialize;
 use std::path::Path;
 
 const SERVICE: &str = "day.dreamer.gitcub";
-/// 2026-10-30 改名前的服务名；旧条目读得到，新写入只用 SERVICE
-const LEGACY_SERVICE: &str = "com.yijoy.quipu";
 
 /// 令牌按**主机名**存在钥匙串里（account = github.com / 自建实例域名 …）。
 /// 不写死 GitHub / GitLab 两家：自建实例才是很多人的主力，它们的域名各不相同。
@@ -74,7 +72,7 @@ pub fn stored_credential(host: &str) -> Option<String> {
 }
 
 pub fn access_token(value: &str) -> Option<String> {
-    if value.starts_with("gitcub-oauth:") || value.starts_with(crate::oauth::LEGACY_PREFIX) {
+    if value.starts_with(crate::oauth::PREFIX) {
         return crate::oauth::access_token(value);
     }
     if let Some(json) = value.strip_prefix("github-desktop-oauth:") {
@@ -107,14 +105,7 @@ fn read(key: &str) -> Option<String> {
     };
     match entry.get_password() {
         Ok(v) => Some(v),
-        Err(keyring::Error::NoEntry) => match keyring::Entry::new(LEGACY_SERVICE, key).and_then(|e| e.get_password()) {
-            Ok(v) => Some(v),
-            Err(keyring::Error::NoEntry) => None,
-            Err(e) => {
-                log::warn!("读旧钥匙串 {key} 失败: {e}");
-                None
-            }
-        },
+        Err(keyring::Error::NoEntry) => None,
         Err(e) => {
             log::warn!("读钥匙串 {key} 失败: {e}");
             None
@@ -174,9 +165,7 @@ mod tests {
 #[cfg(debug_assertions)]
 fn dev_read(key: &str) -> Option<String> {
     let path = dev_token_path(key)?;
-    // 改名前的开发令牌目录：新目录没有就读旧目录
-    let legacy = path.parent()?.parent()?.parent()?.join(LEGACY_SERVICE).join("dev-tokens").join(dev_token_file(key));
-    let v = read_dev_file(&path).or_else(|| read_dev_file(&legacy))?;
+    let v = read_dev_file(&path)?;
     let v = v.trim().to_string();
     (!v.is_empty()).then_some(v)
 }

@@ -1,26 +1,11 @@
 //! GitCub-only credential namespace; never opens Desktop's keychain entries.
-/// 2026-10-30 改名前的命名空间；老条目还在钥匙串里，读的时候认，新写入只用新名字。
-const LEGACY_PREFIXES: [&str; 2] = ["Quipu - ", "Quipu Dev - "];
 fn strip_namespace(service: &str) -> Option<&str> {
-    service
-        .strip_prefix("GitCub - ")
-        .or_else(|| service.strip_prefix("GitCub Dev - "))
-        .or_else(|| LEGACY_PREFIXES.iter().find_map(|prefix| service.strip_prefix(prefix)))
-}
-/// 新名字对应的旧名字（`GitCub - X` → `Quipu - X`），迁移期读不到新条目时再试一次旧的
-fn legacy_service(service: &str) -> Option<String> {
-    service
-        .strip_prefix("GitCub - ")
-        .map(|key| format!("Quipu - {key}"))
-        .or_else(|| service.strip_prefix("GitCub Dev - ").map(|key| format!("Quipu Dev - {key}")))
+    service.strip_prefix("GitCub - ").or_else(|| service.strip_prefix("GitCub Dev - "))
 }
 fn allowed_service(service: &str) -> bool {
-    let Some(key) = strip_namespace(service) else {
-        return false;
-    };
-    key == "Copilot BYOK provider"
-        || reqwest::Url::parse(key)
-            .is_ok_and(|url| matches!(url.scheme(), "https" | "http") && url.host_str().is_some())
+    strip_namespace(service).is_some_and(|key| {
+        reqwest::Url::parse(key).is_ok_and(|url| matches!(url.scheme(), "https" | "http") && url.host_str().is_some())
+    })
 }
 fn entry(service: &str, login: &str) -> Result<keyring::Entry, String> {
     if !allowed_service(service) {
@@ -62,14 +47,7 @@ pub fn get(service: &str, login: &str) -> Result<Option<String>, String> {
     }
     let found = match entry(service, login)?.get_password() {
         Ok(value) => Some(value),
-        Err(keyring::Error::NoEntry) => match legacy_service(service) {
-            Some(legacy) => match entry(&legacy, login)?.get_password() {
-                Ok(value) => Some(value),
-                Err(keyring::Error::NoEntry) => None,
-                Err(e) => return Err(e.to_string()),
-            },
-            None => None,
-        },
+        Err(keyring::Error::NoEntry) => None,
         Err(e) => return Err(e.to_string()),
     };
     if let Some(value) = found {
@@ -135,19 +113,13 @@ pub fn delete(service: &str, login: &str) -> Result<bool, String> {
 mod tests {
     #[test]
     fn credential_namespaces_are_gitcub_only() {
-        for service in
-            [
-                "GitCub - https://api.github.com",
-                "GitCub Dev - https://ghe.test/api/v3",
-                "GitCub - Copilot BYOK provider",
-                "Quipu - https://api.github.com"
-            ]
-        {
+        for service in ["GitCub - https://api.github.com", "GitCub Dev - https://ghe.test/api/v3"] {
             assert!(super::allowed_service(service));
         }
         for service in [
             "GitHub - https://api.github.com",
-            "GitHub Desktop - Copilot BYOK provider",
+            "GitCub - Copilot BYOK provider",
+            "Quipu - https://api.github.com",
             "GitCub - file:///tmp/key",
             "GitCub - invalid",
         ] {

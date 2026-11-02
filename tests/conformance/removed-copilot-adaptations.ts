@@ -40,5 +40,18 @@ export function withoutRemovedCopilot(file: string, source: string): string {
       .replace(/,\s*new CopilotStore\([^\n]*\)/, "")
       .replaceAll(/^.*appStore\['updateCopilot[^\n]*\n/gm, "")
   }
+  if (file === "desktop/stats-store-test.ts") {
+    return source.replace(
+      / {2}it\('tracks GitHub Copilot app handoffs'[\s\S]*?(?= {2}it\('persists token refresh counters)/,
+      ""
+    )
+  }
+  if (file === "desktop/usage-data-test.ts") {
+    // The checked-in example still lists Desktop's Copilot measures and dimension; compare the rest byte for byte.
+    return source.replace(
+      "const checkedInExample = await readFile(examplePath, 'utf8')",
+      "const checkedInExample = (await readFile(examplePath, 'utf8')).replace(/^ *\"(?:copilot\\w*|openInCopilotAppCount|initiateResolveConflictsWithCopilotCount|generateCommitMessage\\w*)\": [^\\n]*\\n/gm, '')"
+    )
+  }
   return source
 }

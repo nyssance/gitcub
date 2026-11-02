@@ -279,9 +279,7 @@ async fn post(url: &str, form: &[(&str, &str)]) -> Result<serde_json::Value, Str
     Ok(value)
 }
 
-const PREFIX: &str = "gitcub-oauth:";
-/// 2026-10-30 改名前写入的凭据前缀，解码时继续认；编码只用 PREFIX
-pub(crate) const LEGACY_PREFIX: &str = "quipu-oauth:";
+pub(crate) const PREFIX: &str = "gitcub-oauth:";
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Credential {
@@ -348,7 +346,6 @@ impl Credential {
 fn decode(value: &str) -> Result<Option<Credential>, String> {
     value
         .strip_prefix(PREFIX)
-        .or_else(|| value.strip_prefix(LEGACY_PREFIX))
         .map(|json| {
             serde_json::from_str(json)
                 .map_err(|error| format!("Stored OAuth credentials are invalid; sign in again: {error}"))
