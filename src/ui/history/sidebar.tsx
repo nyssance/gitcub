@@ -236,10 +236,12 @@ export function HistorySidebar({
       active = false
     }
   }, [repo])
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  // 真正滚动的是 ScrollArea 里的 Viewport，不是 Root
+  const viewport = () => scrollAreaRef.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]') ?? null
   const scrollToTopRequest = useHistoryStore(s => s.scrollToTopRequest)
   useEffect(() => {
-    if (scrollToTopRequest > 0) scrollRef.current?.scrollTo({ top: 0 })
+    if (scrollToTopRequest > 0) viewport()?.scrollTo({ top: 0 })
   }, [scrollToTopRequest])
   const [query, setQuery] = useState("")
   const [options, setOptions] = useState<SearchOption[]>(DEFAULT_SEARCH_OPTIONS)
@@ -325,7 +327,7 @@ export function HistorySidebar({
 
   const virtualizer = useVirtualizer({
     count: list.length,
-    getScrollElement: () => scrollRef.current,
+    getScrollElement: viewport,
     estimateSize: () => ROW,
     overscan: 12
   })
@@ -628,7 +630,7 @@ export function HistorySidebar({
             elementRef={insertionElementRef}
           />
         )}
-        <ScrollArea viewportRef={scrollRef} className="desktop-list min-h-0 flex-1">
+        <ScrollArea ref={scrollAreaRef} className="desktop-list min-h-0 flex-1">
           <div className="sr-only" aria-live="polite">
             {keyboardReorder &&
               t(keyboardReorder.row < list.length ? "history.reorderInsertBefore" : "history.reorderInsertAfter", {

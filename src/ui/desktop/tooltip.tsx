@@ -1,9 +1,11 @@
-// Desktop target-ref compatibility; rendering and positioning use shadcn/Base UI.
+// Desktop target-ref compatibility; rendering and positioning use Base UI.
+// The target is any element, not a trigger, which the shadcn TooltipContent cannot express,
+// so this composes the Base UI parts directly with the shadcn tooltip-content styles.
+import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 import * as React from "react"
 
 import type { ObservableRef } from "../../lib/ui/observable-ref"
 import { cn } from "../../lib/utils"
-import { Tooltip as StandardTooltip, TooltipContent } from "@/components/ui/tooltip"
 export enum TooltipDirection {
   NORTH = "n",
   NORTH_EAST = "ne",
@@ -240,7 +242,8 @@ export function Tooltip<T extends TooltipTarget>(props: React.PropsWithChildren<
         : "center"
   if (!target || !open || props.disabled) return null
   return (
-    <StandardTooltip
+    <TooltipPrimitive.Root
+      data-slot="tooltip"
       open={open && !props.disabled}
       onOpenChange={(next, details) => {
         if (!next && props.dismissable === false && details.reason === "escape-key") {
@@ -249,22 +252,29 @@ export function Tooltip<T extends TooltipTarget>(props: React.PropsWithChildren<
         }
         setOpen(next)
       }}>
-      <TooltipContent
-        id={id}
-        anchor={target}
-        side={side}
-        align={align}
-        role="tooltip"
-        className={cn("tooltip", props.className)}
-        onMouseEnter={() => {
-          if (props.interactive) clearTimeout(timer.current)
-        }}
-        onMouseLeave={() => {
-          if (props.interactive) hide()
-        }}
-        onClick={event => event.stopPropagation()}>
-        <span className="tooltip-content">{props.children}</span>
-      </TooltipContent>
-    </StandardTooltip>
+      <TooltipPrimitive.Portal>
+        <TooltipPrimitive.Positioner anchor={target} side={side} align={align} sideOffset={4} className="isolate z-50">
+          <TooltipPrimitive.Popup
+            data-slot="tooltip-content"
+            id={id}
+            role="tooltip"
+            className={cn(
+              "z-50 inline-flex w-fit max-w-xs origin-(--transform-origin) items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pe-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-start-2 data-[side=inline-start]:slide-in-from-end-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 **:data-[slot=kbd]:relative **:data-[slot=kbd]:isolate **:data-[slot=kbd]:z-50 **:data-[slot=kbd]:rounded-sm data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+              "tooltip",
+              props.className
+            )}
+            onMouseEnter={() => {
+              if (props.interactive) clearTimeout(timer.current)
+            }}
+            onMouseLeave={() => {
+              if (props.interactive) hide()
+            }}
+            onClick={event => event.stopPropagation()}>
+            <span className="tooltip-content">{props.children}</span>
+            <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=inline-end]:top-1/2! data-[side=inline-end]:-start-1 data-[side=inline-end]:-translate-y-1/2 data-[side=inline-start]:top-1/2! data-[side=inline-start]:-end-1 data-[side=inline-start]:-translate-y-1/2 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5" />
+          </TooltipPrimitive.Popup>
+        </TooltipPrimitive.Positioner>
+      </TooltipPrimitive.Portal>
+    </TooltipPrimitive.Root>
   )
 }

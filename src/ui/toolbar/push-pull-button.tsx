@@ -3,13 +3,13 @@
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react"
 import { Trans, useTranslation } from "react-i18next"
 
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { NetworkProgress } from "@/features/repository/store"
 import { ForcePushBranchState } from "@/lib/force-push-state"
 import { formatCompactNumber } from "@/lib/format-number"
 import { cn } from "@/lib/utils"
 import { AriaLiveContainer } from "@/ui/accessibility/aria-live-container"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Octicon, type OcticonSymbol, type OcticonSymbolVariant, syncClockwise } from "@/ui/octicons"
 import * as octicons from "@/ui/octicons/octicons.generated"
 import { RelativeTime } from "@/ui/relative-time"
@@ -175,6 +175,7 @@ export function PushPullButton(props: Props) {
   const { t } = useTranslation()
   const [screenReaderStateMessage, setScreenReaderStateMessage] = useState<string | null>(null)
   const [isDropdownOpen, setDropdownOpen] = useState(false)
+  const [dropdownWidth, setDropdownWidth] = useState<number>()
   const actionInProgress = useRef<ActionInProgress | null>(null)
   const previousProgress = useRef<NetworkProgress | null>(null)
   const screenReaderElement = useRef<HTMLSpanElement>(null)
@@ -341,7 +342,12 @@ export function PushPullButton(props: Props) {
         className="grow">
         {button.children}
       </ToolbarButton>
-      <Popover open={isDropdownOpen} onOpenChange={setDropdownOpen}>
+      <Popover
+        open={isDropdownOpen}
+        onOpenChange={open => {
+          if (open) setDropdownWidth(dropdown.current?.offsetWidth)
+          setDropdownOpen(open)
+        }}>
         <PopoverTrigger
           aria-label={t("toolbar.pushPullFetchOptions")}
           render={
@@ -360,13 +366,12 @@ export function PushPullButton(props: Props) {
         </PopoverTrigger>
         <PopoverContent
           aria-label={t("toolbar.pushPullFetchOptions")}
-          anchor={dropdown}
           side="bottom"
-          align="start"
+          align="end"
           sideOffset={0}
           finalFocus={returnFocusOnDeactivate ? true : screenReaderElement}
-          // MultiOption：与整组按钮同宽，高度随内容
-          style={{ width: "var(--anchor-width)" }}
+          // MultiOption：与整组按钮同宽、右缘对齐（箭头在组的最右端），高度随内容
+          style={{ width: dropdownWidth }}
           data-desktop-palette
           className="bg-background overflow-hidden rounded-none border-t-0 p-0">
           {renderDropdownContent(button.itemTypes)}

@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle } from "@/components/ui/popover"
-import type { PopoverAnchorPosition } from "../desktop/popover"
+import { PopoverDescription, PopoverHeader, PopoverTitle } from "@/components/ui/popover"
+
+import { Popover, type PopoverAnchorPosition } from "../desktop/popover"
 
 interface Props {
   readonly anchor: HTMLElement | null
@@ -11,16 +12,11 @@ interface Props {
   readonly onDismissed: () => void
 }
 
-/** Desktop's whitespace-selection guard, presented with the standard shadcn popover. */
-export function WhitespaceHintPopover({ anchor, onHideWhitespaceInDiffChanged, onDismissed }: Props) {
+/** Desktop's whitespace-selection guard, anchored to the diff line it was raised from. */
+export function WhitespaceHintPopover({ anchor, anchorPosition, onHideWhitespaceInDiffChanged, onDismissed }: Props) {
   const { t } = useTranslation()
   return (
-    <Popover
-      open
-      onOpenChange={open => {
-        if (!open) onDismissed()
-      }}>
-      <PopoverContent anchor={anchor} side="right" finalFocus={() => anchor}>
+    <Popover anchor={anchor} anchorPosition={anchorPosition} onClickOutside={onDismissed}>
         <PopoverHeader>
           <PopoverTitle>{t("diff.whitespaceTitle")}</PopoverTitle>
           <PopoverDescription>{t("diff.whitespaceBody")}</PopoverDescription>
@@ -37,7 +33,6 @@ export function WhitespaceHintPopover({ anchor, onHideWhitespaceInDiffChanged, o
             {t("diff.showWhitespace")}
           </Button>
         </div>
-      </PopoverContent>
     </Popover>
   )
 }
