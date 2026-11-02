@@ -962,8 +962,8 @@ release 包编法同上节；GitHub Desktop 3.6.10；5 万文件合成仓库，6
 
 结论按数据：
 
-- 启动和打开仓库 GitCub 快；**打开仓库后的 RSS GitCub 反而多约 110 MiB**（就绪时少 120 MiB），release 包也一样，
-  不是 debug 开销。10-29 那次「打开仓库后 GitCub 434 / Desktop 535」是 debug 包、且列表没加载完就取样，不成立。
+- 启动和打开仓库 GitCub 快。上表的 RSS 不能定内存结论，见下面「内存改用 phys_footprint」：3 秒静置时 WebKit
+  还没回收，而机器有内存压力时 RSS 又不计被压缩的页，同一阶段 5 次能差一倍。
 - 打开 5 000 行 diff 两边持平（差异在波动内），不宣称更快。
 - 把 diff 滚到末行 GitCub 慢：14 ms 对 3 ms，是本节唯一明确落后的计时，原因尚未定位。
 
@@ -981,6 +981,27 @@ release 包编法同上节；GitHub Desktop 3.6.10；5 万文件合成仓库，6
   现在每次计时前断开旧的，点击前还检查被测内容尚未出现。
 - 「diff 后 RSS」在滚到底再静置 settle 后取，口径与上节相同。
 
+**内存改用 phys_footprint**：`bench:app` 在每个取样点对同一组进程再跑一次 `footprint`（活动监视器「内存」一列的
+口径：计入压缩页，共享的框架页不重复计），报告新增 `footprintKiB`。同机 5 次、静置 10 秒（load 11–19），中位数 MiB：
+
+| 应用 | 就绪后（欢迎页） | 打开仓库后 | diff 后 |
+|---|---:|---:|---:|
+| GitCub（release 包） | 121 | 247 | 280 |
+| GitHub Desktop 3.6.10 | 158 | 199 | 203 |
+
+5 次之间只差几 MiB，比 RSS 稳定得多。按进程拆：两边停在欢迎页时页面进程都约 70 MiB；打开仓库后 Desktop 的
+Renderer 103–108 MiB，GitCub 的 WebContent 179–211 MiB；主进程反而 GitCub 30–41 MiB、Desktop 50–56 MiB。
+**结论：打开仓库后 GitCub 多约 50 MiB，全在页面一侧，是真实差距。** 用临时探针（不入库）排除了几项：
+
+- 不是 Trending 内嵌网页：子 webview 只在左侧浮板可见时创建，整个过程只有一个 WebContent 进程，页面内没有 GitHub 内容。
+- 不是 `location.reload()` 的残留：欢迎页原地重载前后 68 / 67 MiB。
+- 不是泄漏或空转：空仓库主界面 2 分钟内稳定在约 130 MiB，空闲 5 秒内没有 DOM 变动、页面定时器、CSS 动画或 IPC，
+  WebContent CPU 为 0。
+- 不是图层：`footprint` 分类里 WebContent 的增量几乎全是 `WebKit Malloc`（JS 堆与 DOM），graphics 只有十几 MiB；
+  空仓库主界面只有 254 个 DOM 节点，所以是 JS 对象。空仓库主界面已比欢迎页多约 65 MiB，大仓库再多约 25–75 MiB。
+
+哪些 JS 对象占的还没定位：hasgard 不提供堆快照，下一步按组件二分（每次改前端都要重编 release 包）。
+
 同一次测量发现并修掉的问题：被切走的小仓库是刚 `git init`、HEAD 未出生的仓库，`history::query_details` 处理 Desktop
 的未推送提交查询（`HEAD --not --remotes`）时解析不到 HEAD 就让位 git，每次切换多起 2 个 `git log`（git 自己也报
 `bad revision 'HEAD'`，调用方当作空）。改为 HEAD 未出生且修订号的一端是 HEAD（含 `A..B` 省略的一端）时直接返回空；
@@ -990,7 +1011,7 @@ release 包编法同上节；GitHub Desktop 3.6.10；5 万文件合成仓库，6
 未覆盖：
 
 - 冷启动：要清页缓存（`sudo purge`）才算冷，脚本不提权，两边的二进制都在页缓存里。
-- 打开仓库后 RSS 多出的部分归属哪个进程（WebContent 还是主进程）尚未拆开；只有 RSS，没有 `phys_footprint`。
+- 页面一侧多出的约 50 MiB 由哪些 JS 对象占用（见上）。
 - 连续滚动帧率、历史页 diff、长时间运行后的内存。
 
 ## 复现

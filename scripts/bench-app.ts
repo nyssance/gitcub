@@ -22,7 +22,7 @@ import {
 } from "node:fs"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
-import { basename, join } from "node:path"
+import { basename, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { machine } from "./bench-machine.ts"
@@ -67,9 +67,12 @@ interface Sample {
   diff: { openMs: number; scrollMs: number } | null
   /** RSS sum `settle` ms after the diff was scrolled to the end, in KiB. */
   rssDiffKiB: number | null
+  /** The same three moments as phys_footprint sums (`footprint`, what Activity Monitor calls Memory): unlike RSS it
+   *  counts compressed pages and leaves shared framework pages out, so memory pressure does not make a side look small. */
+  footprintKiB: { ready: number; repository: number; diff: number | null }
   processes: {
-    ready: Array<{ pid: number; rssKiB: number; command: string; helper: boolean }>
-    repository: Array<{ pid: number; rssKiB: number; command: string; helper: boolean }>
+    ready: Array<{ pid: number; rssKiB: number; footprintKiB: number; command: string; helper: boolean }>
+    repository: Array<{ pid: number; rssKiB: number; footprintKiB: number; command: string; helper: boolean }>
   }
 }
 
@@ -177,16 +180,17 @@ async function processTree(pid: number, helpersBefore: Set<number> | null) {
       }
     }
   }
-  return rows
-    .filter(
-      row => tree.has(row.pid) || (helpersBefore !== null && isWebKitHelper(row.command) && !helpersBefore.has(row.pid))
-    )
-    .map(row => ({
-      pid: row.pid,
-      rssKiB: row.rssKiB,
-      command: basename(row.command),
-      helper: isWebKitHelper(row.command)
-    }))
+  const own = rows.filter(
+    row => tree.has(row.pid) || (helpersBefore !== null && isWebKitHelper(row.command) && !helpersBefore.has(row.pid))
+  )
+  const footprints = footprint(own.map(row => row.pid))
+  return own.map(row => ({
+    pid: row.pid,
+    rssKiB: row.rssKiB,
+    footprintKiB: footprints.get(row.pid) ?? 0,
+    command: basename(row.command),
+    helper: isWebKitHelper(row.command)
+  }))
 }
 
 /** WebKit XPC helpers are launchd children, not the app's; only those that exit together with the app are its own.
@@ -197,6 +201,24 @@ async function ownProcesses<T extends { pid: number; helper: boolean }>(tree: T[
 }
 
 const sum = (tree: Array<{ rssKiB: number }>) => tree.reduce((total, row) => total + row.rssKiB, 0)
+const footprintSum = (tree: Array<{ footprintKiB: number }>) => tree.reduce((total, row) => total + row.footprintKiB, 0)
+
+/** phys_footprint per pid in KiB, from one `footprint` run over all of them (no root needed for the user's own processes). */
+function footprint(pids: number[]) {
+  const result = new Map<number, number>()
+  if (pids.length === 0) return result
+  const file = join(mkdtempSync(join(tmpdir(), "gitcub-bench-footprint-")), "footprint.json")
+  try {
+    Bun.spawnSync(["footprint", "-f", "bytes", "-j", file, ...pids.flatMap(pid => ["-p", String(pid)])])
+    const report = JSON.parse(readFileSync(file, "utf8")) as { processes: Array<{ pid: number; footprint: number }> }
+    for (const entry of report.processes) result.set(entry.pid, entry.footprint / 1024)
+  } catch (error) {
+    console.warn(`footprint failed: ${String(error)}`)
+  } finally {
+    rmSync(dirname(file), { recursive: true, force: true })
+  }
+  return result
+}
 
 // On-screen windows straight from the window server (CGWindowList): System Events' accessibility
 // view of a process that was first queried before its window existed reported 0 windows for the
@@ -542,6 +564,11 @@ async function launchGitCub(
     rssRepositoryKiB: sum(repositoryTree),
     diff: sample.diff,
     rssDiffKiB: diffTree ? sum(diffTree) : null,
+    footprintKiB: {
+      ready: footprintSum(readyTree),
+      repository: footprintSum(repositoryTree),
+      diff: diffTree ? footprintSum(diffTree) : null
+    },
     gitProcesses: sample.git,
     processes: { ready: readyTree, repository: repositoryTree }
   }
@@ -761,6 +788,11 @@ async function launchDesktop(repository: string, settle: number, expected: numbe
       rssRepositoryKiB: sum(afterRepository),
       diff,
       rssDiffKiB: afterDiff ? sum(afterDiff) : null,
+      footprintKiB: {
+        ready: footprintSum(ready),
+        repository: footprintSum(afterRepository),
+        diff: afterDiff ? footprintSum(afterDiff) : null
+      },
       processes: { ready, repository: afterRepository }
     }
   } finally {
@@ -792,6 +824,13 @@ function summarize(samples: Sample[]) {
     rssDiffKiB: samples.every(sample => sample.rssDiffKiB !== null)
       ? median(samples.map(sample => sample.rssDiffKiB!))
       : null,
+    footprintKiB: {
+      ready: median(samples.map(sample => sample.footprintKiB.ready)),
+      repository: median(samples.map(sample => sample.footprintKiB.repository)),
+      diff: samples.every(sample => sample.footprintKiB.diff !== null)
+        ? median(samples.map(sample => sample.footprintKiB.diff!))
+        : null
+    },
     changes: samples[0]?.changes ?? 0,
     gitProcesses: samples[0]?.gitProcesses
       ? {
@@ -914,6 +953,12 @@ try {
     console.log(diffRow("GitCub", summary.gitcub))
     if (summary.desktop) console.log(diffRow("GitHub Desktop", summary.desktop))
   }
+  const footprintRow = (name: string, s: ReturnType<typeof summarize>) =>
+    `| ${name} | ${mib(s.footprintKiB.ready)} | ${mib(s.footprintKiB.repository)} | ${s.footprintKiB.diff === null ? "—" : mib(s.footprintKiB.diff)} |`
+  console.log("\n| 应用 | 就绪后 footprint (MiB) | 打开仓库后 footprint (MiB) | diff 后 footprint (MiB) |")
+  console.log("|---|---:|---:|---:|")
+  console.log(footprintRow("GitCub", summary.gitcub))
+  if (summary.desktop) console.log(footprintRow("GitHub Desktop", summary.desktop))
   if (summary.gitcub.gitProcesses)
     console.log(
       `\nGitCub git processes (median): launch + open ${summary.gitcub.gitProcesses.repository}, idle ${summary.gitcub.gitProcesses.idle}; first launch by subcommand: ${JSON.stringify(gitcub[0]?.gitProcesses?.commands ?? {})}`
