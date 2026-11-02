@@ -1,7 +1,7 @@
 {
   "name": "gitcub",
   "productName": "GitCub",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A fast, multilingual Git client for GitHub and GitLab",
   "private": true,
   "type": "module",
