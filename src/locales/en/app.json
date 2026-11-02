@@ -107,11 +107,6 @@
     "signOff": "Add Signed-off-by trailer",
     "allowEmpty": "Allow empty commit",
     "include": "Include {{path}} in commit",
-    "isIncludedInCommit": "Fully included in commit",
-    "isExcludedFromCommit": "Excluded from commit",
-    "isNewFile": "New files",
-    "isModifiedFile": "Modified files",
-    "isDeletedFile": "Deleted files",
     "clearFilters": "Clear filters",
     "noFilterResults": "No matching files",
     "commitHidden": "Commit selection (includes hidden files)",
@@ -135,7 +130,14 @@
       "showInFileManager": "Show in your File Manager",
       "openInExternalEditor": "Open in External Editor",
       "openWithDefaultProgram": "Open with Default Program"
-    }
+    },
+    "includedInCommit": "Included in commit ({{count}})",
+    "excludedFromCommit": "Excluded from commit ({{count}})",
+    "newFiles": "New files ({{count}})",
+    "modifiedFiles": "Modified files ({{count}})",
+    "deletedFiles": "Deleted files ({{count}})",
+    "filterOptions": "Filter Options",
+    "filterOptionsApplied": "Filter Options ({{count}} applied)"
   },
   "noChanges": {
     "blurb": "There are no uncommitted changes in this repository. Here are some friendly suggestions for what to do next.",

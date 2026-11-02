@@ -11,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
@@ -169,13 +170,16 @@ export function ChangesSidebar({
     changes.length,
     filters
   )
+  // Desktop changes-list-filter-options getFilterCounts：数的是当前筛选后列表里的文件
+  const shownChanges = [...shownItems.values()].map(item => item.change)
   const filterOptions = [
-    "isIncludedInCommit",
-    "isExcludedFromCommit",
-    "isNewFile",
-    "isModifiedFile",
-    "isDeletedFile"
+    ["isIncludedInCommit", "changes.includedInCommit", shownChanges.filter(c => c.isIncludedInCommit()).length],
+    ["isExcludedFromCommit", "changes.excludedFromCommit", shownChanges.filter(c => c.isExcludedFromCommit()).length],
+    ["isNewFile", "changes.newFiles", shownChanges.filter(c => c.isNew() || c.isUntracked()).length],
+    ["isModifiedFile", "changes.modifiedFiles", shownChanges.filter(c => c.isModified()).length],
+    ["isDeletedFile", "changes.deletedFiles", shownChanges.filter(c => c.isDeleted()).length]
   ] as const
+  const activeFiltersCount = filterOptions.filter(([key]) => filters[key]).length
   const states = changes.map(c => includeOf(c.path))
   const on = states.filter(s => s !== DiffSelectionType.None).length
   // Desktop getIncludeAllState：没有文件时算全选（勾上、但禁用）
@@ -194,28 +198,43 @@ export function ChangesSidebar({
           <Button
             size="icon-xs"
             variant={hasActiveFilters(filters) ? "secondary" : "ghost"}
-            aria-label={t("changes.filter")}
+            aria-label={
+              activeFiltersCount > 0
+                ? t("changes.filterOptionsApplied", { count: activeFiltersCount })
+                : t("changes.filterOptions")
+            }
+            title={
+              activeFiltersCount > 0
+                ? t("changes.filterOptionsApplied", { count: activeFiltersCount })
+                : t("changes.filterOptions")
+            }
           />
         }>
         <FilterIcon />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-52">
         <DropdownMenuGroup>
-          {filterOptions.map(key => (
+          <DropdownMenuLabel>{t("changes.filterOptions")}</DropdownMenuLabel>
+          {filterOptions.map(([key, label, count]) => (
             <DropdownMenuCheckboxItem
               key={key}
               checked={filters[key]}
               onCheckedChange={checked => setFilters({ ...filters, [key]: checked })}>
-              {t(`changes.${key}`)}
+              {t(label, { count })}
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem disabled={!hasActiveFilters(filters)} onClick={() => setFilters(emptyChangesFilter)}>
-            {t("changes.clearFilters")}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
+        {/* 原版只有筛选生效时才显示「Clear filters」 */}
+        {activeFiltersCount > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setFilters(emptyChangesFilter)}>
+                {t("changes.clearFilters")}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

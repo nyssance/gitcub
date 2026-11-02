@@ -1257,6 +1257,31 @@ test("rebasing a branch whose upstream would be rewritten warns about force push
   }
 })
 
+test("changes filter options count the files currently listed", async ({ mainWindow: page }) => {
+  // Desktop changes-list-filter-options：每项后面是当前列表里符合的文件数，筛选生效后才有「Clear filters」
+  const probe = join(smokeRepoPath, "filter-count-probe.txt")
+  writeFileSync(probe, "count me\n")
+  try {
+    await page.locator('[role="tab"]:has-text("Changes")').click()
+    await page.locator('input[placeholder="Filter"]').fill("filter-count-probe")
+    await page.locator('.list-scroller [title="filter-count-probe.txt"]').waitFor({ state: "visible", timeout: 15000 })
+    await page.locator('button[aria-label="Filter Options"]').click()
+    const item = (label: string) => page.locator(`[role="menuitemcheckbox"]:has-text("${label}")`)
+    await item("New files (1)").waitFor({ state: "visible" })
+    await item("Modified files (0)").waitFor({ state: "visible" })
+    await item("Included in commit (1)").waitFor({ state: "visible" })
+    assert.equal(await page.locator('[role="menuitem"]:has-text("Clear filters")').isVisible(), false)
+    await item("Modified files (0)").click()
+    await page.keyboard.press("Escape")
+    await page.locator('button[aria-label="Filter Options (1 applied)"]').click()
+    await page.locator('[role="menuitem"]:has-text("Clear filters")').click()
+    await page.locator('button[aria-label="Filter Options"]').waitFor({ state: "visible" })
+  } finally {
+    await page.locator('input[placeholder="Filter"]').fill("")
+    rmSync(probe, { force: true })
+  }
+})
+
 test("saved Chinese language applies to welcome and Git identity before onboarding", async ({ mainWindow: page }) => {
   await page.evaluate(async () => {
     await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "preferences" })

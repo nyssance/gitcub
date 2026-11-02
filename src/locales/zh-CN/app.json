@@ -105,11 +105,6 @@
     "signOff": "添加 Signed-off-by",
     "allowEmpty": "允许空提交",
     "include": "将 {{path}} 选入提交",
-    "isIncludedInCommit": "整份选入提交",
-    "isExcludedFromCommit": "未选入提交",
-    "isNewFile": "新增文件",
-    "isModifiedFile": "修改文件",
-    "isDeletedFile": "删除文件",
     "clearFilters": "清除筛选",
     "noFilterResults": "没有匹配文件",
     "commitHidden": "提交所选（包含隐藏文件）",
@@ -133,7 +128,14 @@
       "showInFileManager": "在文件管理器中显示",
       "openInExternalEditor": "用外部编辑器打开",
       "openWithDefaultProgram": "用默认程序打开"
-    }
+    },
+    "includedInCommit": "已选入提交（{{count}}）",
+    "excludedFromCommit": "未选入提交（{{count}}）",
+    "newFiles": "新增文件（{{count}}）",
+    "modifiedFiles": "修改文件（{{count}}）",
+    "deletedFiles": "删除文件（{{count}}）",
+    "filterOptions": "筛选选项",
+    "filterOptionsApplied": "筛选选项（已应用 {{count}} 项）"
   },
   "noChanges": {
     "blurb": "这个仓库没有未提交的更改。下面是接下来可以做的几件事。",
