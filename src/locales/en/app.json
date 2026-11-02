@@ -322,7 +322,11 @@
     "addedLines": "{{count}} added lines",
     "removedLines": "{{count}} removed lines",
     "checkoutCommit": "Checkout Commit",
-    "createBranchFromCommit": "Create Branch from Commit"
+    "createBranchFromCommit": "Create Branch from Commit",
+    "squashCommits": "Squash {{count}} Commits",
+    "unableToSquash": "Unable to squash. Squashing replays all commits up to the last one required for the squash. A merge commit cannot exist among those commits.",
+    "cherryPickCommits": "Cherry-pick {{count}} Commits…",
+    "squashCommitsEllipsis": "Squash {{count}} Commits…"
   },
   "noRepos": {
     "title": "Let's get started",

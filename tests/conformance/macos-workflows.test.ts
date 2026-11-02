@@ -1282,6 +1282,50 @@ test("changes filter options count the files currently listed", async ({ mainWin
   }
 })
 
+test("squashing selected commits asks for the squashed commit message first", async ({ mainWindow: page }) => {
+  // Desktop getContextMenuMultipleCommits → compare.onSquash：先弹 CommitMessage（摘要取右键的那条，
+  // 描述合并其余各条），确认后才压缩
+  const head = git("rev-parse", "HEAD")
+  for (const summary of ["squash probe a", "squash probe b", "squash probe c"])
+    git("-c", "commit.gpgsign=false", "commit", "-q", "--allow-empty", "-m", summary, "-m", `${summary} body`)
+  const base = git("rev-parse", "HEAD~2")
+  const row = (summary: string) => page.locator(`.desktop-list .desktop-list-row:has([title="${summary}"])`).first()
+  try {
+    await page.locator('[role="tab"]:has-text("History")').click()
+    await row("squash probe c").waitFor({ state: "visible", timeout: 15000 })
+    await row("squash probe c").click()
+    await row("squash probe b").evaluate(element =>
+      element.dispatchEvent(new MouseEvent("click", { bubbles: true, metaKey: true }))
+    )
+    await row("squash probe b").evaluate(element => {
+      const rect = element.getBoundingClientRect()
+      element.dispatchEvent(
+        new MouseEvent("contextmenu", { bubbles: true, button: 2, clientX: rect.x + 4, clientY: rect.y + 4 })
+      )
+    })
+    await page.locator('[role="menuitem"]:has-text("Squash 2 Commits…")').click()
+    const dialog = page.locator("#commit-message-dialog")
+    await expect(dialog).toContainText("Squash 2 Commits", { timeout: 15000 })
+    assert.equal(
+      await dialog.locator(".summary-field input").evaluate(input => (input as HTMLInputElement).value),
+      "squash probe b"
+    )
+    await dialog.locator('button.commit-button:has-text("Squash 2 Commits")').click()
+    const warning = page.locator("#warn-force-push")
+    await expect
+      .poll(async () => (await warning.isVisible()) || git("rev-parse", "HEAD~1") === base, { timeout: 15000 })
+      .toBe(true)
+    if (await warning.isVisible()) await warning.locator('button:has-text("Begin Squash")').click()
+    await expect.poll(() => git("rev-parse", "HEAD~1"), { timeout: 15000 }).toBe(base)
+    assert.equal(git("log", "-1", "--format=%s"), "squash probe b")
+    const body = git("log", "-1", "--format=%b")
+    assert.match(body, /squash probe b body/)
+    assert.match(body, /squash probe c/)
+  } finally {
+    git("reset", "-q", "--keep", head)
+  }
+})
+
 test("saved Chinese language applies to welcome and Git identity before onboarding", async ({ mainWindow: page }) => {
   await page.evaluate(async () => {
     await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", { event: "menu", payload: "preferences" })

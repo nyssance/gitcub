@@ -318,7 +318,11 @@
     "addedLines": "新增 {{count}} 行",
     "removedLines": "删除 {{count}} 行",
     "checkoutCommit": "检出提交",
-    "createBranchFromCommit": "从提交创建分支"
+    "createBranchFromCommit": "从提交创建分支",
+    "squashCommits": "压缩 {{count}} 个提交",
+    "unableToSquash": "无法压缩。压缩会重放到所需最早提交为止的全部提交，其中不能有合并提交。",
+    "cherryPickCommits": "挑拣 {{count}} 个提交…",
+    "squashCommitsEllipsis": "压缩 {{count}} 个提交…"
   },
   "noRepos": {
     "title": "开始使用",

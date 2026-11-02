@@ -1,21 +1,17 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { useAccountsStore } from "../../features/accounts/store"
 import { useChangesStore } from "../../features/changes/store"
 import { useDialogsStore } from "../../features/dialogs/store"
 import { usePreferencesStore } from "../../features/preferences/store"
 import { useRepositoryStore } from "../../features/repository/store"
-import { getHTMLURL } from "../../lib/api"
 import { getCommits } from "../../lib/commit-history"
 import { getPlaceholderMessage } from "../../lib/commit-placeholder"
 import type { IMentionableUser } from "../../lib/databases/github-user-database"
 import { getDesktopRuntime } from "../../lib/desktop-runtime"
 import { appStatus } from "../../lib/desktop-status"
-import { EMOJI } from "../../lib/emoji"
 import i18n from "../../lib/i18n"
 import { ipc } from "../../lib/ipc"
-import { completionRepository, mentionableUsersSource } from "../../lib/mentionable-users"
 import { emitMenuEvent } from "../../lib/menu/native-menu"
 import { useRepositoryPolicy } from "../../lib/use-repository-policy"
 import type { CommitOptions, Issue, Remote } from "../../models/app-state"
@@ -26,15 +22,10 @@ import { CommitIdentity } from "../../upstream/models/commit-identity"
 import type { ICommitMessage } from "../../upstream/models/commit-message"
 import { DiffSelection, DiffSelectionType } from "../../upstream/models/diff"
 import { WorkingDirectoryFileChange } from "../../upstream/models/status"
-import { EmojiAutocompletionProvider } from "../autocompletion/emoji-autocompletion-provider"
-import type { IAutocompletionProvider } from "../autocompletion/provider-contract"
-import {
-  CoAuthorAutocompletionProvider,
-  UserAutocompletionProvider
-} from "../autocompletion/user-autocompletion-provider"
 import { InlineError } from "../shared/inline-error"
 import { UnknownAuthors } from "../unknown-authors/unknown-authors-dialog"
 import { CommitMessage } from "./commit-message"
+import { useAutocompletionProviders } from "./use-autocompletion-providers"
 
 interface Props {
   /** 历史页「Amend Commit…」请求进入修订（Desktop startAmendingRepository）；处理后调 onAmendRequestHandled 清掉 */
@@ -60,7 +51,6 @@ interface Props {
 export function DesktopCommitForm(props: Props) {
   const runtime = getDesktopRuntime()
   const [accounts, setAccounts] = useState(runtime.appStore.getState().accounts)
-  const platformAccounts = useAccountsStore(s => s.accounts)
   const policy = useRepositoryPolicy(props.repo, props.branch, accounts)
   // Desktop 的 aheadBehind 来自仓库状态（commit-message.tsx 的 props 由 repositoryState 给出），不另读一次 status
   const hasUpstream = useRepositoryStore(s => s.status.hasUpstream)
@@ -110,48 +100,7 @@ export function DesktopCommitForm(props: Props) {
         )
     )
   const prepopulate = files.length === 1
-  const providers = useMemo(() => {
-    const issues: IAutocompletionProvider<Issue> = {
-      kind: "issue",
-      getRegExp: () => /(?:^|\n| )(?:#)([a-z\d\\+-][a-z\d_]*)?/g,
-      getAutocompletionItems: async text =>
-        props.issues
-          .filter(issue => `${issue.number} ${issue.title}`.toLowerCase().includes(text.toLowerCase()))
-          .slice(0, 20),
-      getCompletionText: issue => `#${issue.number}`,
-      getItemAriaLabel: issue => `#${issue.number} ${issue.title}`,
-      renderItem: issue => (
-        <div className="issue">
-          <span className="number">#{issue.number}</span> {issue.title}
-        </div>
-      )
-    }
-    const providers: IAutocompletionProvider<object>[] = [
-      issues,
-      new EmojiAutocompletionProvider(
-        new Map(Object.entries(EMOJI).map(([name, emoji]) => [name, { emoji, aliases: [name], url: "" }]))
-      )
-    ]
-    // Desktop buildAutocompletionProviders：托管仓库再加 `@` 用户与共同作者补全，账号按仓库所在实例找
-    if (props.remote) {
-      const remote = props.remote
-      const gitlab = platformAccounts[remote.host]?.kind === "gitlab"
-      const repository = completionRepository(remote, gitlab)
-      const account = gitlab
-        ? undefined
-        : accounts.find(account => new URL(getHTMLURL(account.endpoint)).host === remote.host)
-      const source = mentionableUsersSource(
-        props.mentionables,
-        runtime.gitHubUserStore,
-        gitlab ? login => ipc.mentionableUser(remote.host, login).catch(() => null) : undefined
-      )
-      providers.push(
-        new UserAutocompletionProvider(source, repository, account),
-        new CoAuthorAutocompletionProvider(source, repository, account)
-      )
-    }
-    return providers
-  }, [props.issues, props.mentionables, props.remote, accounts, platformAccounts, runtime])
+  const providers = useAutocompletionProviders(props.issues, props.mentionables, props.remote, accounts)
   async function commit(context: ICommitContext) {
     if (props.unresolved || busy) return false
     setBusy(true)

@@ -10,7 +10,9 @@ import { resolve, type Updater } from "@/features/effect-runtime"
 import { type PreferencesTab, type Prompt, usePreferencesStore } from "@/features/preferences/store"
 import { localChangesOverwrittenHandler, type LocalChangesOverwrittenPopup } from "@/lib/error-handlers"
 import type { TerminalOutput, TerminalOutputListener } from "@/lib/git-execution"
-import type { CommitOneLine } from "@/models/commit"
+import type { CommitOneLine, ICommitContext } from "@/models/commit"
+import type { Author } from "@/upstream/models/author"
+import type { ICommitMessage } from "@/upstream/models/commit-message"
 
 /** prompt：原版 Prompts 页里对应的那一项；弹窗带「不再显示」，关掉后直接放行 */
 type Asking = { message: string; prompt?: Prompt; dontAskAgain: boolean; resolve: (ok: boolean) => void }
@@ -21,6 +23,16 @@ type StashPrompt = {
   current: string
   hasAssociatedStash: boolean
   resolve: (choice: boolean | "carry") => void
+}
+/** Desktop PopupType.CommitMessage */
+type CommitMessagePopup = {
+  dialogTitle: string
+  dialogButtonText: string
+  commitMessage: ICommitMessage
+  coAuthors: ReadonlyArray<Author>
+  showCoAuthoredBy: boolean
+  prepopulateCommitSummary: boolean
+  onSubmitCommitMessage: (context: ICommitContext) => Promise<boolean>
 }
 /** Desktop PopupType.HookFailed */
 type HookFailedPrompt = {
@@ -54,6 +66,9 @@ interface DialogsStore {
   /** Desktop PopupType.DeleteTag */
   deletingTag: string | null
   setDeletingTag: (tagName: string | null) => void
+  /** Desktop PopupType.CommitMessage（压缩提交前填提交信息） */
+  commitMessageDialog: CommitMessagePopup | null
+  setCommitMessageDialog: (popup: CommitMessagePopup | null) => void
   /** Desktop PopupType.ConfirmCheckoutCommit */
   checkingOutCommit: CommitOneLine | null
   setCheckingOutCommit: (commit: CommitOneLine | null) => void
@@ -113,6 +128,8 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
   },
   deletingTag: null,
   setDeletingTag: deletingTag => set({ deletingTag }),
+  commitMessageDialog: null,
+  setCommitMessageDialog: commitMessageDialog => set({ commitMessageDialog }),
   checkingOutCommit: null,
   setCheckingOutCommit: checkingOutCommit => set({ checkingOutCommit }),
   createBranchFromCommit: null,

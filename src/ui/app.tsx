@@ -59,6 +59,9 @@ import { applyTheme } from "@/lib/theme"
 import type { CommitOptions } from "@/models/app-state"
 import { Branch, BranchType } from "@/models/branch"
 import type { CommitOneLine } from "@/models/commit"
+import { getCommits } from "@/lib/commit-history"
+import { getSquashedCommitDescription } from "@/lib/squashed-commit-description"
+import { getUniqueCoauthorsAsAuthors } from "@/lib/unique-coauthors-as-authors"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import { Repository } from "@/models/repository"
 import { type RetryAction, RetryActionType } from "@/models/retry-actions"
@@ -71,6 +74,7 @@ import { NoChanges } from "@/ui/changes/no-changes"
 import { ChangesSidebar } from "@/ui/changes/sidebar"
 import { Stashes } from "@/ui/changes/stashes"
 import { ConfirmCheckoutCommitDialog } from "@/ui/checkout/confirm-checkout-commit"
+import { CommitMessageDialog } from "@/ui/commit-message/commit-message-dialog"
 import { CommitProgress } from "@/ui/commit-progress/commit-progress"
 import { DeleteTag } from "@/ui/delete-tag/delete-tag-dialog"
 import { DiffView } from "@/ui/diff/lazy-diff"
@@ -149,6 +153,7 @@ export function App() {
   const warnForcePushPrompt = useDialogsStore(s => s.warnForcePush)
   const deletingTag = useDialogsStore(s => s.deletingTag)
   const checkingOutCommit = useDialogsStore(s => s.checkingOutCommit)
+  const commitMessageDialog = useDialogsStore(s => s.commitMessageDialog)
   const confirmCheckoutCommit = usePreferencesStore(s => s.confirmCheckoutCommit)
   const setDeletingTag = useDialogsStore(s => s.setDeletingTag)
   const answerWarnForcePush = useDialogsStore(s => s.answerWarnForcePush)
@@ -979,24 +984,76 @@ export function App() {
       )
     })
   }
+  /** Desktop compare.tsx onSquash：先确认范围里没有合并提交，再弹 CommitMessage（摘要取被压到的那条，
+   *  描述合并其余各条，共同作者去重），提交后经 dispatcher.squash 的强推警告再压缩 */
+  const doSquash = async (toSquashShas: readonly string[], ontoSha: string) => {
+    if (!repo) return
+    const indexes = [...toSquashShas, ontoSha].map(sha => headCommits.findIndex(c => c.sha === sha))
+    if (indexes.some(index => index < 0)) return
+    const oldest = Math.max(...indexes)
+    const lastRetained = headCommits[oldest + 1]?.sha ?? null
+    const { postError, setCommitMessageDialog } = useDialogsStore.getState()
+    if (await ipc.hasMergesAfter(repo, lastRetained ?? undefined).catch(() => false)) {
+      postError(new Error(t("history.unableToSquash")))
+      return
+    }
+    const wanted = [ontoSha, ...toSquashShas]
+    const loaded = await Promise.all(wanted.map(sha => getCommits({ path: repo }, sha, 1)))
+      .then(commits => commits.flat())
+      .catch((error: unknown) => {
+        postError(error instanceof Error ? error : new Error(String(error)))
+        return []
+      })
+    if (loaded.length !== wanted.length) return
+    const [onto, ...rest] = loaded
+    const toSquash = rest.filter(commit => commit.sha !== onto.sha)
+    const count = toSquash.length + 1
+    const coAuthors = getUniqueCoauthorsAsAuthors([...toSquash, onto])
+    setCommitMessageDialog({
+      dialogTitle: t("history.squashCommits", { count }),
+      dialogButtonText: t("history.squashCommits", { count }),
+      commitMessage: {
+        summary: onto.summary,
+        description: getSquashedCommitDescription(toSquash, onto),
+        timestamp: Date.now()
+      },
+      coAuthors,
+      showCoAuthoredBy: coAuthors.length > 0,
+      prepopulateCommitSummary: true,
+      onSubmitCommitMessage: async context => {
+        setCommitMessageDialog(null)
+        if (!(await warnForcePush(oldest, t("warnForcePush.squash")))) return true
+        const message = await ipc.formatCommitMessage(
+          repo,
+          context.summary,
+          context.description,
+          context.trailers ? [...context.trailers] : []
+        )
+        void rewrite(() =>
+          withMultiCommitProgress(repo, MultiCommitOperationKind.Squash, onProgress =>
+            ipc.squashCommits(
+              repo,
+              toSquash.map(commit => commit.sha),
+              onto.sha,
+              lastRetained,
+              message,
+              onProgress
+            )
+          )
+        )
+        return true
+      }
+    })
+  }
+
+  /** 工具栏「压缩所选」：压到所选里最老的那条上 */
   const doSquashMany = async (shas: string[]) => {
-    if (!repo || shas.length < 2) return
     const chosen = headCommits.filter(c => shas.includes(c.sha))
     const target = chosen.at(-1)
-    if (!target) return
-    const oldest = headCommits.findIndex(c => c.sha === target.sha)
-    if (!(await warnForcePush(oldest, t("warnForcePush.squash")))) return
-    await rewrite(() =>
-      withMultiCommitProgress(repo, MultiCommitOperationKind.Squash, onProgress =>
-        ipc.squashCommits(
-          repo,
-          chosen.slice(0, -1).map(c => c.sha),
-          target.sha,
-          headCommits[oldest + 1]?.sha ?? null,
-          "",
-          onProgress
-        )
-      )
+    if (chosen.length < 2 || !target) return
+    await doSquash(
+      chosen.slice(0, -1).map(c => c.sha),
+      target.sha
     )
   }
 
@@ -1004,14 +1061,8 @@ export function App() {
   const doSquashIntoParent = async (index: number) => {
     const c = headCommits[index]
     const parent = headCommits[index + 1]
-    if (!repo || !c || !parent) return
-    if (!(await warnForcePush(index + 1, t("warnForcePush.squash")))) return
-    // 不给信息 = 用 git 拼好的默认信息（两条摘要都留着）
-    void rewrite(() =>
-      withMultiCommitProgress(repo, MultiCommitOperationKind.Squash, onProgress =>
-        ipc.squashCommits(repo, [c.sha], parent.sha, headCommits[index + 2]?.sha ?? null, "", onProgress)
-      )
-    )
+    if (!c || !parent) return
+    await doSquash([c.sha], parent.sha)
   }
 
   /** 把第 from 条提交拖到第 to 条的位置上。
@@ -1579,6 +1630,16 @@ export function App() {
           onDismissed={() => setDeletingTag(null)}
         />
       )}
+      {commitMessageDialog && repo && (
+        <CommitMessageDialog
+          key="commit-message-dialog"
+          repo={repo}
+          branch={status.branch}
+          remote={currentRemote ?? null}
+          {...commitMessageDialog}
+          onDismissed={() => useDialogsStore.getState().setCommitMessageDialog(null)}
+        />
+      )}
       {checkingOutCommit && (
         <ConfirmCheckoutCommitDialog
           key="confirm-checkout-commit-dialog"
@@ -2094,6 +2155,7 @@ export function App() {
                           onCherryPick={sha => void doCherryPickMany([sha])}
                           onCherryPickMany={shas => void doCherryPickMany(shas)}
                           onSquashMany={shas => void doSquashMany(shas)}
+                          onSquashOnto={(toSquash, onto) => void doSquash(toSquash, onto)}
                           onCreateTag={sha => {
                             void askText(t("history.tagName")).then(name => {
                               if (!name) return

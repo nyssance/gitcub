@@ -115,6 +115,8 @@ interface Props {
   onCherryPick: (sha: string) => void
   onCherryPickMany: (shas: string[]) => void
   onSquashMany: (shas: string[]) => void
+  /** Desktop 多选右键「Squash N Commits…」：其余所选压到右键的那条上 */
+  onSquashOnto?: (toSquash: string[], onto: string) => void
   onCreateTag: (sha: string) => void
   onResetTo: (sha: string) => void
   /** Desktop onAmendCommit(commit, isLocalCommit) */
@@ -180,6 +182,7 @@ export function HistorySidebar({
   onCherryPick,
   onCherryPickMany,
   onSquashMany,
+  onSquashOnto,
   onCreateTag,
   onResetTo,
   onAmendCommit,
@@ -698,6 +701,25 @@ export function HistorySidebar({
                       <ContextMenuItem onClick={() => void navigator.clipboard.writeText(c.sha)}>
                         {t("history.copySha")}
                       </ContextMenuItem>
+                    ) : selectedRows.length > 1 && selection.has(c.sha) ? (
+                      // Desktop getContextMenuMultipleCommits。「Reorder N Commits…」是键盘重排模式，本项目没有，不列
+                      <>
+                        <ContextMenuItem
+                          disabled={list.some((commit, index) => selection.has(commit.sha) && stashOf(index) != null)}
+                          onClick={() => onCherryPickMany([...selectedRows].toReversed())}>
+                          {t("history.cherryPickCommits", { count: selectedRows.length })}
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          disabled={!onSquashOnto || filtered || !selectedRows.every(sha => headIndex.has(sha))}
+                          onClick={() =>
+                            onSquashOnto?.(
+                              selectedRows.filter(sha => sha !== c.sha),
+                              c.sha
+                            )
+                          }>
+                          {t("history.squashCommitsEllipsis", { count: selectedRows.length })}
+                        </ContextMenuItem>
+                      </>
                     ) : (
                       <CommitContextMenuItems
                         commit={c}
