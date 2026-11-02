@@ -196,6 +196,8 @@ jobs:
           xcrun stapler staple "$dmg"
           cp "$dmg" "gitcub_${GITHUB_REF_NAME#v}_macos_aarch64.dmg"
           gh release upload "$RELEASE_TAG" "gitcub_${GITHUB_REF_NAME#v}_macos_aarch64.dmg" --repo nyssance/releases --clobber
+          # tauri-action 上传的是公证前的 DMG，只留上面公证并盖章的那份
+          gh release delete-asset "$RELEASE_TAG" "gitcub_${GITHUB_REF_NAME#v}_darwin_aarch64.dmg" --repo nyssance/releases --yes
       - name: 清理签名钥匙串
         if: always() && env.GITCUB_SIGNING_DIR != ''
         shell: bash
