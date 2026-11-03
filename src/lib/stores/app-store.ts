@@ -1,3 +1,4 @@
+import equal from "deep-equal"
 // Desktop MIT application coordination: account lifecycle and
 // repository indicators extracted with their complete dependency closure.
 // Window/layout and other UI workflows are owned by GitCub's React application.
@@ -313,6 +314,16 @@ export class AppStore extends BaseStore {
   private readonly localRepositoryStateLookup = new Map<number, ILocalRepositoryState>()
 
   private readonly gitStoreCache: GitStoreCache
+
+  /** GitCub: the selected repository's status comes from the workspace store, not GitStore.loadStatus,
+   *  so it reports here what Desktop's _loadStatus records with updateSidebarIndicator. The entry
+   *  stays after switching away, until the RepositoryIndicatorUpdater refreshes it. */
+  public updateSelectedRepositoryIndicator(path: string, state: ILocalRepositoryState) {
+    const repository = this.repositories.find(x => x.path === path)
+    if (!repository || equal(this.localRepositoryStateLookup.get(repository.id), state)) return
+    this.localRepositoryStateLookup.set(repository.id, state)
+    this.emitUpdate()
+  }
 
   /**
    * Update the repository sidebar indicator for the repository

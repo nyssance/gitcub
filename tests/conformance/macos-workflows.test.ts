@@ -744,6 +744,11 @@ test("repository rail marks uncommitted changes in the selected repository", asy
   try {
     writeFileSync(file, "indicator\n")
     await dot.waitFor({ state: "visible" })
+    // Desktop _loadStatus 把当前仓库的状态记进 localRepositoryStateLookup：切到别的仓库后圆点仍在
+    await clickRailRepository(page, realpathSync(`${smokeRepoPath}-ui-worktree`))
+    await expect(page.locator(".branch-button")).toContainText("ui-worktree")
+    await dot.waitFor({ state: "visible" })
+    await clickRailRepository(page, main)
   } finally {
     rmSync(file, { force: true })
   }

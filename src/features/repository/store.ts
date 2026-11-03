@@ -24,6 +24,7 @@ import {
   type Updater
 } from "@/features/effect-runtime"
 import { createCoalescingRunner } from "@/lib/coalescing-runner"
+import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import type { IMentionableUser } from "@/lib/databases/github-user-database"
 import { contributionRepository } from "@/lib/fork-contribution"
 import { toPresentableError } from "@/lib/presentable-error"
@@ -161,6 +162,10 @@ const refreshRepository = (repo: string | null) =>
     useAccountsStore.getState().setRemote(repo, remote)
     // 文件监听在构建这类场景下会反复触发刷新；内容没变就不换对象，改动列表不白重绘
     if (!equal(getState().status, next)) setState({ status: next })
+    getDesktopRuntime().appStore.updateSelectedRepositoryIndicator(repo, {
+      aheadBehind: next.hasUpstream ? { ahead: next.ahead, behind: next.behind } : null,
+      changedFilesCount: next.changes.length
+    })
     const lastFetched = nextLastFetched(next.fetchHead, getState().lastFetched)
     if (lastFetched?.getTime() !== getState().lastFetched?.getTime()) setState({ lastFetched })
     setState(store => ({ diffKey: store.diffKey + 1 }))
