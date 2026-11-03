@@ -121,7 +121,9 @@ export function ChangesSidebar({
   const { t } = useTranslation()
   const emoji = useEmojiStore(s => s.emoji)
   const amendRequested = useChangesStore(s => s.amendRequest === repo)
+  const undoRequested = useChangesStore(s => s.undoRequest === repo)
   const consumeAmendRequest = useChangesStore(s => s.consumeAmendRequest)
+  const consumeUndoRequest = useChangesStore(s => s.consumeUndoRequest)
   const [amending, setAmending] = useState(false)
   const [isCommitting, setIsCommitting] = useState(false)
   const [filters, setFilters] = useState(emptyChangesFilter)
@@ -325,6 +327,8 @@ export function ChangesSidebar({
       <DesktopCommitForm
         amendRequested={amendRequested}
         onAmendRequestHandled={consumeAmendRequest}
+        undoRequested={undoRequested}
+        onUndoRequestHandled={consumeUndoRequest}
         repo={repo}
         branch={branch}
         changes={changes}

@@ -2030,7 +2030,7 @@
     "upstream/gitlens/packages/utils/src/path.ts": {
       "project": "gitlens",
       "source": "packages/utils/src/path.ts",
-      "sha256": "05f0aa508f0235bbad3b53483305ca6aa03c84a19880f4d2feae0048f7beb4c7"
+      "sha256": "4ba44ec189d67c138d68526e27511437b7072ef8e17c2bb4cedebe6d18b913ae"
     },
     "upstream/gitlens/packages/utils/src/platform.ts": {
       "project": "gitlens",

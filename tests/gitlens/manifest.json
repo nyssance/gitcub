@@ -1,7 +1,7 @@
 {
   "project": "gitlens",
   "repository": "https://github.com/gitkraken/vscode-gitlens",
-  "commit": "b87331422fe75f845ad32f581d2f500f72f84523",
+  "commit": "beb15f6eb57ff7773a31dd386bd5e3ce84264fff",
   "note": "Source-file inventory only. All entries remain pending until upstream scenarios and assertions are verified against GitCub. Reference features do not imply test coverage or equivalent behavior. Entries marked excluded are VS Code extension host / webview / E2E or GitKraken Plus suites that the user ruled out on 2026-10-27; they are not product gaps. See tests/conformance/README.md. Files in or under any \"plus\" directory are covered by GitLens Pro License (LICENSE.plus) and are excluded from porting on 2026-10-27 regardless of their subject. On 2026-10-27 every remaining pending file was triaged one by one: suites that test GitLens's own infrastructure (exec queue, command classifier, caches, watcher sessions, health monitors, its own parsers and models) or GitLens-only features that Desktop does not have and the user has not authorized are excluded with the reason and the Desktop source or grep used to decide; they are not product gaps. The remaining pending files assert Git behaviour of capabilities GitCub has.",
   "support_sha256": "eb2e71f037d0dfee61fcf4f2fcea1074873e7e7864ebb55435d8238531dd0c20",
   "features": [
@@ -529,7 +529,7 @@
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：列出被忽略的目录（GitLens 用于文件监听排除与资源管理器）；Desktop/GitCub 不列出被忽略条目。"
     },
     "packages/git-cli/src/providers/__tests__/integration/ignoredEntries.test.ts": {
-      "sha256": "844a36993659e609b9d326e7d24580bb16c842329a9ddcde3191c4499c930422",
+      "sha256": "dc64e033edb8b653d75d71e3487f92b997820b16e9ffcb9892e8a59ec99f1f63",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：列出被忽略的条目/路径（status --ignored 等价）；Desktop/GitCub 状态不展示忽略文件，无此 API。"
@@ -2348,7 +2348,7 @@
       "exclusion": "VS Code extension runtime utilities (@gitlens/utils), not Git behaviour — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "packages/utils/src/__tests__/path.test.ts": {
-      "sha256": "89ba73f8872c0c0b5c1ffcb4eab9d86ee107a38e78441bf458e3fe33c09bfef8",
+      "sha256": "256144c7256117c1a214538063040ec37fc87705fa5485f2653de40d94ccd42a",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension runtime utilities (@gitlens/utils), not Git behaviour — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"

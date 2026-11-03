@@ -14,7 +14,7 @@ declare global {
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { basename, join } from "node:path"
 import { crc32, deflateSync } from "node:zlib"
 
@@ -1915,6 +1915,79 @@ test("blame of a 100000-line file stays virtualized and the last line opens its 
   } finally {
     git("checkout", "--", file)
     await page.locator('[role="tab"]:has-text("Changes")').first().click()
+  }
+})
+
+/** Desktop _undoCommit：先切到 Changes 页；git-store undoCommit 把被撤销提交的标题与正文放回提交框，改动回到工作区 */
+test("undoing a local commit from history restores its message in the commit form", async ({ mainWindow: page }) => {
+  const main = realpathSync(smokeRepoPath)
+  await clickRailRepository(page, main)
+  const head = git("rev-parse", "HEAD")
+  const file = join(smokeRepoPath, "undo-restores-message.txt")
+  writeFileSync(file, "undo\n")
+  git("add", "undo-restores-message.txt")
+  git("commit", "-q", "-m", "Undo restores this summary", "-m", "And this description")
+  try {
+    await page.locator('[role="tab"]:has-text("History")').click()
+    const row = page.locator('.desktop-list [title="Undo restores this summary"]').first()
+    await row.waitFor({ state: "visible", timeout: 15000 })
+    await page.evaluate(() => {
+      const target = document.querySelector('.desktop-list [title="Undo restores this summary"]')!
+      const rect = target.getBoundingClientRect()
+      target.dispatchEvent(
+        new MouseEvent("contextmenu", { bubbles: true, button: 2, clientX: rect.x + 4, clientY: rect.y + 4 })
+      )
+    })
+    await page.locator('[role="menuitem"]:has-text("Undo Commit…")').click()
+    const summary = page.locator(".summary-field input")
+    // 前面的用例可能在冒烟仓库里留了改动：Desktop 这时先确认（WarnLocalChangesBeforeUndo）
+    const confirm = page.locator('[role="alertdialog"]')
+    await expect
+      .poll(async () => (await summary.isVisible()) || (await confirm.isVisible()), { timeout: 15000 })
+      .toBe(true)
+    if (await confirm.isVisible()) await confirm.locator('button:has-text("OK")').click()
+    await summary.waitFor({ state: "visible" })
+    await expect.poll(() => summary.inputValue(), { timeout: 15000 }).toBe("Undo restores this summary")
+    // 冒烟仓库没关联 GitHub，走 undoCommit 的回退路径：description 就是 git 的 %b，带结尾换行（Desktop 同样）
+    assert.equal(await page.locator(".description-field textarea").inputValue(), "And this description\n")
+    await expect(page.locator('.repository-sidebar [role="tab"][aria-selected="true"]')).toContainText("Changes")
+    assert.equal(git("rev-parse", "HEAD"), head)
+    await page.locator('[title="undo-restores-message.txt"]').first().waitFor({ state: "visible" })
+  } finally {
+    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--mixed", head)
+    rmSync(file, { force: true })
+    await page.evaluate(() => {
+      for (const field of document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+        ".summary-field input, .description-field textarea"
+      )) {
+        Object.getOwnPropertyDescriptor(Object.getPrototypeOf(field), "value")!.set!.call(field, "")
+        field.dispatchEvent(new Event("input", { bubbles: true }))
+      }
+    })
+  }
+})
+
+/** Desktop _refreshRepository → _updateRepositoryMissing：路径没了显示 MissingRepository，挪回来后「Check again」恢复 */
+test("a repository moved away shows the missing view and Check again recovers it", async ({ mainWindow: page }) => {
+  const other = realpathSync(`${smokeRepoPath}-ui-worktree`)
+  const moved = `${other}-moved`
+  await clickRailRepository(page, other)
+  await expect(page.locator(".branch-button")).toContainText("ui-worktree")
+  renameSync(other, moved)
+  try {
+    await clickRailRepository(page, realpathSync(smokeRepoPath))
+    await clickRailRepository(page, other)
+    const view = page.locator("#missing-repository-view")
+    await view.waitFor({ state: "visible", timeout: 15000 })
+    await expect(view).toContainText(`Can't find "${basename(other)}"`)
+    await view.locator('button:has-text("Locate…")').waitFor({ state: "visible" })
+    renameSync(moved, other)
+    await view.locator('.details [role="button"]:has-text("Check")').click()
+    await view.waitFor({ state: "hidden", timeout: 15000 })
+    await expect(page.locator(".branch-button")).toContainText("ui-worktree")
+  } finally {
+    if (existsSync(moved)) renameSync(moved, other)
+    await clickRailRepository(page, realpathSync(smokeRepoPath))
   }
 })
 

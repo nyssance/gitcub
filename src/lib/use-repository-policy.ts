@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core"
 import { useEffect, useMemo, useState } from "react"
 
+import { useRepositoryStore } from "../features/repository/store"
 import type { Account } from "../models/account"
 import type { Remote } from "../models/app-state"
 import { GitHubRepository } from "../models/github-repository"
@@ -107,9 +108,11 @@ export async function loadRepositoryPolicy(
 export function useRepositoryPolicy(path: string, branch: string | null, accounts: readonly Account[]) {
   const empty = useMemo(() => emptyRepositoryPolicy(path), [path])
   const [policy, setPolicy] = useState(empty)
+  // Desktop refreshBranchProtectionState：推送、拉取、获取之后重读，新发布的分支立刻显示保护状态
+  const protectionKey = useRepositoryStore(s => s.branchProtectionKey)
+  useEffect(() => setPolicy(empty), [empty, branch])
   useEffect(() => {
     let active = true
-    setPolicy(empty)
     if (!branch || !path) return
     loadRepositoryPolicy(path, branch, accounts).then(
       value => {
@@ -120,6 +123,6 @@ export function useRepositoryPolicy(path: string, branch: string | null, account
     return () => {
       active = false
     }
-  }, [path, branch, accounts, empty])
+  }, [path, branch, accounts, protectionKey])
   return policy
 }

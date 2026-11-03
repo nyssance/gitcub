@@ -52,9 +52,11 @@ import { ipc } from "@/lib/ipc"
 import { useNativeMenu } from "@/lib/menu/use-native-menu"
 import { parse, routes } from "@/lib/navigate"
 import { desktopStashForBranch } from "@/lib/no-changes-suggestions"
+import { basename } from "@/lib/platform-path"
 import { toPresentableError } from "@/lib/presentable-error"
 import { cherryPickToPullRequest, findPullRequestBranch, sameHostedRepository } from "@/lib/pull-request-checkout"
 import { push } from "@/lib/push"
+import { getRepositoryType } from "@/lib/repository-access"
 import { handleShortcut } from "@/lib/shortcuts"
 import { getSquashedCommitDescription } from "@/lib/squashed-commit-description"
 import { applySelection, discardLines } from "@/lib/stage"
@@ -86,12 +88,14 @@ import { HookFailed } from "@/ui/hook-failed/hook-failed"
 import { Inbox } from "@/ui/inbox/inbox"
 import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
 import { LocalChangesOverwrittenDialog } from "@/ui/local-changes-overwritten/local-changes-overwritten-dialog"
+import { MissingRepository } from "@/ui/missing-repository"
 import { ProgressDialog } from "@/ui/multi-commit-operation/progress-dialog"
 import { WarnForcePushDialog } from "@/ui/multi-commit-operation/warn-force-push-dialog"
 import { NoRepositoriesView } from "@/ui/no-repositories/no-repositories-view"
 import { Preferences } from "@/ui/preferences/preferences"
 import { CreatePullRequest } from "@/ui/pull-requests/create"
 import { PullRequests } from "@/ui/pull-requests/list"
+import type { RepositoryActionsDispatcher } from "@/ui/repository-actions-contract"
 import { RepositorySettings } from "@/ui/repository-settings/repository-settings"
 import { PublishRepository } from "@/ui/repository/publish"
 import { RepositoryRail } from "@/ui/repository/repository-rail"
@@ -145,6 +149,7 @@ export function App() {
   const reloadKey = useRepositoryStore(s => s.reloadKey)
   const diffKey = useRepositoryStore(s => s.diffKey)
   const error = useRepositoryStore(s => s.error)
+  const missing = useRepositoryStore(s => s.missing)
   const errors = useDialogsStore(s => s.errors)
   const clearError = useDialogsStore(s => s.clearError)
   const localChangesOverwritten = useDialogsStore(s => s.localChangesOverwritten)
@@ -283,13 +288,16 @@ export function App() {
     appStore.backgroundFetch = async repository => {
       const { status, runBackground } = useRepositoryStore.getState()
       if (repository.path !== activeRepository() || !status.remote) return
-      const remote = status.remote
       // Desktop 只给关联上 GitHub 的仓库后台 fetch；GitLab 是一等平台，已登录的 GitLab 远端同样 fetch
       const { rawRemotes, accounts } = useAccountsStore.getState()
       const hosted = rawRemotes[repository.path]
       const gitlab = !!hosted && accounts[hosted.host]?.kind === "gitlab"
       if (!repository.gitHubRepository && !gitlab) return
-      await runBackground(() => ipc.fetch(repository.path, remote))
+      try {
+        await runBackground(() => backgroundFetch(repository.path))
+      } finally {
+        useRepositoryStore.getState().setNetworkProgress(repository.path, null)
+      }
     }
     return () => {
       appStore.backgroundFetch = null
@@ -416,7 +424,7 @@ export function App() {
   useEffect(() => useRepositoryStore.getState().loadCompletions(repo, currentRemote), [repo, currentRemote])
 
   // 提交人：头像用它的首字母
-  useEffect(() => useRepositoryStore.getState().loadAuthor(), [])
+  useEffect(() => useRepositoryStore.getState().loadAuthor(repo), [repo])
 
   // 切到 History 才拉提交图，避免打开仓库就白跑一次遍历。reloadKey 让命令行提交、压缩、变基之后
   // 列表跟着变，否则照着旧的几条再操作就会失败（实测：压缩一次后再压报「提交不在范围里」）。
@@ -624,6 +632,9 @@ export function App() {
     })
     await ipc.fastForwardBranches(path).catch(error => log.error("Branch fast-forwarding failed", error))
     setNetworkProgress(path, { kind: "generic", title, value: refreshStartProgress + 0.1 * 0.5 })
+    // manually refresh branch protections after the push, to ensure
+    // any new branch will immediately report as protected
+    useRepositoryStore.getState().refreshBranchProtection()
   }
   const withNetworkProgress = async (path: string, operation: () => Promise<unknown>) => {
     try {
@@ -662,26 +673,74 @@ export function App() {
       await refreshAfterNetworkOperation(path, pullWeight + fetchWeight)
       if (failure) withRetry(path, repository => ({ type: RetryActionType.Pull, repository }))(failure.error)
     })
-  /** Desktop performFetch：获取占 0.9，刷新 0.1 */
-  const doFetch = (path: string) =>
-    withNetworkProgress(path, async () => {
-      const remote = useRepositoryStore.getState().status.remote
-      if (!remote) return
-      const fetchWeight = 0.9
+  /** Desktop performFetch：获取占 0.9，刷新 0.1。远端照 GitStore.fetch：当前分支跟踪的远端在前，再默认远端，
+   *  fork 再加 upstream（同名只取一次），进度按远端均分。后台任务（BackgroundFetcher）同样显示进度、快进其他分支，
+   *  失败只记日志 */
+  const performFetch = async (path: string, background: boolean) => {
+    const repository =
+      getDesktopRuntime()
+        .appStore.getState()
+        .repositories.find(r => r.path === path) ?? new Repository(path, -1, null, false)
+    const gitStore = getDesktopRuntime().appStore.gitStoreFor(repository)
+    await gitStore.loadRemotes()
+    const current = useRepositoryStore.getState().status.remote ?? gitStore.currentRemote?.name
+    const remotes = [
+      ...new Set([current, gitStore.defaultRemote?.name, gitStore.upstreamRemote?.name].filter(name => !!name))
+    ] as string[]
+    if (remotes.length === 0) return
+    const fetchWeight = 0.9
+    const weight = 1 / remotes.length
+    let failure = null as { error: unknown } | null
+    for (const [i, remote] of remotes.entries()) {
       const title = t("toolbar.fetchingRemote", { remote })
-      // Desktop fetchRemotes 用 performFailableOperation：获取失败照样快进、刷新，错误另行显示
-      const failure = await fetchRemote({ path }, { name: remote }, progress =>
-        setNetworkProgress(path, { ...progress, title, value: progress.value * fetchWeight })
-      ).then(
-        () => null,
-        (error: unknown) => ({ error })
-      )
-      await refreshAfterNetworkOperation(path, fetchWeight)
-      if (failure) throw failure.error
-    })
+      // Desktop fetchRemote 用 performFailableOperation：一个远端失败照样取下一个、快进、刷新，错误另行显示
+      await fetchRemote(
+        { path },
+        { name: remote },
+        progress =>
+          setNetworkProgress(path, { ...progress, title, value: (i * weight + progress.value * weight) * fetchWeight }),
+        background
+      ).catch((error: unknown) => {
+        failure ??= { error }
+      })
+    }
+    await refreshAfterNetworkOperation(path, fetchWeight)
+    if (failure) throw failure.error
+  }
+  const doFetch = (path: string) => withNetworkProgress(path, () => performFetch(path, false))
+  const backgroundFetch = useEffectEvent((path: string) => performFetch(path, true))
   /** Keep confirmation, transport and recovery inside one operation lock. */
   const confirmBranchStash = (name: string, current: string) => ask(t("branch.stashConfirm", { name, current }))
 
+  // Desktop MissingRepository 的动作（dispatcher removeRepository / relocateRepository / cloneAgain）
+  const removeFromList = (path: string) => {
+    if (!state) return
+    const remaining = state.repositories.filter(r => r !== path)
+    patch({ repositories: remaining, selectedRepository: remaining[0] ?? null })
+  }
+  const missingRepositoryDispatcher = {
+    postError: showError,
+    refreshRepository: () => useRepositoryStore.getState().refresh(),
+    removeRepository: (repository: Repository) => removeFromList(repository.path),
+    // Desktop _relocateRepository：选到的目录是仓库（或 Git 认为不安全的仓库）就换成新路径，否则报错
+    relocateRepository: async (repository: Repository) => {
+      const path = await open({ directory: true, multiple: false })
+      if (typeof path !== "string" || !state) return
+      const type = await getRepositoryType(path)
+      const next = type.kind === "regular" ? type.topLevelWorkingDirectory : type.kind === "unsafe" ? path : null
+      if (next === null) {
+        showError(new Error(`${path} isn't a Git repository.`))
+        return
+      }
+      patch({
+        repositories: state.repositories
+          .map(r => (r === repository.path ? next : r))
+          .filter((r, i, all) => all.indexOf(r) === i),
+        selectedRepository: next
+      })
+    },
+    cloneAgain: (url: string, path: string) => cloneInto(url, path, basename(path))
+  }
   /** Desktop StashAndSwitchBranch：切换前有更改时问放哪里。选了「留在当前分支」而这个分支已有贮藏时，
    *  原版会弹 ConfirmOverwriteStash —— checkoutWithStash 里接着问，这里只回答选择。 */
   const stashAndSwitchDispatcher = {
@@ -782,7 +841,9 @@ export function App() {
       if (!(await ask(warning))) return
     } else if (!clean && !(await ask(t("desktopUI.youHaveChangesInProgressUndoingTheCommit"), "confirmUndoCommit")))
       return
-    await run(() => ipc.undoCommit(repo))
+    // Make sure we show the changes after undoing the commit
+    patch({ selectedTab: "changes" })
+    useChangesStore.getState().requestUndo(repo)
   }
 
   /** Desktop _startAmendingRepository：已推送的提交先走 WarnForcePush('Amend')，再切到 Changes 页让提交框载入 HEAD */
@@ -1175,6 +1236,7 @@ export function App() {
     stashesVisible,
     filterVisible,
     hasStashes: stashList.length > 0,
+    hasBranchStash: desktopStashForBranch(stashList, status.branch) !== null,
     platform: accounts[remotes[repo ?? ""]?.host ?? ""]?.kind ?? "github"
   })
 
@@ -1933,385 +1995,398 @@ export function App() {
 
               {(error || diffError) && <InlineError error={(error ?? diffError)!} />}
 
-              <RepositorySplit
-                panelRef={sidebarPanel}
-                initialWidth={initialWidth ?? 250}
-                onResize={width => patch({ sidebarWidth: width })}
-                sidebar={
-                  <div className="repository-sidebar">
-                    <Tabs
-                      // 旧版本存下的 "pr" 页签已不存在
-                      value={state.selectedTab === "pr" ? "changes" : state.selectedTab}
-                      onValueChange={v => patch({ selectedTab: v })}
-                      className="flex min-h-0 flex-1 flex-col gap-0">
-                      <TabsList variant="line" className="w-full shrink-0">
-                        <TabsTrigger value="changes">
-                          {t("tabs.changes")}
-                          {status.changes.length > 0 && (
-                            <span className="bg-muted-foreground/20 rounded-full px-1.5 text-[10px]">
-                              {status.changes.length}
+              {missing ? (
+                <MissingRepository
+                  dispatcher={missingRepositoryDispatcher as unknown as RepositoryActionsDispatcher}
+                  repository={
+                    getDesktopRuntime()
+                      .appStore.getState()
+                      .repositories.find(r => r.path === repo) ?? new Repository(repo, -1, null, true)
+                  }
+                />
+              ) : (
+                <RepositorySplit
+                  panelRef={sidebarPanel}
+                  initialWidth={initialWidth ?? 250}
+                  onResize={width => patch({ sidebarWidth: width })}
+                  sidebar={
+                    <div className="repository-sidebar">
+                      <Tabs
+                        // 旧版本存下的 "pr" 页签已不存在
+                        value={state.selectedTab === "pr" ? "changes" : state.selectedTab}
+                        onValueChange={v => patch({ selectedTab: v })}
+                        className="flex min-h-0 flex-1 flex-col gap-0">
+                        <TabsList variant="line" className="w-full shrink-0">
+                          <TabsTrigger value="changes">
+                            {t("tabs.changes")}
+                            {status.changes.length > 0 && (
+                              <span className="bg-muted-foreground/20 rounded-full px-1.5 text-[10px]">
+                                {status.changes.length}
+                              </span>
+                            )}
+                          </TabsTrigger>
+                          <TabsTrigger value="history">{t("tabs.history")}</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="changes" className="panel">
+                          {/* 没配身份的话提交会挂在一个默认的 name/email 上（或者 git
+                    直接拒绝提交）。这是第一次用时最容易卡住的地方。 */}
+                          {author !== undefined && (!author.name || !author.email) && (
+                            <Banner
+                              sticky
+                              warning
+                              message={t("identity.missing")}
+                              actionLabel={t("identity.configure")}
+                              onAction={() => setPrefsOpen(true)}
+                              onDismiss={() => setAuthor({ name: "-", email: "-" })}
+                            />
+                          )}
+                          {/* LFS 没生效是个会毁数据的状态，排在普通提示之前 */}
+                          {lfs?.used && !lfs.installed && (
+                            <Banner
+                              sticky
+                              warning
+                              message={t(lfs.available ? "lfs.notInstalled" : "lfs.missing")}
+                              actionLabel={lfs.available ? t("lfs.install") : undefined}
+                              onAction={lfs.available && repo ? () => void run(() => ipc.lfsInstall(repo)) : undefined}
+                              onDismiss={() => setLfs(null)}
+                            />
+                          )}
+                          {banner && (
+                            <span role="status" className="sr-only">
+                              {banner}
                             </span>
                           )}
-                        </TabsTrigger>
-                        <TabsTrigger value="history">{t("tabs.history")}</TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="changes" className="panel">
-                        {/* 没配身份的话提交会挂在一个默认的 name/email 上（或者 git
-                    直接拒绝提交）。这是第一次用时最容易卡住的地方。 */}
-                        {author !== undefined && (!author.name || !author.email) && (
-                          <Banner
-                            sticky
-                            warning
-                            message={t("identity.missing")}
-                            actionLabel={t("identity.configure")}
-                            onAction={() => setPrefsOpen(true)}
-                            onDismiss={() => setAuthor({ name: "-", email: "-" })}
-                          />
-                        )}
-                        {/* LFS 没生效是个会毁数据的状态，排在普通提示之前 */}
-                        {lfs?.used && !lfs.installed && (
-                          <Banner
-                            sticky
-                            warning
-                            message={t(lfs.available ? "lfs.notInstalled" : "lfs.missing")}
-                            actionLabel={lfs.available ? t("lfs.install") : undefined}
-                            onAction={lfs.available && repo ? () => void run(() => ipc.lfsInstall(repo)) : undefined}
-                            onDismiss={() => setLfs(null)}
-                          />
-                        )}
-                        {banner && (
-                          <span role="status" className="sr-only">
-                            {banner}
-                          </span>
-                        )}
-                        <Conflicts
-                          operation={status.operation}
-                          busy={busy}
-                          files={status.changes.filter(c => c.change === "conflicted")}
-                          ours={status.branch}
-                          theirs={status.theirs}
-                          onResolve={(file, keep) => void run(() => ipc.resolveConflict(repo, file.path, keep))}
-                          // 中止和收尾都按「正在进行的是哪个操作」来，不靠试错
-                          onAbort={op =>
-                            void run(() => ipc.abortOperation(repo, op)).then(() =>
-                              useRepositoryStore.getState().dropRewrite(repo)
-                            )
-                          }
-                          onContinue={op =>
-                            void run(() => {
-                              // Desktop base-rebase / cherry-pick onContinue：继续时切回进度对话框
-                              const kind =
-                                op === "rebase"
-                                  ? (useRepositoryStore.getState().rebaseKinds[repo] ?? MultiCommitOperationKind.Rebase)
-                                  : op === "cherry-pick"
-                                    ? MultiCommitOperationKind.CherryPick
-                                    : null
-                              return kind === null
-                                ? ipc.continueOperation(repo, op)
-                                : withMultiCommitProgress(repo, kind, onProgress =>
-                                    ipc.continueOperation(repo, op, onProgress)
-                                  )
-                            }).then(() => useRepositoryStore.getState().settleRewrite(repo))
-                          }
-                        />
-                        {stashesVisible && (
-                          <Stashes
-                            stashes={stashList}
-                            onPop={name => void run(() => ipc.stashPop(repo, name))}
-                            onDrop={name =>
-                              void ask(
-                                t("desktopUI.areYouSureYouWantToDiscardTheseStashedChanges"),
-                                "confirmDiscardStash"
-                              ).then(ok => {
-                                if (ok) return run(() => ipc.stashDrop(repo, name))
-                              })
+                          <Conflicts
+                            operation={status.operation}
+                            busy={busy}
+                            files={status.changes.filter(c => c.change === "conflicted")}
+                            ours={status.branch}
+                            theirs={status.theirs}
+                            onResolve={(file, keep) => void run(() => ipc.resolveConflict(repo, file.path, keep))}
+                            // 中止和收尾都按「正在进行的是哪个操作」来，不靠试错
+                            onAbort={op =>
+                              void run(() => ipc.abortOperation(repo, op)).then(() =>
+                                useRepositoryStore.getState().dropRewrite(repo)
+                              )
+                            }
+                            onContinue={op =>
+                              void run(() => {
+                                // Desktop base-rebase / cherry-pick onContinue：继续时切回进度对话框
+                                const kind =
+                                  op === "rebase"
+                                    ? (useRepositoryStore.getState().rebaseKinds[repo] ??
+                                      MultiCommitOperationKind.Rebase)
+                                    : op === "cherry-pick"
+                                      ? MultiCommitOperationKind.CherryPick
+                                      : null
+                                return kind === null
+                                  ? ipc.continueOperation(repo, op)
+                                  : withMultiCommitProgress(repo, kind, onProgress =>
+                                      ipc.continueOperation(repo, op, onProgress)
+                                    )
+                              }).then(() => useRepositoryStore.getState().settleRewrite(repo))
                             }
                           />
-                        )}
-                        <ChangesSidebar
-                          filterVisible={filterVisible}
-                          key={repo}
-                          repo={repo}
-                          selectionOf={path => stateOf(path).selection}
-                          changes={status.changes}
-                          branch={status.branch}
-                          selected={selected}
-                          includeOf={p => stateOf(p).include}
-                          selectedPaths={selectedPaths}
-                          onSelectionChange={paths => {
-                            const anchor = paths.at(-1) ?? null
-                            setFileSelection({ repo, anchor, paths })
-                            setSelected(anchor)
-                          }}
-                          onDiscardMany={setDiscarding}
-                          onSelect={setSelected}
-                          onIncludeChange={(path, include) =>
-                            setFiles(prev => {
-                              const c = prev.get(path)
-                              return new Map(prev).set(path, {
-                                include: include ? DiffSelectionType.All : DiffSelectionType.None,
-                                diff: c?.diff,
-                                selection:
-                                  (include ? c?.selection?.withSelectAll() : c?.selection?.withSelectNone()) ?? null
-                              })
-                            })
-                          }
-                          onToggleAll={include =>
-                            setFiles(prev => {
-                              const next = new Map(prev)
-                              for (const c of status.changes) {
-                                const st = next.get(c.path)
-                                next.set(c.path, {
-                                  include: include ? DiffSelectionType.All : DiffSelectionType.None,
-                                  diff: st?.diff,
-                                  selection:
-                                    (include ? st?.selection?.withSelectAll() : st?.selection?.withSelectNone()) ?? null
+                          {stashesVisible && (
+                            <Stashes
+                              stashes={stashList}
+                              onPop={name => void run(() => ipc.stashPop(repo, name))}
+                              onDrop={name =>
+                                void ask(
+                                  t("desktopUI.areYouSureYouWantToDiscardTheseStashedChanges"),
+                                  "confirmDiscardStash"
+                                ).then(ok => {
+                                  if (ok) return run(() => ipc.stashDrop(repo, name))
                                 })
                               }
-                              return next
-                            })
-                          }
-                          author={author}
-                          issues={issues}
-                          mentionables={mentionables}
-                          remote={currentRemote ?? null}
-                          onDiscard={path => setDiscarding([path])}
-                          // Desktop _appendIgnoreFile / _appendIgnoreRule：写完 .gitignore 后刷新仓库
-                          onIgnore={(kind, patterns) =>
-                            void run(() =>
-                              kind === "files"
-                                ? ipc.appendIgnoreFiles(repo, patterns)
-                                : ipc.appendIgnoreRules(repo, patterns)
-                            )
-                          }
-                          rebaseConflict={status.operation === "rebase"}
-                          externalEditorLabel={editorName}
-                          onBlame={path => setBlaming(path)}
-                          onShowHistory={showFileHistory}
-                          onCommit={doCommit}
-                          onUndoCommit={() => void doUndoCommit()}
-                          mostRecentLocalCommit={mostRecentLocalCommit}
-                          isPushPullFetchInProgress={networkProgress !== null}
-                          onAmend={async (summary, description) => {
-                            return (
-                              (await rewrite(async () => {
-                                await applySelection(
-                                  repo,
-                                  status.changes.map(file => ({
-                                    file,
-                                    include: stateOf(file.path).include,
-                                    selection: stateOf(file.path).selection
-                                  }))
-                                )
-                                return commitWithHooks(callbacks =>
-                                  ipc.amendCommit(repo, summary, description, callbacks)
-                                )
-                              })) ?? false
-                            )
-                          }}
-                        />
-                      </TabsContent>
-
-                      <TabsContent value="history" keepMounted className="panel data-[hidden]:hidden">
-                        <HistorySidebar
-                          commits={commits}
-                          repo={repo}
-                          fileHistory={
-                            historyFile
-                              ? {
-                                  path: historyFile,
-                                  commits: fileCommits,
-                                  hasMore: fileHistoryMore,
-                                  loadingMore: fileHistoryLoadingMore,
-                                  onLoadMore: loadMoreFileHistory,
-                                  loading: fileHistoryLoading,
-                                  error: fileHistoryError
-                                }
-                              : null
-                          }
-                          onCloseFileHistory={() => setHistoryFile(null)}
-                          rows={graphRows}
-                          hasMore={!graphDone}
-                          loadingMore={graphLoading}
-                          onLoadMore={loadMoreGraph}
-                          selected={commitSha}
-                          onSelect={selectHistoryCommit}
-                          onRevert={sha => {
-                            const c = commits.find(x => x.sha === sha)
-                            void run(() => ipc.revertCommit(repo, sha, (c?.parentCount ?? 1) > 1))
-                          }}
-                          onCherryPick={sha => void doCherryPickMany([sha])}
-                          onCherryPickMany={shas => void doCherryPickMany(shas)}
-                          onSquashMany={shas => void doSquashMany(shas)}
-                          onSquashOnto={(toSquash, onto) => void doSquash(toSquash, onto)}
-                          onCreateTag={sha => {
-                            void askText(t("history.tagName")).then(name => {
-                              if (!name) return
-                              void run(async () => {
-                                await ipc.createTag(repo, name, sha)
-                                useRepositoryStore.getState().addTagToPush(repo, name)
+                            />
+                          )}
+                          <ChangesSidebar
+                            filterVisible={filterVisible}
+                            key={repo}
+                            repo={repo}
+                            selectionOf={path => stateOf(path).selection}
+                            changes={status.changes}
+                            branch={status.branch}
+                            selected={selected}
+                            includeOf={p => stateOf(p).include}
+                            selectedPaths={selectedPaths}
+                            onSelectionChange={paths => {
+                              const anchor = paths.at(-1) ?? null
+                              setFileSelection({ repo, anchor, paths })
+                              setSelected(anchor)
+                            }}
+                            onDiscardMany={setDiscarding}
+                            onSelect={setSelected}
+                            onIncludeChange={(path, include) =>
+                              setFiles(prev => {
+                                const c = prev.get(path)
+                                return new Map(prev).set(path, {
+                                  include: include ? DiffSelectionType.All : DiffSelectionType.None,
+                                  diff: c?.diff,
+                                  selection:
+                                    (include ? c?.selection?.withSelectAll() : c?.selection?.withSelectNone()) ?? null
+                                })
                               })
-                            })
-                          }}
-                          currentBranch={status.branch}
-                          pushStatus={status}
-                          localCommits={localCommits}
-                          onMerge={b => doMerge(b, false)}
-                          onCompared={setCompared}
-                          onReorder={(shas, row) => void doReorderCommits(shas, row)}
-                          onAmendCommit={(_sha, isLocal) => void startAmending(isLocal)}
-                          onUndoCommit={() => void doUndoCommit()}
-                          unpushedTags={tagsToPush}
-                          onDeleteTag={setDeletingTag}
-                          onCheckoutCommit={commit => {
-                            const oneLine = { sha: commit.sha, summary: commit.summary }
-                            if (confirmCheckoutCommit) useDialogsStore.getState().setCheckingOutCommit(oneLine)
-                            else void doCheckoutCommit(oneLine)
-                          }}
-                          onCreateBranchFromCommit={commit =>
-                            useDialogsStore
-                              .getState()
-                              .setCreateBranchFromCommit({ sha: commit.sha, summary: commit.summary })
-                          }
-                          viewOnLabel={
-                            selectedRemote
-                              ? accounts[selectedRemote.host]?.kind === "gitlab"
-                                ? t("history.viewOnGitLab")
-                                : selectedRemote.host === "github.com"
-                                  ? t("history.viewOnGitHub")
-                                  : t("history.viewOnGitHubEnterprise")
-                              : undefined
-                          }
-                          onResetTo={sha => {
-                            // 重置会丢提交，问清楚要哪种：保留改动还是连改动一起丢
-                            void ask(t("history.resetKeepChanges")).then(keep =>
-                              run(() => ipc.resetTo(repo, keep ? "mixed" : "hard", sha))
-                            )
-                          }}
-                          onOpenInBrowser={
-                            remotes[repo ?? ""]
-                              ? sha => {
-                                  const r = remotes[repo ?? ""]
-                                  if (r) void openUrl(`https://${r.host}/${r.owner}/${r.name}/commit/${sha}`)
+                            }
+                            onToggleAll={include =>
+                              setFiles(prev => {
+                                const next = new Map(prev)
+                                for (const c of status.changes) {
+                                  const st = next.get(c.path)
+                                  next.set(c.path, {
+                                    include: include ? DiffSelectionType.All : DiffSelectionType.None,
+                                    diff: st?.diff,
+                                    selection:
+                                      (include ? st?.selection?.withSelectAll() : st?.selection?.withSelectNone()) ??
+                                      null
+                                  })
                                 }
-                              : undefined
-                          }
-                        />
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                }>
-                <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-                  {/* 逐行追溯占的是 diff 的位置：同一个文件，要么看改了什么，
-                    要么看每行是谁改的，不会同时想看 */}
-                  {blaming && repo ? (
-                    <Blame
-                      repo={repo}
-                      file={blaming}
-                      onClose={() => setBlaming(null)}
-                      onSelectCommit={sha => {
-                        setBlaming(null)
-                        patch({ selectedTab: "history" })
-                        setCommitSha(sha)
-                      }}
-                    />
-                  ) : state.selectedTab === "history" ? (
-                    selectedCommit ? (
-                      <CommitDetails
-                        commit={selectedCommit}
-                        details={commitDetails}
-                        remote={remotes[repo ?? ""] ?? null}
-                        platform={accounts[remotes[repo ?? ""]?.host ?? ""]?.kind ?? "github"}
-                        autolinks={state.autolinks}
-                        files={commitFiles}
-                        selected={commitFile}
-                        onSelect={setCommitFile}
-                        onShowHistory={showFileHistory}>
-                        <DiffView
-                          file={commitFile}
-                          diff={commitDiff}
-                          selection={null}
-                          error={null}
-                          tokens={commitTokens}
-                          repo={repo}
-                          sha={commitSha}
-                          oldPath={commitOldPath}
-                          status={commitFileKind && <CommitStatusIcon kind={commitFileKind} />}
-                          readOnly
-                        />
-                      </CommitDetails>
-                    ) : (
-                      <div className="text-muted-foreground flex flex-1 items-center justify-center">
-                        {t("history.selectCommit")}
-                      </div>
-                    )
-                  ) : status.changes.length === 0 ? (
-                    // Desktop repository-view.tsx renderContentForChanges：没有本地改动时内容区是
-                    // NoChanges 空白页，按仓库状态给出接下来能做的事
-                    <NoChanges
-                      repository={{
-                        isHosted: !!remotes[repo ?? ""],
-                        platform: accounts[remotes[repo ?? ""]?.host ?? ""]?.kind ?? "github"
-                      }}
-                      appMenu={appMenu}
-                      repositoryState={{
-                        branch: status.branch,
-                        remote: status.remote,
-                        aheadBehind: status.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null,
-                        tagsToPush,
-                        isForcePush: forcePushBranchState === ForcePushBranchState.Recommended,
-                        defaultBranch,
-                        hasCurrentPullRequest,
-                        isHosted: !!remotes[repo ?? ""],
-                        stashEntry: desktopStashForBranch(stashList, status.branch)
-                      }}
-                      isExternalEditorAvailable
-                      onOpenIntegrationPreferences={() => {
-                        openPreferences("integrations")
-                      }}
-                    />
-                  ) : selectedPaths.length > 1 ? (
-                    <div className="text-muted-foreground flex flex-1 items-center justify-center">
-                      {t("changes.selectedCount", { count: selectedPaths.length })}
+                                return next
+                              })
+                            }
+                            author={author}
+                            issues={issues}
+                            mentionables={mentionables}
+                            remote={currentRemote ?? null}
+                            onDiscard={path => setDiscarding([path])}
+                            // Desktop _appendIgnoreFile / _appendIgnoreRule：写完 .gitignore 后刷新仓库
+                            onIgnore={(kind, patterns) =>
+                              void run(() =>
+                                kind === "files"
+                                  ? ipc.appendIgnoreFiles(repo, patterns)
+                                  : ipc.appendIgnoreRules(repo, patterns)
+                              )
+                            }
+                            rebaseConflict={status.operation === "rebase"}
+                            externalEditorLabel={editorName}
+                            onBlame={path => setBlaming(path)}
+                            onShowHistory={showFileHistory}
+                            onCommit={doCommit}
+                            onUndoCommit={() => void doUndoCommit()}
+                            mostRecentLocalCommit={mostRecentLocalCommit}
+                            isPushPullFetchInProgress={networkProgress !== null}
+                            onAmend={async (summary, description) => {
+                              return (
+                                (await rewrite(async () => {
+                                  await applySelection(
+                                    repo,
+                                    status.changes.map(file => ({
+                                      file,
+                                      include: stateOf(file.path).include,
+                                      selection: stateOf(file.path).selection
+                                    }))
+                                  )
+                                  return commitWithHooks(callbacks =>
+                                    ipc.amendCommit(repo, summary, description, callbacks)
+                                  )
+                                })) ?? false
+                              )
+                            }}
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="history" keepMounted className="panel data-[hidden]:hidden">
+                          <HistorySidebar
+                            commits={commits}
+                            repo={repo}
+                            fileHistory={
+                              historyFile
+                                ? {
+                                    path: historyFile,
+                                    commits: fileCommits,
+                                    hasMore: fileHistoryMore,
+                                    loadingMore: fileHistoryLoadingMore,
+                                    onLoadMore: loadMoreFileHistory,
+                                    loading: fileHistoryLoading,
+                                    error: fileHistoryError
+                                  }
+                                : null
+                            }
+                            onCloseFileHistory={() => setHistoryFile(null)}
+                            rows={graphRows}
+                            hasMore={!graphDone}
+                            loadingMore={graphLoading}
+                            onLoadMore={loadMoreGraph}
+                            selected={commitSha}
+                            onSelect={selectHistoryCommit}
+                            onRevert={sha => {
+                              const c = commits.find(x => x.sha === sha)
+                              void run(() => ipc.revertCommit(repo, sha, (c?.parentCount ?? 1) > 1))
+                            }}
+                            onCherryPick={sha => void doCherryPickMany([sha])}
+                            onCherryPickMany={shas => void doCherryPickMany(shas)}
+                            onSquashMany={shas => void doSquashMany(shas)}
+                            onSquashOnto={(toSquash, onto) => void doSquash(toSquash, onto)}
+                            onCreateTag={sha => {
+                              void askText(t("history.tagName")).then(name => {
+                                if (!name) return
+                                void run(async () => {
+                                  await ipc.createTag(repo, name, sha)
+                                  useRepositoryStore.getState().addTagToPush(repo, name)
+                                })
+                              })
+                            }}
+                            currentBranch={status.branch}
+                            pushStatus={status}
+                            localCommits={localCommits}
+                            onMerge={b => doMerge(b, false)}
+                            onCompared={setCompared}
+                            onReorder={(shas, row) => void doReorderCommits(shas, row)}
+                            onAmendCommit={(_sha, isLocal) => void startAmending(isLocal)}
+                            onUndoCommit={() => void doUndoCommit()}
+                            unpushedTags={tagsToPush}
+                            onDeleteTag={setDeletingTag}
+                            onCheckoutCommit={commit => {
+                              const oneLine = { sha: commit.sha, summary: commit.summary }
+                              if (confirmCheckoutCommit) useDialogsStore.getState().setCheckingOutCommit(oneLine)
+                              else void doCheckoutCommit(oneLine)
+                            }}
+                            onCreateBranchFromCommit={commit =>
+                              useDialogsStore
+                                .getState()
+                                .setCreateBranchFromCommit({ sha: commit.sha, summary: commit.summary })
+                            }
+                            viewOnLabel={
+                              selectedRemote
+                                ? accounts[selectedRemote.host]?.kind === "gitlab"
+                                  ? t("history.viewOnGitLab")
+                                  : selectedRemote.host === "github.com"
+                                    ? t("history.viewOnGitHub")
+                                    : t("history.viewOnGitHubEnterprise")
+                                : undefined
+                            }
+                            onResetTo={sha => {
+                              // 重置会丢提交，问清楚要哪种：保留改动还是连改动一起丢
+                              void ask(t("history.resetKeepChanges")).then(keep =>
+                                run(() => ipc.resetTo(repo, keep ? "mixed" : "hard", sha))
+                              )
+                            }}
+                            onOpenInBrowser={
+                              remotes[repo ?? ""]
+                                ? sha => {
+                                    const r = remotes[repo ?? ""]
+                                    if (r) void openUrl(`https://${r.host}/${r.owner}/${r.name}/commit/${sha}`)
+                                  }
+                                : undefined
+                            }
+                          />
+                        </TabsContent>
+                      </Tabs>
                     </div>
-                  ) : selectedChange?.submodule ? (
-                    // 子模块不是文件，别拿它做文本 diff
-                    <SubmoduleView
-                      repo={repo}
-                      file={selectedChange}
-                      onOpen={path => {
-                        patch({
-                          repositories: [path, ...state.repositories.filter(r => r !== path)]
-                        })
-                        navigate(routes.repo(path))
-                      }}
-                    />
-                  ) : (
-                    <DiffView
-                      file={selected}
-                      diff={diff}
-                      selection={cur?.selection ?? null}
-                      tokens={tokens}
-                      repo={repo}
-                      status={selectedChange && <ChangeStatusIcon file={selectedChange} />}
-                      lineEndings={lineEndings}
-                      onDiscardLines={(source, lines) => void doDiscardLines(source, lines)}
-                      onSelectionChange={next =>
-                        selected &&
-                        setFiles(prev =>
-                          new Map(prev).set(selected, {
-                            include: next.getSelectionType(),
-                            selection: next,
-                            diff: diff ?? undefined
+                  }>
+                  <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+                    {/* 逐行追溯占的是 diff 的位置：同一个文件，要么看改了什么，
+                    要么看每行是谁改的，不会同时想看 */}
+                    {blaming && repo ? (
+                      <Blame
+                        repo={repo}
+                        file={blaming}
+                        onClose={() => setBlaming(null)}
+                        onSelectCommit={sha => {
+                          setBlaming(null)
+                          patch({ selectedTab: "history" })
+                          setCommitSha(sha)
+                        }}
+                      />
+                    ) : state.selectedTab === "history" ? (
+                      selectedCommit ? (
+                        <CommitDetails
+                          commit={selectedCommit}
+                          details={commitDetails}
+                          remote={remotes[repo ?? ""] ?? null}
+                          platform={accounts[remotes[repo ?? ""]?.host ?? ""]?.kind ?? "github"}
+                          autolinks={state.autolinks}
+                          files={commitFiles}
+                          selected={commitFile}
+                          onSelect={setCommitFile}
+                          onShowHistory={showFileHistory}>
+                          <DiffView
+                            file={commitFile}
+                            diff={commitDiff}
+                            selection={null}
+                            error={null}
+                            tokens={commitTokens}
+                            repo={repo}
+                            sha={commitSha}
+                            oldPath={commitOldPath}
+                            status={commitFileKind && <CommitStatusIcon kind={commitFileKind} />}
+                            readOnly
+                          />
+                        </CommitDetails>
+                      ) : (
+                        <div className="text-muted-foreground flex flex-1 items-center justify-center">
+                          {t("history.selectCommit")}
+                        </div>
+                      )
+                    ) : status.changes.length === 0 ? (
+                      // Desktop repository-view.tsx renderContentForChanges：没有本地改动时内容区是
+                      // NoChanges 空白页，按仓库状态给出接下来能做的事
+                      <NoChanges
+                        repository={{
+                          isHosted: !!remotes[repo ?? ""],
+                          platform: accounts[remotes[repo ?? ""]?.host ?? ""]?.kind ?? "github"
+                        }}
+                        appMenu={appMenu}
+                        repositoryState={{
+                          branch: status.branch,
+                          remote: status.remote,
+                          aheadBehind: status.hasUpstream ? { ahead: status.ahead, behind: status.behind } : null,
+                          tagsToPush,
+                          isForcePush: forcePushBranchState === ForcePushBranchState.Recommended,
+                          defaultBranch,
+                          hasCurrentPullRequest,
+                          isHosted: !!remotes[repo ?? ""],
+                          stashEntry: desktopStashForBranch(stashList, status.branch)
+                        }}
+                        isExternalEditorAvailable
+                        onOpenIntegrationPreferences={() => {
+                          openPreferences("integrations")
+                        }}
+                      />
+                    ) : selectedPaths.length > 1 ? (
+                      <div className="text-muted-foreground flex flex-1 items-center justify-center">
+                        {t("changes.selectedCount", { count: selectedPaths.length })}
+                      </div>
+                    ) : selectedChange?.submodule ? (
+                      // 子模块不是文件，别拿它做文本 diff
+                      <SubmoduleView
+                        repo={repo}
+                        file={selectedChange}
+                        onOpen={path => {
+                          patch({
+                            repositories: [path, ...state.repositories.filter(r => r !== path)]
                           })
-                        )
-                      }
-                      error={null}
-                    />
-                  )}
-                </div>
-              </RepositorySplit>
+                          navigate(routes.repo(path))
+                        }}
+                      />
+                    ) : (
+                      <DiffView
+                        file={selected}
+                        diff={diff}
+                        selection={cur?.selection ?? null}
+                        tokens={tokens}
+                        repo={repo}
+                        status={selectedChange && <ChangeStatusIcon file={selectedChange} />}
+                        lineEndings={lineEndings}
+                        onDiscardLines={(source, lines) => void doDiscardLines(source, lines)}
+                        onSelectionChange={next =>
+                          selected &&
+                          setFiles(prev =>
+                            new Map(prev).set(selected, {
+                              include: next.getSelectionType(),
+                              selection: next,
+                              diff: diff ?? undefined
+                            })
+                          )
+                        }
+                        error={null}
+                      />
+                    )}
+                  </div>
+                </RepositorySplit>
+              )}
             </>
           )}
         </div>

@@ -27,6 +27,7 @@ import { createCoalescingRunner } from "@/lib/coalescing-runner"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import type { IMentionableUser } from "@/lib/databases/github-user-database"
 import { contributionRepository } from "@/lib/fork-contribution"
+import { getRepositoryType } from "@/lib/repository-access"
 import { toPresentableError } from "@/lib/presentable-error"
 import type { Issue, LfsState, Remote, StashEntry } from "@/models/app-state"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
@@ -89,6 +90,11 @@ interface RepositoryStore {
   /** 状态返回后加一：选中文件的 diff 跟着刷新后的状态取（Desktop 在 loadStatus 之后才重新加载 diff） */
   diffKey: number
   error: string | null
+  /** Desktop _updateRepositoryMissing：当前仓库的路径没了或不再是可读的仓库，界面换成 MissingRepository */
+  missing: boolean
+  /** Desktop refreshBranchProtectionState：推送、拉取、获取之后加一，分支保护与规则重读 */
+  branchProtectionKey: number
+  refreshBranchProtection: () => void
   busy: boolean
   progress: string
   /** 推送、拉取、获取进行中（Desktop networkActionInProgress 与 pushPullFetchProgress） */
@@ -140,7 +146,9 @@ interface RepositoryStore {
   setStatus: (next: Updater<RepoStatus>) => void
   /** Desktop buildAutocompletionProviders：Issue 与用户都取贡献目标（fork 为上游贡献时是上游） */
   loadCompletions: (repo: string | null, remote: Remote | null | undefined) => () => void
-  loadAuthor: () => void
+  /** Desktop _refreshAuthor（getAuthorIdentity(repository)）：按仓库读，仓库自己的 user.name/email 优先。
+   *  Desktop 每次刷新都读；这里在换仓库时读——按仓库读要合并系统/全局/本地配置，只能起 git 进程，不放进每次刷新 */
+  loadAuthor: (repo: string | null) => () => void
 }
 
 let locked = false
@@ -161,6 +169,7 @@ const refreshRepository = (repo: string | null) =>
     if (repo !== activeRepository()) return
     useAccountsStore.getState().setRemote(repo, remote)
     // 文件监听在构建这类场景下会反复触发刷新；内容没变就不换对象，改动列表不白重绘
+    if (getState().missing) setState({ missing: false })
     if (!equal(getState().status, next)) setState({ status: next })
     getDesktopRuntime().appStore.updateSelectedRepositoryIndicator(repo, {
       aheadBehind: next.hasUpstream ? { ahead: next.ahead, behind: next.behind } : null,
@@ -187,8 +196,12 @@ const refreshRepository = (repo: string | null) =>
     for (const tag of getState().tagsToPush) if (!localTags.has(tag)) getState().removeTagToPush(repo, tag)
   }).pipe(
     Effect.catch(error =>
-      Effect.sync(() => {
-        if (repo === activeRepository()) useRepositoryStore.setState({ error: describeError(error) })
+      Effect.gen(function* () {
+        // Desktop _refreshRepository：路径不存在或 status 读不出来时标记 missing，而不是报 git 原文
+        const type = repo ? yield* Effect.promise(() => getRepositoryType(repo).catch(() => null)) : null
+        if (repo !== activeRepository()) return
+        if (type && type.kind !== "regular") useRepositoryStore.setState({ missing: true, error: null })
+        else useRepositoryStore.setState({ error: describeError(error) })
       })
     )
   )
@@ -203,6 +216,9 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   reloadKey: 0,
   diffKey: 0,
   error: null,
+  missing: false,
+  branchProtectionKey: 0,
+  refreshBranchProtection: () => set(store => ({ branchProtectionKey: store.branchProtectionKey + 1 })),
   busy: false,
   progress: "",
   networkProgress: null,
@@ -271,6 +287,7 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
   },
   reset: () =>
     set({
+      missing: false,
       status: EMPTY_STATUS,
       stashList: [],
       lfs: null,
@@ -368,14 +385,13 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
       }).pipe(Effect.catch(() => Effect.void))
     )
   },
-  loadAuthor: () => {
+  loadAuthor: repo =>
     forkCancelable(
-      call("gitIdentity", ipc => ipc.gitIdentity()).pipe(
+      call("gitIdentity", ipc => ipc.gitIdentity(repo ?? undefined)).pipe(
         Effect.match({
           onFailure: () => set({ author: { name: "", email: "" } }),
           onSuccess: author => set({ author })
         })
       )
     )
-  }
 }))

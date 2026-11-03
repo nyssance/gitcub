@@ -31,6 +31,9 @@ interface Props {
   /** 历史页「Amend Commit…」请求进入修订（Desktop startAmendingRepository）；处理后调 onAmendRequestHandled 清掉 */
   amendRequested: boolean
   onAmendRequestHandled: () => void
+  /** Desktop _undoCommit 切到 Changes 页后由这里撤销 HEAD；处理后调 onUndoRequestHandled 清掉 */
+  undoRequested: boolean
+  onUndoRequestHandled: () => void
   repo: string
   branch: string | null
   changes: FileChange[]
@@ -129,22 +132,60 @@ export function DesktopCommitForm(props: Props) {
       setBusy(false)
     }
   }
+  // 载回合著者时从当前列表补全用户名（git-store loadCommitAndCoAuthors 读 this.coAuthors）
+  const coAuthorState = useRef({ coAuthors, showCoAuthors })
+  coAuthorState.current = { coAuthors, showCoAuthors }
   const { amendRequested, onAmendRequestHandled } = props
   useEffect(() => {
     if (!amendRequested) return
     onAmendRequestHandled()
     // 请求清掉会让这个 effect 重跑，不能拿它来作废结果；换了仓库才作废
+    // Desktop git-store prepareToAmendCommit：提交信息连同 Co-Authored-By 合著者一起载回
+    const gitStore = runtime.appStore.gitStoreFor(repository)
+    gitStore.setCoAuthors(coAuthorState.current.coAuthors)
+    gitStore.setShowCoAuthoredBy(coAuthorState.current.showCoAuthors)
     void getCommits(repository, "HEAD", 1)
-      .then(([commit]) => {
-        if (currentRepository.current === repository && commit) {
-          setAmending(commit)
-          setMessage({ summary: commit.summary, description: commit.bodyNoCoAuthors, timestamp: Date.now() })
-        }
+      .then(async ([commit]) => {
+        if (!commit) return
+        await gitStore.prepareToAmendCommit(commit)
+        if (currentRepository.current !== repository) return
+        setAmending(commit)
+        setMessage(gitStore.commitMessage)
+        setCoAuthors(gitStore.coAuthors)
+        setShowCoAuthors(gitStore.showCoAuthoredBy)
       })
       .catch(error => {
         if (currentRepository.current === repository) setError(String(error))
       })
-  }, [amendRequested, onAmendRequestHandled, repository])
+  }, [amendRequested, onAmendRequestHandled, repository, runtime])
+  const { undoRequested, onUndoRequestHandled } = props
+  useEffect(() => {
+    if (!undoRequested) return
+    onUndoRequestHandled()
+    // Desktop git-store undoCommit：首个提交删掉分支引用，其余 reset --mixed 到父提交；
+    // 然后把提交信息与 Co-Authored-By 合著者放回提交框（合著者从当前的列表里补全用户名）
+    const gitStore = runtime.appStore.gitStoreFor(repository)
+    gitStore.setCoAuthors(coAuthorState.current.coAuthors)
+    gitStore.setShowCoAuthoredBy(coAuthorState.current.showCoAuthors)
+    void useRepositoryStore.getState().run(async () => {
+      const [commit] = await getCommits(repository, "HEAD", 1)
+      if (!commit) return
+      let failure = null as Error | null
+      const subscription = gitStore.onDidError(error => {
+        failure = error
+      })
+      try {
+        await gitStore.undoCommit(commit)
+      } finally {
+        subscription.dispose()
+      }
+      if (failure) throw failure
+      if (currentRepository.current !== repository) return
+      setMessage(gitStore.commitMessage)
+      setCoAuthors(gitStore.coAuthors)
+      setShowCoAuthors(gitStore.showCoAuthoredBy)
+    })
+  }, [undoRequested, onUndoRequestHandled, repository, runtime])
   return (
     <>
       {error && <InlineError error={error} />}

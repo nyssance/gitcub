@@ -46,6 +46,10 @@ interface ChangesStore {
   amendRequest: string | null
   requestAmend: (repo: string) => void
   consumeAmendRequest: () => void
+  /** Desktop _undoCommit：先切到 Changes 页，提交框再撤销 HEAD 并载回它的提交信息与合著者（git-store undoCommit） */
+  undoRequest: string | null
+  requestUndo: (repo: string) => void
+  consumeUndoRequest: () => void
   reset: () => void
   setSelected: (next: Updater<string | null>) => void
   setFileSelection: (selection: FileSelection) => void
@@ -60,6 +64,9 @@ export const useChangesStore = create<ChangesStore>()(set => ({
   amendRequest: null,
   requestAmend: repo => set({ amendRequest: repo }),
   consumeAmendRequest: () => set({ amendRequest: null }),
+  undoRequest: null,
+  requestUndo: repo => set({ undoRequest: repo }),
+  consumeUndoRequest: () => set({ undoRequest: null }),
   selected: null,
   fileSelection: { repo: null, anchor: null, paths: [] },
   files: new Map(),

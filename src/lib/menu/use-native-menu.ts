@@ -18,8 +18,8 @@ import { type MenuTemplate, updateNativeMenu } from "./native-menu"
 import { type NativeMenuContext, repositoryMenuState } from "./repository-menu-state"
 import { snapshotMenu } from "./snapshot"
 
-export function useNativeMenu(context: NativeMenuContext) {
-  const { state, status, busy, remote, stashesVisible, filterVisible, hasStashes, platform } = context
+export function useNativeMenu(context: NativeMenuContext & { hasBranchStash: boolean }) {
+  const { state, status, busy, remote, stashesVisible, filterVisible, hasStashes, platform, hasBranchStash } = context
   // 调用方每次渲染都传一个新的 context 对象；菜单只随这些字段变，不随对象身份变。
   // 2026-10-30：下面的 effect 曾直接依赖 context，而它里面的 setAppMenu 每次都放新对象，
   // 任何一次 App 重渲染都会再触发一次 effect → 再 setAppMenu → 再渲染，PR 列表一有行就把页面卡死。
@@ -42,9 +42,10 @@ export function useNativeMenu(context: NativeMenuContext) {
   const repo = state?.selectedRepository
   const forcePushBranches = useRepositoryStore(s => (repo ? s.forcePushBranches[repo] : undefined))
   const askForConfirmationOnForcePush = usePreferencesStore(s => s.confirmForcePush)
-  // Desktop menu-update：isForcePushForCurrentRepository = forcePushBranchState === Recommended
+  // Desktop updateMenuItemLabels：From the menu, we'll offer to force-push whenever it's possible, regardless
+  // of whether or not the user performed any action we know would be followed by a force-push.
   const isForcePushForCurrentRepository =
-    getCurrentBranchForcePushState(status, forcePushBranches) === ForcePushBranchState.Recommended
+    getCurrentBranchForcePushState(status, forcePushBranches) !== ForcePushBranchState.NotAvailable
   const [defaultBranch, setDefaultBranch] = useState<string>()
   const [hasCurrentPullRequest, setHasCurrentPullRequest] = useState(false)
   // Desktop AppMenu 模型：空白页的建议动作按菜单 id 找标签、快捷键和可用性
@@ -99,7 +100,8 @@ export function useNativeMenu(context: NativeMenuContext) {
       selectedShell: shellName || null,
       askForConfirmationOnForcePush,
       askForConfirmationOnRepositoryRemoval: true,
-      askForConfirmationWhenStashingAllChanges: false,
+      // Desktop：changesState.stashEntry !== null（当前分支已有贮藏，「贮藏全部更改…」会先确认覆盖）
+      askForConfirmationWhenStashingAllChanges: hasBranchStash,
       isStashedChangesVisible: stashesVisible,
       isChangesFilterVisible: filterVisible,
       contributionTargetDefaultBranch: defaultBranch,
@@ -163,7 +165,8 @@ export function useNativeMenu(context: NativeMenuContext) {
     editorName,
     shellName,
     askForConfirmationOnForcePush,
-    isForcePushForCurrentRepository
+    isForcePushForCurrentRepository,
+    hasBranchStash
   ])
   // 设置里选的编辑器名：改动行右键菜单的「用 … 打开」和原生菜单用同一个；
   // 菜单模型、默认分支和「当前分支已有 PR」给空白页的建议动作

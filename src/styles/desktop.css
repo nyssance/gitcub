@@ -1120,3 +1120,46 @@ svg.avatar {
   top: 5px;
   box-shadow: 1px 1px 1px 1px var(--border);
 }
+
+/* Desktop _missing-repository-view.scss：仓库路径没了时的视图，居中在约 40% 高度处 */
+#missing-repository-view {
+  justify-content: center;
+  align-self: center;
+  width: 600px;
+  margin-top: -60px;
+  padding: 20px;
+  align-items: center;
+}
+
+#missing-repository-view .title-container {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#missing-repository-view .title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 32px;
+  font-weight: 300;
+}
+
+#missing-repository-view .details {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#missing-repository-view .details .path {
+  font-family: var(--font-mono);
+  background: var(--suggested-action-primary);
+  border-radius: 6px;
+  padding: calc(10px / 3);
+}
+
+#missing-repository-view button {
+  min-width: 120px;
+}
