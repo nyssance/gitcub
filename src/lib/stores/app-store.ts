@@ -1,4 +1,5 @@
 import equal from "deep-equal"
+
 // Desktop MIT application coordination: account lifecycle and
 // repository indicators extracted with their complete dependency closure.
 // Window/layout and other UI workflows are owned by GitCub's React application.
@@ -201,6 +202,7 @@ export class AppStore extends BaseStore {
     this.subscriptions.push(
       this.repositoriesStore.onDidUpdate(repositories => {
         this.repositories = repositories
+        void this.refreshMissingLocalIndicators()
         if (this.selectedRepository instanceof Repository) {
           // Desktop updateRepositorySelectionAfterRepositoriesChanged: a changed hash (e.g. the
           // GitHub association just matched) re-selects, which restarts the background fetcher.
@@ -286,6 +288,36 @@ export class AppStore extends BaseStore {
       })
       this.emitUpdate()
     }
+  }
+
+  private localIndicatorPass: Promise<void> | null = null
+
+  /** GitCub 差异：Desktop 第一轮指示要等 InitialRepositoryIndicatorTimeout（2 分钟）。圆点只看本地
+   *  status，GitCub 的 status 走 gix（docs/benchmarks.md 单仓库 3–16 ms），所以仓库列表一到就逐个读
+   *  还没有记录的仓库；不联网，后台 fetch 仍走 RepositoryIndicatorUpdater 的 2 分钟／15 分钟节奏。 */
+  private refreshMissingLocalIndicators(): Promise<void> {
+    if (this.localIndicatorPass) return this.localIndicatorPass
+    const run = async () => {
+      const done = new Set<number>()
+      const next = () =>
+        this.repositoryIndicatorsEnabled
+          ? this.getRepositoriesForIndicatorRefresh().find(
+              r => !done.has(r.id) && !r.missing && !this.localRepositoryStateLookup.has(r.id)
+            )
+          : undefined
+      for (let repository = next(); repository; repository = next()) {
+        done.add(repository.id)
+        if (!(await pathExists(repository.path))) continue
+        const status = await this.gitStoreCache.get(repository).loadStatus()
+        if (status === null || this.localRepositoryStateLookup.has(repository.id)) continue
+        this.updateSidebarIndicator(repository, status)
+        this.emitUpdate()
+      }
+    }
+    this.localIndicatorPass = run().finally(() => {
+      this.localIndicatorPass = null
+    })
+    return this.localIndicatorPass
   }
 
   /**
@@ -613,6 +645,7 @@ export class AppStore extends BaseStore {
     setBoolean(repositoryIndicatorsEnabledKey, repositoryIndicatorsEnabled)
     this.repositoryIndicatorsEnabled = repositoryIndicatorsEnabled
     if (repositoryIndicatorsEnabled) {
+      void this.refreshMissingLocalIndicators()
       this.repositoryIndicatorUpdater.start()
     } else {
       this.repositoryIndicatorUpdater.stop()
