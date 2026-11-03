@@ -149,8 +149,8 @@ test("a partial-clone history fetch cannot block navigation or other native comm
     // 2026-10-22; the hosted repository tabs now live under the GitCub header.
     await page.locator('.repository-rail [data-slot="sidebar-header"] button:has-text("GitCub")').click()
     await page.waitForSelector('[role="tablist"][aria-label="Discover"]', { state: "visible" })
-    // A local repository without a remote is listed under "Third-party".
-    await page.locator('[data-slot="tabs-trigger"]:has-text("Third-party")').click()
+    // A local repository without a remote is listed under the "Other" tab.
+    await page.locator('[data-slot="tabs-trigger"]:has-text("Other")').click()
     await page.locator(`button:has-text("${smokeRepoName}")`).click()
     assert.equal(await page.evaluate(() => !window.__blockedHistory.done), true)
     assert.ok(Date.now() - before < 5000, "navigation must finish before the blocked fetch returns")

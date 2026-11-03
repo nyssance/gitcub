@@ -3,7 +3,6 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   BellIcon,
-  ChevronDownIcon,
   DotFillIcon,
   FlameIcon,
   GearIcon,
@@ -12,14 +11,14 @@ import {
   SearchIcon
 } from "@primer/octicons-react"
 import { openUrl } from "@tauri-apps/plugin-opener"
-import { UserIcon } from "lucide-react"
-import { type CSSProperties, useMemo, useState } from "react"
+import { FolderIcon, UserIcon } from "lucide-react"
+import { type CSSProperties, type ReactNode, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { siGithub, siGitlab, type SimpleIcon } from "simple-icons"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -44,7 +43,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuAction,
@@ -75,36 +73,28 @@ import { InlineError } from "@/ui/shared/inline-error"
  * 归属先按 origin 的 owner 跟账号 login 比，用户可以右键改，手动结果优先。 */
 
 const nameOf = (p: string) => p.split("/").findLast(Boolean) ?? p
-type Tab = "mine" | "third"
+type Tab = "github" | "gitlab" | "other"
 
-/** 分组标题：公有实例给品牌名，自建实例就写主机名——「其他」什么都没说明。 */
-const hostLabel = (host: string) => {
-  if (host === "github.com") return "GitHub"
-  if (host === "gitlab.com") return "GitLab"
-  return host
+/** 页签：GitHub、GitLab 各含自建实例（平台取自账号记录），没有托管远端或认不出平台的归「其他」。 */
+const platformOf = (remote: Remote | null, accounts: Accounts): Tab => {
+  if (!remote) return "other"
+  const host = remote.host.toLowerCase()
+  const kind = host === "github.com" ? "github" : host === "gitlab.com" ? "gitlab" : accounts[remote.host]?.kind
+  return kind ?? "other"
+}
+
+/** simple-icons 的品牌图形，跟随文字颜色 */
+function BrandIcon({ icon }: { icon: SimpleIcon }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-current">
+      <path d={icon.path} />
+    </svg>
+  )
 }
 
 /** 自动判定：origin 的 owner 命中你在那个 host 上的命名空间（登录名或你所属的
  *  组织/群组）就是自己的。只比登录名不够——自己的项目常常挂在组织下。
  *  判不出来（没 origin、没凭据、离线）一律当第三方。 */
-/** 托管平台本身按 owner 分组的域名（Desktop isDotCom，加上 gitlab.com） */
-const ownerGroupedHosts = new Set(["github.com", "gitlab.com"])
-type ParsedGroupKey =
-  { kind: "owner"; host: string; owner: string } | { kind: "host"; host: string } | { kind: "other" }
-/** Desktop getGroupKey 的顺序：1 owner、2 实例、3 其他；键里的 \0 只作分隔 */
-const groupKey = (remote: Remote | null) => {
-  if (!remote) return "3:other"
-  const host = remote.host.toLowerCase()
-  return ownerGroupedHosts.has(host) ? `1:${remote.owner.split("/")[0]}\0${host}` : `2:${host}`
-}
-const parseGroupKey = (key: string): ParsedGroupKey => {
-  if (key.startsWith("1:")) {
-    const [owner, host] = key.slice(2).split("\0")
-    return { kind: "owner", owner, host }
-  }
-  return key.startsWith("2:") ? { kind: "host", host: key.slice(2) } : { kind: "other" }
-}
-
 const autoOwnership = (remote: Remote | null, accounts: Accounts): Ownership => {
   if (!remote) return "third"
   const account = accounts[remote.host]
@@ -190,9 +180,8 @@ export function RepositoryRail({
   onSyncUpstream
 }: Props) {
   const { t, i18n } = useTranslation()
-  const [tab, setTab] = useState<Tab>("mine")
+  const [tab, setTab] = useState<Tab>("github")
   const [q, setQ] = useState("")
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const indicators = useRepositoryIndicatorsStore(s => s.byPath)
   const status = useRepositoryStore(s => s.status)
   // 当前仓库不归后台刷新管（Desktop getRepositoriesForIndicatorRefresh 排除了它），用工作区状态
@@ -205,51 +194,31 @@ export function RepositoryRail({
       : indicators[r]
   const buckets = useMemo(() => {
     const query = q.trim().toLowerCase()
-    // 分组照 Desktop repository-list-grouping 的 getGroupKey：github.com 与 gitlab.com 按 owner
-    // （GitLab 取顶层命名空间，子组归到所属组），自建实例按 host（Desktop 的 enterprise），没有 origin 的归「其他」。
-    // 键同时是排序键，组内按仓库名排。没有 origin 的纯本地仓无法判断归属，列在「第三方」
-    const mine = new Map<string, string[]>()
-    const third = new Map<string, string[]>()
+    // 每个页签平铺：自己的在前，别人的在后，各自按仓库名排
+    const lists: Record<Tab, { path: string; mine: boolean; owner: string | null }[]> = {
+      github: [],
+      gitlab: [],
+      other: []
+    }
     for (const r of repositories) {
       if (remoteErrors?.[r] && !remotes[r] && !ownership[r]) continue
       if (query && !nameOf(r).toLowerCase().includes(query) && !r.toLowerCase().includes(query)) {
         continue
       }
       const remote = remotes[r] ?? null
-      const who = ownership[r] ?? autoOwnership(remote, accounts)
-      const target = who === "mine" ? mine : third
-      const key = groupKey(remote)
-      const list = target.get(key)
-      if (list) list.push(r)
-      else target.set(key, [r])
+      const mine = (ownership[r] ?? autoOwnership(remote, accounts)) === "mine"
+      lists[platformOf(remote, accounts)].push({ path: r, mine, owner: remote?.owner ?? null })
     }
-    const sorted = (groups: Map<string, string[]>) =>
-      [...groups.entries()]
-        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-        .map(([key, list]) => [key, list.toSorted((a, b) => nameOf(a).localeCompare(nameOf(b)))] as const)
-    return { mine: sorted(mine), third: sorted(third) }
+    for (const list of Object.values(lists))
+      list.sort((a, b) => Number(b.mine) - Number(a.mine) || nameOf(a.path).localeCompare(nameOf(b.path)))
+    return lists
   }, [repositories, remotes, remoteErrors, accounts, ownership, q])
 
-  const mineCount = buckets.mine.reduce((n, [, list]) => n + list.length, 0)
-  // 同名 owner 出现在两个托管平台时，组名补上平台
-  const ownerHosts = new Map<string, Set<string>>()
-  for (const [key] of [...buckets.mine, ...buckets.third]) {
-    const parsed = parseGroupKey(key)
-    if (parsed.kind === "owner")
-      ownerHosts.set(parsed.owner, (ownerHosts.get(parsed.owner) ?? new Set()).add(parsed.host))
-  }
-  const groupLabel = (key: string) => {
-    const parsed = parseGroupKey(key)
-    if (parsed.kind === "other") return t("rail.other")
-    if (parsed.kind === "host") return hostLabel(parsed.host)
-    return (ownerHosts.get(parsed.owner)?.size ?? 0) > 1 ? `${parsed.owner} · ${hostLabel(parsed.host)}` : parsed.owner
-  }
   const accountState = accountEmptyState(accounts)
   const remoteError = repositories.map(path => remoteErrors?.[path]).find(Boolean)
 
-  /** 一行一个仓库。不写第二行 owner：「我的」那页都是你自己的，
-   *  「第三方」那页 owner 也不值得占一整行——想看完整路径 hover 就有。 */
-  const row = (r: string) => (
+  /** 一行一个仓库。别人的仓库名字用浅色，后面带 owner 小标签；完整路径 hover 就有。 */
+  const row = ({ path: r, mine, owner }: { path: string; mine: boolean; owner: string | null }) => (
     <SidebarMenuItem key={r}>
       <ContextMenu>
         <ContextMenuTrigger
@@ -261,7 +230,14 @@ export function RepositoryRail({
               onClick={() => onNavigate(routes.repo(r))}
               aria-current={!trendingActive && route.kind === "repo" && r === current ? "page" : undefined}
               className="w-full justify-start">
-              <span className="min-w-0 flex-1 truncate text-left">{nameOf(r)}</span>
+              <span className={`min-w-0 flex-1 truncate text-left ${mine ? "" : "text-muted-foreground"}`}>
+                {nameOf(r)}
+              </span>
+              {!mine && owner && (
+                <Badge variant="outline" className="text-muted-foreground max-w-24 shrink truncate px-1.5 font-normal">
+                  {owner}
+                </Badge>
+              )}
               <RepoIndicators state={indicatorOf(r)} />
             </SidebarMenuButton>
           }
@@ -289,36 +265,40 @@ export function RepositoryRail({
     </SidebarMenuItem>
   )
 
-  const group = (key: string, list: readonly string[]) => {
-    if (list.length === 0) return null
-    const open = !collapsed[key]
-    const label = groupLabel(key)
-    return (
-      <Collapsible
-        key={key}
-        open={open}
-        onOpenChange={value => setCollapsed(prev => ({ ...prev, [key]: !value }))}
-        className="group/collapsible">
-        <SidebarGroup>
-          <SidebarGroupLabel render={<CollapsibleTrigger />} className="gap-2">
-            <span className="min-w-0 flex-1 truncate text-left">{label}</span>
-            <Badge variant="secondary">{list.length}</Badge>
-            <ChevronDownIcon className="-rotate-90 transition-transform group-data-open/collapsible:rotate-0" />
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu>{list.map(r => row(r))}</SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    )
-  }
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "mine", label: t("rail.mine") },
-    { key: "third", label: t("rail.thirdParty") }
+  const tabs: { key: Tab; label: string; icon: ReactNode }[] = [
+    { key: "github", label: "GitHub", icon: <BrandIcon icon={siGithub} /> },
+    { key: "gitlab", label: "GitLab", icon: <BrandIcon icon={siGitlab} /> },
+    { key: "other", label: t("rail.other"), icon: <FolderIcon className="size-4" aria-hidden /> }
   ]
+
+  /** 托管平台的页签空着时别给一张白板：没登录就给登录入口，账号验证失败（断网、令牌被拒）说明原因，入口是设置。 */
+  const empty = (key: Tab) =>
+    key === "other" || accountState.kind === "signedIn" ? (
+      <Empty className="px-2 py-6">
+        <EmptyHeader>
+          <EmptyTitle className="text-xs">{t("noRepositories")}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    ) : (
+      <Empty className="px-2 py-6">
+        <EmptyHeader>
+          <EmptyTitle className="text-xs">
+            {accountState.kind === "failed"
+              ? t("rail.accountFailedTitle", { host: accountState.host })
+              : t("rail.signedOutTitle")}
+          </EmptyTitle>
+          <EmptyDescription className="text-[11px] wrap-anywhere">
+            {accountState.kind === "failed" ? accountState.error : t("rail.signedOutHint")}
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button size="sm" onClick={() => onNavigate(routes.settings())}>
+            {accountState.kind === "failed" ? <GearIcon size={16} /> : <MarkGithubIcon size={16} />}
+            {accountState.kind === "failed" ? t("rail.openSettings") : t("rail.signInWithGitHub")}
+          </Button>
+        </EmptyContent>
+      </Empty>
+    )
 
   return (
     <SidebarProvider className="h-full min-h-0 w-60 shrink-0" style={{ "--sidebar-width": "15rem" } as CSSProperties}>
@@ -407,56 +387,32 @@ export function RepositoryRail({
           }}>
           <TabsList className="mx-2 mb-2 w-auto shrink-0" aria-label={t("rail.repositories")}>
             {tabs.map(it => (
-              <TabsTrigger key={it.key} value={it.key}>
-                {it.label}
+              <TabsTrigger key={it.key} value={it.key} title={it.label}>
+                {it.icon}
+                <span className="sr-only">{it.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
-          <TabsContent value="mine" className="min-h-0 overflow-hidden">
-            {remoteError && <InlineError error={remoteError} />}
-            <ScrollArea className="h-full">
-              <nav aria-label={t("rail.mine")}>
-                {mineCount === 0 && remoteError ? null : mineCount === 0 ? (
-                  /* 「我的」空着的时候别给一张白板：没登录就给登录入口，
-               登录了还空就说清楚该怎么办（右键手动移）。
-               账号验证失败（断网、令牌被拒）不是没登录：说明原因，入口是设置。 */
-                  <Empty className="px-2 py-6">
-                    <EmptyHeader>
-                      <EmptyTitle className="text-xs">
-                        {accountState.kind === "signedIn"
-                          ? t("rail.emptyMine")
-                          : accountState.kind === "failed"
-                            ? t("rail.accountFailedTitle", { host: accountState.host })
-                            : t("rail.signedOutTitle")}
-                      </EmptyTitle>
-                      <EmptyDescription className="text-[11px] wrap-anywhere">
-                        {accountState.kind === "signedIn"
-                          ? t("rail.emptyMineHint")
-                          : accountState.kind === "failed"
-                            ? accountState.error
-                            : t("rail.signedOutHint")}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    {accountState.kind !== "signedIn" && (
-                      <EmptyContent>
-                        <Button size="sm" onClick={() => onNavigate(routes.settings())}>
-                          {accountState.kind === "failed" ? <GearIcon size={16} /> : <MarkGithubIcon size={16} />}
-                          {accountState.kind === "failed" ? t("rail.openSettings") : t("rail.signInWithGitHub")}
-                        </Button>
-                      </EmptyContent>
-                    )}
-                  </Empty>
-                ) : (
-                  buckets.mine.map(([key, list]) => group(key, list))
-                )}
-              </nav>
-            </ScrollArea>
-          </TabsContent>
-          <TabsContent value="third" className="min-h-0 overflow-hidden">
-            <ScrollArea className="h-full">
-              <nav aria-label={t("rail.thirdParty")}>{buckets.third.map(([key, list]) => group(key, list))}</nav>
-            </ScrollArea>
-          </TabsContent>
+          {tabs.map(it => (
+            <TabsContent key={it.key} value={it.key} className="min-h-0 overflow-hidden">
+              {it.key !== "other" && remoteError && <InlineError error={remoteError} />}
+              <ScrollArea className="h-full">
+                <nav aria-label={it.label}>
+                  {buckets[it.key].length === 0 ? (
+                    it.key !== "other" && remoteError ? null : (
+                      empty(it.key)
+                    )
+                  ) : (
+                    <SidebarGroup>
+                      <SidebarGroupContent>
+                        <SidebarMenu>{buckets[it.key].map(row)}</SidebarMenu>
+                      </SidebarGroupContent>
+                    </SidebarGroup>
+                  )}
+                </nav>
+              </ScrollArea>
+            </TabsContent>
+          ))}
         </Tabs>
 
         {/* 栏底：用户。设置在它弹出的菜单里——照 alwith-desktop 的

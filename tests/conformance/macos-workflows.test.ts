@@ -756,6 +756,22 @@ test("repository rail marks uncommitted changes in the selected repository", asy
   await dot.waitFor({ state: git("status", "--porcelain") ? "visible" : "hidden" })
 })
 
+/** 页签按平台：GitHub、GitLab 与「其他」。冒烟仓库的 origin 是本地路径，没有托管远端，列在「其他」。 */
+test("repository rail lists a repository without a hosted origin under the Other tab", async ({ mainWindow: page }) => {
+  const main = realpathSync(smokeRepoPath)
+  await clickRailRepository(page, main)
+  const tabOf = (path: string) =>
+    page.evaluate(
+      path =>
+        document
+          .querySelector(`button[title="${CSS.escape(path)}"]`)
+          ?.closest("nav")
+          ?.getAttribute("aria-label") ?? null,
+      path
+    )
+  await expect.poll(() => tabOf(main)).toBe("Other")
+})
+
 /** 差异设置在齿轮弹层里（Desktop diff-options.tsx）：打开、点选项、再点齿轮关上。 */
 async function setDiffOption(page: Page, label: string) {
   const gear = page.locator('button[aria-label="Diff Settings"]')
@@ -800,7 +816,7 @@ async function startAmendingFromHistory(page: Page) {
 async function clickRailRepository(page: Page, path: string) {
   const button = page.locator(`button[title="${path}"]`)
   if (!(await button.isVisible())) {
-    await page.locator('[data-slot="tabs-trigger"]:has-text("Third-party")').click()
+    await page.locator('[data-slot="tabs-trigger"]:has-text("Other")').click()
     await button.waitFor({ state: "visible" })
   }
   await button.click()
