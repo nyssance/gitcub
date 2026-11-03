@@ -54,7 +54,7 @@
     "signInWithGitHub": "Sign in with GitHub",
     "emptyMine": "No repositories of yours",
     "emptyMineHint": "Right-click a repository to move it here",
-    "local": "Local",
+    "other": "Other",
     "discover": "Discover",
     "openInEditor": "Open in editor",
     "openInTerminal": "Open in terminal",

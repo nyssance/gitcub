@@ -87,6 +87,24 @@ const hostLabel = (host: string) => {
 /** 自动判定：origin 的 owner 命中你在那个 host 上的命名空间（登录名或你所属的
  *  组织/群组）就是自己的。只比登录名不够——自己的项目常常挂在组织下。
  *  判不出来（没 origin、没凭据、离线）一律当第三方。 */
+/** 托管平台本身按 owner 分组的域名（Desktop isDotCom，加上 gitlab.com） */
+const ownerGroupedHosts = new Set(["github.com", "gitlab.com"])
+type ParsedGroupKey =
+  { kind: "owner"; host: string; owner: string } | { kind: "host"; host: string } | { kind: "other" }
+/** Desktop getGroupKey 的顺序：1 owner、2 实例、3 其他；键里的 \0 只作分隔 */
+const groupKey = (remote: Remote | null) => {
+  if (!remote) return "3:other"
+  const host = remote.host.toLowerCase()
+  return ownerGroupedHosts.has(host) ? `1:${remote.owner.split("/")[0]}\0${host}` : `2:${host}`
+}
+const parseGroupKey = (key: string): ParsedGroupKey => {
+  if (key.startsWith("1:")) {
+    const [owner, host] = key.slice(2).split("\0")
+    return { kind: "owner", owner, host }
+  }
+  return key.startsWith("2:") ? { kind: "host", host: key.slice(2) } : { kind: "other" }
+}
+
 const autoOwnership = (remote: Remote | null, accounts: Accounts): Ownership => {
   if (!remote) return "third"
   const account = accounts[remote.host]
@@ -187,9 +205,11 @@ export function RepositoryRail({
       : indicators[r]
   const buckets = useMemo(() => {
     const query = q.trim().toLowerCase()
-    // 「我的」按 host 分组；没有 origin 的纯本地仓无法判断归属，列在「第三方」
+    // 分组照 Desktop repository-list-grouping 的 getGroupKey：github.com 与 gitlab.com 按 owner
+    // （GitLab 取顶层命名空间，子组归到所属组），自建实例按 host（Desktop 的 enterprise），没有 origin 的归「其他」。
+    // 键同时是排序键，组内按仓库名排。没有 origin 的纯本地仓无法判断归属，列在「第三方」
     const mine = new Map<string, string[]>()
-    const third: string[] = []
+    const third = new Map<string, string[]>()
     for (const r of repositories) {
       if (remoteErrors?.[r] && !remotes[r] && !ownership[r]) continue
       if (query && !nameOf(r).toLowerCase().includes(query) && !r.toLowerCase().includes(query)) {
@@ -197,19 +217,33 @@ export function RepositoryRail({
       }
       const remote = remotes[r] ?? null
       const who = ownership[r] ?? autoOwnership(remote, accounts)
-      if (who !== "mine") {
-        third.push(r)
-        continue
-      }
-      const key = remote?.host ?? ""
-      const list = mine.get(key)
+      const target = who === "mine" ? mine : third
+      const key = groupKey(remote)
+      const list = target.get(key)
       if (list) list.push(r)
-      else mine.set(key, [r])
+      else target.set(key, [r])
     }
-    return { mine: [...mine.entries()].toSorted(([a], [b]) => a.localeCompare(b)), third }
+    const sorted = (groups: Map<string, string[]>) =>
+      [...groups.entries()]
+        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([key, list]) => [key, list.toSorted((a, b) => nameOf(a).localeCompare(nameOf(b)))] as const)
+    return { mine: sorted(mine), third: sorted(third) }
   }, [repositories, remotes, remoteErrors, accounts, ownership, q])
 
   const mineCount = buckets.mine.reduce((n, [, list]) => n + list.length, 0)
+  // 同名 owner 出现在两个托管平台时，组名补上平台
+  const ownerHosts = new Map<string, Set<string>>()
+  for (const [key] of [...buckets.mine, ...buckets.third]) {
+    const parsed = parseGroupKey(key)
+    if (parsed.kind === "owner")
+      ownerHosts.set(parsed.owner, (ownerHosts.get(parsed.owner) ?? new Set()).add(parsed.host))
+  }
+  const groupLabel = (key: string) => {
+    const parsed = parseGroupKey(key)
+    if (parsed.kind === "other") return t("rail.other")
+    if (parsed.kind === "host") return hostLabel(parsed.host)
+    return (ownerHosts.get(parsed.owner)?.size ?? 0) > 1 ? `${parsed.owner} · ${hostLabel(parsed.host)}` : parsed.owner
+  }
   const accountState = accountEmptyState(accounts)
   const remoteError = repositories.map(path => remoteErrors?.[path]).find(Boolean)
 
@@ -255,15 +289,15 @@ export function RepositoryRail({
     </SidebarMenuItem>
   )
 
-  const group = (host: string, list: string[]) => {
+  const group = (key: string, list: readonly string[]) => {
     if (list.length === 0) return null
-    const open = !collapsed[host]
-    const label = host === "" ? t("rail.local") : hostLabel(host)
+    const open = !collapsed[key]
+    const label = groupLabel(key)
     return (
       <Collapsible
-        key={host}
+        key={key}
         open={open}
-        onOpenChange={value => setCollapsed(prev => ({ ...prev, [host]: !value }))}
+        onOpenChange={value => setCollapsed(prev => ({ ...prev, [key]: !value }))}
         className="group/collapsible">
         <SidebarGroup>
           <SidebarGroupLabel render={<CollapsibleTrigger />} className="gap-2">
@@ -413,20 +447,14 @@ export function RepositoryRail({
                     )}
                   </Empty>
                 ) : (
-                  buckets.mine.map(([host, list]) => group(host, list))
+                  buckets.mine.map(([key, list]) => group(key, list))
                 )}
               </nav>
             </ScrollArea>
           </TabsContent>
           <TabsContent value="third" className="min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
-              <nav aria-label={t("rail.thirdParty")}>
-                <SidebarGroup>
-                  <SidebarGroupContent>
-                    <SidebarMenu>{buckets.third.map(row)}</SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              </nav>
+              <nav aria-label={t("rail.thirdParty")}>{buckets.third.map(([key, list]) => group(key, list))}</nav>
             </ScrollArea>
           </TabsContent>
         </Tabs>
