@@ -5,12 +5,12 @@
   "files": {
     "app/test/e2e/app-launch.e2e.ts": {
       "sha256": "f87b3317b19b77ecac2a41af90e73df8ce2bb744c0ff333f5f24857b11016691",
-      "status": "ported",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/e2e/app-launch-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Original assertions unchanged; Playwright/Electron transport replaced with Hasgard against the real production frontend and Tauri app in an isolated data directory. Tauri update manifest replaces Squirrel feed. All 10 original E2E cases execute against the packaged app. Suspended downloads do not validate installation success."
+        "adaptation": "Original assertions unchanged; Playwright/Electron transport replaced with Hasgard against the real production frontend and Tauri app in an isolated data directory. The App Launch block executes against the packaged app. The Auto-update block is excluded by user decision (2026-11-03): updates follow ALwith Desktop through @alwith/module-desktop-shell (first check 30 s after launch, automatic download, rail update card, one relaunch question; no About check button, update status text or installing-update quit guard). Signed download, tamper rejection, installation and restart are verified by tests/macos/update-install.ts."
       }
     },
     "app/test/unit/account-token-lifecycle-test.ts": {

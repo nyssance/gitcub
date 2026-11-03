@@ -70,9 +70,7 @@ mod test_repo;
 mod token_store;
 mod trampoline;
 mod trending_webview;
-mod updater;
 mod watch;
-mod window_effects;
 mod windows_integrations;
 mod xdiff;
 
@@ -96,7 +94,6 @@ fn main() {
         .manage(watch::Watching::default())
         .manage(file_tail::Watches::default())
         .manage(trampoline::Service::default())
-        .manage(updater::UpdateState::default())
         .menu(menu::build)
         .on_menu_event(|app, event| menu::on_event(app, event.id().0.as_str()))
         .setup(|app| {
@@ -111,21 +108,19 @@ fn main() {
             if let Err(error) = notifications::initialize(app.handle().clone()) {
                 eprintln!("Notifications unavailable: {error}");
             }
-            atlas_tauri::install(app.handle())?;
             named_store::init(app.handle())?;
             // 把资源目录告诉 git 模块，好让它优先用打包进来的 git
             match app.path().resource_dir() {
                 Ok(dir) => git::set_resource_dir(&dir),
                 Err(error) => log::warn!("取资源目录失败，改用系统 git: {error}"),
             }
-            if let Some(w) = app.get_webview_window("main") {
-                window_effects::apply(&w);
-            }
             Ok(())
         })
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        // ALwith Desktop 的更新流程、窗口材质与 Atlas 原生桥；菜单是 GitCub 自己的，所以用 init_native
+        .plugin(tauri_plugin_alwith_desktop_shell::init_native())
         .plugin(tauri_plugin_opener::Builder::new().open_js_links_on_click(false).build());
 
     #[cfg(feature = "hasgard-testing")]
@@ -157,13 +152,19 @@ fn main() {
             window.visible = false;
         }
     }
+    // 测试更新服务：换掉 plugins.updater 的端点与公钥，tauri-plugin-updater 和 desktop shell 都从这里读
+    #[cfg(feature = "hasgard-testing")]
+    if let Ok(endpoint) = std::env::var("GITCUB_TEST_UPDATE_ENDPOINT")
+        && let Some(updater) = context.config_mut().plugins.0.get_mut("updater").and_then(|v| v.as_object_mut())
+    {
+        updater.insert("endpoints".into(), serde_json::json!([endpoint]));
+        updater.insert("dangerousInsecureTransportProtocol".into(), serde_json::Value::Bool(true));
+        if let Ok(key) = std::env::var("GITCUB_TEST_UPDATE_PUBLIC_KEY") {
+            updater.insert("pubkey".into(), serde_json::Value::String(key));
+        }
+    }
     builder
         .invoke_handler(tauri::generate_handler![
-            updater::updater_check,
-            updater::updater_endpoint,
-            updater::request_quit,
-            updater::cancel_quit,
-            updater::install_update,
             commands::app_architecture,
             commands::is_in_application_folder,
             commands::get_stats_guid,
@@ -404,13 +405,7 @@ fn main() {
         ])
         .build(context)
         .expect("GitCub 启动失败")
-        .run(|app, event| {
-            if let tauri::RunEvent::ExitRequested { api, .. } = event
-                && updater::should_delay_exit(app)
-            {
-                api.prevent_exit();
-            }
-        });
+        .run(|_, _| {});
 }
 
 #[cfg(test)]

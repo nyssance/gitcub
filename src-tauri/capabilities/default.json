@@ -21,6 +21,7 @@
     "core:window:allow-show",
     "core:window:allow-is-fullscreen",
     "core:window:allow-set-fullscreen",
-    "core:webview:allow-set-webview-zoom"
+    "core:webview:allow-set-webview-zoom",
+    "alwith-desktop-shell:default"
   ]
 }

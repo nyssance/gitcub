@@ -1,3 +1,4 @@
+import { desktopUpdateLabels, DesktopUpdateStatus } from "@alwith/module-desktop-shell/react"
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -170,7 +171,7 @@ export function RepositoryRail({
   onOwnershipChange,
   onSyncUpstream
 }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [tab, setTab] = useState<Tab>("mine")
   const [q, setQ] = useState("")
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
@@ -431,8 +432,12 @@ export function RepositoryRail({
         </Tabs>
 
         {/* 栏底：用户。设置在它弹出的菜单里——照 alwith-desktop 的
-          NavUserDropdownContent。 */}
-        <SidebarFooter>
+          NavUserDropdownContent。更新卡浮在用户行上方（照 alwith-desktop 的 UpdateStatusButton），
+          不挤压列表；就绪时主窗还会自动问一次是否重启。 */}
+        <SidebarFooter className="relative">
+          <div className="absolute inset-x-2 bottom-full z-20 mb-1 empty:hidden">
+            <DesktopUpdateStatus labels={desktopUpdateLabels(i18n.language)} />
+          </div>
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>

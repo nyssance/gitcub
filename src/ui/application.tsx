@@ -7,26 +7,21 @@ import { useTranslation } from "react-i18next"
 import { Button as StandardButton } from "@/components/ui/button"
 
 import { getVersion } from "../lib/app-version"
-import { releaseChannel } from "../lib/build-environment"
 import { getDesktopRuntime } from "../lib/desktop-runtime"
 import { ipc } from "../lib/ipc"
-import { cancelQuittingApp, getUpdatesEndpoint, quitApp } from "../lib/native-updater"
 import { SignInStep } from "../lib/stores/sign-in-store"
 import { applyTheme } from "../lib/theme"
-import { updateStore } from "../lib/ui/update-store"
 import type { Accounts, AppState } from "../models/app-state"
 import type { Popup } from "../models/popup"
 import { hasShownWelcomeFlow, markWelcomeFlowComplete } from "../upstream/lib/welcome"
 import { About } from "./about/about"
 import { App } from "./app"
 import { DialogStackContext } from "./desktop/dialog/dialog"
-import { InstallingUpdate } from "./installing-update/installing-update"
 import { Preferences } from "./preferences/preferences"
 import type { WelcomeDispatcher } from "./welcome-dispatcher"
 import { DesktopImportWelcome } from "./welcome/desktop-import"
 import { Welcome } from "./welcome/welcome"
 
-let startupUpdateCheck: Promise<void> | undefined
 export function Application() {
   const { i18n } = useTranslation()
   const runtime = getDesktopRuntime()
@@ -52,8 +47,6 @@ export function Application() {
       .catch(error => setError(String(error)))
   }, [])
   const [about, setAbout] = useState(false)
-  const [installing, setInstalling] = useState(false)
-  const [updateState, setUpdateState] = useState(updateStore.state)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -95,32 +88,15 @@ export function Application() {
   }, [i18n, runtime])
 
   useEffect(() => {
-    const subscriptions = [
-      runtime.signInStore.onDidUpdate(setSignIn),
-      runtime.accountsStore.onDidUpdate(setAccounts),
-      updateStore.onDidChange(setUpdateState),
-      updateStore.onError(error => {
-        setError(error.message)
-        setUpdateState(updateStore.state)
-      })
-    ]
+    const subscriptions = [runtime.signInStore.onDidUpdate(setSignIn), runtime.accountsStore.onDidUpdate(setAccounts)]
     const menu = listen<readonly string[]>("menu-event", ({ payload }) => {
       if (payload[0] === "show-about") setAbout(true)
     })
-    const install = listen("show-installing-update", () => setInstalling(true))
-    if (releaseChannel !== "development" && releaseChannel !== "test" && startupUpdateCheck === undefined) {
-      startupUpdateCheck = getUpdatesEndpoint()
-        .then(endpoint => {
-          if (endpoint) return updateStore.checkForUpdates(true, false)
-        })
-        .catch(error => log.error("Unable to check for updates", error))
-    }
     return () => {
       subscriptions.forEach(subscription => {
         subscription.dispose()
       })
       void menu.then(dispose => dispose())
-      void install.then(dispose => dispose())
     }
   }, [runtime])
 
@@ -212,33 +188,11 @@ export function Application() {
             applicationVersion={getVersion()}
             applicationArchitecture={arch()}
             onDismissed={() => setAbout(false)}
-            updateState={updateState}
-            onCheckForNonStaggeredUpdates={() => {
-              setError(null)
-              void updateStore.checkForUpdates(false, true)
-            }}
-            onQuitAndInstall={() => updateStore.quitAndInstallUpdate()}
             onShowAcknowledgements={() => {
               void openUrl("https://github.com/nyssance/gitcub/blob/main/NOTICE.md")
             }}
             onShowTermsAndConditions={() => {
               void openUrl("https://github.com/nyssance/gitcub/blob/main/LICENSE")
-            }}
-          />
-        )}
-        {installing && (
-          <InstallingUpdate
-            onDismissed={() => {
-              setInstalling(false)
-              void cancelQuittingApp()
-            }}
-            dispatcher={{
-              quitApp: force => {
-                void quitApp(force)
-              },
-              cancelQuittingApp: () => {
-                void cancelQuittingApp()
-              }
             }}
           />
         )}

@@ -127,40 +127,29 @@ async function until(check: () => Promise<void>, timeout = 30_000) {
   } while (Date.now() < deadline)
   throw error
 }
-async function checkUpdate() {
-  return hasgard(
-    "eval",
-    `(async () => {
-    const events = [];
-    const api = window.__TAURI_INTERNALS__;
-    const id = api.transformCallback(message => { if (message.message) events.push(message.message); });
-    try { await api.invoke('updater_check', { events: '__CHANNEL__:' + id }); return { events }; }
-    catch (error) { return { error: String(error), events }; }
-    finally { api.unregisterCallback(id); }
-  })()`
-  )
+const shell = (command: string) => `plugin:alwith-desktop-shell|${command}`
+async function updaterState(): Promise<{ type: string; update?: { version: string } }> {
+  return hasgard("eval", `window.__TAURI_INTERNALS__.invoke(${JSON.stringify(shell("updater_state"))})`)
+}
+/** One round now (check + automatic download), as the desktop shell's background loop would do it. */
+async function checkUpdate(): Promise<{ type: string }> {
+  return hasgard("eval", `window.__TAURI_INTERNALS__.invoke(${JSON.stringify(shell("updater_check"))})`)
 }
 try {
   await until(async () => {
     assert.ok(await hasgard("ping"))
   })
-  // Wait for the normal startup check before issuing another request.
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  // Startup recovery leaves Uninitialized; checks only start from Idle.
+  await until(async () => assert.equal((await updaterState()).type, "idle"))
   mode = "tampered"
-  const rejected = await checkUpdate()
-  assert.ok(rejected.error, "A corrupted signed payload must be rejected")
-  assert.ok(!rejected.events.some((e: { kind: string }) => e.kind === "downloaded"))
+  assert.equal((await checkUpdate()).type, "idle", "A corrupted signed payload must be rejected")
   mode = "valid"
   const accepted = await checkUpdate()
-  assert.equal(accepted.error, undefined)
-  assert.ok(
-    accepted.events.some((e: { kind: string }) => e.kind === "downloaded"),
-    JSON.stringify(accepted)
-  )
-  mode = "none"
+  assert.equal(accepted.type, "ready", JSON.stringify(accepted))
+  // Installing asks the server again; the release must still be the one that was downloaded.
   await hasgard(
     "eval",
-    `window.__TAURI_INTERNALS__.invoke('install_update').catch(error => { window.__updateTestError = String(error); console.error(error); }); true`
+    `window.__TAURI_INTERNALS__.invoke(${JSON.stringify(shell("updater_install_and_relaunch"))}).catch(error => { window.__updateTestError = String(error); console.error(error); }); true`
   )
   await until(async () => {
     const failure = await hasgard("eval", "window.__updateTestError ?? null").catch(() => null)
@@ -171,6 +160,7 @@ try {
     )
     assert.notEqual(app.exitCode, null, "Old process has not exited")
   })
+  mode = "none"
   await until(async () => {
     assert.ok(await hasgard("ping"))
   }, 45_000)
@@ -198,8 +188,9 @@ try {
   console.log("Signed updater: tamper rejection, verified download, package installation and restart passed")
 } finally {
   await writeFile(join(artifactDir, "console.json"), JSON.stringify(await hasgard("logs").catch(String), null, 2))
-  await hasgard("eval", "window.__TAURI_INTERNALS__.invoke('request_quit', {force:true}); true").catch(() => {})
   if (app.exitCode === null) app.kill("SIGTERM")
+  // The relaunched copy is not our child process.
+  await exec("pkill", ["-f", join(bundle, "Contents/MacOS/gitcub")]).catch(() => {})
   server.closeAllConnections()
   await new Promise<void>(resolve => server.close(() => resolve()))
   await writeFile(join(artifactDir, "native.log"), logs.join(""))

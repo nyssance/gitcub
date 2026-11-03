@@ -276,13 +276,14 @@ behavior merely to silence them.
   StatsStore、GitStore 和命名存储数据库。窗口与导航仍由 GitCub React 根组件管理，
   不表示整个 Desktop AppStore 的所有工作流都已替换。
 - 认证推送经过真实 Rust Git 子进程、TCP trampoline 和 credential helper；测试使用隔离凭据。
-- 原版 `app-launch.e2e.ts` 的 10 个用例原文不改，通过 Hasgard 操作实际 WKWebView。
-  Electron 菜单/退出 IPC 映射为 Tauri 事件/命令；原版 helper 独立检查实际 Git 结果。
-  覆盖欢迎配置、默认标题提交、创建/切换分支、启动更新检查、关于版本、下载状态、
-  下载中退出保护和强制退出。应用数据、Git 全局配置、应用标识和更新服务均隔离。
-- 更新服务器保留上游的悬挂下载行为，清单格式适配为 Tauri。此测试不覆盖下载完成、
-  签名验证成功、安装成功或重启。正式发布需配置 `GITCUB_UPDATE_ENDPOINT` 和
-  `GITCUB_UPDATE_PUBLIC_KEY`；测试地址只在 `hasgard-testing` 编译功能中可用。
+- 原版 `app-launch.e2e.ts` 的 App Launch 用例原文不改，通过 Hasgard 操作实际 WKWebView；
+  Electron 菜单 IPC 映射为 Tauri 事件，原版 helper 独立检查实际 Git 结果。覆盖欢迎配置、
+  默认标题提交、创建/切换分支和关于版本。应用数据、Git 全局配置、应用标识和更新服务均隔离。
+- 原版 Auto-update 块按用户 2026-11-03 的决定排除（`design-adaptations.ts`，清单记为 `partial`）：
+  更新照 ALwith Desktop 走 `@alwith/module-desktop-shell`，没有关于窗口的检查按钮、更新状态文案和
+  下载中退出保护。签名下载、篡改拒绝、安装与重启由 `tests/macos/update-install.ts` 验证。
+  端点与公钥来自 `tauri.conf.json` 的 `plugins.updater`；测试服务器只在 `hasgard-testing`
+  编译功能下经 `GITCUB_TEST_UPDATE_ENDPOINT` / `GITCUB_TEST_UPDATE_PUBLIC_KEY` 覆盖。
 - `test-results/desktop-e2e/` 保存真实 WebView 命令、日志、截图和 trace；`test:upstream`
   自动重建 `.app`，避免用旧二进制验证新代码。
 - GitLens 独立登记（b87331422；与 efffd14e1 相比夹具只变了 package.json、pnpm 锁文件与 workspace，autolink.utils、integration/config、integration/revision 三个套件已重新同步，见 manifest 的 support_review）：612 个文件中 14 个完整移植、20 个部分移植、0 个未接入、578 个明确排除（含 `plus` 目录因 GitLens Pro License 排除的文件），不计入 Desktop 的 256 个文件。

@@ -4,7 +4,7 @@
   "workspaces": {
     "": {
       "dependencies": {
-        "@alwith/module-desktop-shell": "^0.5.16",
+        "@alwith/module-desktop-shell": "^0.5.25",
         "@alwith/module-store": "^0.5.0",
         "@base-ui/react": "^1.9.0",
         "@floating-ui/core": "^1.8.0",
@@ -20,7 +20,7 @@
         "@lezer/python": "^1.1.19",
         "@lezer/rust": "^1.0.3",
         "@lezer/yaml": "^1.0.4",
-        "@nyssance/atlas": "^0.1.10",
+        "@nyssance/atlas": "^0.1.11",
         "@nyssance/shadcn": "^4.23.4",
         "@primer/octicons-react": "^19.42.0",
         "@tanstack/react-virtual": "^3.14.25",
@@ -108,7 +108,7 @@
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],
 
-    "@alwith/module-desktop-shell": ["@alwith/module-desktop-shell@0.5.16", "", { "dependencies": { "@base-ui/react": "^1.9.0", "@nyssance/shadcn": "^4.23.4", "class-variance-authority": "^0.7.1", "cn": "^0.5.1", "lucide-react": "^1.66.0" }, "peerDependencies": { "@nyssance/atlas": "^0.1.10", "@tauri-apps/api": "^3.0.0-alpha.3", "react": "^19.3.1", "react-dom": "^19.3.1" }, "optionalPeers": ["@nyssance/atlas"] }, "sha512-98vtEAAd+1PmzIiEiOHm2XvX36bTUGzH3rqH2DXRTN0cvrDmhxYrxij4HC0cHCw3cDs2xx7GpF+PuWL+wLJ35w=="],
+    "@alwith/module-desktop-shell": ["@alwith/module-desktop-shell@0.5.25", "", { "dependencies": { "@base-ui/react": "^1.9.0", "@nyssance/shadcn": "^4.23.4", "class-variance-authority": "^0.7.1", "cn": "^0.5.2", "lucide-react": "^1.66.0" }, "peerDependencies": { "@nyssance/atlas": "^0.1.11", "@tauri-apps/api": "^3.0.0-alpha.3", "react": "^19.3.1", "react-dom": "^19.3.1" }, "optionalPeers": ["@nyssance/atlas"] }, "sha512-/7mRjFwL9EcEOy4pdXFfB5IA0p68AWAjvzyPARmG+nzQOJ4oVuraOkGzpTxHUhe+OgZaA8JcIA1xrVbDsmnWNw=="],
 
     "@alwith/module-store": ["@alwith/module-store@0.5.0", "", {}, "sha512-k8MVgmKYQ6acIS89XNg9dGFkR9ZGVDUJpKvZxbC5k4/QNAeNPaAfXL/hPgf1xq8kPMr8FyK41M/PTtIxRP8N1g=="],
 
@@ -280,7 +280,7 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.6", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1 || 2.0.0-beta.2", "@emnapi/runtime": "^1.7.1 || 2.0.0-beta.2" } }, "sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw=="],
 
-    "@nyssance/atlas": ["@nyssance/atlas@0.1.10", "", { "dependencies": { "embla-carousel": "^8.6.0", "motion": "^14.9.0" }, "peerDependencies": { "@angular/core": ">=20 <24", "@tauri-apps/api": ">=2 <4", "react": "^19.0.0", "svelte": "^5.0.0", "vue": "^3.5.0" }, "optionalPeers": ["@angular/core", "@tauri-apps/api", "react", "svelte", "vue"] }, "sha512-nMpssIseGt211b9Nj1vCkdJ3dzVUwSNHqX5nLK2jcXLc+W7n9/o3bxmLOf5p5EXhy/eJnw2mnjQyS5gAkrDNvQ=="],
+    "@nyssance/atlas": ["@nyssance/atlas@0.1.11", "", { "dependencies": { "embla-carousel": "^8.6.0", "motion": "^14.9.0" }, "peerDependencies": { "@angular/core": ">=20 <24", "@tauri-apps/api": ">=2 <4", "react": "^19.0.0", "svelte": "^5.0.0", "vue": "^3.5.0" }, "optionalPeers": ["@angular/core", "@tauri-apps/api", "react", "svelte", "vue"] }, "sha512-FTaZrAbPGXohRqG2d2KhG0OckEWJY9mYnQMkribFR5HCtnqM5ea7THj0RmRoI+jV5RUBvGmSel1lmNSIEJ1qqA=="],
 
     "@nyssance/shadcn": ["@nyssance/shadcn@4.23.4", "", { "dependencies": { "@base-ui/react": "^1.9.0", "@shadcn/react": "^0.3.1", "class-variance-authority": "^0.7.1", "cmdk": "^1.1.1", "cn": "^0.5.1", "embla-carousel-react": "^8.6.0", "input-otp": "^1.5.0", "lucide-react": "^1.66.0", "next-themes": "^0.4.6", "react-day-picker": "^10.0.2", "react-resizable-panels": "^4.16.0", "recharts": "3.8.0", "shiki": "^4.5.0", "sonner": "^2.0.8" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0", "vite": ">=8" }, "optionalPeers": ["vite"] }, "sha512-pdqPvm9SkSD6tmbyFPsnaYo+9dj/9AkabQtGnCam5b0tmABMLnAqP5jBducAV5T/iItflMFPcgrA7DE0/69yqg=="],
 
