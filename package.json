@@ -38,6 +38,7 @@
     "@lezer/rust": "^1.0.3",
     "@lezer/yaml": "^1.0.4",
     "@nyssance/atlas": "^0.1.11",
+    "@nyssance/reui": "^2.8.1",
     "@nyssance/shadcn": "^4.23.4",
     "@primer/octicons-react": "^19.42.0",
     "@tanstack/react-virtual": "^3.14.25",
