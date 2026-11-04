@@ -50,10 +50,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
-name = "alwith-module-store"
-version = "0.1.1"
+name = "alwith-desktop-shell"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f915f9497f47b51571d51b7573942edced3de5aa1d7e296cd2b2579bbd85fa75"
+checksum = "9d9eb55427eca133d16d62ba25317612648848120a7bed032c4b6b99d2c073eb"
+dependencies = [
+ "atlas-tauri",
+ "flate2",
+ "libc",
+ "log",
+ "rfd",
+ "semver",
+ "serde",
+ "serde_json",
+ "tar",
+ "tauri",
+ "tauri-plugin",
+ "tauri-plugin-updater",
+ "tokio",
+]
+
+[[package]]
+name = "alwith-module-store"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b8d063c73e5532859d4cf20254e207e3db2c75009677d365834df4f9fccb5e4"
 dependencies = [
  "serde",
  "serde_json",
@@ -1881,6 +1902,7 @@ dependencies = [
 name = "gitcub"
 version = "0.1.5"
 dependencies = [
+ "alwith-desktop-shell",
  "alwith-module-store",
  "atlas-tauri",
  "base64 0.23.1",
@@ -1906,7 +1928,6 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
- "tauri-plugin-alwith-desktop-shell",
  "tauri-plugin-dialog",
  "tauri-plugin-hasgard",
  "tauri-plugin-log",
@@ -2319,7 +2340,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7518b930f6aeb75e871d32ce873c2ae46e35cef19b5a0b039d4337f651d897cd"
 dependencies = [
  "bstr",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.1",
 ]
 
 [[package]]
@@ -3270,7 +3291,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.61.2",
+ "windows-core 0.62.2",
 ]
 
 [[package]]
@@ -6047,24 +6068,6 @@ dependencies = [
  "serde_json",
  "tauri-utils",
  "walkdir",
-]
-
-[[package]]
-name = "tauri-plugin-alwith-desktop-shell"
-version = "0.5.2"
-dependencies = [
- "atlas-tauri",
- "base64 0.23.1",
- "log",
- "minisign-verify",
- "rfd",
- "semver",
- "serde",
- "serde_json",
- "tauri",
- "tauri-plugin",
- "tauri-plugin-updater",
- "tokio",
 ]
 
 [[package]]

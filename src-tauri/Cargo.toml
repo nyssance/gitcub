@@ -14,7 +14,8 @@ cc = "1"
 tauri-build = { version = "3.0.0-alpha.4", features = [] }
 
 [dependencies]
-alwith-module-store = "0.1"
+alwith-desktop-shell = "0.6"
+alwith-module-store = "0.2"
 atlas-tauri = "0.1"
 # 图片 diff 要把图片内容交给 webview，走 data: URL 最省事
 base64 = "0.23"
@@ -44,7 +45,6 @@ tauri = { version = "3.0.0-alpha.5", features = ["unstable"] }
 tauri-runtime-wry = "3.0.0-alpha.5"
 tauri-plugin-dialog = "3.0.0-alpha.4"
 tauri-plugin-hasgard = { version = "0.6", optional = true }
-tauri-plugin-alwith-desktop-shell = { path = "../node_modules/@alwith/module-desktop-shell/rust" }
 tauri-plugin-log = "3.0.0-alpha.3"
 tauri-plugin-opener = "3.0.0-alpha.3"
 tauri-plugin-os = "3.0.0-alpha.3"

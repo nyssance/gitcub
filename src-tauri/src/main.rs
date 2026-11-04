@@ -119,8 +119,13 @@ fn main() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        // ALwith Desktop 的更新流程、窗口材质与 Atlas 原生桥；菜单是 GitCub 自己的，所以用 init_native
-        .plugin(tauri_plugin_alwith_desktop_shell::init_native())
+        // ALwith Desktop 的更新流程、窗口材质与 Atlas 原生桥；菜单是 GitCub 自己的，所以用 init_native。
+        // debug 构建默认不更新；hasgard-testing 的 e2e 包是 debug 构建，签名安装回归要打开它
+        .plugin(alwith_desktop_shell::init_native_with(
+            alwith_desktop_shell::updater::UpdaterOptions::new()
+                .install_window("main")
+                .enable_in_debug(cfg!(feature = "hasgard-testing")),
+        ))
         .plugin(tauri_plugin_opener::Builder::new().open_js_links_on_click(false).build());
 
     #[cfg(feature = "hasgard-testing")]
