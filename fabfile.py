@@ -265,23 +265,10 @@ def dev(c: Context) -> None:
 
 @task
 def tauri(c: Context) -> None:
-    """Tauri 开发实例；使用 exec 传递终端信号，启用 Hasgard。"""
+    """Tauri 开发实例，启用 Hasgard。"""
     if not _bundled_git_ready():
         rich.print("[yellow]随包 git 未下载，将回退到 PATH 上的 git。跑 fab git-download 可下载。[/yellow]")
-    # exec 替换自身,不拉子进程:python 层在 stage/问答做完后毫无运行期作用,留着只会
-    # 挡信号——invoke 管道模式下 Ctrl-C 层层失灵(2026-07-30 实撞:cargo 已死,
-    # fab/node 存活傻等,进程杀不掉)。exec 后链条是 终端→node(tauri)→cargo,信号直达。
-    os.chdir(ROOT)
-    arguments = [
-        "bunx",
-        "--bun", "tauri",
-        "dev",
-        "--config",
-        "src-tauri/tauri.dev-instance.conf.json",
-        "--features",
-        "hasgard-testing",
-    ]
-    os.execvp("bunx", arguments)
+    c.run("bunx --bun tauri dev --config src-tauri/tauri.dev-instance.conf.json --features hasgard-testing")
 
 
 def _bundled_git_ready() -> bool:

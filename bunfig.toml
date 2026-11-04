@@ -12,7 +12,6 @@ ignorePatterns = [
   "src-tauri/resources",
   "src/upstream",
   "src/ui/base",
-  "src/ui/reui",
   "**/*.md",
   "**/*.html",
   "package.json",
@@ -31,7 +30,6 @@ preserveWhitespace = true
 ignorePatterns = [
   "src/upstream/**",
   "src/ui/base/**",
-  "src/ui/reui/**",
   "tests/conformance/upstream/**",
   "tests/conformance/fixtures/**",
   ".claude/**"

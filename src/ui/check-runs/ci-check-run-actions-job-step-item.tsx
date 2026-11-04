@@ -1,5 +1,6 @@
 // Desktop MIT port; original job-step rendering and navigation behavior.
 
+import { StepperIndicator } from "@nyssance/reui/vega/components/reui/stepper"
 import classNames from "classnames"
 import * as React from "react"
 
@@ -12,7 +13,6 @@ import { TooltipDirection } from "../desktop/tooltip"
 import { TooltippedContent } from "../desktop/tooltipped-content"
 import { Octicon } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
-import { StepperIndicator } from "../reui/stepper"
 
 interface ICICheckRunActionsJobStepListItemProps {
   readonly step: IAPIWorkflowJobStep

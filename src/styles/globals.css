@@ -1,6 +1,7 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss";
 @source "../../node_modules/@nyssance/shadcn/dist/vega";
+@source "../../node_modules/@nyssance/reui/dist/vega/components/reui/stepper.js";
 @import "./scrollbars.css";
 @import "./desktop.css" layer(components);
 @import "./diff.css" layer(components);

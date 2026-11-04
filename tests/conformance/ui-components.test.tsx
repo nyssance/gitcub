@@ -1846,30 +1846,28 @@ function repositoryRail(props: Partial<ComponentProps<typeof RepositoryRail>> = 
   )
   return onNavigate
 }
-test("repository rail: cached rows need no native calls, groups collapse, a row navigates (NavigationAndGroups, CachedOwnershipSurvivesReadFailure)", async () => {
+test("repository rail: cached rows need no native calls, platform tabs split rows, a row navigates (NavigationAndTabs, CachedOwnershipSurvivesReadFailure)", async () => {
   const user = userEvent.setup()
   const onNavigate = repositoryRail({ remoteErrors: { "/preview/gitcub": "Unable to read origin" } })
+  expect(screen.getByRole("tab", { name: "GitHub" })).toHaveAttribute("aria-selected", "true")
   expect(screen.getByRole("button", { name: "gitcub" })).toBeVisible()
-  expect(screen.queryByText(t("rail.emptyMine"))).not.toBeInTheDocument()
   expect(screen.queryByText(t("rail.signedOutTitle"))).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: "gitcub" }).querySelector("svg")).toBeNull()
-  // 分组标题是「平台名 + 数量」两段文字，中间的间距是样式不是空格
-  const group = screen.getByRole("button", { name: /^GitHub\s*2$/ })
-  await user.click(group)
-  await waitFor(() => expect(screen.queryByRole("button", { name: "gitcub" })).not.toBeInTheDocument())
-  await user.click(group)
-  await user.click(await screen.findByRole("button", { name: "atlas" }))
+  expect(screen.queryByRole("button", { name: "team" })).not.toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "atlas" }))
   expect(onNavigate).toHaveBeenCalledWith(routes.repo("/preview/atlas"))
-  await user.click(screen.getByRole("tab", { name: t("rail.thirdParty") }))
+  await user.click(screen.getByRole("tab", { name: "GitLab" }))
+  expect(await screen.findByRole("button", { name: "team" })).toBeVisible()
+  await user.click(screen.getByRole("tab", { name: t("rail.other") }))
   expect(await screen.findByRole("button", { name: "very-long-repository-name-for-truncation" })).toBeVisible()
   expect(nativeCall).not.toHaveBeenCalled()
 })
-test("repository rail: an empty Mine tab stays selected instead of switching to Third party (EmptyMineStaysSelected)", async () => {
+test("repository rail: an empty GitHub tab stays selected instead of switching to Other (EmptyGitHubStaysSelected)", async () => {
   const user = userEvent.setup()
   repositoryRail({ accounts: {}, remotes: {} })
-  expect(screen.getByRole("tab", { name: t("rail.mine") })).toHaveAttribute("aria-selected", "true")
+  expect(screen.getByRole("tab", { name: "GitHub" })).toHaveAttribute("aria-selected", "true")
   expect(screen.queryByRole("button", { name: "gitcub" })).not.toBeInTheDocument()
-  await user.click(screen.getByRole("tab", { name: t("rail.thirdParty") }))
+  await user.click(screen.getByRole("tab", { name: t("rail.other") }))
   expect(await screen.findByRole("button", { name: "gitcub" })).toBeVisible()
 })
 
