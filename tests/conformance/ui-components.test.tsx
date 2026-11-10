@@ -141,7 +141,7 @@ afterEach(() => {
   uninstall()
   uninstall = () => {}
 })
-const t = (key: string, options?: Record<string, unknown>) => i18n.t(key, options)
+const t = (key: string, options?: Record<string, unknown>) => i18n.t(key, options ?? {})
 
 test("autolink preferences emit only rules that pass validation, and removal emits the rest", async () => {
   const user = userEvent.setup()
@@ -2404,7 +2404,7 @@ test("rich text: a custom autolink opens in the browser (CustomRuleAndGitLab)", 
         [rule],
         { host: "gitlab.example", owner: "group/subgroup", name: "project" },
         "gitlab",
-        (key, options) => i18n.t(key, options)
+        (key, options) => i18n.t(key, options ?? {})
       )}
     />
   )

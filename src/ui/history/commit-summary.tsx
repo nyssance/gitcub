@@ -42,7 +42,7 @@ export function CommitSummary({
 }) {
   const { t } = useTranslation()
   const refsets = useMemo(
-    () => autolinkRefSets(rules, remote ?? null, platform, (key, options) => t(key, options)),
+    () => autolinkRefSets(rules, remote ?? null, platform, (key, options) => t(key, options ?? {})),
     [rules, remote, platform, t]
   )
   const lines = changesetLineCounts(files)

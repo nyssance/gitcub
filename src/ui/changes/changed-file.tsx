@@ -92,7 +92,7 @@ export function ChangedFile({
     rebaseConflict,
     externalEditorLabel,
     platform,
-    t: (key, options) => t(key, options),
+    t: (key, options) => t(key, options ?? {}),
     actions: {
       discard: onDiscard,
       ignoreFiles: onIgnoreFiles,

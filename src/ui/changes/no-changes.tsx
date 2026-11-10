@@ -632,5 +632,5 @@ class NoChangesView extends React.Component<INoChangesProps, INoChangesState> {
 /** 没有本地改动时内容区的空白页（Desktop changes/no-changes.tsx），文案走 i18n */
 export function NoChanges(props: Omit<INoChangesProps, "t">) {
   const { t } = useTranslation()
-  return <NoChangesView {...props} t={(key, options) => t(key, options)} />
+  return <NoChangesView {...props} t={(key, options) => t(key, options ?? {})} />
 }

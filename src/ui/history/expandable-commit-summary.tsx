@@ -79,7 +79,7 @@ export function ExpandableCommitSummary({
   const hasEmptySummary = commit.summary.length === 0
   const avatarUsers = useMemo(() => uniqueAvatarUsers(getAvatarUsersForCommit(null, commit)), [commit])
   const refsets = useMemo(
-    () => autolinkRefSets(rules, remote ?? null, platform, (key, options) => t(key, options)),
+    () => autolinkRefSets(rules, remote ?? null, platform, (key, options) => t(key, options ?? {})),
     [rules, remote, platform, t]
   )
 

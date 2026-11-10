@@ -165,7 +165,7 @@ test("a partial-clone history fetch cannot block navigation or other native comm
   )
 })
 
-test("the native Trending board opens lazily and leaves the mounted workspace responsive", async ({
+test("three-finger canvas swiping is ignored until it is enabled in Trackpad settings", async ({
   mainWindow: page
 }) => {
   const initial = await page.evaluate(async () => {
@@ -206,18 +206,52 @@ test("the native Trending board opens lazily and leaves the mounted workspace re
       true
     )
   // 设置照 Desktop 只在「保存」时写回
-  await page.locator('[role="dialog"] button:has-text("Save")').click()
-  await page.waitForSelector('[role="dialog"]', { state: "hidden" })
+  try {
+    await page.locator('[role="dialog"] button:has-text("Save")').click()
+    await page.waitForSelector('[role="dialog"]', { state: "hidden" })
+  } catch (error) {
+    console.error(
+      "Preferences at failure:",
+      await page.evaluate(() =>
+        [...document.querySelectorAll('[role="dialog"]')]
+          .map(
+            dialog =>
+              `tab=${dialog.querySelector('[role="tab"][aria-selected="true"]')?.textContent}|${[...dialog.querySelectorAll("button")].map(button => `${button.textContent}:${button.disabled}`).slice(-3)}|alert=${dialog.querySelector('[role="alert"]')?.textContent}`
+          )
+          .join(" || ")
+      )
+    )
+    // 对话框留着会挡住后面所有用例
+    const cancel = page.locator('[role="dialog"] button:has-text("Cancel")')
+    if (await cancel.isVisible()) await cancel.click()
+    throw error
+  }
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const state = await window.__TAURI_INTERNALS__.invoke<{ canvasTrackpadGestures: boolean }>("load_state")
+        return state.canvasTrackpadGestures
+      })
+    )
+    .toBe(initial.available)
+})
+
+/** Trending 是独立的内嵌网页；用默认就开着的中键拖动滑过去，不依赖触控板设置 */
+test("the native Trending board opens lazily and leaves the mounted workspace responsive", async ({
+  mainWindow: page
+}) => {
   // Hasgard targets a WebviewWindow. Run the multi-webview interaction in one
   // evaluation and close the child before returning to the driver.
   const result = await page.evaluate(async () => {
     const invoke = window.__TAURI_INTERNALS__.invoke
-    const wait = async (condition: () => boolean | Promise<boolean>) => {
+    const wait = async (stage: string, condition: () => boolean | Promise<boolean>) => {
       const until = Date.now() + 6000
       while (!(await condition())) {
         if (Date.now() > until)
           throw new Error(
             `Native Trending transition timed out: ${JSON.stringify({
+              stage,
+              views: (await views()).map(view => view.label),
               page: document.querySelector("[data-floating-workspace]")?.getAttribute("data-page"),
               workspaceX: document.querySelector('[data-floating-board="workspace"]')?.getBoundingClientRect().x,
               track: document.querySelector("[data-canvas-track]")?.getAttribute("style")
@@ -227,35 +261,24 @@ test("the native Trending board opens lazily and leaves the mounted workspace re
       }
     }
     const views = () => invoke<{ label: string }[]>("plugin:webview|get_all_webviews")
-    // Exercise the hardware-independent mouse path on machines without a trackpad.
-    const available = await invoke<boolean>("has_trackpad")
     const swipe = async (dx: number) => {
       const root = document.querySelector<HTMLElement>("[data-canvas-viewport]")!
       let x = 0
-      let total = 0
       const emit = async (phase: string, delta = 0) => {
-        if (available) {
-          total += delta
-          await invoke("plugin:event|emit", {
-            event: "trackpad-gesture",
-            payload: { fingers: 3, phase, dx: delta, dy: 0, totalDx: total, totalDy: 0, ts: performance.now() }
+        x += delta * root.clientWidth
+        // Atlas keeps a middle-button pan only while `buttons` still has the middle bit set.
+        root.dispatchEvent(
+          new PointerEvent(phase === "began" ? "pointerdown" : phase === "changed" ? "pointermove" : "pointerup", {
+            bubbles: true,
+            cancelable: true,
+            button: 1,
+            buttons: phase === "ended" ? 0 : 4,
+            pointerId: 1,
+            pointerType: "mouse",
+            isPrimary: true,
+            clientX: x
           })
-        } else {
-          x += delta * root.clientWidth
-          // Atlas keeps a middle-button pan only while `buttons` still has the middle bit set.
-          root.dispatchEvent(
-            new PointerEvent(phase === "began" ? "pointerdown" : phase === "changed" ? "pointermove" : "pointerup", {
-              bubbles: true,
-              cancelable: true,
-              button: 1,
-              buttons: phase === "ended" ? 0 : 4,
-              pointerId: 1,
-              pointerType: "mouse",
-              isPrimary: true,
-              clientX: x
-            })
-          )
-        }
+        )
       }
       await emit("began")
       for (let i = 0; i < 12; i++) {
@@ -269,7 +292,7 @@ test("the native Trending board opens lazily and leaves the mounted workspace re
     const navigation = document.querySelector("[data-canvas-navigation]")
     try {
       await swipe(0.8)
-      await wait(async () => (await views()).some(view => view.label === "github-trending"))
+      await wait("open", async () => (await views()).some(view => view.label === "github-trending"))
       await invoke("load_state")
       const position = await invoke<{ x: number; y: number }>("plugin:webview|webview_position", {
         label: "github-trending"
@@ -280,7 +303,7 @@ test("the native Trending board opens lazily and leaves the mounted workspace re
       const { x, y, width, height } = document.querySelector("[data-trending-webview]")!.getBoundingClientRect()
       const navigationOnRight = navigation!.getBoundingClientRect().x > innerWidth / 2
       await swipe(-0.8)
-      await wait(() => Math.abs(workspace!.getBoundingClientRect().x - 256) < 1)
+      await wait("return", () => Math.abs(workspace!.getBoundingClientRect().x - 256) < 1)
       await invoke("load_state")
       return {
         lazy: !before.some(view => view.label === "github-trending"),
@@ -301,21 +324,13 @@ test("the native Trending board opens lazily and leaves the mounted workspace re
         reload: false,
         onLoad: "__CHANNEL__:0"
       })
-      await wait(async () => !(await views()).some(view => view.label === "github-trending"))
+      await wait("cleanup", async () => !(await views()).some(view => view.label === "github-trending"))
     }
   })
   assert.equal(result.lazy, true)
   assert.equal(result.sameWorkspace, true)
   assert.equal(result.sameNavigation, true)
   assert.equal(result.navigationOnRight, true)
-  await expect
-    .poll(() =>
-      page.evaluate(async () => {
-        const state = await window.__TAURI_INTERNALS__.invoke<{ canvasTrackpadGestures: boolean }>("load_state")
-        return state.canvasTrackpadGestures
-      })
-    )
-    .toBe(initial.available)
   assert.equal(result.page, "1")
   for (const key of ["x", "y"] as const)
     assert.ok(Math.abs(result.position[key] / result.scale - result.frame[key]) <= 1)

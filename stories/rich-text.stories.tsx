@@ -13,7 +13,7 @@ const jira = {
   title: "Issue <num>"
 }
 const gitlab = { host: "gitlab.example", owner: "group/subgroup", name: "project" }
-const translate = (key: string, options?: Record<string, string>) => i18n.t(key, options)
+const translate = (key: string, options?: Record<string, string>) => i18n.t(key, options ?? {})
 
 // Desktop's RichText with GitLens autolink reference sets applied after the tokenizer.
 const meta = {

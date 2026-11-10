@@ -1284,6 +1284,12 @@ function divergedBranch(name: string) {
   return { head, side }
 }
 
+/** 用例中途失败时合并可能停在半路；先放弃合并再回到原提交，否则 `reset --keep` 报错会盖住真正的失败并连累后面的用例 */
+function restoreAfterMerge(head: string) {
+  if (existsSync(join(smokeRepoPath, ".git", "MERGE_HEAD"))) git("merge", "--abort")
+  if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--keep", head)
+}
+
 async function ignoreFailingPreMergeCommit(page: Page, run: () => Promise<void>) {
   const hook = join(smokeRepoPath, ".git", "hooks", "pre-merge-commit")
   writeFileSync(hook, '#!/bin/sh\necho "merge rejected by hook" >&2\nexit 1\n', { mode: 0o755 })
@@ -1320,7 +1326,7 @@ test("merging a branch asks about a failing pre-merge-commit hook and ignoring i
     })
     await expect.poll(() => git("log", "-1", "--format=%P")).toBe(`${head} ${side}`)
   } finally {
-    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--keep", head)
+    restoreAfterMerge(head)
     git("branch", "-D", "hooks-merge-source")
   }
 })
@@ -1341,7 +1347,7 @@ test("pulling asks about a failing pre-merge-commit hook and ignoring it complet
     await expect.poll(() => git("log", "-1", "--format=%P")).toBe(`${head} ${side}`)
   } finally {
     git("config", "branch.remote-feature.merge", upstream)
-    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--keep", head)
+    restoreAfterMerge(head)
     git("branch", "-D", "hooks-pull-source")
   }
 })
