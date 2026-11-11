@@ -598,7 +598,7 @@
       }
     },
     "app/test/unit/git/add-test.ts": {
-      "sha256": "748adab7a4f8e203a1aa2db6767fadf1ad9c3080c07677a295f0dfa250f5b7be",
+      "sha256": "50e96acfe787cee677f4c58f6c5d8ac3323ba492175215420bffa67cdaf8b70d",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -628,13 +628,13 @@
       }
     },
     "app/test/unit/git/checkout-test.ts": {
-      "sha256": "e1a72a3c6b2c2d5363f69cd76e1474e967cd869c8fff70bac473d4c78209bf31",
+      "sha256": "6a29439086ffe1478a604cf76e8f8c651a9739addfd6ff42a76695c7e973b209",
       "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/checkout-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Original assertions unchanged. Rust production branch/ops/status functions; The production GitStore supplies tip/cache events through Rust Git reads; coverage is limited to the original cases. All original cases executed without skips."
+        "adaptation": "Original assertions unchanged. Rust production branch/ops/status functions; The production GitStore supplies tip/cache events through Rust Git reads; coverage is limited to the original cases. All original cases executed without skips. Resynced at db99902e7: checkoutPaths and removeConflictedFile run the production TypeScript functions; checkoutConflictedFile runs production resolve_conflict, which also stages the chosen side."
       }
     },
     "app/test/unit/git/cherry-pick-test.ts": {
@@ -658,7 +658,7 @@
       }
     },
     "app/test/unit/git/commit-test.ts": {
-      "sha256": "8f4ac1309715bee4525d702da0cce96b1743c11ddaf5a4f022803d03a21d3019",
+      "sha256": "e374c7860465dc3dbc4b2a37c1bf2fce5dc13e3c6b159f5b2eed395e5baf0c71",
       "status": "ported",
       "rust_tests": [
         {
@@ -794,13 +794,13 @@
       }
     },
     "app/test/unit/git/diff-test.ts": {
-      "sha256": "ad80e783fe5554a88abeff4af19e4a575ceaf77742b9c4114d0cfeecd0fbd7f5",
-      "status": "ported",
+      "sha256": "cbfdc9228c24209128e3462b6c6f6296fe2db2e7ea6fdfccecad1df27a8b95eb",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/diff-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery. Resynced at db99902e7: the pathspec-literal working-directory, commit and merge-base diff cases run unchanged; the two `range` cases of 'historical diffs with literal filenames' are removed by tests/conformance/design-adaptations.ts because GitCub has no multi-commit range diff (Desktop getCommitRangeDiff), which is a product gap, not an accepted difference."
       }
     },
     "app/test/unit/git/environment-test.ts": {
@@ -1136,7 +1136,7 @@
       }
     },
     "app/test/unit/git/reset-test.ts": {
-      "sha256": "5b1793c160d996d3e768409965de1309439d2bc2ad230b3e7e385498b7b373b7",
+      "sha256": "1001f91d91efa59f2012853d0a5e3d6a310b7e5128b877043b26c443949d39d9",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -1206,7 +1206,7 @@
       }
     },
     "app/test/unit/git/submodule-test.ts": {
-      "sha256": "881dabdd4277967ce27356bb7e42180f2ad9c58113e09cd923988ce6f0981df8",
+      "sha256": "53019e939a383fec2c0f82e4a73f3977e5c1b74c6fc09aeb87cb61dea3f1ba77",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -1750,7 +1750,7 @@
       }
     },
     "app/test/unit/sanitize-ref-name-test.ts": {
-      "sha256": "ce21ba54895e7ba5d35461240f1a9127ffa5f2a8cc511fb8edc7d0513d51d5f1",
+      "sha256": "ba69df31e767438092d0cec8c8fbe7975b5cc449d59e49d2d2b1566cf06c6d2c",
       "status": "ported",
       "rust_tests": [],
       "runner": {

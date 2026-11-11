@@ -143,6 +143,50 @@ export async function getTempFilePath(prefix: string) {
   return join(await mkdtemp(join(tmpdir(), "gitcub-message-")), prefix)
 }
 
+// Desktop helpers/repositories.ts (db99902e7): pathspec-magic fixtures, bodies unchanged.
+export const PathspecMagicFileName = ":(glob)*.txt"
+
+/** Set up a repository with a tracked file whose name uses pathspec syntax. */
+export async function setupRepositoryWithPathspecMagicFile(t: TestContext): Promise<Repository> {
+  const repo = await setupEmptyRepository(t)
+
+  await writeFile(join(repo.path, PathspecMagicFileName), "base content\n")
+  await writeFile(join(repo.path, "unrelated.txt"), "unrelated content\n")
+  await exec(["add", "--all"], repo.path)
+  await exec(["commit", "-m", "Initial commit"], repo.path)
+
+  return repo
+}
+
+/** Set up a repository with a conflict in a pathspec-magic filename. */
+export async function setupConflictedRepoWithPathspecMagicFile(
+  t: TestContext,
+  includeUnrelatedConflict = false
+): Promise<Repository> {
+  const repo = await setupRepositoryWithPathspecMagicFile(t)
+
+  await exec(["branch", "other-branch"], repo.path)
+
+  await writeFile(join(repo.path, PathspecMagicFileName), "master content\n")
+  if (includeUnrelatedConflict) {
+    await writeFile(join(repo.path, "unrelated.txt"), "master unrelated\n")
+  }
+  await exec(["add", "--all"], repo.path)
+  await exec(["commit", "-m", "Update on master"], repo.path)
+
+  await switchTo(repo, "other-branch")
+  await writeFile(join(repo.path, PathspecMagicFileName), "other content\n")
+  if (includeUnrelatedConflict) {
+    await writeFile(join(repo.path, "unrelated.txt"), "other unrelated\n")
+  }
+  await exec(["add", "--all"], repo.path)
+  await exec(["commit", "-m", "Update on other branch"], repo.path)
+
+  await exec(["merge", "master"], repo.path)
+
+  return repo
+}
+
 export async function setupConflictedRepo(t: TestContext): Promise<Repository> {
   const repo = await setupEmptyRepository(t)
 

@@ -129,8 +129,8 @@
     "desktop/checkout-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/checkout-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "e1a72a3c6b2c2d5363f69cd76e1474e967cd869c8fff70bac473d4c78209bf31"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "6a29439086ffe1478a604cf76e8f8c651a9739addfd6ff42a76695c7e973b209"
     },
     "desktop/merge-test.ts": {
       "project": "desktop",
@@ -165,8 +165,8 @@
     "desktop/commit-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/commit-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "8f4ac1309715bee4525d702da0cce96b1743c11ddaf5a4f022803d03a21d3019"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "e374c7860465dc3dbc4b2a37c1bf2fce5dc13e3c6b159f5b2eed395e5baf0c71"
     },
     "desktop/remote-parsing-test.ts": {
       "project": "desktop",
@@ -189,8 +189,8 @@
     "desktop/add-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/add-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "748adab7a4f8e203a1aa2db6767fadf1ad9c3080c07677a295f0dfa250f5b7be"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "50e96acfe787cee677f4c58f6c5d8ac3323ba492175215420bffa67cdaf8b70d"
     },
     "desktop/apply-test.ts": {
       "project": "desktop",
@@ -201,8 +201,8 @@
     "desktop/reset-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/reset-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "5b1793c160d996d3e768409965de1309439d2bc2ad230b3e7e385498b7b373b7"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "1001f91d91efa59f2012853d0a5e3d6a310b7e5128b877043b26c443949d39d9"
     },
     "desktop/diff-stage-test.ts": {
       "project": "desktop",
@@ -243,8 +243,8 @@
     "desktop/submodule-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/submodule-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "881dabdd4277967ce27356bb7e42180f2ad9c58113e09cd923988ce6f0981df8"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "53019e939a383fec2c0f82e4a73f3977e5c1b74c6fc09aeb87cb61dea3f1ba77"
     },
     "desktop/format-patch-test.ts": {
       "project": "desktop",
@@ -321,8 +321,8 @@
     "desktop/diff-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/diff-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "ad80e783fe5554a88abeff4af19e4a575ceaf77742b9c4114d0cfeecd0fbd7f5"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "cbfdc9228c24209128e3462b6c6f6296fe2db2e7ea6fdfccecad1df27a8b95eb"
     },
     "desktop/rebase-full-test.ts": {
       "project": "desktop",
@@ -393,8 +393,8 @@
     "desktop/sanitize-ref-name-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/sanitize-ref-name-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "ce21ba54895e7ba5d35461240f1a9127ffa5f2a8cc511fb8edc7d0513d51d5f1"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "ba69df31e767438092d0cec8c8fbe7975b5cc449d59e49d2d2b1566cf06c6d2c"
     },
     "desktop/format-duration-test.ts": {
       "project": "desktop",
@@ -6245,7 +6245,7 @@
     "../../src/upstream/lib/sanitize-ref-name.ts": {
       "project": "desktop",
       "source": "app/src/lib/sanitize-ref-name.ts",
-      "sha256": "0eea6436141b5b261e225e00f30c41e910f3778399772e5366888d8f220b04ab"
+      "sha256": "0fe15d6f2b81bdc11c69997d6e4125009df142c406f69b13b53ae0e3d61de79f"
     },
     "../../src/upstream/lib/promise.ts": {
       "project": "desktop",

@@ -237,6 +237,13 @@ fn execute(request: &Value) -> Result<Value, String> {
             request["file"].as_str().unwrap(),
             request["length"].as_u64().unwrap() as usize
         )?),
+        "diff/commit" => json!(raw_diff::commit_file_diff(
+            repo,
+            request["sha"].as_str().unwrap(),
+            request["file"].as_str().unwrap(),
+            request["oldPath"].as_str(),
+            request["hideWhitespace"].as_bool().unwrap_or(false)
+        )?),
         "diff/merge-base" => json!(raw_diff::merge_base_diff(
             repo,
             request["from"].as_str().unwrap(),
@@ -448,6 +455,14 @@ fn execute(request: &Value) -> Result<Value, String> {
                 serde_json::from_value(request["mode"].clone()).map_err(|e| e.to_string())?,
                 request["target"].as_str().unwrap(),
                 &strings("paths")?,
+            )?;
+            Value::Null
+        }
+        "conflict/resolve" => {
+            ops::resolve_conflict(
+                repo,
+                request["file"].as_str().unwrap(),
+                serde_json::from_value(request["keep"].clone()).map_err(|e| e.to_string())?,
             )?;
             Value::Null
         }

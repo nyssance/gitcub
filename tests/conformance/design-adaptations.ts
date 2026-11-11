@@ -18,5 +18,13 @@ export function withoutNativeDetails(file: string, source: string): string {
     if (start === -1) throw new Error("app-launch-test: Auto-update block not found")
     return source.slice(0, start)
   }
+  if (file === "desktop/diff-test.ts") {
+    // GitCub has no multi-commit range diff (Desktop getCommitRangeDiff / history multi-selection diff),
+    // so the `range` operation of 'historical diffs with literal filenames' has nothing to run against.
+    // The `commit` and `merge-base` operations run unchanged. Registered as `partial` in the manifest.
+    const operations = "for (const operation of ['commit', 'merge-base', 'range'] as const) {"
+    if (!source.includes(operations)) throw new Error("diff-test: historical diff operations not found")
+    return source.replace(operations, "for (const operation of ['commit', 'merge-base'] as const) {")
+  }
   return source
 }

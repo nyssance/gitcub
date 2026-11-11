@@ -149,8 +149,8 @@ fn apply_selection_to_index(root: &Path, files: &[StageFile], index: &Path) -> R
         {
             if let Some(old) = &f.old_path {
                 // Desktop applyPatchToIndex：重建 rename，再把选中的行应用到新名字。
-                git().args(["add", "--update", "--", old]).run()?;
-                let tree = git().args(["ls-tree", "HEAD", "--", old]).stdout()?;
+                git().args(["--literal-pathspecs", "add", "--update", "--", old]).run()?;
+                let tree = git().args(["--literal-pathspecs", "ls-tree", "HEAD", "--", old]).stdout()?;
                 let info = tree.split('\t').next().unwrap_or_default();
                 let mut fields = info.split_whitespace();
                 let mode = fields.next().ok_or("重命名源文件缺少 mode")?;
@@ -158,7 +158,7 @@ fn apply_selection_to_index(root: &Path, files: &[StageFile], index: &Path) -> R
                 let oid = fields.next().ok_or("重命名源文件缺少 oid")?;
                 git().args(["update-index", "--add", "--cacheinfo", mode, oid, &f.path]).run()?;
             } else {
-                git().args(["reset", "--", &f.path]).run()?;
+                git().args(["--literal-pathspecs", "reset", "--", &f.path]).run()?;
             }
             git().args(["apply", "--cached", "--unidiff-zero", "--whitespace=nowarn", "-"]).stdin(patch).run()?;
         }

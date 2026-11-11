@@ -656,6 +656,37 @@ export async function getBranchMergeBaseDiff(
   const { getBranchMergeBaseDiff } = await import("../../src/lib/diff")
   return getBranchMergeBaseDiff(repo.path, file.path, from, to, file.status.oldPath, hideWhitespace)
 }
+export async function getCommitDiff(
+  repo: { path: string },
+  file: { path: string; status: { oldPath?: string } },
+  sha: string,
+  hideWhitespace = false
+) {
+  const [{ ipc }, { toTextDiff }, { DiffParser }] = await Promise.all([
+    import("../../src/lib/ipc"),
+    import("../../src/lib/diff"),
+    import("../../src/upstream/lib/diff-parser")
+  ])
+  const raw = await ipc.commitFileDiff(repo.path, sha, file.path, file.status.oldPath ?? null, hideWhitespace)
+  return toTextDiff(new DiffParser().parse(raw))
+}
+/** GitCub has no multi-commit range diff (Desktop getCommitRangeDiff); the range cases are registered as unported. */
+export async function getCommitRangeDiff(): Promise<never> {
+  throw new Error("getCommitRangeDiff is not implemented in GitCub")
+}
+export async function checkoutPaths(repo: { path: string }, paths: ReadonlyArray<string>) {
+  const { checkoutPaths } = await import("../../src/lib/git/checkout-paths")
+  return checkoutPaths(repo as never, paths)
+}
+export async function removeConflictedFile(repo: { path: string }, file: { path: string }) {
+  const { removeConflictedFile } = await import("../../src/lib/git/rm")
+  return removeConflictedFile(repo as never, file as never)
+}
+/** Production resolves a side through `resolve_conflict` (checkout of the chosen stage, then staging it). */
+export async function checkoutConflictedFile(repo: { path: string }, file: { path: string }, resolution: string) {
+  const { ipc } = await import("../../src/lib/ipc")
+  return ipc.resolveConflict(repo.path, file.path, resolution as never)
+}
 export async function getBlobContents(repo: { path: string }, revision: string, file: string) {
   try {
     return Buffer.from(call("blob", { repo: repo.path, revision, file }))

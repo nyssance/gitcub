@@ -1883,7 +1883,7 @@ const suites = [
       ["../../../src/lib/git", adapter],
       ["../../helpers/repositories", fixtures],
       ...(name !== "description" ? [["../../../src/models/repository", fixtures]] : []),
-      ...(["reflog", "format-patch"].includes(name) ? [["dugite", fixtures]] : []),
+      ...(["reflog", "format-patch", "submodule"].includes(name) ? [["dugite", fixtures]] : []),
       ...(name === "reflog" ? [["../../../src/lib/offset-from", upstream("lib/offset-from.ts")]] : []),
       ...(name === "submodule" ? [["../../../src/lib/git/submodule", adapter]] : []),
       ...(name === "format-patch" ? [["../../helpers/repository-scaffolding", fixtures]] : [])
@@ -1934,6 +1934,12 @@ const suites = [
     imports: Object.fromEntries([
       ["../../helpers/repositories", fixtures],
       ...(name === "add" ? [["../../../src/lib/git/add", adapter]] : []),
+      ...(name === "add"
+        ? [
+            ["../../../src/lib/path-exists", fixtures],
+            ["dugite", fixtures]
+          ]
+        : []),
       ...(name === "reset" ? [["../../../src/lib/git/reset", adapter]] : []),
       ...(["apply", "diff-stage", "diff-resolution"].includes(name)
         ? [
@@ -2020,7 +2026,9 @@ const suites = [
       ...(name === "checkout"
         ? [
             ["../../../src/models/branch", adapter],
-            ["../../../src/lib/path-exists", fixtures]
+            ["../../../src/lib/path-exists", fixtures],
+            ["../../../src/lib/git/rm", adapter],
+            ["../../../src/models/manual-conflict-resolution", adapter]
           ]
         : []),
       ...(name === "branch" ? [["../../../src/lib/fatal-error", adapter]] : []),
