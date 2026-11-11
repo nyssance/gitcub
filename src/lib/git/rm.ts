@@ -26,5 +26,5 @@ export async function unstageAllFiles(repository: Repository): Promise<void> {
  * Remove conflicted file from  working tree and index
  */
 export async function removeConflictedFile(repository: Repository, file: WorkingDirectoryFileChange) {
-  await git(["rm", "--", file.path], repository.path, "removeConflictedFile")
+  await git(["--literal-pathspecs", "rm", "--", file.path], repository.path, "removeConflictedFile")
 }

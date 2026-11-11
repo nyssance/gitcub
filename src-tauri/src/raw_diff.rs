@@ -74,7 +74,7 @@ pub fn working_directory_diff_via_git(
     repo: &Path, file: &str, kind: FileKind, hide_whitespace: bool,
 ) -> Result<RawDiff, String> {
     // 只读：`git diff HEAD` 会顺手刷新并回写索引，抢 index.lock 会让用户自己的 git 命令失败（status.rs 同一规则）
-    let mut g = Git::new(Some(repo)).args(["--no-optional-locks", "diff"]);
+    let mut g = Git::new(Some(repo)).args(["--no-optional-locks", "--literal-pathspecs", "diff"]);
     if hide_whitespace {
         g = g.arg("-w");
     }
@@ -115,7 +115,7 @@ pub fn apply_patch_to_index(repo: &Path, patch: &str) -> Result<(), String> {
 /// 已暂存的内容上。对应原版 applyPatchToIndex 开头的 `reset`。
 pub fn reset_file_in_index(repo: &Path, file: &str) -> Result<(), String> {
     // 不显式传 HEAD，Git 在新仓库也能重置。锁失败等错误必须传回调用者。
-    Git::new(Some(repo)).args(["reset", "--", file]).run()
+    Git::new(Some(repo)).args(["--literal-pathspecs", "reset", "--", file]).run()
 }
 
 /// 某个文件在某次提交里的原始 diff 文本。
@@ -143,7 +143,7 @@ pub fn commit_file_diff(
 pub fn commit_file_diff_via_git(
     repo: &Path, sha: &str, file: &str, old_path: Option<&str>, hide_whitespace: bool,
 ) -> Result<String, String> {
-    let mut g = Git::new(Some(repo)).args(["log", sha]);
+    let mut g = Git::new(Some(repo)).args(["--literal-pathspecs", "log", sha]);
     if hide_whitespace {
         g = g.arg("-w");
     }
@@ -1419,6 +1419,45 @@ pub(crate) mod in_process {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Desktop 9e5f4998d / 4038b5701：文件名本身是 pathspec 语法（`:(glob)*.txt`）时只能动这一个文件。
+    /// 不按字面处理的话，重置暂存和单文件 diff 都会把同目录的其它 .txt 一并带上。
+    #[test]
+    fn 带_pathspec_语法的文件名只按字面匹配() {
+        let run = |repo: &Path, args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(repo).args(args).output().unwrap();
+            assert!(out.status.success(), "{args:?}: {}", String::from_utf8_lossy(&out.stderr));
+            String::from_utf8_lossy_owned(out.stdout)
+        };
+        let dir = tempfile::tempdir().unwrap();
+        let repo = dir.path();
+        let magic = ":(glob)*.txt";
+        run(repo, &["init", "-q", "-b", "main", "."]);
+        run(repo, &["config", "user.email", "t@t.t"]);
+        run(repo, &["config", "user.name", "t"]);
+        for file in [magic, "unrelated.txt"] {
+            std::fs::write(repo.join(file), "base\n").unwrap();
+        }
+        run(repo, &["add", "--all"]);
+        run(repo, &["commit", "-q", "-m", "base"]);
+        for file in [magic, "unrelated.txt"] {
+            std::fs::write(repo.join(file), "changed\n").unwrap();
+        }
+
+        let diff = working_directory_diff_via_git(repo, magic, FileKind::Normal, false).unwrap().text;
+        assert!(diff.contains(magic), "{diff}");
+        assert!(!diff.contains("unrelated.txt"), "{diff}");
+
+        run(repo, &["add", "--all"]);
+        reset_file_in_index(repo, magic).unwrap();
+        assert_eq!(run(repo, &["diff", "--cached", "--name-only", "-z"]), "unrelated.txt\0");
+
+        run(repo, &["add", "--all"]);
+        run(repo, &["commit", "-q", "-m", "change both"]);
+        let diff = commit_file_diff_via_git(repo, "HEAD", magic, None, false).unwrap();
+        assert!(diff.contains(magic), "{diff}");
+        assert!(!diff.contains("unrelated.txt"), "{diff}");
+    }
 
     #[test]
     fn 认得出_git_的行尾警告() {

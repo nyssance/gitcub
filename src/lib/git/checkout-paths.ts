@@ -2,7 +2,7 @@
 import type { Repository } from "../../models/repository"
 import { executeGit as git } from "../git-execution"
 export async function checkoutPaths(repository: Repository, paths: ReadonlyArray<string>): Promise<void> {
-  await git(["checkout", "HEAD", "--", ...paths], repository.path, "checkoutPaths")
+  await git(["--literal-pathspecs", "checkout", "HEAD", "--", ...paths], repository.path, "checkoutPaths")
 }
 
 /**
