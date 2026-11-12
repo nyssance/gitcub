@@ -82,7 +82,7 @@ import { CommitProgress } from "@/ui/commit-progress/commit-progress"
 import { DeleteTag } from "@/ui/delete-tag/delete-tag-dialog"
 import { DiffView } from "@/ui/diff/lazy-diff"
 import { SubmoduleView } from "@/ui/diff/submodule"
-import { CommitDetails } from "@/ui/history/commit-details"
+import { CommitDetails, MultipleCommitsSelected } from "@/ui/history/commit-details"
 import { headHistory, HistorySidebar } from "@/ui/history/sidebar"
 import { HookFailed } from "@/ui/hook-failed/hook-failed"
 import { Inbox } from "@/ui/inbox/inbox"
@@ -233,6 +233,7 @@ export function App() {
   const commitDetails = useHistoryStore(s => s.commitDetails)
   const setCommitSha = useHistoryStore(s => s.setCommitSha)
   const commitFiles = useHistoryStore(s => s.commitFiles)
+  const commitSelection = useHistoryStore(s => s.commitSelection)
   const commitFile = useHistoryStore(s => s.commitFile)
   const setCommitFile = useHistoryStore(s => s.setCommitFile)
   const commitDiff = useHistoryStore(s => s.commitDiff)
@@ -478,11 +479,19 @@ export function App() {
       : null
   const commitFileKind = selectedCommitFile?.kind
 
+  // Desktop commitSelection：多选且连续时看从最老那个的父到最新那个的合并改动；多选不连续时不显示 diff
+  const multipleCommits = commitSelection.shas.length > 1
+  const rangeLatest = multipleCommits && commitSelection.isContiguous ? commitSelection.shas[0]! : null
+  const rangeOldest = multipleCommits && commitSelection.isContiguous ? commitSelection.shas.at(-1)! : null
+  const detailSha = multipleCommits ? rangeLatest : commitSha
   // 选中提交 → 拉它改了哪些文件；选中文件 → 拉它在那次提交里的 diff
-  useEffect(() => useHistoryStore.getState().loadCommitFiles(repo, commitSha), [repo, commitSha])
   useEffect(
-    () => useHistoryStore.getState().loadCommitDiff(repo, commitSha, commitFile, commitOldPath),
-    [repo, commitSha, commitFile, commitOldPath]
+    () => useHistoryStore.getState().loadCommitFiles(repo, detailSha, rangeOldest),
+    [repo, detailSha, rangeOldest]
+  )
+  useEffect(
+    () => useHistoryStore.getState().loadCommitDiff(repo, detailSha, commitFile, commitOldPath, rangeOldest),
+    [repo, detailSha, commitFile, commitOldPath, rangeOldest]
   )
 
   const stateOf = useCallback(
@@ -1227,6 +1236,24 @@ export function App() {
     [...commits, ...fileCommits, ...(compared?.ahead ?? []), ...(compared?.behind ?? [])].find(
       c => c.sha === commitSha
     ) ?? null
+
+  // Desktop getShasInDiff：从最新的那个沿父提交走，只走选中的；走不到的（合并带进来的另一条线）不在这份 diff 里
+  const shasInDiff = useMemo(() => {
+    if (!rangeLatest) return commitSelection.shas
+    const lookup = new Map(
+      [...commits, ...fileCommits, ...(compared?.ahead ?? []), ...(compared?.behind ?? [])].map(c => [c.sha, c])
+    )
+    const selectedShas = new Set(commitSelection.shas)
+    const inDiff = new Set<string>()
+    const pending = [rangeLatest]
+    for (let sha = pending.pop(); sha !== undefined; sha = pending.pop()) {
+      if (inDiff.has(sha)) continue
+      inDiff.add(sha)
+      for (const parent of lookup.get(sha)?.parentSHAs ?? [])
+        if (selectedShas.has(parent) && !inDiff.has(parent)) pending.push(parent)
+    }
+    return [...inDiff]
+  }, [rangeLatest, commitSelection.shas, commits, fileCommits, compared])
 
   const { editorName, appMenu, defaultBranch, hasCurrentPullRequest } = useNativeMenu({
     state,
@@ -2212,6 +2239,9 @@ export function App() {
                             onLoadMore={loadMoreGraph}
                             selected={commitSha}
                             onSelect={selectHistoryCommit}
+                            onSelectionChange={(shas, isContiguous) =>
+                              useHistoryStore.getState().setCommitSelection({ shas, isContiguous })
+                            }
                             onRevert={sha => {
                               const c = commits.find(x => x.sha === sha)
                               void run(() => ipc.revertCommit(repo, sha, (c?.parentCount ?? 1) > 1))
@@ -2292,10 +2322,17 @@ export function App() {
                         }}
                       />
                     ) : state.selectedTab === "history" ? (
-                      selectedCommit ? (
+                      multipleCommits && !commitSelection.isContiguous ? (
+                        <MultipleCommitsSelected />
+                      ) : selectedCommit ? (
                         <CommitDetails
                           commit={selectedCommit}
                           details={commitDetails}
+                          range={
+                            multipleCommits
+                              ? { selected: commitSelection.shas.length, inDiff: shasInDiff.length }
+                              : undefined
+                          }
                           remote={remotes[repo ?? ""] ?? null}
                           platform={accounts[remotes[repo ?? ""]?.host ?? ""]?.kind ?? "github"}
                           autolinks={state.autolinks}
@@ -2310,7 +2347,7 @@ export function App() {
                             error={null}
                             tokens={commitTokens}
                             repo={repo}
-                            sha={commitSha}
+                            sha={detailSha}
                             oldPath={commitOldPath}
                             status={commitFileKind && <CommitStatusIcon kind={commitFileKind} />}
                             readOnly

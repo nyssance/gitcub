@@ -24,6 +24,12 @@ export function matchCommitFile(files: CommitFile[], path: string): string | nul
   return files.find(file => file.path === path || file.oldPath === path)?.path ?? null
 }
 
+export interface CommitSelection {
+  shas: string[]
+  isContiguous: boolean
+}
+const noCommitSelection: CommitSelection = { shas: [], isContiguous: true }
+
 interface HistoryStore {
   /** Desktop onBranchCreatedFromCommit → scrollCompareListToTop：每次加一，历史列表看到变化就滚回顶部 */
   scrollToTopRequest: number
@@ -38,6 +44,9 @@ interface HistoryStore {
    *  Desktop 每次 refreshChangesSection 都 loadLocalCommits，这里只取第一条 */
   mostRecentLocalCommit: Commit | null
   commitSha: string | null
+  /** Desktop commitSelection：历史里多选的提交（列表顺序，最新在前）和它们在列表里是否连续。
+   *  多于一个且连续时内容区显示从最老那个的父到最新那个的合并改动；不连续时不显示 diff */
+  commitSelection: CommitSelection
   commitFiles: CommitFile[]
   /** 选中提交的完整信息（Desktop Commit：提交者、共同作者 trailer），提交摘要用 */
   commitDetails: Commit | null
@@ -60,8 +69,16 @@ interface HistoryStore {
   loadMostRecentLocalCommit: (repo: string | null, status: PushStatus | null) => void
   loadFileHistory: (repo: string | null, file: string | null) => void
   loadMoreFileHistory: (repo: string) => void
-  loadCommitFiles: (repo: string | null, sha: string | null) => () => void
-  loadCommitDiff: (repo: string | null, sha: string | null, file: string | null, oldPath: string | null) => () => void
+  /** `oldest`：多选连续提交时范围里最老的那个，`sha` 是最新的那个 */
+  loadCommitFiles: (repo: string | null, sha: string | null, oldest?: string | null) => () => void
+  loadCommitDiff: (
+    repo: string | null,
+    sha: string | null,
+    file: string | null,
+    oldPath: string | null,
+    oldest?: string | null
+  ) => () => void
+  setCommitSelection: (selection: CommitSelection) => void
   selectCommit: (sha: string) => void
   setCommitSha: (sha: string | null) => void
   setCommitFile: (file: string | null) => void
@@ -90,6 +107,7 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
   localCommits: null,
   mostRecentLocalCommit: null,
   commitSha: null,
+  commitSelection: noCommitSelection,
   commitDetails: null,
   commitFiles: [],
   commitFile: null,
@@ -114,6 +132,7 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
       graphDone: false,
       graphLoading: false,
       commitSha: null,
+      commitSelection: noCommitSelection,
       commitFiles: [],
       commitDetails: null,
       commitFile: null,
@@ -274,12 +293,30 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
     )
   },
   // 从文件历史里选的提交：选中那个文件（改名那一次按旧名也能对上），对不上才退回第一个
-  loadCommitFiles: (repo, sha) => {
+  loadCommitFiles: (repo, sha, oldest = null) => {
     if (!repo || !sha) {
       set({ commitFiles: [], commitDetails: null })
       return () => {}
     }
     if (get().commitDetails?.sha !== sha) set({ commitDetails: null })
+    // Desktop loadChangedFilesForCurrentSelection：多个提交走 getCommitRangeChangedFiles，摘要不属于某一个提交
+    if (oldest && oldest !== sha) {
+      set({ commitDetails: null })
+      return forkCancelable(
+        call("commitRangeFiles", ipc => ipc.commitRangeFiles(repo, oldest, sha)).pipe(
+          Effect.match({
+            onSuccess: files => {
+              const current = get().commitFile
+              set({
+                commitFiles: files,
+                commitFile: files.some(file => file.path === current) ? current : (files[0]?.path ?? null)
+              })
+            },
+            onFailure: error => reportError(error.message)
+          })
+        )
+      )
+    }
     return forkCancelable(
       Effect.all(
         [
@@ -309,19 +346,24 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
     )
   },
   // 语法高亮独立于 diff：失败或太大就只是没颜色，不挡住 diff
-  loadCommitDiff: (repo, sha, file, oldPath) => {
+  loadCommitDiff: (repo, sha, file, oldPath, oldest = null) => {
     if (!repo || !sha || !file) {
       set({ commitDiff: null })
       return () => {}
     }
     set({ commitTokens: undefined })
+    const range = oldest && oldest !== sha ? oldest : null
     return forkCancelable(
       Effect.all(
         [
-          Effect.tryPromise(() => getCommitSyntaxTokens(repo, sha, file)).pipe(
+          Effect.tryPromise(() => getCommitSyntaxTokens(repo, sha, file, range ? `${range}^` : undefined)).pipe(
             Effect.match({ onSuccess: commitTokens => set({ commitTokens }), onFailure: () => {} })
           ),
-          call("commitFileDiff", ipc => ipc.commitFileDiff(repo, sha, file, oldPath)).pipe(
+          call("commitFileDiff", ipc =>
+            range
+              ? ipc.commitRangeFileDiff(repo, range, sha, file, oldPath)
+              : ipc.commitFileDiff(repo, sha, file, oldPath)
+          ).pipe(
             Effect.match({
               onSuccess: text => set({ commitDiff: new DiffParser().parse(text) }),
               onFailure: error => reportError(error.message)
@@ -342,6 +384,14 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
     set({ commitSha: sha })
   },
   setCommitSha: commitSha => set({ commitSha }),
+  setCommitSelection: next =>
+    set(store =>
+      store.commitSelection.isContiguous === next.isContiguous &&
+      store.commitSelection.shas.length === next.shas.length &&
+      store.commitSelection.shas.every((sha, index) => sha === next.shas[index])
+        ? store
+        : { commitSelection: next }
+    ),
   setCommitFile: commitFile => set({ commitFile }),
   setHistoryFile: historyFile => set({ historyFile }),
   setCompared: next => set(store => ({ compared: resolve(next, store.compared) }))

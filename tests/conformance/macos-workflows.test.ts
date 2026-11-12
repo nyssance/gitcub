@@ -1941,6 +1941,62 @@ test("blame of a 100000-line file stays virtualized and the last line opens its 
 })
 
 /** Desktop _undoCommit：先切到 Changes 页；git-store undoCommit 把被撤销提交的标题与正文放回提交框，改动回到工作区 */
+test("selecting consecutive commits shows their combined diff, non-consecutive ones show no diff", async ({
+  mainWindow: page
+}) => {
+  // Desktop SelectedCommits + getCommitRangeChangedFiles / getCommitRangeDiff
+  const main = realpathSync(smokeRepoPath)
+  await clickRailRepository(page, main)
+  const head = git("rev-parse", "HEAD")
+  const file = join(smokeRepoPath, "range-probe.txt")
+  const lines = ["range one", "range two", "range three"]
+  lines.forEach((_, index) => {
+    writeFileSync(file, `${lines.slice(0, index + 1).join("\n")}\n`)
+    git("add", "range-probe.txt")
+    git("-c", "commit.gpgsign=false", "commit", "-q", "-m", `range probe ${index + 1}`)
+  })
+  const click = (summary: string, modifier: "shiftKey" | "metaKey" | null) =>
+    page.evaluate(
+      ({ summary, modifier }) => {
+        const row = document.querySelector(`.desktop-list [title="${summary}"]`)!
+        for (const type of ["mousedown", "mouseup", "click"])
+          row.dispatchEvent(
+            new MouseEvent(type, { bubbles: true, button: 0, ...(modifier ? { [modifier]: true } : {}) })
+          )
+      },
+      { summary, modifier }
+    )
+  try {
+    await page.locator('[role="tab"]:has-text("History")').click()
+    await page.locator('.desktop-list [title="range probe 3"]').first().waitFor({ state: "visible", timeout: 15000 })
+    await click("range probe 3", null)
+    await click("range probe 1", "shiftKey")
+    const summary = page.locator("#expandable-commit-summary[data-multiple-commits]")
+    await expect(summary).toContainText("Showing changes from 3 commits", { timeout: 15000 })
+    await page.locator('[data-commit-details] [title="range-probe.txt"]').first().waitFor({ state: "visible" })
+    const diff = page.locator(".diff-container")
+    for (const line of lines) await expect(diff).toContainText(line, { timeout: 15000 })
+    // 跳过中间那个：不连续，不显示 diff
+    await click("range probe 3", null)
+    await click("range probe 1", "metaKey")
+    await expect(page.locator("#multiple-commits-selected")).toContainText("non-consecutive", { timeout: 15000 })
+    // 回到单个提交：只有它自己的那一行是新增
+    await click("range probe 2", null)
+    await expect(diff).toContainText("range two", { timeout: 15000 })
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            `${!!document.querySelector("#multiple-commits-selected")} ${(document.querySelector(".diff-container")?.textContent ?? "").includes("range three")}`
+        )
+      )
+      .toBe("false false")
+  } finally {
+    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--hard", head)
+    rmSync(file, { force: true })
+  }
+})
+
 test("undoing a local commit from history restores its message in the commit form", async ({ mainWindow: page }) => {
   const main = realpathSync(smokeRepoPath)
   await clickRailRepository(page, main)

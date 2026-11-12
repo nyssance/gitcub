@@ -126,9 +126,15 @@ export async function getSyntaxTokens(repo: string, file: string): Promise<DiffT
 /** 历史 diff 的词法分析：取该提交及其父提交里那个文件的内容。
  *
  * 之前历史页没有高亮，就是因为只给工作区 diff 取了两侧内容。 */
-export async function getCommitSyntaxTokens(repo: string, sha: string, file: string): Promise<DiffTokens> {
+/** `base`：旧的一侧取哪个版本，默认是这个提交的父；多选提交时是范围里最老那个的父 */
+export async function getCommitSyntaxTokens(
+  repo: string,
+  sha: string,
+  file: string,
+  base = `${sha}^`
+): Promise<DiffTokens> {
   const [original, modified] = await Promise.all([
-    invoke<string>("file_at_commit", { repo, sha: `${sha}^`, file }).catch(() => ""),
+    invoke<string>("file_at_commit", { repo, sha: base, file }).catch(() => ""),
     invoke<string>("file_at_commit", { repo, sha, file }).catch(() => "")
   ])
   const [oldTokens, newTokens] = await Promise.all([tokenizeFile(original, file), tokenizeFile(modified, file)])

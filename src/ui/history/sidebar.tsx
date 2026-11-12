@@ -2,7 +2,7 @@ import { ArrowUpIcon, GitCompareIcon, SearchIcon } from "@primer/octicons-react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { formatDistanceToNowStrict } from "date-fns"
 import { CaseSensitive, CheckCheck, CircleHelp, Regex, SlidersHorizontal, WholeWord, X } from "lucide-react"
-import { type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { type RefObject, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useTranslation } from "react-i18next"
 
@@ -115,6 +115,8 @@ interface Props {
   onLoadMore?: () => void
   selected: string | null
   onSelect: (sha: string) => void
+  /** Desktop CommitList onCommitsSelected：选中的提交（列表顺序）和它们的行是否连续 */
+  onSelectionChange?: (shas: string[], isContiguous: boolean) => void
   /** 右键菜单里的动作。对齐原版历史页的那几项 */
   onRevert: (sha: string) => void
   onCherryPick: (sha: string) => void
@@ -182,6 +184,7 @@ export function HistorySidebar({
   onLoadMore,
   selected,
   onSelect,
+  onSelectionChange,
   onRevert,
   onCherryPick,
   onCherryPickMany,
@@ -308,6 +311,14 @@ export function HistorySidebar({
   // 列表不是完整的 log：不画泳道、不给拖、不按下标改写历史
   const filtered = searching || !!fileHistory
   const selectedRows = list.filter(commit => selection.has(commit.sha)).map(commit => commit.sha)
+  // Desktop commit-list isContiguous：选中的行下标逐个相邻
+  const selectedIndexes = list.flatMap((commit, index) => (selection.has(commit.sha) ? [index] : []))
+  const isContiguous = selectedIndexes.every((index, at) => at === 0 || index === selectedIndexes[at - 1]! + 1)
+  const selectionKey = selectedRows.join(",")
+  const reportSelection = useEffectEvent(() => onSelectionChange?.(selectedRows, isContiguous))
+  useEffect(() => {
+    reportSelection()
+  }, [selectionKey, isContiguous])
   // 每个提交在 HEAD 历史里的下标；不在里面的（别的分支、贮藏）不能按 HEAD 历史改写
   const head = headHistory(rows, commits)
   const headIndex = new Map(head.map((commit, index) => [commit.sha, index]))

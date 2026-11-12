@@ -45,6 +45,7 @@ import { DiffView, ImagePane } from "../../src/ui/diff/diff"
 import { ImageDiffView } from "../../src/ui/diff/image"
 import { SplitDiff } from "../../src/ui/diff/split-diff"
 import { SubmoduleView } from "../../src/ui/diff/submodule"
+import { CommitDetails, MultipleCommitsSelected } from "../../src/ui/history/commit-details"
 import { CommitSummary } from "../../src/ui/history/commit-summary"
 import { CommitFileList } from "../../src/ui/history/file-list"
 import { HistorySidebar } from "../../src/ui/history/sidebar"
@@ -1547,6 +1548,45 @@ test("history: clicking a commit selects it; search sends GitLens defaults and E
   await waitFor(() => expect(screen.queryByText("Initial commit")).not.toBeInTheDocument())
   await user.keyboard("{Escape}")
   expect(await screen.findByText("Initial commit")).toBeVisible()
+})
+// Desktop commit-list onCommitsSelected / isContiguous 与 SelectedCommits 的多选分支
+test("history: shift selects a consecutive range, cmd skips rows, and both are reported with contiguity (MultipleCommitSelection)", async () => {
+  const user = userEvent.setup()
+  const three = [...historyCommits, { ...commit, sha: "c".repeat(40), shortSha: "ccccccc", summary: "Third commit" }]
+  const args = historySidebar({}, { commits: three, onSelectionChange: mock() })
+  const last = () => (args.onSelectionChange as ReturnType<typeof mock>).mock.calls.at(-1)
+  await user.click(await screen.findByText(commit.summary))
+  expect(last()).toEqual([[commit.sha], true])
+  await user.keyboard("{Shift>}")
+  await user.click(screen.getByText("Third commit"))
+  await user.keyboard("{/Shift}")
+  expect(last()).toEqual([three.map(c => c.sha), true])
+  await user.click(screen.getByText(commit.summary))
+  await user.keyboard("{Meta>}")
+  await user.click(screen.getByText("Third commit"))
+  await user.keyboard("{/Meta}")
+  expect(last()).toEqual([[three[0]!.sha, three[2]!.sha], false])
+})
+test("history: several consecutive commits show a combined summary, non-consecutive ones show the blank slate (MultipleCommitsSummary)", () => {
+  layout(600, 384)
+  const view = render(
+    <CommitDetails
+      commit={commit}
+      details={null}
+      remote={null}
+      files={[]}
+      selected={null}
+      onSelect={mock()}
+      range={{ selected: 3, inDiff: 2 }}>
+      <div />
+    </CommitDetails>
+  )
+  expect(screen.getByText(t("history.showingChangesFromCommits", { count: 2 }))).toBeVisible()
+  expect(screen.getByText(t("history.unreachableCommitsNotIncluded", { count: 1 }))).toBeVisible()
+  expect(screen.queryByText(commit.summary)).not.toBeInTheDocument()
+  view.unmount()
+  render(<MultipleCommitsSelected />)
+  expect(screen.getByText(t("history.unableToDisplayDiffWhenMultipleNonConsecutiveCommitsAreSelected"))).toBeVisible()
 })
 test("history: :alias: in a commit summary renders as the emoji and the tooltip keeps the shortcode (RichText emoji)", async () => {
   useEmojiStore.setState({ emoji: await readEmoji() })
