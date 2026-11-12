@@ -168,8 +168,9 @@ export function Worktrees({
           </div>
           <FieldGroup>
             <Field>
-              <FieldLabel>{t("worktree.branch")}</FieldLabel>
+              <FieldLabel htmlFor="worktree-branch">{t("worktree.branch")}</FieldLabel>
               <Input
+                id="worktree-branch"
                 disabled={busy}
                 value={branch}
                 onChange={e => setBranch(e.currentTarget.value)}
@@ -196,9 +197,9 @@ export function Worktrees({
               </Select>
             )}
             <Field>
-              <FieldLabel>{t("worktree.path")}</FieldLabel>
+              <FieldLabel htmlFor="worktree-path">{t("worktree.path")}</FieldLabel>
               <div className="flex gap-2">
-                <Input disabled={busy} value={path} onChange={e => setPath(e.currentTarget.value)} />
+                <Input id="worktree-path" disabled={busy} value={path} onChange={e => setPath(e.currentTarget.value)} />
                 <Button
                   variant="outline"
                   disabled={busy || !branch.trim()}

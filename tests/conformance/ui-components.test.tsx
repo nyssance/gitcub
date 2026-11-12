@@ -613,10 +613,9 @@ test("worktrees: a failed creation stays open, reports the error and can be retr
   render(<Worktrees repo="/preview/repository" onClose={onClose} onOpen={mock()} onMove={mock()} />)
   const create = await screen.findByRole("button", { name: t("worktree.create") })
   await waitFor(() => expect(callsOf("branches")).toHaveLength(1))
-  // 分支输入带 datalist，起点下拉也是 combobox；按表单里的顺序取：分支、路径
-  const [branchInput, pathInput] = [...screen.getByRole("dialog").querySelectorAll("input")]
-  await user.type(branchInput!, "feature")
-  await user.type(pathInput!, "/preview/feature")
+  const pathInput = screen.getByLabelText(t("worktree.path"))
+  await user.type(screen.getByLabelText(t("worktree.branch")), "feature")
+  await user.type(pathInput, "/preview/feature")
   await user.click(create)
   expect(await screen.findByRole("alert")).toHaveTextContent("already exists")
   await waitFor(() => expect(create).toBeEnabled())
