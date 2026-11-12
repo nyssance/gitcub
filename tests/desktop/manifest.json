@@ -2181,6 +2181,11 @@
         "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
       }
     },
+    "app/test/unit/ui/add-worktree-dialog-test.tsx": {
+      "sha256": "52d2adc9c4e7feab3b98dcdc50be30303fc8d901478dcc91c0d63ffe3f67da8e",
+      "status": "pending",
+      "rust_tests": []
+    },
     "app/test/unit/ui/appearance-test.tsx": {
       "sha256": "350a7d9c439ea3c8674ffffa51a37c9bc0fa5499ae179d6b364f3bac34d58651",
       "status": "ported",
@@ -2423,6 +2428,12 @@
         "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
       }
     },
+    "app/test/unit/ui/dropdown-select-button-test.tsx": {
+      "sha256": "fb8cb632f425ec090710be78f7c9a492540459d20b43d506b6a28a9469de7fad",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Project rule: base controls use standard shadcn/Base UI. GitCub has no DropdownSelectButton; its highlight bookkeeping is internal to that Desktop control. Not executed and not counted as compatible."
+    },
     "app/test/unit/ui/email-attribution-warning-test.tsx": {
       "sha256": "1cacd95c1ea47883908ea8d38cc07bdf6c9cb0598a058e6480edf21c4ce30ce1",
       "status": "ported",
@@ -2523,6 +2534,12 @@
         "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
       }
     },
+    "app/test/unit/ui/popover-test.tsx": {
+      "sha256": "c809f9d24c1878e282e45e11fafaa1ef4111ff2df408c02e291491aa536a275e",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Project rule: base controls use standard shadcn/Base UI. GitCub's Popover keeps Desktop's call contract but is positioned by Base UI and never computes --available-height, so the asserted internal does not exist. Not executed and not counted as compatible."
+    },
     "app/test/unit/ui/relative-time-test.tsx": {
       "sha256": "cd381339100b3492fbf02fdb286df8798a38f9a04e7c0ad700dacdb8f25f6888",
       "status": "ported",
@@ -2552,6 +2569,11 @@
         "command": "bun run test:upstream",
         "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
       }
+    },
+    "app/test/unit/ui/repository-settings-test.tsx": {
+      "sha256": "1bc09a2cb0cfb8ae60bc93da6846d8ed4a374ff2559bed1b0f6805494c078538",
+      "status": "pending",
+      "rust_tests": []
     },
     "app/test/unit/ui/rulesets-and-publish-surfaces-test.tsx": {
       "sha256": "f7c5243083e7699fb3af39bbd19c77881fe35e67a5e1cb58b61be2674be02c96",
