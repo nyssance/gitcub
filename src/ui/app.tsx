@@ -1633,11 +1633,12 @@ export function App() {
   if (!repo) {
     return (
       <TooltipProvider>
+        {/* 这三个弹窗在有仓库的那棵树里也排在最前：位置一致，repo 在有无之间切换时不会重新挂载、丢掉没保存的改动 */}
+        {prefs}
+        {askDialog}
+        {askTextDialog}
         <div className="h-screen">
           <TitleBar />
-          {prefs}
-          {askDialog}
-          {askTextDialog}
           {errors[0] && (
             <AppError
               key="app-error"
