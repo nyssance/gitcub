@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process"
 import { access, cp, mkdir, mkdtemp, readdir, rename, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import type { TestContext } from "node:test"
 
 export class Repository {
@@ -44,6 +44,27 @@ export async function exec(args: string[], cwd: string, options?: { stdin?: stri
   const result = spawnSync("git", args, { cwd, encoding: "utf8", timeout: 30000, input: options?.stdin })
   if (result.error) throw result.error
   return { stdout: result.stdout, stderr: result.stderr, exitCode: result.status }
+}
+// Desktop helpers/assisted-commit.ts 里与 Copilot 无关的通用夹具：rawGit、tip、seed。
+export async function rawGit(repository: Repository, args: string[]) {
+  const result = await exec(args, repository.path)
+  if (result.exitCode !== 0) throw new Error(result.stderr)
+  return result.stdout.replace(/\r?\n$/, "")
+}
+export async function tip(repository: Repository) {
+  const sha = await rawGit(repository, ["rev-parse", "--verify", "HEAD"])
+  if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(sha)) throw new Error(`Unexpected HEAD: ${sha}`)
+  return sha
+}
+export async function seed(t: TestContext, entries: Readonly<Record<string, string | Buffer>>) {
+  const repository = await setupEmptyRepository(t)
+  for (const [path, bytes] of Object.entries(entries)) {
+    await mkdir(dirname(join(repository.path, path)), { recursive: true })
+    await writeFile(join(repository.path, path), bytes)
+  }
+  await rawGit(repository, ["add", "--", ...Object.keys(entries)])
+  await rawGit(repository, ["commit", "-m", "Initial commit"])
+  return repository
 }
 export async function setupLocalConfig(repo: Repository, entries: [string, string][]) {
   for (const [key, value] of entries) {

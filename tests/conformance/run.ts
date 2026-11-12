@@ -829,6 +829,14 @@ const suites = [
     }
   },
   {
+    file: "desktop/ui/focus-container-test.ts",
+    globals: false,
+    imports: {
+      "../../../src/ui/lib/focus-container": join(root, "../../src/ui/desktop/focus-container.tsx"),
+      "../../helpers/ui/render": join(root, "upstream/desktop/helpers/ui/render.tsx")
+    }
+  },
+  {
     file: "desktop/ui/text-box-test.ts",
     globals: false,
     imports: {
@@ -1676,6 +1684,7 @@ const suites = [
       "../../../src/lib/git/clone": adapter,
       "../../../src/lib/git": adapter,
       "../../../src/lib/git/core": adapter,
+      "../../../src/models/repository": fixtures,
       "../../helpers/repositories": fixtures,
       "../../helpers/repository-scaffolding": fixtures,
       "../../helpers/temp": fixtures,
@@ -1861,6 +1870,9 @@ const suites = [
       ...(name === "fetch"
         ? [
             ["../../../src/lib/git/for-each-ref", adapter],
+            ["../../../src/lib/git/fetch", adapter],
+            ["../../helpers/assisted-commit", fixtures],
+            ["../../helpers/temp", fixtures],
             ["../../../src/models/branch", adapter]
           ]
         : []),

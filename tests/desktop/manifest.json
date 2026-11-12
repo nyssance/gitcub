@@ -74,6 +74,24 @@
         "adaptation": "Original suite unchanged against production code via API shape adapter; executed by the upstream runner. Coverage is limited to the original assertions."
       }
     },
+    "app/test/unit/assisted-commit-coordinator-test.ts": {
+      "sha256": "fd647fea52f33a621411e58f064e65a97d0950d0a7db605e9f155c295f909b87",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/assisted-commit-push-storage-test.ts": {
+      "sha256": "e5fc857b9328a119ecfe8d2d4ce1c4aab726d9984c5412b251947fa8982e9056",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/assisted-commit-selection-test.ts": {
+      "sha256": "d2d968e7b98d15ad876fd5a0d9f686a84b224edbc629503728cb03e1bfe2c43e",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
     "app/test/unit/authenticated-image-filter-test.ts": {
       "sha256": "622adf1ab20e52c51617a5fa0e23feee04b63250103c4c0307b837c29dd9321d",
       "status": "ported",
@@ -174,6 +192,12 @@
         "adaptation": "Original test bytes and production TypeScript module copied unchanged; not Rust coverage. Original suite passed."
       }
     },
+    "app/test/unit/commit-mode-storage-test.ts": {
+      "sha256": "2bce21d87aa213e54b8640acbd0bd17966844b5806a5278d7b93ec47f75276f0",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Per-repository manual/assisted commit mode storage; assisted commit (Copilot) was removed at the user's request on 2026-10-21. Not executed and not counted as compatible."
+    },
     "app/test/unit/copilot-app-test.ts": {
       "sha256": "07c102133d45acee1ff5dd30d32a502b2d2be1f788f484ddb17eb7b8528abefa",
       "status": "excluded",
@@ -184,6 +208,18 @@
         "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
       },
       "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-assisted-commit-sdk-test.ts": {
+      "sha256": "98ccce0b86057a1e2450a144283a5aa0b425885079a654ca1b2552f1abeba91e",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/copilot-assisted-commit-test.ts": {
+      "sha256": "06e069e26187376662cf2c6c5626bb9d996ca1d4110586f2ad7027fb2385184d",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
     },
     "app/test/unit/copilot-byok-test.ts": {
       "sha256": "c9a2c2b12b63fe9a9724645a970ab9285703e156a8469bfa05ebd647a371b47e",
@@ -274,7 +310,7 @@
       "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "app/test/unit/copilot-in-memory-session-fs-provider-test.ts": {
-      "sha256": "a91606455343348bc37c5ead1877f8ef33deca2d03865c0b1ec1438dc0693246",
+      "sha256": "4b78a0ec07d3475b3f6d6c05784ac7ae64b8bf3e7fde3b0c05b70a6fb98b32a4",
       "status": "excluded",
       "rust_tests": [],
       "runner": {
@@ -283,6 +319,12 @@
         "adaptation": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
       },
       "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
+    },
+    "app/test/unit/copilot-operation-test.ts": {
+      "sha256": "d92f10068bdec4857286e519171dbb45a754029096ccc2d54b3c12a0d3cffc12",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
     },
     "app/test/unit/copilot-resolution-helpers-test.ts": {
       "sha256": "2df5a97a8ecaab89001bf02bb949acea926065ce90758d21f14daeb51c43bd8e",
@@ -617,6 +659,48 @@
         "adaptation": "Original tests unchanged, production Rust and TS functions via API shape adapters. All original active assertions executed and passed; no test body changes."
       }
     },
+    "app/test/unit/git/assisted-commit-cleanup-test.ts": {
+      "sha256": "665b719eb0ffc6caaf7735944512393947e3b81ad10e4de52f52a390037fae2f",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/git/assisted-commit-completion-test.ts": {
+      "sha256": "52c2ca669c7e621f8a396f702afc06d9103bb32a394570c06763ace375cceed9",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/git/assisted-commit-hooks-test.ts": {
+      "sha256": "6de398cc76eb9dddc80f443091ae778c53a836b2e2ec22e683d5624f262ef892",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/git/assisted-commit-planning-test.ts": {
+      "sha256": "68f8c9ab5dcae7bcfde1f1b02da7e9a74e1013e1ed11b76e792ba2bd94ddacdd",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/git/assisted-commit-selected-fence-test.ts": {
+      "sha256": "94c859514f351a4b475bd846e9c7c2ac939139e2a2e7d9532ba6cb1de9135432",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/git/assisted-commit-snapshot-test.ts": {
+      "sha256": "4fe6f1e8d18460e205c63e1d97f03c592d6c8bec3c74a509365977cf44a9c718",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/git/assisted-commit-test.ts": {
+      "sha256": "67b337b0daef5d9b68351672bcfaf4412d8b4111efe19543d547ec8535b09156",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
     "app/test/unit/git/branch-test.ts": {
       "sha256": "67874b74c95e4f5be0fa8103f1aa1928860806dbb5e4f6af02c853e59896b638",
       "status": "ported",
@@ -648,14 +732,15 @@
       }
     },
     "app/test/unit/git/clone-test.ts": {
-      "sha256": "943eb231cf381887684439b98ebdfd3079c6c653edfdee6ca10a5711f9aa9b84",
-      "status": "ported",
+      "sha256": "c8b66b57121d846982835d198fb30310627ff93066fd3f9d5d2f21b7729f4ba7",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/clone-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery."
-      }
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery. Copilot removal: excludes the local source path mapping, local source coordination, protected execution directory and assisted-run destination admission cases; no full-file compatibility claim."
+      },
+      "exclusion": "Assisted-commit (Copilot) repository-operation lease cases intentionally removed with the feature; transport policy and all plain clone assertions retained."
     },
     "app/test/unit/git/commit-test.ts": {
       "sha256": "e374c7860465dc3dbc4b2a37c1bf2fce5dc13e3c6b159f5b2eed395e5baf0c71",
@@ -814,7 +899,7 @@
       }
     },
     "app/test/unit/git/fetch-test.ts": {
-      "sha256": "60e5e6048cdeeff3a8e07d4030beaea132131fee489c6f822a41dd787983adf2",
+      "sha256": "2d67b4b70ffbd28a43b15e9d1ac1bd3a58966d3661bea37317f4b291af7c7fe1",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -1134,6 +1219,12 @@
         "command": "bun run test:upstream",
         "adaptation": "Original assertions unchanged, including conflict/resume and invalid targets. Calls production Rust interactive, ops, status, history. Bridge maps Rust Result plus actual conflict state to Desktop RebaseResult; fixtures use Git solely to create commits. HEAD-only getCommit/getCommits adaptation rejects other revisions."
       }
+    },
+    "app/test/unit/git/repository-operation-test.ts": {
+      "sha256": "d57fdb59c37103d3b8e4d7b73b91eeabf4651472072b66f62917a722a08b8784",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Assisted-commit (Copilot) repository-operation leases; the feature was removed at the user's request on 2026-10-21. Not executed and not counted as compatible."
     },
     "app/test/unit/git/reset-test.ts": {
       "sha256": "1001f91d91efa59f2012853d0a5e3d6a310b7e5128b877043b26c443949d39d9",
@@ -1487,7 +1578,7 @@
       }
     },
     "app/test/unit/parse-app-url-test.ts": {
-      "sha256": "91547b24df250d241d2e290013e8c21641412972b486a7c894882fbbabaa5dfa",
+      "sha256": "517a631b8777065a61867c48505e03143b091551c17d71ef5c72b500fe687349",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -1679,7 +1770,7 @@
       }
     },
     "app/test/unit/repositories-database-test.ts": {
-      "sha256": "8924e081948c4c0981a970b63e47de98484f9d3fbe7a5e467e6bfe544461fa72",
+      "sha256": "c9566d7970e223cbe77f69d492bd5a4221cec37cbf1adbe781f63ff4adde5471",
       "status": "excluded",
       "rust_tests": [],
       "runner": {
@@ -1910,8 +2001,80 @@
         "adaptation": "Original assertions and mocks unchanged against the production AppStore account/indicator method closure and real AccountsStore, StatsStore, CopilotStore and repository caches. React owns unrelated window/navigation workflows; this is not coverage of the entire upstream AppStore."
       }
     },
+    "app/test/unit/stores/assisted-commit-cancellation-test.ts": {
+      "sha256": "81ed3e0081a3ccc72b8ffd68a15d4e0fd4cdc266c9a1b29bf785dcb8dfab14aa",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-cleanup-test.tsx": {
+      "sha256": "21c00da5f61a166f09c0a881c94ac882cbe901954d3fdd0b2d4f89fadf56e84a",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-completion-test.ts": {
+      "sha256": "9736163dfc22e96af4700c7d3ffd130901fd33fb1b005d87b50e493e0d181c0d",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-preview-test.ts": {
+      "sha256": "cb16c7f41abce36018f2fd5a9f17271d08f79e1e9671ed035605ca945e7ad5f0",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-push-hooks-test.ts": {
+      "sha256": "40cd97d581709d5b3f323bd6f4b15d05f0cb58f484ac07d461b385ad2ba522df",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-reader-publication-test.ts": {
+      "sha256": "3b578ff809052d6f62ad40a560e6130cbaf1c7c9fec90d6735b30d01839a6718",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-recovery-test.ts": {
+      "sha256": "a48d77578380d22a3f265e9e3b548a4118f998f4c3b6322bc725dfa22459278d",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-run-hooks-test.ts": {
+      "sha256": "b629b355befda1aa9b9ae9f36ccb97ba6b414e995a9c63632412fc5544ae8cdd",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-run-test.ts": {
+      "sha256": "03129ad1f94f5b55fdf75a1410281e64152d1e2a0a7dc2c460ea2894b9805c52",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-selection-test.ts": {
+      "sha256": "86c2970f6cbbe8048031eef8947537727f05f08b2dcbdd3812727dabccfc8f77",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/assisted-commit-upstream-integration-test.ts": {
+      "sha256": "c6faa8615163e77a6b6a32772c63e6fc53fd9145738371906ca295196c0523ea",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/stores/copilot-assisted-commit-test.ts": {
+      "sha256": "641786f1f9fea5ca5469da254713a9bbe9afcf8e83d42fc3bd37111a43c51f89",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
     "app/test/unit/stores/copilot-store-credentials-test.ts": {
-      "sha256": "16b383879277dd3703b949529939095a0045e7b6e68d43020418316f776cccda",
+      "sha256": "41b70e6b459538756c4ea3f7127337641fc8f242487a09006034a715e615c3b2",
       "status": "excluded",
       "rust_tests": [],
       "runner": {
@@ -1922,7 +2085,7 @@
       "exclusion": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "app/test/unit/stores/copilot-store-test.ts": {
-      "sha256": "bdf542802ef86b2f2d0feb91147175268340efa8a1e973e9ec28dafd934a8ed8",
+      "sha256": "69a693ac1d6564ce3072d4aff3b7ca45d33679cbabbd1717e9338d7e5befb3d2",
       "status": "excluded",
       "rust_tests": [],
       "runner": {
@@ -1963,7 +2126,7 @@
       }
     },
     "app/test/unit/stores/updates/update-remote-url-test.ts": {
-      "sha256": "aa7b377a11a069d0441dcd2c2806273aa66d5eb3ee2b18a5dca2fa5240cbac1b",
+      "sha256": "d3ab23df4fc3610b6fe803ed64e720ff500e4425fdb9f2d01757af7a17560281",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -2032,6 +2195,36 @@
         "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
       }
     },
+    "app/test/unit/ui/assisted-commit-details-test.tsx": {
+      "sha256": "bbd502348c7a99cec919420aa2b5a6e64e5680627bf117d2741f48f0d36ad7fe",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/ui/assisted-commit-history-test.tsx": {
+      "sha256": "963ba0da7ef90f1cbfa1ac6223e73ccece323b1fc08c8f2a114b8a7558096332",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/ui/assisted-commit-sidebar-test.tsx": {
+      "sha256": "9035e34b5548c5fea872f38cd775a524541175db63cb5a2a48998635461a2cea",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/ui/assisted-repository-creation-test.tsx": {
+      "sha256": "a9bc501c39429989bdeb840e984b9d49673beb7c05973e69fbb686b15f2cf2fa",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/ui/assisted-worktree-mutations-test.ts": {
+      "sha256": "92fc781a56655cddc85d0dcbe50c8638c29f31874f8da1d9abcae0bbf8d21574",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
     "app/test/unit/ui/banner-surfaces-test.tsx": {
       "sha256": "399cc63f678b6e0ee6f6f472bb537b126fcf78ff33f787bfc23f478ef31fa572",
       "status": "ported",
@@ -2083,7 +2276,7 @@
       }
     },
     "app/test/unit/ui/commit-message-test.tsx": {
-      "sha256": "a658f385065dd7b6686baa8ffcd5b68d01f391efd86a3fc30cb3430bfc10cb06",
+      "sha256": "1b63ec6cee54fc15bad9c35c425ffb5187bfa9988fb6a289dafe16175ef224e8",
       "status": "excluded",
       "rust_tests": [],
       "runner": {
@@ -2123,6 +2316,18 @@
         "command": "bun run test:upstream",
         "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
       }
+    },
+    "app/test/unit/ui/copilot-animation-test.tsx": {
+      "sha256": "22fd70dcbf3b7eac75e11ffcd95102df0ca5907833f1eecaaeb8f479573a5909",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
+    },
+    "app/test/unit/ui/copilot-commit-panel-test.tsx": {
+      "sha256": "b343fdba01f9ca5888e152f76b4c0e534aa298fba18abbb7d79aed98666a8f4e",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
     },
     "app/test/unit/ui/copilot-custom-providers-dialog-test.tsx": {
       "sha256": "49c2280137200989a89c4e09f8caf3491b4af89f90ed77100101558c68fd0393",
@@ -2216,6 +2421,16 @@
         "adaptation": "Original suite unchanged against production code via API shape adapter; original assertions verified; platform and module paths adapted."
       }
     },
+    "app/test/unit/ui/focus-container-test.tsx": {
+      "sha256": "8ec7f37149356c91360996662fc0eb814d32c568a2b3f171b5200e77df7c03de",
+      "status": "ported",
+      "rust_tests": [],
+      "runner": {
+        "snapshot": "tests/conformance/upstream/desktop/ui/focus-container-test.ts",
+        "command": "bun run test:upstream",
+        "adaptation": "Original assertions against the production FocusContainer; only the import path is mapped."
+      }
+    },
     "app/test/unit/ui/helper-side-effect-surfaces-test.tsx": {
       "sha256": "4ebf0d84f23958806bd5d3ddee1c9a793a018afe1ae4357957499b7fa08787fd",
       "status": "ported",
@@ -2307,7 +2522,7 @@
       }
     },
     "app/test/unit/ui/repository-directory-exceptions-test.tsx": {
-      "sha256": "476940e254a9721cf77b1daeeb06884d415315ff6a14fffc7268dc004ef53978",
+      "sha256": "2c1f102d152fc4b7c8c8729d20f50a2dcdf7b4b4a217a329afc96d415b8025c3",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -2499,7 +2714,7 @@
       }
     },
     "app/test/unit/usage-data-test.ts": {
-      "sha256": "e303af2dd912643ba98ccbd623a6ead19dbc23d00802ed599b5a79bf9adf7269",
+      "sha256": "6c96b3575d71919d91ab89cb07c0cc237210fe9bc4197abce043110a481cfc7d",
       "status": "ported",
       "rust_tests": [],
       "runner": {
@@ -2625,6 +2840,12 @@
         "command": "bun run test:upstream",
         "adaptation": "Original upstream package sources and tsconfigs copied byte-for-byte; original TypeScript compiler output assertions executed, including notification declarations. This verifies vendored ABI contracts, not Rust native module implementation behavior."
       }
+    },
+    "script/npm-test.ts": {
+      "sha256": "a82066a0c412d4e63f4663175729ffeb6227638f3c53e2ae48eea74df7231c7a",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "Desktop's own npm/webpack build tooling; GitCub builds with Bun and Tauri. Not executed and not counted as compatible."
     },
     "script/webpack-copilot-timers-test.ts": {
       "sha256": "d81b5712447f7e4193ca4b3711b2d9788e77f0c0ab324cba54d9cb2398ca23f7",

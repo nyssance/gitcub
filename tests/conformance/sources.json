@@ -255,8 +255,8 @@
     "desktop/fetch-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/fetch-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "60e5e6048cdeeff3a8e07d4030beaea132131fee489c6f822a41dd787983adf2"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "2d67b4b70ffbd28a43b15e9d1ac1bd3a58966d3661bea37317f4b291af7c7fe1"
     },
     "desktop/lfs-test.ts": {
       "project": "desktop",
@@ -351,8 +351,8 @@
     "desktop/clone-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/clone-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "943eb231cf381887684439b98ebdfd3079c6c653edfdee6ca10a5711f9aa9b84"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "c8b66b57121d846982835d198fb30310627ff93066fd3f9d5d2f21b7729f4ba7"
     },
     "desktop/remote-test.ts": {
       "project": "desktop",
@@ -804,8 +804,8 @@
     "desktop/copilot-in-memory-session-fs-provider-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/copilot-in-memory-session-fs-provider-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "a91606455343348bc37c5ead1877f8ef33deca2d03865c0b1ec1438dc0693246",
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "4b78a0ec07d3475b3f6d6c05784ac7ae64b8bf3e7fde3b0c05b70a6fb98b32a4",
       "excluded": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "desktop/repo-rules-test.ts": {
@@ -859,8 +859,8 @@
     "desktop/parse-app-url-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/parse-app-url-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "91547b24df250d241d2e290013e8c21641412972b486a7c894882fbbabaa5dfa"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "517a631b8777065a61867c48505e03143b091551c17d71ef5c72b500fe687349"
     },
     "desktop/release-notes-test.ts": {
       "project": "desktop",
@@ -1046,8 +1046,8 @@
     "desktop/repositories-database-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/repositories-database-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "8924e081948c4c0981a970b63e47de98484f9d3fbe7a5e467e6bfe544461fa72",
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "c9566d7970e223cbe77f69d492bd5a4221cec37cbf1adbe781f63ff4adde5471",
       "excluded": "User removed Dexie/IndexedDB on 2026-10-26; Desktop databases now use the Rust named JSON store (src-tauri/crates/store), which has no schema-version migration. Retained snapshot is provenance only; store behaviour is covered by the ported store suites."
     },
     "desktop/repositories-store-test.ts": {
@@ -1191,8 +1191,8 @@
     "desktop/stores/updates/update-remote-url-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/stores/updates/update-remote-url-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "aa7b377a11a069d0441dcd2c2806273aa66d5eb3ee2b18a5dca2fa5240cbac1b"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "d3ab23df4fc3610b6fe803ed64e720ff500e4425fdb9f2d01757af7a17560281"
     },
     "desktop/git-config-isolation-test.ts": {
       "project": "desktop",
@@ -1395,8 +1395,14 @@
     "desktop/ui/repository-directory-exceptions-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/repository-directory-exceptions-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "476940e254a9721cf77b1daeeb06884d415315ff6a14fffc7268dc004ef53978"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "2c1f102d152fc4b7c8c8729d20f50a2dcdf7b4b4a217a329afc96d415b8025c3"
+    },
+    "desktop/ui/focus-container-test.ts": {
+      "project": "desktop",
+      "source": "app/test/unit/ui/focus-container-test.tsx",
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "8ec7f37149356c91360996662fc0eb814d32c568a2b3f171b5200e77df7c03de"
     },
     "desktop/ui/welcome-and-sign-in-wrappers-test.ts": {
       "project": "desktop",
@@ -1461,8 +1467,8 @@
     "desktop/usage-data-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/usage-data-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "e303af2dd912643ba98ccbd623a6ead19dbc23d00802ed599b5a79bf9adf7269"
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "6c96b3575d71919d91ab89cb07c0cc237210fe9bc4197abce043110a481cfc7d"
     },
     "desktop/notifications-store-test.ts": {
       "project": "desktop",
@@ -1492,15 +1498,15 @@
     "desktop/stores/copilot-store-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/stores/copilot-store-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "bdf542802ef86b2f2d0feb91147175268340efa8a1e973e9ec28dafd934a8ed8",
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "69a693ac1d6564ce3072d4aff3b7ca45d33679cbabbd1717e9338d7e5befb3d2",
       "excluded": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "desktop/stores/copilot-store-credentials-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/stores/copilot-store-credentials-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "16b383879277dd3703b949529939095a0045e7b6e68d43020418316f776cccda",
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "41b70e6b459538756c4ea3f7127337641fc8f242487a09006034a715e615c3b2",
       "excluded": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "desktop/cygwin-test.ts": {
@@ -1561,8 +1567,8 @@
     "desktop/ui/commit-message-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/commit-message-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "a658f385065dd7b6686baa8ffcd5b68d01f391efd86a3fc30cb3430bfc10cb06",
+      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
+      "sha256": "1b63ec6cee54fc15bad9c35c425ffb5187bfa9988fb6a289dafe16175ef224e8",
       "excluded": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "desktop/stores/app-store-indicators-test.ts": {

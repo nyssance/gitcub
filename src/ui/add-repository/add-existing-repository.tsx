@@ -85,7 +85,9 @@ export class AddExistingRepository extends React.Component<IAddExistingRepositor
   }
 
   private async validatePath(path: string): Promise<boolean> {
-    if (path.length === 0) {
+    const repositoryPath = this.unquotePath(path)
+
+    if (repositoryPath.length === 0) {
       this.setState({
         isRepositoryBare: false,
         showNonGitRepositoryWarning: false
@@ -93,7 +95,7 @@ export class AddExistingRepository extends React.Component<IAddExistingRepositor
       return false
     }
 
-    const type = await getRepositoryType(path)
+    const type = await getRepositoryType(repositoryPath)
 
     const isRepository = type.kind !== "missing" && type.kind !== "unsafe"
     const isRepositoryUnsafe = type.kind === "unsafe"
@@ -256,7 +258,11 @@ export class AddExistingRepository extends React.Component<IAddExistingRepositor
   }
 
   private resolvedPath(path: string): string {
-    return Path.resolve("/", untildify(path))
+    return Path.resolve("/", untildify(this.unquotePath(path)))
+  }
+
+  private unquotePath(path: string): string {
+    return path.startsWith('"') && path.endsWith('"') ? path.slice(1, -1) : path
   }
 
   private addRepository = async () => {

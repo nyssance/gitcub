@@ -46,6 +46,20 @@ export function withoutRemovedCopilot(file: string, source: string): string {
       ""
     )
   }
+  if (file === "desktop/clone-test.ts") {
+    // Assisted commit (Copilot) owns the repository-operation leases; the local source mapping, source
+    // coordination and destination admission cases only exist to serve it. Transport policy and plain clones stay.
+    return source
+      .replace(/^import \{ createAssistedCommitRunHarness \}[^\n]*\n/m, "")
+      .replace("import { clone, getLocalCloneSourcePath }", "import { clone }")
+      .replaceAll(/^import \{\n(?: {2}[^\n]*\n)+\} from '[^']*(?:repository-operation|assisted-commit)'\n/gm, "")
+      .replace(/ {2}describe\('local source path mapping',[\s\S]*?(?= {2}describe\('transport policy')/, "")
+      .replace(
+        / {2}it\('allows an independent clone while the application execution directory is protected',[\s\S]*?(?= {2}it\('clones with a specific branch')/,
+        ""
+      )
+      .replace(/describe\('clone destination admission during assisted runs',[\s\S]*$/, "")
+  }
   if (file === "desktop/usage-data-test.ts") {
     // The checked-in example still lists Desktop's Copilot measures and dimension; compare the rest byte for byte.
     return source.replace(
