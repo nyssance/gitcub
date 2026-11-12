@@ -36,21 +36,75 @@ class DesktopCatalogTests(unittest.TestCase):
         # Dexie removed on 2026-10-26: the IndexedDB schema-migration suites have no counterpart.
         expected.update(('app/test/unit/database-migration-test.ts',
                          'app/test/unit/repositories-database-test.ts'))
+        # Desktop 3.6.11 / 3.6.12 betas (db99902e7): assisted commit is part of the removed Copilot feature.
+        expected.update((
+            'app/test/unit/assisted-commit-coordinator-test.ts',
+            'app/test/unit/assisted-commit-push-storage-test.ts',
+            'app/test/unit/assisted-commit-selection-test.ts',
+            'app/test/unit/commit-mode-storage-test.ts',
+            'app/test/unit/copilot-assisted-commit-sdk-test.ts',
+            'app/test/unit/copilot-assisted-commit-test.ts',
+            'app/test/unit/copilot-operation-test.ts',
+            'app/test/unit/git/assisted-commit-cleanup-test.ts',
+            'app/test/unit/git/assisted-commit-completion-test.ts',
+            'app/test/unit/git/assisted-commit-hooks-test.ts',
+            'app/test/unit/git/assisted-commit-planning-test.ts',
+            'app/test/unit/git/assisted-commit-selected-fence-test.ts',
+            'app/test/unit/git/assisted-commit-snapshot-test.ts',
+            'app/test/unit/git/assisted-commit-test.ts',
+            'app/test/unit/git/repository-operation-test.ts',
+            'app/test/unit/stores/assisted-commit-cancellation-test.ts',
+            'app/test/unit/stores/assisted-commit-cleanup-test.tsx',
+            'app/test/unit/stores/assisted-commit-completion-test.ts',
+            'app/test/unit/stores/assisted-commit-preview-test.ts',
+            'app/test/unit/stores/assisted-commit-push-hooks-test.ts',
+            'app/test/unit/stores/assisted-commit-reader-publication-test.ts',
+            'app/test/unit/stores/assisted-commit-recovery-test.ts',
+            'app/test/unit/stores/assisted-commit-run-hooks-test.ts',
+            'app/test/unit/stores/assisted-commit-run-test.ts',
+            'app/test/unit/stores/assisted-commit-selection-test.ts',
+            'app/test/unit/stores/assisted-commit-upstream-integration-test.ts',
+            'app/test/unit/stores/copilot-assisted-commit-test.ts',
+            'app/test/unit/ui/assisted-commit-details-test.tsx',
+            'app/test/unit/ui/assisted-commit-history-test.tsx',
+            'app/test/unit/ui/assisted-commit-sidebar-test.tsx',
+            'app/test/unit/ui/assisted-repository-creation-test.tsx',
+            'app/test/unit/ui/assisted-worktree-mutations-test.ts',
+            'app/test/unit/ui/copilot-animation-test.tsx',
+            'app/test/unit/ui/copilot-commit-panel-test.tsx',
+        ))
+        # 2026-11-12: the user declined "Push after committing".
+        expected.update(('app/test/unit/stores/commit-auto-push-test.ts',
+                         'app/test/unit/ui/commit-push-error-test.tsx'))
+        # Desktop's own npm/webpack tooling, and internals of Desktop base controls that the project rule
+        # replaces with shadcn / Base UI.
+        expected.update(('script/npm-test.ts', 'app/test/unit/ui/popover-test.tsx',
+                         'app/test/unit/ui/dropdown-select-button-test.tsx'))
         self.assertEqual(set(excluded), expected)
         for entry in excluded.values():
             self.assertTrue(entry.get('exclusion'))
         outstanding = {path: entry['status'] for path, entry in manifest['files'].items()
                        if path not in expected and entry['status'] != 'ported'}
         self.assertEqual(outstanding, {
+            # Auto-update block excluded by user decision (2026-11-03); updates follow ALwith Desktop's shell.
+            'app/test/e2e/app-launch.e2e.ts': 'partial',
             'app/test/unit/api-test.ts': 'partial',
+            # Assisted-commit lease cases removed with Copilot (removed-copilot-adaptations.ts).
+            'app/test/unit/git/clone-test.ts': 'partial',
+            # No multi-commit range diff in GitCub: the two getCommitRangeDiff cases are a product gap.
+            'app/test/unit/git/diff-test.ts': 'partial',
             'app/test/unit/main-process/menu-test.ts': 'partial',
             'app/test/unit/refresh-token-consumers-test.ts': 'partial',
             'app/test/unit/repo-rules-test.ts': 'partial',
             # shadcn Collapsible instead of native <details>: one tutorial case excluded (design-adaptations.ts).
+            # GitCub's dialogs are rewrites; equivalent regressions live in ui-components.test.tsx (see note).
+            'app/test/unit/ui/add-worktree-dialog-test.tsx': 'pending',
+            'app/test/unit/ui/repository-settings-test.tsx': 'pending',
             'app/test/unit/ui/tutorial-welcome-surfaces-test.tsx': 'partial',
         }, 'Desktop completeness regressed')
         for path in outstanding:
-            self.assertTrue(manifest['files'][path].get('exclusion'))
+            entry = manifest['files'][path]
+            self.assertTrue(entry.get('exclusion') or entry.get('note') or entry.get('runner', {}).get('adaptation'))
 
     def test_registered_ports_point_to_real_rust_tests(self):
         manifest = json.loads(desktop_tests.MANIFEST.read_text())
