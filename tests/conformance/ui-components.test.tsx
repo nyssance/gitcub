@@ -50,6 +50,7 @@ import { CommitSummary } from "../../src/ui/history/commit-summary"
 import { CommitFileList } from "../../src/ui/history/file-list"
 import { HistorySidebar } from "../../src/ui/history/sidebar"
 import { Tags } from "../../src/ui/history/tags"
+import { UnreachableCommitsDialog } from "../../src/ui/history/unreachable-commits-dialog"
 import { Inbox } from "../../src/ui/inbox/inbox"
 import { AutolinkRules } from "../../src/ui/preferences/autolink-rules"
 import { Preferences } from "../../src/ui/preferences/preferences"
@@ -1567,9 +1568,10 @@ test("history: shift selects a consecutive range, cmd skips rows, and both are r
   await user.keyboard("{/Meta}")
   expect(last()).toEqual([[three[0]!.sha, three[2]!.sha], false])
 })
-test("history: several consecutive commits show a combined summary, non-consecutive ones show the blank slate (MultipleCommitsSummary)", () => {
+test("history: several consecutive commits show a combined summary, non-consecutive ones show the blank slate (MultipleCommitsSummary)", async () => {
+  const user = userEvent.setup()
   layout(600, 384)
-  const view = render(
+  const details = (range: ComponentProps<typeof CommitDetails>["range"]) => (
     <CommitDetails
       commit={commit}
       details={null}
@@ -1577,16 +1579,68 @@ test("history: several consecutive commits show a combined summary, non-consecut
       files={[]}
       selected={null}
       onSelect={mock()}
-      range={{ selected: 3, inDiff: 2 }}>
+      range={range}>
       <div />
     </CommitDetails>
   )
-  expect(screen.getByText(t("history.showingChangesFromCommits", { count: 2 }))).toBeVisible()
-  expect(screen.getByText(t("history.unreachableCommitsNotIncluded", { count: 1 }))).toBeVisible()
+  const view = render(details({ selected: 3, inDiff: 3 }))
+  expect(screen.getByText(t("history.showingChangesFromCommits", { count: 3 }))).toBeVisible()
   expect(screen.queryByText(commit.summary)).not.toBeInTheDocument()
+  expect(screen.queryByText(/unreachable/)).not.toBeInTheDocument()
+  // 合并带进来的提交不在 diff 里：两处都变成链接，点开对话框的对应页签，悬停时突出对应的提交
+  const range = { selected: 3, inDiff: 2, onShowCommits: mock(), onHighlight: mock() }
+  view.rerender(details(range))
+  const inDiff = screen.getByText("2 commits")
+  const notInDiff = screen.getByText("1 unreachable commit")
+  await user.hover(inDiff)
+  expect(range.onHighlight).toHaveBeenLastCalledWith("inDiff")
+  await user.hover(notInDiff)
+  expect(range.onHighlight).toHaveBeenLastCalledWith("notInDiff")
+  await user.unhover(notInDiff)
+  expect(range.onHighlight).toHaveBeenLastCalledWith(null)
+  await user.click(inDiff)
+  expect(range.onShowCommits).toHaveBeenLastCalledWith("reachable")
+  await user.click(notInDiff)
+  expect(range.onShowCommits).toHaveBeenLastCalledWith("unreachable")
   view.unmount()
   render(<MultipleCommitsSelected />)
   expect(screen.getByText(t("history.unableToDisplayDiffWhenMultipleNonConsecutiveCommitsAreSelected"))).toBeVisible()
+})
+test("history: the reachability dialog lists unreachable and reachable commits on their tabs (CommitReachabilityDialog)", async () => {
+  const user = userEvent.setup()
+  const merged = { ...commit, sha: "d".repeat(40), shortSha: "ddddddd", summary: "Merged in from a side branch" }
+  const lookup = new Map([...historyCommits, merged].map(c => [c.sha, c]))
+  const onTabChange = mock()
+  const onDismissed = mock()
+  const dialog = (tab: "unreachable" | "reachable") => (
+    <UnreachableCommitsDialog
+      selectedShas={[...lookup.keys()]}
+      shasInDiff={historyCommits.map(c => c.sha)}
+      commitLookup={lookup}
+      selectedTab={tab}
+      onTabChange={onTabChange}
+      onDismissed={onDismissed}
+    />
+  )
+  const view = render(dialog("unreachable"))
+  expect(screen.getByText(t("history.youWillNotSeeChangesFromTheFollowingCommits", { count: 1 }))).toBeVisible()
+  expect(screen.getByText("Merged in from a side branch")).toBeVisible()
+  expect(screen.queryByText("Initial commit")).not.toBeInTheDocument()
+  await user.click(screen.getByRole("tab", { name: t("history.reachable") }))
+  expect(onTabChange).toHaveBeenLastCalledWith("reachable")
+  view.rerender(dialog("reachable"))
+  expect(screen.getByText(t("history.youWillSeeChangesFromTheFollowingCommits", { count: 2 }))).toBeVisible()
+  expect(screen.getByText("Initial commit")).toBeVisible()
+  expect(screen.queryByText("Merged in from a side branch")).not.toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: t("common.confirm") }))
+  expect(onDismissed).toHaveBeenCalled()
+})
+test("history: highlighted commits stay opaque while the rest of the list fades (HighlightedCommits)", async () => {
+  historySidebar({}, { highlighted: [commit.sha] })
+  const row = (summary: string) => screen.getByText(summary).closest(".desktop-list-row")!
+  expect((await screen.findByText(commit.summary)).closest(".desktop-list-row")).toHaveAttribute("data-highlighted")
+  expect(row(commit.summary)).not.toHaveClass("opacity-30")
+  expect(row("Initial commit")).toHaveClass("opacity-30")
 })
 test("history: :alias: in a commit summary renders as the emoji and the tooltip keeps the shortcode (RichText emoji)", async () => {
   useEmojiStore.setState({ emoji: await readEmoji() })

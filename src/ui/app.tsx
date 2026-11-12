@@ -84,6 +84,7 @@ import { DiffView } from "@/ui/diff/lazy-diff"
 import { SubmoduleView } from "@/ui/diff/submodule"
 import { CommitDetails, MultipleCommitsSelected } from "@/ui/history/commit-details"
 import { headHistory, HistorySidebar } from "@/ui/history/sidebar"
+import { UnreachableCommitsDialog } from "@/ui/history/unreachable-commits-dialog"
 import { HookFailed } from "@/ui/hook-failed/hook-failed"
 import { Inbox } from "@/ui/inbox/inbox"
 import { FloatingWorkspace } from "@/ui/layout/floating-workspace"
@@ -234,6 +235,8 @@ export function App() {
   const setCommitSha = useHistoryStore(s => s.setCommitSha)
   const commitFiles = useHistoryStore(s => s.commitFiles)
   const commitSelection = useHistoryStore(s => s.commitSelection)
+  const commitReachabilityTab = useHistoryStore(s => s.commitReachabilityTab)
+  const highlightedShas = useHistoryStore(s => s.highlightedShas)
   const commitFile = useHistoryStore(s => s.commitFile)
   const setCommitFile = useHistoryStore(s => s.setCommitFile)
   const commitDiff = useHistoryStore(s => s.commitDiff)
@@ -1238,11 +1241,16 @@ export function App() {
     ) ?? null
 
   // Desktop getShasInDiff：从最新的那个沿父提交走，只走选中的；走不到的（合并带进来的另一条线）不在这份 diff 里
+  const commitLookup = useMemo(
+    () =>
+      new Map(
+        [...commits, ...fileCommits, ...(compared?.ahead ?? []), ...(compared?.behind ?? [])].map(c => [c.sha, c])
+      ),
+    [commits, fileCommits, compared]
+  )
   const shasInDiff = useMemo(() => {
     if (!rangeLatest) return commitSelection.shas
-    const lookup = new Map(
-      [...commits, ...fileCommits, ...(compared?.ahead ?? []), ...(compared?.behind ?? [])].map(c => [c.sha, c])
-    )
+    const lookup = commitLookup
     const selectedShas = new Set(commitSelection.shas)
     const inDiff = new Set<string>()
     const pending = [rangeLatest]
@@ -1253,7 +1261,12 @@ export function App() {
         if (selectedShas.has(parent) && !inDiff.has(parent)) pending.push(parent)
     }
     return [...inDiff]
-  }, [rangeLatest, commitSelection.shas, commits, fileCommits, compared])
+  }, [rangeLatest, commitSelection.shas, commitLookup])
+  // 选择变了：悬停高亮和对话框都是针对上一份选择的
+  useEffect(() => {
+    useHistoryStore.getState().setHighlightedShas([])
+    if (!rangeLatest) useHistoryStore.getState().setCommitReachabilityTab(null)
+  }, [rangeLatest, commitSelection.shas])
 
   const { editorName, appMenu, defaultBranch, hasCurrentPullRequest } = useNativeMenu({
     state,
@@ -1694,6 +1707,16 @@ export function App() {
       {prefs}
       {askDialog}
       {askTextDialog}
+      {commitReachabilityTab && (
+        <UnreachableCommitsDialog
+          selectedShas={commitSelection.shas}
+          shasInDiff={shasInDiff}
+          commitLookup={commitLookup}
+          selectedTab={commitReachabilityTab}
+          onTabChange={useHistoryStore.getState().setCommitReachabilityTab}
+          onDismissed={() => useHistoryStore.getState().setCommitReachabilityTab(null)}
+        />
+      )}
       {stashAndSwitchDialog}
       {deletingTag && repo && (
         <DeleteTag
@@ -2242,6 +2265,7 @@ export function App() {
                             onSelectionChange={(shas, isContiguous) =>
                               useHistoryStore.getState().setCommitSelection({ shas, isContiguous })
                             }
+                            highlighted={highlightedShas}
                             onRevert={sha => {
                               const c = commits.find(x => x.sha === sha)
                               void run(() => ipc.revertCommit(repo, sha, (c?.parentCount ?? 1) > 1))
@@ -2330,7 +2354,21 @@ export function App() {
                           details={commitDetails}
                           range={
                             multipleCommits
-                              ? { selected: commitSelection.shas.length, inDiff: shasInDiff.length }
+                              ? {
+                                  selected: commitSelection.shas.length,
+                                  inDiff: shasInDiff.length,
+                                  onShowCommits: useHistoryStore.getState().setCommitReachabilityTab,
+                                  onHighlight: which =>
+                                    useHistoryStore
+                                      .getState()
+                                      .setHighlightedShas(
+                                        which === "inDiff"
+                                          ? shasInDiff
+                                          : which === "notInDiff"
+                                            ? commitSelection.shas.filter(sha => !shasInDiff.includes(sha))
+                                            : []
+                                      )
+                                }
                               : undefined
                           }
                           remote={remotes[repo ?? ""] ?? null}
@@ -2348,6 +2386,7 @@ export function App() {
                             tokens={commitTokens}
                             repo={repo}
                             sha={detailSha}
+                            oldestSha={rangeOldest}
                             oldPath={commitOldPath}
                             status={commitFileKind && <CommitStatusIcon kind={commitFileKind} />}
                             readOnly

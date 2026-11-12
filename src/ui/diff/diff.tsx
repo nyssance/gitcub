@@ -57,6 +57,8 @@ interface Props {
   /** 仓库路径 + 提交（看历史时）。二进制文件是图片时要拿这两个去取图 */
   repo?: string | null
   sha?: string | null
+  /** 多选连续提交时范围里最老的那个（`sha` 是最新的）：旧的一侧从它的父算起 */
+  oldestSha?: string | null
   /** 看历史时，重命名或复制前的路径 */
   oldPath?: string | null
   /** 右键落点。给的是统一 diff 下标：这一行，以及它所在的整块。
@@ -69,7 +71,7 @@ interface Props {
  * 数据来自移植自原版的 DiffParser（`IRawDiff` / `DiffHunk` / `DiffLine`），
  * 统一和并排视图共用 Desktop 的行构造与行组件。 */
 export function DiffView(props: Props) {
-  return <FileDiffView key={JSON.stringify([props.repo, props.file, props.sha])} {...props} />
+  return <FileDiffView key={JSON.stringify([props.repo, props.file, props.sha, props.oldestSha])} {...props} />
 }
 
 function FileDiffView(props: Props) {
@@ -146,8 +148,12 @@ function FileDiffView(props: Props) {
     const repo = props.repo
     const file = props.file
     const sha = props.sha
+    const oldest = props.oldestSha && props.oldestSha !== sha ? props.oldestSha : null
     const result = sha
-      ? ipc.commitFileDiff(repo, sha, file, props.oldPath ?? null, true).then(text => new DiffParser().parse(text))
+      ? (oldest
+          ? ipc.commitRangeFileDiff(repo, oldest, sha, file, props.oldPath ?? null, true)
+          : ipc.commitFileDiff(repo, sha, file, props.oldPath ?? null, true)
+        ).then(text => new DiffParser().parse(text))
       : ipc.repoStatus(repo).then(status => {
           const change = status.changes.find(c => c.path === file)
           return getDiff(repo, file, fileKindOf(change ?? { kind: "unstaged", change: "modified" }), true).then(
@@ -158,7 +164,7 @@ function FileDiffView(props: Props) {
     return () => {
       active = false
     }
-  }, [hide, props.repo, props.file, props.sha, props.oldPath, props.diff])
+  }, [hide, props.repo, props.file, props.sha, props.oldestSha, props.oldPath, props.diff])
   const [expanded, setExpanded] = useState<{ source: IRawDiff; diff: IRawDiff } | null>(null)
   const [expanding, setExpanding] = useState(false)
   const [textActions, setTextActions] = useState<{ text: string; selectAll: () => void } | null>(null)
@@ -339,6 +345,7 @@ function TextDiffView({
   lineEndings,
   repo,
   sha,
+  oldestSha,
   tokens
 }: Props) {
   const { t } = useTranslation()
@@ -364,7 +371,7 @@ function TextDiffView({
   // 其余的至少要说清楚是二进制——掉进下面那个「没有改动」等于撒谎。
   if (diff.isBinary) {
     return diffKind(diff, file) === DiffType.Image && repo ? (
-      <ImagePane repo={repo} file={file} sha={sha ?? null} />
+      <ImagePane repo={repo} file={file} sha={sha ?? null} oldestSha={oldestSha ?? null} />
     ) : (
       <Centered>{t("diff.binary")}</Centered>
     )
@@ -417,7 +424,17 @@ function TextDiffView({
 
 /** 取两版图片再交给 ImageDiffView。放在这里而不是上层，是因为「这是不是图片」
  *  要等 diff 解析出来（isBinary）才知道。 */
-export function ImagePane({ repo, file, sha }: { repo: string; file: string; sha: string | null }) {
+export function ImagePane({
+  repo,
+  file,
+  sha,
+  oldestSha = null
+}: {
+  repo: string
+  file: string
+  sha: string | null
+  oldestSha?: string | null
+}) {
   const { t } = useTranslation()
   const [data, setData] = useState<ImageDiffData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -427,13 +444,13 @@ export function ImagePane({ repo, file, sha }: { repo: string; file: string; sha
     setData(null)
     setError(null)
     ipc
-      .imageDiff(repo, file, sha ?? undefined)
+      .imageDiff(repo, file, sha ?? undefined, sha && oldestSha && oldestSha !== sha ? `${oldestSha}^` : undefined)
       .then(value => active && setData(value))
       .catch((e: unknown) => active && setError(String(e)))
     return () => {
       active = false
     }
-  }, [repo, file, sha])
+  }, [repo, file, sha, oldestSha])
 
   if (error) return <Centered>{t("diff.binary")}</Centered>
   if (!data) return <Centered>{t("diff.loading")}</Centered>

@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import type { HostingPlatform } from "@/lib/autolink-rules"
@@ -8,6 +8,7 @@ import type { AutolinkRule, Remote } from "@/models/app-state"
 import type { Commit } from "@/models/commit"
 import type { CommitFile, CommitInfo } from "@/models/history"
 
+import { LinkButton } from "../desktop/link-button"
 import { CommitSummary } from "./commit-summary"
 import { ExpandableCommitSummary } from "./expandable-commit-summary"
 import { CommitFileList } from "./file-list"
@@ -36,7 +37,14 @@ export function CommitDetails({
   onSelect: (path: string) => void
   onShowHistory?: (path: string) => void
   /** 多选连续提交：选了几个、其中几个的改动在这份 diff 里（Desktop shasInDiff） */
-  range?: { selected: number; inDiff: number }
+  range?: {
+    selected: number
+    inDiff: number
+    /** Desktop showUnreachableCommits：打开「提交可达性」对话框并落在对应页签 */
+    onShowCommits?: (tab: "unreachable" | "reachable") => void
+    /** Desktop onHighlightShas：悬停时在提交列表里突出 diff 里的或不在 diff 里的那些，移开时传 null */
+    onHighlight?: (which: "inDiff" | "notInDiff" | null) => void
+  }
   children: ReactNode
 }) {
   const { t } = useTranslation()
@@ -50,11 +58,42 @@ export function CommitDetails({
         // 不显示某一个提交的 SHA、正文与标签；合并带进来、不在这份 diff 里的提交单独说明
         <div id="expandable-commit-summary" data-multiple-commits>
           <div className="ecs-title">
-            <span className="selectable">{t("history.showingChangesFromCommits", { count: range.inDiff })}</span>
+            <span className="selectable">
+              {range.selected > range.inDiff ? (
+                <Trans
+                  i18nKey="history.showingChangesFromLinkedCommits"
+                  count={range.inDiff}
+                  components={{
+                    commits: (
+                      <LinkButton
+                        className="commits-in-diff"
+                        onClick={() => range.onShowCommits?.("reachable")}
+                        onMouseOver={() => range.onHighlight?.("inDiff")}
+                        onMouseOut={() => range.onHighlight?.(null)}
+                      />
+                    )
+                  }}
+                />
+              ) : (
+                t("history.showingChangesFromCommits", { count: range.inDiff })
+              )}
+            </span>
           </div>
           {range.selected > range.inDiff && (
             <div className="commit-unreachable-info text-muted-foreground px-3 pb-2 text-xs">
-              {t("history.unreachableCommitsNotIncluded", { count: range.selected - range.inDiff })}
+              <Trans
+                i18nKey="history.unreachableCommitsNotIncluded"
+                count={range.selected - range.inDiff}
+                components={{
+                  commits: (
+                    <LinkButton
+                      onClick={() => range.onShowCommits?.("unreachable")}
+                      onMouseOver={() => range.onHighlight?.("notInDiff")}
+                      onMouseOut={() => range.onHighlight?.(null)}
+                    />
+                  )
+                }}
+              />
             </div>
           )}
         </div>

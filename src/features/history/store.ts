@@ -47,6 +47,10 @@ interface HistoryStore {
   /** Desktop commitSelection：历史里多选的提交（列表顺序，最新在前）和它们在列表里是否连续。
    *  多于一个且连续时内容区显示从最老那个的父到最新那个的合并改动；不连续时不显示 diff */
   commitSelection: CommitSelection
+  /** 「提交可达性」对话框开在哪个页签；null 是没开 */
+  commitReachabilityTab: "unreachable" | "reachable" | null
+  /** Desktop highlightedShas：悬停摘要里的链接时在提交列表里突出的那些提交 */
+  highlightedShas: string[]
   commitFiles: CommitFile[]
   /** 选中提交的完整信息（Desktop Commit：提交者、共同作者 trailer），提交摘要用 */
   commitDetails: Commit | null
@@ -79,6 +83,8 @@ interface HistoryStore {
     oldest?: string | null
   ) => () => void
   setCommitSelection: (selection: CommitSelection) => void
+  setCommitReachabilityTab: (tab: "unreachable" | "reachable" | null) => void
+  setHighlightedShas: (shas: string[]) => void
   selectCommit: (sha: string) => void
   setCommitSha: (sha: string | null) => void
   setCommitFile: (file: string | null) => void
@@ -108,6 +114,8 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
   mostRecentLocalCommit: null,
   commitSha: null,
   commitSelection: noCommitSelection,
+  commitReachabilityTab: null,
+  highlightedShas: [],
   commitDetails: null,
   commitFiles: [],
   commitFile: null,
@@ -133,6 +141,8 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
       graphLoading: false,
       commitSha: null,
       commitSelection: noCommitSelection,
+      commitReachabilityTab: null,
+      highlightedShas: [],
       commitFiles: [],
       commitDetails: null,
       commitFile: null,
@@ -384,6 +394,8 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
     set({ commitSha: sha })
   },
   setCommitSha: commitSha => set({ commitSha }),
+  setCommitReachabilityTab: commitReachabilityTab => set({ commitReachabilityTab }),
+  setHighlightedShas: highlightedShas => set({ highlightedShas }),
   setCommitSelection: next =>
     set(store =>
       store.commitSelection.isContiguous === next.isContiguous &&

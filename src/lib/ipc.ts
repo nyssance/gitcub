@@ -330,8 +330,9 @@ export const ipc = {
   mentionableUser: (host: string, login: string) =>
     invoke<IMentionableUser | null>("mentionable_user", { host, login }),
   /** 两版图片本身。sha 给了是看某次提交，没给是看工作区 */
-  imageDiff: (repo: string, file: string, sha?: string) =>
-    invoke<ImageDiff>("image_diff", { repo, file, sha }).then(prepareImageDiff),
+  /** `base`：旧的一侧取哪个版本，默认是 `<sha>^` */
+  imageDiff: (repo: string, file: string, sha?: string, base?: string) =>
+    invoke<ImageDiff>("image_diff", { repo, file, sha, base }).then(prepareImageDiff),
   /** 子模块的细节：地址、记录的提交 vs 实际的提交、里面有多少没提交的东西 */
   submoduleInfo: (repo: string, file: string) => invoke<SubmoduleInfo>("submodule_info", { repo, file }),
   /** Desktop createCommit：钩子环境与「提交进度」照原版 interceptHooks / onTerminalOutputAvailable */

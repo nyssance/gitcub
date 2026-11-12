@@ -424,10 +424,14 @@ pub async fn lfs_install(repo: String) -> Result<(), String> {
 /// 两版图片本身（base64），给图片 diff 用。
 /// `sha` 给了是看某次提交，没给是看工作区。
 #[tauri::command]
-pub async fn image_diff(repo: String, file: String, sha: Option<String>) -> Result<image::ImageDiff, String> {
-    tauri::async_runtime::spawn_blocking(move || image::image_diff(Path::new(&repo), &file, sha.as_deref()))
-        .await
-        .map_err(|error| error.to_string())?
+pub async fn image_diff(
+    repo: String, file: String, sha: Option<String>, base: Option<String>,
+) -> Result<image::ImageDiff, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        image::image_diff_from(Path::new(&repo), &file, sha.as_deref(), base.as_deref())
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 /// 子模块的细节（地址、记录的提交 vs 实际的提交、内部有多少没提交的东西）。

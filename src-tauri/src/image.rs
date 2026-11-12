@@ -81,8 +81,16 @@ pub fn blob_image(repo: &Path, file: &str, revision: &str) -> Result<Option<Imag
 /// 两版图片。`sha` 给了就是看某次提交（和它的父比），
 /// 没给就是看工作区（和 HEAD 比）。
 pub fn image_diff(repo: &Path, file: &str, sha: Option<&str>) -> Result<ImageDiff, String> {
+    image_diff_from(repo, file, sha, None)
+}
+
+/// `base`：旧的一侧取哪个版本，默认是 `<sha>^`；多选提交时是范围里最老那个的父。
+pub fn image_diff_from(repo: &Path, file: &str, sha: Option<&str>, base: Option<&str>) -> Result<ImageDiff, String> {
     let (previous, current) = match sha {
-        Some(sha) => (blob_image(repo, file, &format!("{sha}^"))?, blob_image(repo, file, sha)?),
+        Some(sha) => {
+            let parent = format!("{sha}^");
+            (blob_image(repo, file, base.unwrap_or(&parent))?, blob_image(repo, file, sha)?)
+        }
         None => (blob_image(repo, file, "HEAD")?, working_image(repo, file)?),
     };
     Ok(ImageDiff { previous, current })
@@ -180,5 +188,30 @@ mod tests {
         let d = image_diff(&r, "i.png", Some(&sha)).unwrap();
         assert_eq!(d.previous.unwrap().bytes, PNG.len() as u64);
         assert_eq!(d.current.unwrap().bytes, bigger.len() as u64);
+    }
+
+    /// 多选连续提交：旧图取范围里最老那个提交的父，不是最新提交的父。
+    #[test]
+    fn 看一段提交时和最老那个的父比() {
+        let (_d, r) = repo();
+        std::fs::write(r.join("i.png"), PNG).unwrap();
+        git(&r, &["add", "."]);
+        git(&r, &["commit", "-qm", "加图"]);
+        let mut versions = vec![PNG.to_vec()];
+        let mut shas = Vec::new();
+        for _ in 0..2 {
+            let mut next = versions.last().unwrap().clone();
+            next.push(0);
+            std::fs::write(r.join("i.png"), &next).unwrap();
+            git(&r, &["commit", "-qam", "改图"]);
+            shas.push(git(&r, &["rev-parse", "HEAD"]).trim().to_string());
+            versions.push(next);
+        }
+
+        let d = image_diff_from(&r, "i.png", Some(&shas[1]), Some(&format!("{}^", shas[0]))).unwrap();
+        assert_eq!(d.previous.unwrap().bytes, versions[0].len() as u64);
+        assert_eq!(d.current.unwrap().bytes, versions[2].len() as u64);
+        let single = image_diff(&r, "i.png", Some(&shas[1])).unwrap();
+        assert_eq!(single.previous.unwrap().bytes, versions[1].len() as u64);
     }
 }

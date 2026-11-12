@@ -117,6 +117,8 @@ interface Props {
   onSelect: (sha: string) => void
   /** Desktop CommitList onCommitsSelected：选中的提交（列表顺序）和它们的行是否连续 */
   onSelectionChange?: (shas: string[], isContiguous: boolean) => void
+  /** Desktop commit-list has-highlighted-commits：有值时其余的行淡到 30% */
+  highlighted?: ReadonlyArray<string>
   /** 右键菜单里的动作。对齐原版历史页的那几项 */
   onRevert: (sha: string) => void
   onCherryPick: (sha: string) => void
@@ -185,6 +187,7 @@ export function HistorySidebar({
   selected,
   onSelect,
   onSelectionChange,
+  highlighted,
   onRevert,
   onCherryPick,
   onCherryPickMany,
@@ -744,8 +747,15 @@ export function HistorySidebar({
                           // 原版 `.commit`：左 10px、右 15px（给滚动条留位）、底边线；
                           // 选中色、焦点态由 desktop.css 的 `.desktop-list-row` 提供，行可聚焦才有焦点态
                           data-selected={on || undefined}
+                          data-highlighted={highlighted?.includes(c.sha) || undefined}
                           tabIndex={-1}
-                          className="desktop-list-row h-full cursor-default rounded-none border-b py-0 pr-[15px] pl-2.5"
+                          className={`desktop-list-row h-full cursor-default rounded-none border-b py-0 pr-[15px] pl-2.5 transition-opacity ${
+                            highlighted?.length
+                              ? highlighted.includes(c.sha)
+                                ? "duration-500"
+                                : "opacity-30 duration-500"
+                              : "duration-250"
+                          }`}
                         />
                       }>
                       {/* 提交图那一列。搜索结果和文件历史不是连续历史，画泳道是错的，所以不画 */}
