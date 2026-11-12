@@ -2573,7 +2573,8 @@
     "app/test/unit/ui/repository-settings-test.tsx": {
       "sha256": "1bc09a2cb0cfb8ae60bc93da6846d8ed4a374ff2559bed1b0f6805494c078538",
       "status": "pending",
-      "rust_tests": []
+      "rust_tests": [],
+      "note": "Not run: the suite drives Desktop's class component through the assisted-commit run harness. GitCub's dialog is a rewrite that refreshes the author when it closes; the partial identity write and unchanged identity scenarios are covered by PartialIdentityWriteStaysOpen and UnchangedLocalIdentityNotWritten in tests/conformance/ui-components.test.tsx. The identity update admission case depends on assisted-commit leases (removed with Copilot)."
     },
     "app/test/unit/ui/rulesets-and-publish-surfaces-test.tsx": {
       "sha256": "f7c5243083e7699fb3af39bbd19c77881fe35e67a5e1cb58b61be2674be02c96",

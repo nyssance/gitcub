@@ -666,6 +666,46 @@ test("repository settings: drafts are written only on Save, remote trimmed, loca
     ["config", "--replace-all", "user.email", "global@example.test"]
   ])
 })
+// Desktop app/test/unit/ui/repository-settings-test.tsx（a6ff9b27d）'repository settings Git identity refresh' 的两个场景，
+// 按 GitCub 的实现改写：作者信息在对话框关闭时由 app 整体刷新，所以断言落在「写了什么、对话框是否还开着」上。
+test("repository settings: a failed email write after the name was written keeps the dialog open with the error (PartialIdentityWriteStaysOpen)", async () => {
+  const user = userEvent.setup()
+  const args = repositorySettings({
+    git_execute: (call: Record<string, unknown>) => {
+      const argv = (call as { args: string[] }).args
+      if (argv[0] === "config" && argv[2] === "user.email") throw new Error("could not lock config file .git/config")
+      return ok
+    }
+  })
+  await user.click(await screen.findByRole("tab", { name: t("repositorySettings.gitConfig") }))
+  await user.click(screen.getByRole("radio", { name: t("repositorySettings.useALocalGitConfig") }))
+  const name = screen.getByLabelText(t("prefs.name"))
+  await user.clear(name)
+  await user.type(name, "Local Name")
+  await user.click(screen.getByRole("button", { name: t("common.save") }))
+  expect(await screen.findByText(/could not lock config file/)).toBeVisible()
+  expect(args.onDismissed).not.toHaveBeenCalled()
+  expect(settingsWrites().map(([, call]) => (call as { args: string[] }).args)).toEqual([
+    ["config", "--replace-all", "user.name", "Local Name"],
+    ["config", "--replace-all", "user.email", "global@example.test"]
+  ])
+  await waitFor(() => expect(screen.getByRole("button", { name: t("common.save") })).toBeEnabled())
+  // 关闭对话框是 app 刷新作者信息的时机：名字已经写进去了，这一步不能被失败挡住
+  await user.click(screen.getByRole("button", { name: t("common.cancel") }))
+  expect(args.onDismissed).toHaveBeenCalledTimes(1)
+})
+test("repository settings: an unchanged local identity is not written again (UnchangedLocalIdentityNotWritten)", async () => {
+  const user = userEvent.setup()
+  const args = repositorySettings({
+    get_config_value: (call: Record<string, unknown>) =>
+      call.key === "user.name" ? "Local Name" : call.key === "user.email" ? "local@example.test" : null
+  })
+  await user.click(await screen.findByRole("tab", { name: t("repositorySettings.gitConfig") }))
+  await waitFor(() => expect(screen.getByLabelText(t("prefs.name"))).toHaveValue("Local Name"))
+  await user.click(screen.getByRole("button", { name: t("common.save") }))
+  await waitFor(() => expect(args.onDismissed).toHaveBeenCalled())
+  expect(settingsWrites()).toEqual([])
+})
 test("repository settings: Cancel writes nothing (CancelWritesNothing)", async () => {
   const user = userEvent.setup()
   const args = repositorySettings()
@@ -1990,15 +2030,17 @@ test("image diff: slider ends map to clip and opacity, and each mode starts from
     expect(button).toHaveAttribute("aria-pressed", "true")
   }
   const before = () => screen.getByRole("img", { name: t("diff.imageBefore") }).parentElement!
+  // jsdom 31 把内联样式里的 0 序列化成 0px，和浏览器一致；比较前归一化
+  const clip = () => before().style.clipPath.replaceAll("0px", "0")
   await select("swipe")
   let slider = screen.getByRole("slider")
   slider.focus()
   await user.keyboard("{End}")
   expect(slider).toHaveAttribute("aria-valuenow", "100")
-  expect(before().style.clipPath).toBe("inset(0 0% 0 0)")
+  expect(clip()).toBe("inset(0 0% 0 0)")
   await user.keyboard("{Home}")
   expect(slider).toHaveAttribute("aria-valuenow", "0")
-  expect(before().style.clipPath).toBe("inset(0 100% 0 0)")
+  expect(clip()).toBe("inset(0 100% 0 0)")
   await select("onion")
   slider = screen.getByRole("slider")
   expect(slider).toHaveAttribute("aria-valuenow", "1")
