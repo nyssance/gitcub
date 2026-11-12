@@ -2184,7 +2184,8 @@
     "app/test/unit/ui/add-worktree-dialog-test.tsx": {
       "sha256": "52d2adc9c4e7feab3b98dcdc50be30303fc8d901478dcc91c0d63ffe3f67da8e",
       "status": "pending",
-      "rust_tests": []
+      "rust_tests": [],
+      "note": "Not run: the suite drives Desktop's AddWorktreeDialog through the assisted-commit run harness. GitCub creates worktrees from its worktree management dialog, which stays open after a successful creation, so the dismissal-order case does not apply; the failure case (stays open, reports the error, re-enables creation) is covered by FailedCreationCanRetry in tests/conformance/ui-components.test.tsx."
     },
     "app/test/unit/ui/appearance-test.tsx": {
       "sha256": "350a7d9c439ea3c8674ffffa51a37c9bc0fa5499ae179d6b364f3bac34d58651",

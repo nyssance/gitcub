@@ -61,6 +61,7 @@ import { Discover } from "../../src/ui/trending/discover"
 import { Trending } from "../../src/ui/trending/trending"
 import { UnknownAuthors } from "../../src/ui/unknown-authors/unknown-authors-dialog"
 import { DesktopImportWelcome } from "../../src/ui/welcome/desktop-import"
+import { Worktrees } from "../../src/ui/worktrees/worktrees"
 import { DiffParser } from "../../src/upstream/lib/diff-parser"
 import { DiffSelection, DiffSelectionType } from "../../src/upstream/models/diff"
 import { commit, file, repo, status as repoStatus, summary } from "../../stories/fixtures"
@@ -594,6 +595,45 @@ test("create PR: a push that finishes after the branch changed is ignored (Ignor
   expect(args.onOpenChange).not.toHaveBeenCalled()
   expect(openedUrls).toEqual([])
   expect(screen.getByRole("dialog")).toBeVisible()
+})
+
+// Desktop app/test/unit/ui/add-worktree-dialog-test.tsx（9822d840e）'keeps failures open, reports the error and re-enables creation'，
+// 按 GitCub 的工作树对话框改写：它创建成功后也不关闭，所以原版的「关闭前先清 creating」不适用。
+test("worktrees: a failed creation stays open, reports the error and can be retried (FailedCreationCanRetry)", async () => {
+  const user = userEvent.setup()
+  let attempts = 0
+  fixtures({
+    worktrees: () => [{ path: "/preview/repository", branch: "main", main: true }],
+    branches: () => [{ name: "main" }],
+    add_worktree_at: () => {
+      if (attempts++ === 0) throw new Error("fatal: '/preview/feature' already exists")
+    }
+  })
+  const onClose = mock()
+  render(<Worktrees repo="/preview/repository" onClose={onClose} onOpen={mock()} onMove={mock()} />)
+  const create = await screen.findByRole("button", { name: t("worktree.create") })
+  await waitFor(() => expect(callsOf("branches")).toHaveLength(1))
+  // 分支输入带 datalist，起点下拉也是 combobox；按表单里的顺序取：分支、路径
+  const [branchInput, pathInput] = [...screen.getByRole("dialog").querySelectorAll("input")]
+  await user.type(branchInput!, "feature")
+  await user.type(pathInput!, "/preview/feature")
+  await user.click(create)
+  expect(await screen.findByRole("alert")).toHaveTextContent("already exists")
+  await waitFor(() => expect(create).toBeEnabled())
+  expect(pathInput).toHaveValue("/preview/feature")
+  expect(onClose).not.toHaveBeenCalled()
+  await user.click(create)
+  await waitFor(() => expect(pathInput).toHaveValue(""))
+  expect(screen.queryByRole("alert")).toBeNull()
+  expect(callsOf("add_worktree_at")).toEqual(
+    Array.from({ length: 2 }, () => ({
+      repo: "/preview/repository",
+      path: "/preview/feature",
+      createBranch: "feature",
+      commitish: "HEAD"
+    }))
+  )
+  expect(callsOf("worktrees")).toHaveLength(2)
 })
 
 // ---- Settings/Repository settings ----
