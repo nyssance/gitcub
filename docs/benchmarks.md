@@ -1031,7 +1031,7 @@ Renderer 103–108 MiB，GitCub 的 WebContent 179–211 MiB；主进程反而 G
 ### diff 滚到末行：拆开后是持平，原先的口径对 Desktop 偏宽（2026-11-12）
 
 `BENCH_SCROLL_PROFILE=1 bun run bench:app -- --launches 3 --files 3000 --settle 1000 --app src-tauri/target/bench/release/bundle/macos/GitCub.app`
-（GitCub 是 11-02 的基准包，diff 视图此后没有改动；GitHub Desktop 3.6.10；5 000 行 diff；同一次运行交替启动；
+（GitCub 是 11-02 的基准包；此后 diff 目录有两个提交：一次格式化（7b85287），一次改为从 @nyssance/shadcn 包引用组件（9206bd4），本次没有用当前代码重编复测；GitHub Desktop 3.6.10；5 000 行 diff；同一次运行交替启动；
 WebKit 的 `performance.now()` 只有 1 ms 精度）。探针在页面里把一次跳到底拆成：同步的 scroll 派发、派发期间读几何量
 引起的强制排版（包住 `getBoundingClientRect`、`offsetHeight`、`scrollHeight` 等的读取计数计时）、派发后强制一次排版，
 以及视口重新填满（行数回到跳转前的八成以上）的时刻。
