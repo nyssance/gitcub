@@ -880,12 +880,12 @@
     },
     "app/test/unit/git/diff-test.ts": {
       "sha256": "cbfdc9228c24209128e3462b6c6f6296fe2db2e7ea6fdfccecad1df27a8b95eb",
-      "status": "partial",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/diff-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery. Resynced at db99902e7: the pathspec-literal working-directory, commit and merge-base diff cases run unchanged; the two `range` cases of 'historical diffs with literal filenames' are removed by tests/conformance/design-adaptations.ts because GitCub has no multi-commit range diff (Desktop getCommitRangeDiff), which is a product gap, not an accepted difference."
+        "adaptation": "Untouched original suite passed against production Rust and TypeScript; API shape/IPC transport adaptations only. Clone progress currently verifies initial event; rebase/cherry-pick progress verifies actual Git output sequence, not live delivery. Resynced at db99902e7: the pathspec-literal working-directory, commit and merge-base diff cases run unchanged; the two `range` cases of 'historical diffs with literal filenames' run against raw_diff::commit_range_file_diff (Desktop getCommitRangeDiff), added 2026-11-12."
       }
     },
     "app/test/unit/git/environment-test.ts": {

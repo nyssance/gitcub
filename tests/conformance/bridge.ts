@@ -670,9 +670,27 @@ export async function getCommitDiff(
   const raw = await ipc.commitFileDiff(repo.path, sha, file.path, file.status.oldPath ?? null, hideWhitespace)
   return toTextDiff(new DiffParser().parse(raw))
 }
-/** GitCub has no multi-commit range diff (Desktop getCommitRangeDiff); the range cases are registered as unported. */
-export async function getCommitRangeDiff(): Promise<never> {
-  throw new Error("getCommitRangeDiff is not implemented in GitCub")
+export async function getCommitRangeDiff(
+  repo: { path: string },
+  file: { path: string; status: { oldPath?: string } },
+  commits: ReadonlyArray<string>,
+  hideWhitespace = false
+) {
+  if (commits.length === 0) throw new Error("No commits to diff...")
+  const [{ ipc }, { toTextDiff }, { DiffParser }] = await Promise.all([
+    import("../../src/lib/ipc"),
+    import("../../src/lib/diff"),
+    import("../../src/upstream/lib/diff-parser")
+  ])
+  const raw = await ipc.commitRangeFileDiff(
+    repo.path,
+    commits[0]!,
+    commits.at(-1)!,
+    file.path,
+    file.status.oldPath ?? null,
+    hideWhitespace
+  )
+  return toTextDiff(new DiffParser().parse(raw))
 }
 export async function checkoutPaths(repo: { path: string }, paths: ReadonlyArray<string>) {
   const { checkoutPaths } = await import("../../src/lib/git/checkout-paths")

@@ -91,8 +91,6 @@ class DesktopCatalogTests(unittest.TestCase):
             'app/test/unit/api-test.ts': 'partial',
             # Assisted-commit lease cases removed with Copilot (removed-copilot-adaptations.ts).
             'app/test/unit/git/clone-test.ts': 'partial',
-            # No multi-commit range diff in GitCub: the two getCommitRangeDiff cases are a product gap.
-            'app/test/unit/git/diff-test.ts': 'partial',
             'app/test/unit/main-process/menu-test.ts': 'partial',
             'app/test/unit/refresh-token-consumers-test.ts': 'partial',
             'app/test/unit/repo-rules-test.ts': 'partial',

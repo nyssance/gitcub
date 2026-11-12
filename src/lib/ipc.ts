@@ -293,6 +293,18 @@ export const ipc = {
   /** `oldPath`：重命名或复制前的路径（Desktop getCommitDiff 会一并传给 git）。 */
   commitFileDiff: (repo: string, sha: string, file: string, oldPath: string | null, hideWhitespace = false) =>
     invoke<string>("commit_file_diff_raw", { repo, sha, file, oldPath, hideWhitespace }),
+  /** Desktop getCommitRangeChangedFiles：多选连续提交（oldest 最老、latest 最新）合起来改了哪些文件 */
+  commitRangeFiles: (repo: string, oldest: string, latest: string) =>
+    invoke<CommitFile[]>("commit_range_files", { repo, oldest, latest }),
+  /** Desktop getCommitRangeDiff：多选连续提交时某个文件的合并 diff */
+  commitRangeFileDiff: (
+    repo: string,
+    oldest: string,
+    latest: string,
+    file: string,
+    oldPath: string | null,
+    hideWhitespace = false
+  ) => invoke<string>("commit_range_file_diff_raw", { repo, oldest, latest, file, oldPath, hideWhitespace }),
   repoStatus: (repo: string) => invoke<RepoStatus>("repo_status", { repo }),
   /** 待办页用的摘要：分支、远端、领先数、冲突路径。不遍历工作区，可以对很多仓库连着问 */
   repoSummary: (repo: string) => invoke<RepoSummary>("repo_summary", { repo }),

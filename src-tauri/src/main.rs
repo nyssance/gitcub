@@ -313,6 +313,8 @@ fn main() {
             commands::search_commits,
             commands::commit_files,
             commands::commit_file_diff_raw,
+            commands::commit_range_files,
+            commands::commit_range_file_diff_raw,
             commands::working_directory_diff,
             commands::resolution_diff,
             commands::apply_patch_to_index,

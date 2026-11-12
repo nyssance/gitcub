@@ -244,6 +244,14 @@ fn execute(request: &Value) -> Result<Value, String> {
             request["oldPath"].as_str(),
             request["hideWhitespace"].as_bool().unwrap_or(false)
         )?),
+        "diff/commit-range" => json!(raw_diff::commit_range_file_diff(
+            repo,
+            request["oldest"].as_str().unwrap(),
+            request["latest"].as_str().unwrap(),
+            request["file"].as_str().unwrap(),
+            request["oldPath"].as_str(),
+            request["hideWhitespace"].as_bool().unwrap_or(false)
+        )?),
         "diff/merge-base" => json!(raw_diff::merge_base_diff(
             repo,
             request["from"].as_str().unwrap(),

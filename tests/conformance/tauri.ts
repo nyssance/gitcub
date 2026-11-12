@@ -209,6 +209,8 @@ export async function invoke(command: string, args: Record<string, unknown>) {
       return call("diff/merge-base", args)
     case "commit_file_diff_raw":
       return call("diff/commit", args)
+    case "commit_range_file_diff_raw":
+      return call("diff/commit-range", args)
     case "resolve_conflict":
       return call("conflict/resolve", args)
     case "push_with_tags":

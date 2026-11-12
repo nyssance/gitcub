@@ -2149,6 +2149,24 @@ pub fn commit_files_via_git(root: &Path, sha: &str) -> Result<Vec<CommitFile>, S
     Ok(parse_raw_with_numstat(&out.stdout))
 }
 
+/// 多选连续提交时的文件列表（Desktop `getCommitRangeChangedFiles`，app/src/lib/git/diff.ts）：
+/// `git diff <oldest>^ <latest> -C -M -z --raw --numstat --`；`<oldest>^` 是 bad revision 时改用空树重试。
+pub fn commit_range_files(root: &Path, oldest: &str, latest: &str) -> Result<Vec<CommitFile>, String> {
+    let run = |from: &str| -> Result<Vec<CommitFile>, String> {
+        let out = crate::git::Git::new(Some(root))
+            .args(["diff", from, latest, "-C", "-M", "-z", "--raw", "--numstat", "--"])
+            .output()?;
+        if !out.status.success() {
+            return Err(crate::git::stderr_of(&out));
+        }
+        Ok(parse_raw_with_numstat(&out.stdout))
+    };
+    match run(&format!("{oldest}^")) {
+        Err(error) if crate::raw_diff::is_bad_revision(&error) => run(crate::raw_diff::NULL_TREE_SHA),
+        result => result,
+    }
+}
+
 /// `git log -m -1 --first-parent <sha>` 比较的两棵树：第一父的树（根提交为 `None`，即空树）和提交自己的树。
 ///
 /// 只接受完整的对象名或 `HEAD`；浅克隆、`info/grafts`、`refs/replace/*` 会改变父提交或对象本身，让位给 git。

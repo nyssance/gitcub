@@ -321,6 +321,35 @@ pub async fn commit_file_diff_raw(
     .map_err(|error| error.to_string())?
 }
 
+/// 多选连续提交的文件列表：`oldest` 到 `latest` 这一段相对 `oldest` 的父提交改了哪些文件。
+#[tauri::command]
+pub async fn commit_range_files(
+    repo: String, oldest: String, latest: String,
+) -> Result<Vec<history::CommitFile>, String> {
+    tauri::async_runtime::spawn_blocking(move || history::commit_range_files(Path::new(&repo), &oldest, &latest))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+/// 多选连续提交时某个文件的原始 diff 文本。
+#[tauri::command]
+pub async fn commit_range_file_diff_raw(
+    repo: String, oldest: String, latest: String, file: String, old_path: Option<String>, hide_whitespace: Option<bool>,
+) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        raw_diff::commit_range_file_diff(
+            Path::new(&repo),
+            &oldest,
+            &latest,
+            &file,
+            old_path.as_deref(),
+            hide_whitespace.unwrap_or(false),
+        )
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
 /// 原始 diff 文本，交给前端移植自原版的 diff-parser 解析。
 #[tauri::command]
 pub async fn working_directory_diff(

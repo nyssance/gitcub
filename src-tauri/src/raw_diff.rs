@@ -161,6 +161,34 @@ pub fn commit_file_diff_via_git(
     g.args(file_diff_pathspecs(file, old_path)).stdout()
 }
 
+/// 空树对象（Desktop `NullTreeSHA`，app/src/lib/git/diff-index.ts）：范围里最老的提交没有父提交时拿它当起点。
+pub const NULL_TREE_SHA: &str = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
+
+/// git 报 `bad revision`（dugite `GitError.BadRevision`）：`<sha>^` 不存在。
+pub fn is_bad_revision(error: &str) -> bool {
+    error.contains("bad revision")
+}
+
+/// 多选连续提交时某个文件的合并 diff（Desktop `getCommitRangeDiff`，app/src/lib/git/diff.ts）：
+/// `git diff <oldest>^ <latest> [-w] --patch-with-raw --format= -z --no-color -- <file> [<oldPath>]`。
+/// 最老的提交没有父提交时 `<oldest>^` 是 bad revision，改用空树重试。
+pub fn commit_range_file_diff(
+    repo: &Path, oldest: &str, latest: &str, file: &str, old_path: Option<&str>, hide_whitespace: bool,
+) -> Result<String, String> {
+    let run = |from: &str| {
+        let mut g = Git::new(Some(repo)).args(["--literal-pathspecs", "diff", from, latest]);
+        if hide_whitespace {
+            g = g.arg("-w");
+        }
+        g = g.args(["--patch-with-raw", "--format=", "-z", "--no-color", "--"]);
+        g.args(file_diff_pathspecs(file, old_path)).stdout()
+    };
+    match run(&format!("{oldest}^")) {
+        Err(error) if is_bad_revision(&error) => run(NULL_TREE_SHA),
+        result => result,
+    }
+}
+
 /// 单个文件 diff 的 pathspec：新路径，重命名或复制时再加旧路径（GitLens `getFileDiffPathspecs`，
 /// Desktop `getCommitDiff` 同样追加 `oldPath`）。空的旧路径不算——git 拒绝空 pathspec。
 pub fn file_diff_pathspecs<'a>(file: &'a str, old_path: Option<&'a str>) -> Vec<&'a str> {
@@ -1457,6 +1485,43 @@ mod tests {
         let diff = commit_file_diff_via_git(repo, "HEAD", magic, None, false).unwrap();
         assert!(diff.contains(magic), "{diff}");
         assert!(!diff.contains("unrelated.txt"), "{diff}");
+    }
+
+    /// Desktop getCommitRangeDiff / getCommitRangeChangedFiles：多选连续提交看到的是「最老那个的父」到「最新那个」的合并改动；
+    /// 范围从根提交开始时 `<sha>^` 不存在，改拿空树当起点。
+    #[test]
+    fn 多个提交的范围_diff_合并其间的改动_根提交起改用空树() {
+        let run = |repo: &Path, args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(repo).args(args).output().unwrap();
+            assert!(out.status.success(), "{args:?}: {}", String::from_utf8_lossy(&out.stderr));
+            String::from_utf8_lossy_owned(out.stdout).trim().to_owned()
+        };
+        let dir = tempfile::tempdir().unwrap();
+        let repo = dir.path();
+        run(repo, &["init", "-q", "-b", "main", "."]);
+        run(repo, &["config", "user.email", "t@t.t"]);
+        run(repo, &["config", "user.name", "t"]);
+        let mut shas = Vec::new();
+        for (index, content) in ["one\n", "one\ntwo\n", "one\ntwo\nthree\n"].into_iter().enumerate() {
+            std::fs::write(repo.join("a.txt"), content).unwrap();
+            if index == 2 {
+                std::fs::write(repo.join("b.txt"), "new\n").unwrap();
+            }
+            run(repo, &["add", "--all"]);
+            run(repo, &["commit", "-q", "-m", &format!("commit {index}")]);
+            shas.push(run(repo, &["rev-parse", "HEAD"]));
+        }
+
+        let diff = commit_range_file_diff(repo, &shas[1], &shas[2], "a.txt", None, false).unwrap();
+        assert!(diff.contains("+two") && diff.contains("+three"), "{diff}");
+        assert!(!diff.contains("+one"), "{diff}");
+        let files = crate::history::commit_range_files(repo, &shas[1], &shas[2]).unwrap();
+        assert_eq!(files.iter().map(|file| file.path.as_str()).collect::<Vec<_>>(), ["a.txt", "b.txt"]);
+
+        let from_root = commit_range_file_diff(repo, &shas[0], &shas[2], "a.txt", None, false).unwrap();
+        assert!(from_root.contains("+one") && from_root.contains("+three"), "{from_root}");
+        let files = crate::history::commit_range_files(repo, &shas[0], &shas[2]).unwrap();
+        assert_eq!(files.len(), 2);
     }
 
     #[test]
