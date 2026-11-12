@@ -2067,6 +2067,12 @@
       "rust_tests": [],
       "exclusion": "Copilot and assisted commit were removed at the user's request on 2026-10-21; this file only covers that feature. Not executed and not counted as compatible."
     },
+    "app/test/unit/stores/commit-auto-push-test.ts": {
+      "sha256": "b744770731bd0a689ccf41093fd09acfa2ddbf72d1b083d0d12b45a90fe78605",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User decided on 2026-11-12 not to adopt Desktop's \"Push after committing\"; commit and push stay separate steps. Not executed and not counted as compatible."
+    },
     "app/test/unit/stores/copilot-assisted-commit-test.ts": {
       "sha256": "641786f1f9fea5ca5469da254713a9bbe9afcf8e83d42fc3bd37111a43c51f89",
       "status": "excluded",
@@ -2296,6 +2302,12 @@
         "adaptation": "User requested removal of Copilot on 2026-10-21; generation dialogs removed. Snapshot retained as provenance only."
       },
       "exclusion": "User requested removal of Copilot on 2026-10-21; generation dialogs removed. Snapshot retained as provenance only."
+    },
+    "app/test/unit/ui/commit-push-error-test.tsx": {
+      "sha256": "a872efa74aa94eeae414a3d413bbeb16096106ec42b174a45e04802eab348e28",
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "User decided on 2026-11-12 not to adopt Desktop's \"Push after committing\"; commit and push stay separate steps. Not executed and not counted as compatible."
     },
     "app/test/unit/ui/component-primitives-test.tsx": {
       "sha256": "95332cf1db3dca5a6521ae37ae23ea1d53a157a3f516512d6a30eed58617d413",
