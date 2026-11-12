@@ -133,3 +133,17 @@ it("links GitLab owner/repo#<num> and owner/repo!<num> to that project's issue a
     ]
   )
 })
+
+// GitLens packages/git/src/remotes/__tests__/gitlab.test.ts（f168f8dd1）'GitLabRemoteProvider nested groups' › autolinks
+it("links GitLab references to projects in nested groups by their whole namespace", () => {
+  const message = "see acme/platform/kepler#12, acme/platform/tools/kepler!7 and acme/kepler#3"
+  const spans = findAutolinkSpans(message, autolinkRefSets([], gitlab, "gitlab", t))
+  assert.deepEqual(
+    spans.map(span => [span.text, span.url]),
+    [
+      ["acme/platform/kepler#12", "https://gitlab.example/acme/platform/kepler/-/issues/12"],
+      ["acme/platform/tools/kepler!7", "https://gitlab.example/acme/platform/tools/kepler/-/merge_requests/7"],
+      ["acme/kepler#3", "https://gitlab.example/acme/kepler/-/issues/3"]
+    ]
+  )
+})

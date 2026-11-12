@@ -41,12 +41,20 @@ const unported: Record<string, Unported> = {
       "import { getRemoteNameSlashIndex } from '@gitlens/utils/gitRefs.js';\n",
       "import { GitBranch } from '../../models/branch.js';\n",
       "\tgetBranchNameAndRemote,\n",
+      "\tgetBranchReflogWork,\n",
       "\tgetBranchTrackingWithoutRemote,\n",
       "\tisDetachedHead,\n",
       "\tparseRefName,\n",
       "\tparseUpstream,\n"
     ],
-    suites: ["parseUpstream", "parseRefName", "getRemoteNameSlashIndex", "isDetachedHead", "upstream remote"],
+    suites: [
+      "parseUpstream",
+      "parseRefName",
+      "getRemoteNameSlashIndex",
+      "isDetachedHead",
+      "upstream remote",
+      "getBranchReflogWork"
+    ],
     tests: ["strips a leading remotes/", "keeps a leading remotes/ that belongs to the remote name"]
   },
   // 缓存、空树 sha、限定路径的文件/树列表，以及 getBlobIds / exists / getTreeEntryForRevision 在 GitCub 没有对应 API。空树只有 Desktop 的 SHA-1 常量
@@ -58,7 +66,8 @@ const unported: Record<string, Unported> = {
       "RevisionSubProvider.getEmptyTreeSha",
       "RevisionSubProvider scoped listings",
       "RevisionSubProvider glob-like file names",
-      "RevisionSubProvider.getBlobIds (working) with paths hash-object cannot read"
+      "RevisionSubProvider.getBlobIds (working) with paths hash-object cannot read",
+      "RevisionSubProvider.getTrackedFilesRaw"
     ]
   },
   // Desktop getRepositoryType 把 git 退出码 128（含无权进入目录）一律当作 missing。

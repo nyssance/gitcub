@@ -38,6 +38,7 @@ export const gitLensIntegrationAdaptations: Record<string, Adaptation> = {
         "Desktop/GitCub 无 worktree lock/unlock",
       "a forced getWorktrees sees a worktree created outside the provider, and matches its new branch": `force 读取与 sinon 进程计数，${cache}`,
       "a forced getWorktrees of an unchanged repository re-reads only the worktree list": `force 读取与 sinon 进程计数，${cache}`,
+      "a forced getWorktrees sees the main checkout detach from a branch the cached list still places there": `force 读取对缓存列表，${cache}`,
       "a cancelled createWorktree rejects as CancellationError, not WorktreeCreateError":
         "GitLens AbortSignal 取消语义，GitCub 工作树操作无取消入口",
       "a cancelled deleteWorktree rejects as CancellationError, not WorktreeDeleteError":
@@ -94,6 +95,7 @@ export const gitLensIntegrationAdaptations: Record<string, Adaptation> = {
       "RefsSubProvider ref updates": "GitLens 引用写入 API（CAS、钩子、gk 元数据清理），GitCub 无对应入口",
       "RefsSubProvider.validateReference — force bypasses the cache": cache,
       "RefsSubProvider.getReference — force bypasses the branch cache": cache,
+      "RefsSubProvider.getRefs — a forced refresh that finds a ref moved drops the counts keyed by ref names": `GitLens 提交计数缓存，${cache}`,
       "RefsSubProvider.getReflogEntries": "GitLens reflog 视图，GitCub 无对应入口"
     }
   },

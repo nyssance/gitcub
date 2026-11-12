@@ -30,9 +30,11 @@ export type HostingPlatform = "github" | "gitlab"
 
 export type Translate = (key: string, options?: Record<string, string>) => string
 
-// GitLens packages/git/src/remotes/github.ts / gitlab.ts (b87331422)
+// GitLens packages/git/src/remotes/github.ts (4a58ac0b4)：GitHub 只有 owner/repo 两段
 const autolinkFullIssuesRegex = /\b([^/\s]+\/[^/\s]+?)(?:\\)?#([0-9]+)\b(?!]\()/g
-const autolinkFullMergeRequestsRegex = /\b([^/\s]+\/[^/\s]+?)(?:\\)?!([0-9]+)\b(?!]\()/g
+// GitLens packages/git/src/remotes/gitlab.ts (4a58ac0b4, f168f8dd1)：GitLab 的命名空间可以嵌套多级子组
+const gitlabAutolinkFullIssuesRegex = /\b((?:[^/\s]+\/)+[^/\s]+?)(?:\\)?#([0-9]+)\b(?!]\()/g
+const gitlabAutolinkFullMergeRequestsRegex = /\b((?:[^/\s]+\/)+[^/\s]+?)(?:\\)?!([0-9]+)\b(?!]\()/g
 
 /** GitLens 的 `owner/repo#1` 动态引用：parse 进结果表，descriptor 供渲染定位链接 */
 function fullReference(
@@ -109,7 +111,7 @@ export function gitlabAutolinks(remote: Remote, t: Translate): (AutolinkReferenc
       description: t("autolinks.gitlabMergeRequestDescription", { num: "<num>" })
     },
     fullReference(
-      autolinkFullIssuesRegex,
+      gitlabAutolinkFullIssuesRegex,
       (repo, num) => `https://${remote.host}/${repo}/-/issues/${num}`,
       (repo, num) => t("autolinks.openIssueFromRepositoryOnGitLab", { num, repository: repo }),
       (repo, num) => t("autolinks.gitLabIssueInRepository", { num, repository: repo }),
@@ -117,7 +119,7 @@ export function gitlabAutolinks(remote: Remote, t: Translate): (AutolinkReferenc
       "issue"
     ),
     fullReference(
-      autolinkFullMergeRequestsRegex,
+      gitlabAutolinkFullMergeRequestsRegex,
       (repo, num) => `https://${remote.host}/${repo}/-/merge_requests/${num}`,
       (repo, num) => t("autolinks.openMergeRequestFromRepositoryOnGitLab", { num, repository: repo }),
       (repo, num) => t("autolinks.gitLabMergeRequestInRepository", { num, repository: repo }),

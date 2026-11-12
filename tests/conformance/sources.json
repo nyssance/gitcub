@@ -1635,8 +1635,8 @@
     "gitlens/branch.utils.test.ts": {
       "project": "gitlens",
       "source": "packages/git/src/utils/__tests__/branch.utils.test.ts",
-      "commit": "efffd14e1ea755f9075a820780a7d385e93f72d1",
-      "sha256": "9475e55e25ff288fc71267baab7b0432f83a088d2ee9e89f7d977d8c01ec5644"
+      "commit": "4a58ac0b4ede9fc803259278940bc943d9f60320",
+      "sha256": "a14dd07e0d799bdfc5b476d1c6563c0b0b4656252190ebeaef061923e49042bb"
     },
     "gitlens/commits.searchTypeMerge.test.ts": {
       "project": "gitlens",
@@ -1647,8 +1647,8 @@
     "gitlens/revision.test.ts": {
       "project": "gitlens",
       "source": "packages/git-cli/src/providers/__tests__/integration/revision.test.ts",
-      "commit": "b87331422fe75f845ad32f581d2f500f72f84523",
-      "sha256": "475c31331a04943125ac61554a43eab4ccd6279cf29db2a7ef77c66d509f4f9d"
+      "commit": "4a58ac0b4ede9fc803259278940bc943d9f60320",
+      "sha256": "013fd04a0ee1d57db65a522bd06e1091b60a09b34da49b3deaa02c1808eee40c"
     },
     "gitlens/revParseGitDir.test.ts": {
       "project": "gitlens",
@@ -1683,8 +1683,8 @@
     "gitlens/integration/worktrees.test.ts": {
       "project": "gitlens",
       "source": "packages/git-cli/src/providers/__tests__/integration/worktrees.test.ts",
-      "commit": "5c1708ecab59236c2b9ae7e2b38ce876b9262394",
-      "sha256": "d1dad9c5a365abe1e471e23fcb13509d8c2da3959e30f332dcfadbf24b047fc9"
+      "commit": "4a58ac0b4ede9fc803259278940bc943d9f60320",
+      "sha256": "222c4e9c26abac01d9660782347c5bb0d6e0f0c304fa2c61c00e7727c1dbef06"
     },
     "gitlens/integration/config.test.ts": {
       "project": "gitlens",
@@ -1713,8 +1713,8 @@
     "gitlens/integration/refs.test.ts": {
       "project": "gitlens",
       "source": "packages/git-cli/src/providers/__tests__/integration/refs.test.ts",
-      "commit": "5c1708ecab59236c2b9ae7e2b38ce876b9262394",
-      "sha256": "e25ebd8bb4a7aeffbfb7be3168fa5d3a085306f5eecc09c3b37941940dac69b8"
+      "commit": "4a58ac0b4ede9fc803259278940bc943d9f60320",
+      "sha256": "c02da14dfdf8344789c840f44cc95d5447782ff2e422a2c6a58983e256007a4a"
     },
     "gitlens/integration/status.test.ts": {
       "project": "gitlens",
@@ -2021,7 +2021,7 @@
     "upstream/gitlens/packages/git/src/utils/branch.utils.ts": {
       "project": "gitlens",
       "source": "packages/git/src/utils/branch.utils.ts",
-      "sha256": "982ec6d22c972de483c23f82e2e755efe47bc65b9717a4a14a1c0ba4004205ee"
+      "sha256": "08569b22116c32be7bdf860e25649bfd69fac8cf13e11b4a12991271b302cff1"
     },
     "upstream/gitlens/packages/git/src/utils/revision.utils.ts": {
       "project": "gitlens",
@@ -9291,13 +9291,13 @@
     "upstream/gitlens/packages/git-cli/src/providers/__tests__/integration/helpers.ts": {
       "project": "gitlens",
       "source": "packages/git-cli/src/providers/__tests__/integration/helpers.ts",
-      "sha256": "d77d4c4dcfa4a47cb213658f03b00a49760cc6a705174149e81d27c773cc7e0b"
+      "sha256": "f66853930d17c21636bb1f0d4c49318dcab6dea0e5d41fb5e0ec2242de512e5a"
     },
     "upstream/gitlens/packages/git/src/errors.ts": {
       "project": "gitlens",
       "source": "packages/git/src/errors.ts",
-      "sha256": "abb28f222dd162b2eba95ed41dacc4ae4001e37f03869c525db9f4ef21c5e51f",
-      "commit": "b87331422fe75f845ad32f581d2f500f72f84523"
+      "sha256": "7b84d27cffa1b30546a1584f02f7ea84970f71e441817e762cca5a9d7dc3177a",
+      "commit": "4a58ac0b4ede9fc803259278940bc943d9f60320"
     },
     "upstream/gitlens/packages/git/src/utils/reference.utils.ts": {
       "project": "gitlens",
