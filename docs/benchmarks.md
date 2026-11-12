@@ -1028,6 +1028,27 @@ Renderer 103–108 MiB，GitCub 的 WebContent 179–211 MiB；主进程反而 G
   React 渲染与排版各占多少要用性能分析器才能拆开，未做。两边都在一帧（16 ms）以内。
 - 连续滚动帧率、历史页 diff、长时间运行后的内存。
 
+### diff 滚到末行：拆开后是持平，原先的口径对 Desktop 偏宽（2026-11-12）
+
+`BENCH_SCROLL_PROFILE=1 bun run bench:app -- --launches 3 --files 3000 --settle 1000 --app src-tauri/target/bench/release/bundle/macos/GitCub.app`
+（GitCub 是 11-02 的基准包，diff 视图此后没有改动；GitHub Desktop 3.6.10；5 000 行 diff；同一次运行交替启动；
+WebKit 的 `performance.now()` 只有 1 ms 精度）。探针在页面里把一次跳到底拆成：同步的 scroll 派发、派发期间读几何量
+引起的强制排版（包住 `getBoundingClientRect`、`offsetHeight`、`scrollHeight` 等的读取计数计时）、派发后强制一次排版，
+以及视口重新填满（行数回到跳转前的八成以上）的时刻。
+
+| 应用 | scroll 派发 (ms) | 派发内强制排版 | 派发后那一刻的行数 | 视口填满 (ms) |
+|---|---:|---|---:|---:|
+| GitCub | 4 / 4 / 5 | 4 次读取，0 ms | 98（跳转前 98） | 11 / 11 / 12 |
+| GitHub Desktop 3.6.10 | 5.9 / 2.9 / 4.0 | 4 次读取，0.4–0.9 ms | 3（跳转前 77） | 14.3 / 11.6 / 35.6 |
+
+- 原先「滚到末行」在最后一行出现时停表。Desktop 的 react-virtualized 在那一刻只渲染了 3 行（含末行），其余行在之后的
+  更新里补齐；GitCub 一次同步渲染出整屏。所以 14 ms 对 3 ms 比的不是同一件事。
+- 按「视口填满」算，GitCub 11–12 ms，Desktop 11.6–35.6 ms（中位数 14.3）。GitCub 的数字里含探针自己强制的一次排版
+  （约 7 ms，本来在下一帧绘制时才发生），Desktop 的不含补齐那些行的排版，口径对 GitCub 偏严。3 次、差距在波动内，**报持平，
+  不宣称更快**。
+- 之前怀疑的「虚拟列表挂载时逐行测高引起排版抖动」不成立：派发期间两边都只有 4 次几何读取。
+- 未覆盖：连续滚动的帧率；用当前代码重编的基准包（本次用的是 11-02 的包）；更大的 diff。
+
 ## 复现
 
 ```sh

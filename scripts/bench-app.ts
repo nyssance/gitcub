@@ -412,6 +412,60 @@ const scrollDiffToEnd = `(() => {
   target.dispatchEvent(new Event('scroll'));
 })()`
 
+// Splits the jump to the end: how long the synchronous scroll dispatch takes, and how much of it is layout forced
+// by reads of geometry (the virtualizers measure rows as they mount). Counts and time are per read API.
+const installLayoutProbe = `(() => {
+  const probe = (window.__benchLayout = { reads: 0, ms: 0, slowest: 0, by: {} });
+  const wrap = (proto, name, kind) => {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, name);
+    if (!descriptor) return;
+    const original = kind === 'get' ? descriptor.get : descriptor.value;
+    const timed = function (...args) {
+      const start = performance.now();
+      try { return original.apply(this, args); }
+      finally {
+        const took = performance.now() - start;
+        probe.reads++; probe.ms += took; probe.slowest = Math.max(probe.slowest, took);
+        const entry = (probe.by[name] ??= { reads: 0, ms: 0 }); entry.reads++; entry.ms += took;
+      }
+    };
+    Object.defineProperty(proto, name, kind === 'get' ? { ...descriptor, get: timed } : { ...descriptor, value: timed });
+  };
+  wrap(Element.prototype, 'getBoundingClientRect', 'value');
+  for (const name of ['scrollWidth', 'scrollHeight', 'clientWidth', 'clientHeight', 'scrollTop']) wrap(Element.prototype, name, 'get');
+  for (const name of ['offsetWidth', 'offsetHeight', 'offsetTop']) wrap(HTMLElement.prototype, name, 'get');
+  wrap(window, 'getComputedStyle', 'value');
+  return true;
+})()`
+const profiledScrollDiffToEnd = `(() => {
+  const scrollers = [...document.querySelectorAll('.diff-container *')].filter(el => el.scrollHeight > el.clientHeight + 1);
+  const target = scrollers.toSorted((a, b) => b.scrollHeight - a.scrollHeight)[0];
+  const probe = window.__benchLayout;
+  probe.reads = 0; probe.ms = 0; probe.slowest = 0; probe.by = {};
+  const rowsBefore = document.querySelectorAll('.diff-container [role=row], .diff-container .row').length;
+  const start = performance.now();
+  target.scrollTop = target.scrollHeight;
+  target.dispatchEvent(new Event('scroll'));
+  const dispatchMs = performance.now() - start;
+  const inDispatch = JSON.parse(JSON.stringify(probe));
+  const layoutStart = performance.now();
+  void document.body.offsetHeight;
+  window.__benchScrollProfile = { dispatchMs, inDispatch, layoutAfterMs: performance.now() - layoutStart, rowsBefore,
+    rowsAfter: document.querySelectorAll('.diff-container [role=row], .diff-container .row').length };
+  // The last line showing is not the viewport being drawn: time until as many rows are back as before the jump.
+  const count = () => document.querySelectorAll('.diff-container [role=row], .diff-container .row').length;
+  const filled = () => {
+    if (count() >= rowsBefore * 0.8) {
+      window.__benchScrollProfile.filledMs = performance.now() - start;
+      window.__benchScrollProfile.rowsFilled = count();
+      observer.disconnect();
+    }
+  };
+  const observer = new MutationObserver(filled);
+  observer.observe(target, { subtree: true, childList: true });
+  filled();
+})()`
+
 /** Opens the probe file's diff and scrolls it to the end, both timed in the page. */
 async function measureDiff(evaluate: (expression: string) => Promise<unknown>, lines: number) {
   await until(
@@ -436,9 +490,15 @@ async function measureDiff(evaluate: (expression: string) => Promise<unknown>, l
   const openMs = await finished()
   // Let the first paint settle so the scroll timing does not include the open.
   await sleep(500)
+  const profile = process.env.BENCH_SCROLL_PROFILE === "1"
+  if (profile) await evaluate(installLayoutProbe)
   await evaluate(armExpression(diffShowsExpression(diffLine(lines - 1)), 1))
-  await evaluate(clickExpression(scrollDiffToEnd))
+  await evaluate(clickExpression(profile ? profiledScrollDiffToEnd : scrollDiffToEnd))
   const scrollMs = await finished()
+  if (profile) {
+    await sleep(300)
+    console.error("scroll profile", JSON.stringify(await evaluate("JSON.stringify(window.__benchScrollProfile)")))
+  }
   return { openMs, scrollMs }
 }
 
