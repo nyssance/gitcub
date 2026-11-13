@@ -382,6 +382,36 @@ pub(crate) mod in_process {
                 .or_else(|| self.bundled.as_ref().and_then(|file| file.string(key)))
         }
 
+        /// `GIT_CONFIG_NOSYSTEM` 为真时 git 不读系统配置：换成一份空的，gix 看到的本机系统配置同样被排除。
+        pub(crate) fn without_system(mut self) -> Self {
+            self.bundled = Some(gix::config::File::new(gix::config::file::Metadata::from(gix::config::Source::System)));
+            self
+        }
+
+        /// 只看配置文件里的值（`git config <key>` 的口径）。gix 的快照另把 `GIT_EDITOR` 这类环境变量折成配置项
+        /// （来源 Env / EnvOverride），git 的 `config` 命令并不这样报。`None`：文件里没有这个键的字符串值。
+        pub(crate) fn file_string(&self, key: &str) -> Option<gix::bstr::BString> {
+            use gix::config::Source;
+            let mut keep = self.keep();
+            self.snapshot
+                .plumbing()
+                .string_filter(key, |meta| {
+                    keep(meta) && !matches!(meta.source, Source::Env | Source::EnvOverride | Source::Cli | Source::Api)
+                })
+                .or_else(|| self.bundled.as_ref().and_then(|file| file.string(key)))
+        }
+
+        /// 文件里出现过这个键（含没有 `=` 的隐式写法）
+        pub(crate) fn file_present(&self, key: &str) -> bool {
+            use gix::config::Source;
+            let mut keep = self.keep();
+            let from_files = |meta: &gix::config::file::Metadata| {
+                keep(meta) && !matches!(meta.source, Source::Env | Source::EnvOverride | Source::Cli | Source::Api)
+            };
+            !matches!(self.snapshot.plumbing().boolean_filter(key, from_files), Ok(None))
+                || self.bundled.as_ref().is_some_and(|file| !matches!(file.boolean(key), Ok(None)))
+        }
+
         /// 布尔值；写成 git 不认的形式时让位
         pub(crate) fn boolean(&self, key: &str) -> Result<Option<bool>, Fallback> {
             let value = match self.snapshot.plumbing().boolean_filter(key, self.keep()) {
@@ -393,6 +423,20 @@ pub(crate) mod in_process {
 
         pub(crate) fn present(&self, key: &str) -> bool {
             self.string(key).is_some() || !matches!(self.boolean(key), Ok(None))
+        }
+
+        /// 条件 include 只有 `gitdir`、`gitdir/i` 与 `onbranch` 时为真；别的条件（`hasconfig:` 等）不保证与 git 同解。
+        pub(crate) fn only_supported_conditions(&self) -> bool {
+            let supported = |file: &gix::config::File| {
+                file.sections().all(|section| {
+                    let header = section.header();
+                    !header.name().eq_ignore_ascii_case(b"includeIf")
+                        || header.subsection_name().is_some_and(|condition| {
+                            [&b"gitdir:"[..], b"gitdir/i:", b"onbranch:"].iter().any(|prefix| condition.starts_with(prefix))
+                        })
+                })
+            };
+            supported(self.snapshot.plumbing()) && self.bundled.as_ref().is_none_or(supported)
         }
     }
 

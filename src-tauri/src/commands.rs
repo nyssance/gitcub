@@ -1801,6 +1801,10 @@ pub async fn git_metadata_exists(repo: String, name: String) -> Result<bool, Str
         if !["SQUASH_MSG", "MERGE_HEAD", "CHERRY_PICK_HEAD"].contains(&name.as_str()) {
             return Err("Unknown Git metadata".into());
         }
+        // 普通仓库里 `rev-parse --git-path <name>` 就是 `.git/<name>`
+        if let Some(git_dir) = crate::repository::plain_git_dir(Path::new(&repo)) {
+            return crate::file_system::path_exists(&git_dir.join(&name));
+        }
         let path = crate::git::Git::new(Some(Path::new(&repo))).args(["rev-parse", "--git-path", &name]).stdout()?;
         let path = Path::new(path.trim());
         crate::file_system::path_exists(&if path.is_absolute() {

@@ -1081,6 +1081,42 @@ WebKit 的 `performance.now()` 只有 1 ms 精度，GitCub 一侧的数字都是
 - 未覆盖：真实的触控板或滚轮输入（合成器线程的异步滚动、惯性）；并排视图与开启换行；带搜索高亮或拖选时的滚动；
   历史页的 diff；更大的 diff。冷启动和页面多出的约 50 MiB 内存本次没有新数据。
 
+### 打开仓库起的 git 进程：9 个回到 1 个（2026-11-13）
+
+`bun run bench:app -- --launches 5 --settle 2000 --app src-tauri/target/bench/release/bundle/macos/GitCub.app`（当前代码重编的基准包，
+5 万文件合成仓库，中位数）。11-01 记录的是启动到打开仓库 1 个 git 进程；这次复测是 9 个，之后移植进来的 Desktop store
+在每次选中仓库时多问了四件事：
+
+| 每个仓库起的进程 | 谁在问 | 现在 |
+|---|---|---|
+| `rev-parse --is-bare-repository --show-cdup --git-dir` | `getRepositoryType` | 进程内 |
+| `rev-parse --git-path SQUASH_MSG` | 合并状态（`isSquashMsgSet`） | 进程内 |
+| `config -z user.name`、`config -z user.email` | 提交身份 | 进程内 |
+
+基准里先后选中两个仓库，所以是 4 × 2 加一个 `var GIT_ATTR_SYSTEM`。
+
+| | 启动到打开仓库的 git 进程 | 空闲 |
+|---|---:|---:|
+| 改动前 | 9（`config` 4、`rev-parse` 4、`var` 1） | 0 |
+| 改动后 | 1（`var GIT_ATTR_SYSTEM`） | 0 |
+
+- **仓库类型与 `--git-path`**（`repository::plain_git_dir`）：只认最常见的一种形状——路径正是工作区根目录，`.git` 是普通仓库
+  目录（HEAD 合法、有 `objects` 与 `refs`、没有 `commondir`），工作区与 `.git` 都属于当前用户，仓库自己的 config 里没有
+  `core.bare=true`、`core.worktree`、扩展或 include。这时 git 的输出必然是 `false`、空行、`.git`。子目录、gitfile、链接工作区、
+  裸仓库、所有权不符、环境变量指定目录一律让位。单元测试对 13 种形状逐个核对「答不答」，答了的与 git 的结果逐字段比较；
+  Desktop 原版 rev-parse 测试 21 个通过（它用 `GIT_TEST_ASSUME_DIFFERENT_OWNER` 模拟所有权不符，这个开关同样让位）。
+- **有效配置**（`git_config::effective_in_process`）：复用 diff 快速路径的那份配置视图（打包 git 的系统配置按 git 的 include
+  语义展开，加上全局、本地、工作区各级）。只在用打包的 git 时作答：PATH 上的 git 读哪份安装级配置由它的编译参数决定
+  （Apple 的 git 另读 Xcode 里的一份，单元测试第一版就在 `init.defaultBranch` 上对不上），gix 看到的未必相同。
+  两处与 git 不同的地方是对照时发现并处理的：gix 把 `GIT_EDITOR` 这类环境变量折成配置项，`git config` 不报，所以只取
+  来自文件的值；`GIT_CONFIG_NOSYSTEM` 按 git 的布尔语义处理（为真时不读系统配置，写法不认识时让位）。
+  `GIT_CONFIG_GLOBAL`、`GIT_CONFIG_COUNT`、`GIT_CONFIG_PARAMETERS`、子目录、`gitdir` / `onbranch` 之外的 `includeIf` 条件、
+  空值与隐式值都让位。单元测试覆盖本地值、include、`includeIf gitdir`、大小写与各种让位形状；另在本机用打包的 git
+  对 19 个键（含全局与系统配置里的、设了 `GIT_PAGER` 等环境变量时）临时对照过一遍，全部相同，该对照依赖本机配置，没有入库。
+- 打开仓库的耗时这次没有可比的前后数据：两次运行的机器负载不同（改动前 93 ms、改动后 78 ms，Desktop 同期 129 / 127 ms），
+  不据此宣称变快；这一节的结论只是进程数。
+- 未覆盖：真实仓库里带链接工作区、子模块的形状仍走 git（按设计让位）；写操作本来就交给 git。
+
 ## 复现
 
 ```sh

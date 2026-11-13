@@ -7,7 +7,7 @@ pub fn get(repo: Option<&Path>, key: &str, only_local: bool, boolean: bool) -> R
         let value = match repo {
             Some(repo) if only_local => local_in_process(repo, key),
             None => global_in_process(key),
-            Some(_) => None,
+            Some(repo) => effective_in_process(repo, key),
         };
         if let Some(value) = value {
             return Ok(value);
@@ -22,6 +22,52 @@ pub fn get(repo: Option<&Path>, key: &str, only_local: bool, boolean: bool) -> R
 pub fn local_in_process(repo: &Path, key: &str) -> Option<Option<String>> {
     let repo = gix::open(repo).ok()?;
     in_files(&[repo.common_dir().join("config")], key)
+}
+
+/// `git config -z <key>` in process: every scope git reads for a repository (the bundled git's system config, global,
+/// local, worktree; includes followed), the last value. Left to git (`None`): configuration injected through the
+/// environment, a path that is not the top of a work tree, `includeIf` conditions other than `gitdir` and `onbranch`,
+/// unusual keys, and empty or implicit values.
+pub fn effective_in_process(repo: &Path, key: &str) -> Option<Option<String>> {
+    use crate::raw_diff::in_process;
+    if ["GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "GIT_CONFIG_GLOBAL"]
+        .iter()
+        .any(|name| std::env::var_os(name).is_some())
+    {
+        return None;
+    }
+    // config.c git_config_system：GIT_CONFIG_NOSYSTEM 按布尔值读，为真就不读系统配置；写法不认识时让位
+    let no_system = match std::env::var("GIT_CONFIG_NOSYSTEM").as_deref().map(str::to_ascii_lowercase).as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("" | "0" | "false" | "no" | "off") => false,
+        Ok("1" | "true" | "yes" | "on") => true,
+        _ => return None,
+    };
+    // 用 PATH 上的 git 时，它读哪份安装级配置由那个 git 的编译参数决定（Apple 的 git 另读 Xcode 里的一份），
+    // gix 看到的未必相同；只有打包的 git 的系统配置是确定的那一个文件。
+    crate::git::bundled_system_config()?;
+    let repo = in_process::open(repo).ok()?;
+    let config = in_process::config(&repo).ok()?;
+    effective_from(&if no_system { config.without_system() } else { config }, key)
+}
+
+fn effective_from(config: &crate::raw_diff::in_process::Config<'_>, key: &str) -> Option<Option<String>> {
+    if !simple_key(key) || !config.only_supported_conditions() {
+        return None;
+    }
+    match config.file_string(key) {
+        Some(value) if !value.is_empty() => Some(Some(String::from_utf8_lossy(value.as_ref()).into_owned())),
+        Some(_) => None,
+        None if config.file_present(key) => None,
+        None => Some(None),
+    }
+}
+
+/// `section.name` or `section.subsection.name` in the plain form git accepts without quoting rules to consider.
+fn simple_key(key: &str) -> bool {
+    let Some((section, rest)) = key.split_once('.') else { return false };
+    let name = rest.rsplit_once('.').map_or(rest, |(_, name)| name);
+    let valid = |part: &str| !part.is_empty() && part.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-');
+    valid(section) && valid(name) && name.as_bytes()[0].is_ascii_alphabetic()
 }
 
 /// `git config -z --global <key>` in process (builtin/config.c reads one file, `git_global_config`): `GIT_CONFIG_GLOBAL`
@@ -135,6 +181,59 @@ pub fn add_safe_directory(path: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// `git config -z <key>` in process across every scope must print what git prints.
+    #[test]
+    fn 进程内有效配置与_git_一致_其余形状让位() {
+        let d = tempfile::tempdir().unwrap();
+        let r = d.path().canonicalize().unwrap();
+        let r = r.as_path();
+        Git::new(Some(r)).args(["init", "-q", "-b", "main"]).run().unwrap();
+        std::fs::write(r.join(".git/extra"), "[included]\n\tname = From Include\n").unwrap();
+        std::fs::write(r.join(".git/conditional"), "[conditional]\n\tname = From Condition\n").unwrap();
+        let base = std::fs::read_to_string(r.join(".git/config")).unwrap();
+        let with = |extra: &str| std::fs::write(r.join(".git/config"), format!("{base}{extra}")).unwrap();
+        with(&format!(
+            concat!(
+                "[user]\n\tname = First\n\tname = \"  Quoted \\\"Name\\\"  \" ; comment\n",
+                "\temail = a@example.invalid # trailing\n",
+                "[include]\n\tpath = extra\n",
+                "[includeIf \"gitdir:{}/\"]\n\tpath = conditional\n",
+                "[core]\n\tflag\n\tempty =\n",
+            ),
+            r.display()
+        ));
+        let keys = [
+            ("user.name", true),
+            ("user.email", true),
+            ("USER.Email", true),
+            // 有效配置展开 include 与满足条件的 includeIf
+            ("included.name", true),
+            ("conditional.name", true),
+            ("gitcubtest.missing", true),
+            ("core.flag", false),
+            ("core.empty", false),
+            ("nodot", false),
+        ];
+        // 测试进程用 PATH 上的 git，对外的入口按设计让位；这里直接验解析这一层，键都由仓库自己的配置决定。
+        assert_eq!(effective_in_process(r, "user.name"), None);
+        let open = || crate::raw_diff::in_process::open(r).unwrap();
+        for (key, answered) in keys {
+            let repo = open();
+            let fast = effective_from(&crate::raw_diff::in_process::config(&repo).unwrap(), key);
+            assert_eq!(fast.is_some(), answered, "{key}: {fast:?}");
+            if let Some(fast) = fast {
+                assert_eq!(Ok(fast), get_via_git(Some(r), key, false, false), "{key}");
+            }
+        }
+        // 子目录让位：git -C <子目录> 的语义留给 git
+        std::fs::create_dir(r.join("sub")).unwrap();
+        assert!(crate::raw_diff::in_process::open(&r.join("sub")).is_err());
+        // 不认识的条件让位
+        with("[user]\n\tname = Kept\n[includeIf \"hasconfig:remote.*.url:https://example.invalid/**\"]\n\tpath = conditional\n");
+        let repo = open();
+        assert_eq!(effective_from(&crate::raw_diff::in_process::config(&repo).unwrap(), "user.name"), None);
+    }
 
     /// `git config -z --local` in process must print what git prints, byte for byte.
     #[test]
