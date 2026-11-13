@@ -28,6 +28,7 @@ pub fn local_in_process(repo: &Path, key: &str) -> Option<Option<String>> {
 /// local, worktree; includes followed), the last value. Left to git (`None`): configuration injected through the
 /// environment, a path that is not the top of a work tree, `includeIf` conditions other than `gitdir` and `onbranch`,
 /// unusual keys, and empty or implicit values.
+#[cfg(unix)]
 pub fn effective_in_process(repo: &Path, key: &str) -> Option<Option<String>> {
     use crate::raw_diff::in_process;
     if ["GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "GIT_CONFIG_GLOBAL"]
@@ -50,6 +51,13 @@ pub fn effective_in_process(repo: &Path, key: &str) -> Option<Option<String>> {
     effective_from(&if no_system { config.without_system() } else { config }, key)
 }
 
+/// The in-process repository reader is Unix-only; elsewhere every lookup goes to git.
+#[cfg(not(unix))]
+pub fn effective_in_process(_repo: &Path, _key: &str) -> Option<Option<String>> {
+    None
+}
+
+#[cfg(unix)]
 fn effective_from(config: &crate::raw_diff::in_process::Config<'_>, key: &str) -> Option<Option<String>> {
     if !simple_key(key) || !config.only_supported_conditions() {
         return None;
@@ -183,6 +191,7 @@ mod tests {
     use super::*;
 
     /// `git config -z <key>` in process across every scope must print what git prints.
+    #[cfg(unix)]
     #[test]
     fn 进程内有效配置与_git_一致_其余形状让位() {
         let d = tempfile::tempdir().unwrap();
