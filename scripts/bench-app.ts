@@ -517,6 +517,9 @@ interface ScrollFrames {
   stepMax: number
   dispatchMedian: number
   layoutMedian: number
+  /** Means: WebKit's clock ticks in whole milliseconds, so only the mean over all steps resolves below 1 ms. */
+  dispatchMean: number
+  layoutMean: number
   /** Fewest rows mounted right after a step, against the count before scrolling. */
   rowsMin: number
   rowsBefore: number
@@ -532,6 +535,8 @@ function summarizeFrames(raw: {
 }): ScrollFrames {
   const at = (values: number[], q: number) =>
     values.toSorted((a, b) => a - b)[Math.min(values.length - 1, Math.floor(values.length * q))]!
+  const mean = (values: number[]) =>
+    Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 100) / 100
   const steps = raw.dispatch.map((dispatch, index) => dispatch + raw.layout[index]!)
   const period = at(raw.intervals, 0.5)
   return {
@@ -550,6 +555,8 @@ function summarizeFrames(raw: {
     stepMax: Math.max(...steps),
     dispatchMedian: at(raw.dispatch, 0.5),
     layoutMedian: at(raw.layout, 0.5),
+    dispatchMean: mean(raw.dispatch),
+    layoutMean: mean(raw.layout),
     rowsMin: Math.min(...raw.rows),
     rowsBefore: raw.rowsBefore
   }
@@ -582,6 +589,12 @@ async function measureDiff(evaluate: (expression: string) => Promise<unknown>, l
   // BENCH_SCROLL_FRAMES=<steps>: scroll that many steps, BENCH_SCROLL_STEP px each (80), before the jump to the end.
   const frameCount = Number(process.env.BENCH_SCROLL_FRAMES ?? 0)
   if (frameCount > 0) {
+    // BENCH_PAGE_CSS=<css>: a stylesheet added before the steps, to try a styling change without rebuilding.
+    const css = process.env.BENCH_PAGE_CSS
+    if (css)
+      await evaluate(
+        `document.head.appendChild(Object.assign(document.createElement('style'), { textContent: ${JSON.stringify(css)} })) && true`
+      )
     await evaluate(clickExpression(scrollFrames(frameCount, Number(process.env.BENCH_SCROLL_STEP ?? 80))))
     const raw = await until(
       () => evaluate("JSON.stringify(window.__benchScrollFrames ?? null)") as Promise<string>,
