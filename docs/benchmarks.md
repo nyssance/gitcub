@@ -1117,6 +1117,45 @@ WebKit 的 `performance.now()` 只有 1 ms 精度，GitCub 一侧的数字都是
   不据此宣称变快；这一节的结论只是进程数。
 - 未覆盖：真实仓库里带链接工作区、子模块的形状仍走 git（按设计让位）；写操作本来就交给 git。
 
+### 页面多出的内存：归因到 JavaScript 引擎的对象堆块与代码元数据（2026-11-13）
+
+复测（当前代码的基准包，`--launches 5 --settle 10000`，footprint 中位数 MiB）：
+
+| 应用 | 就绪后 | 打开仓库后 | diff 后 |
+|---|---:|---:|---:|
+| GitCub | 277 | 266 | 255 |
+| GitHub Desktop 3.6.10 | 159 | 198 | 192 |
+
+差距还在（约 70 MiB，全在页面进程：WebContent 165–245，Desktop 的 Renderer 107）。这次把两件没验证过的事做了：
+
+- **不是静置后会归还的暂留**。静置 60 秒（`--settle 60000`，2 次）：打开仓库后 WebContent 150 / 171，Renderer 80 / 90；
+  总量 GitCub 235、Desktop 163。11-02 的猜测（分配器留着已释放、尚未归还的内存）不成立。
+- **按分配调用栈归因**。`__XPC_Malloc=1 __XPC_MallocStackLogging=lite` 启动（WebKit 的辅助进程改走系统分配器并记调用栈），
+  `BENCH_REPOSITORY_HOOK` 在打开仓库静置 10 秒后对 WebContent 跑 `heap -s`。该进程 footprint 201 MiB，
+  系统分配器里存活 144.6 MiB、44 万个块：
+
+  | 类别 | MiB |
+  |---|---:|
+  | JavaScriptCore 的对象堆块（32 KiB 一块，约 2 200 块） | 69.0 |
+  | JavaScriptCore 其他（内联缓存、JIT 链接数据、哈希表等） | 24.9 |
+  | 已链接的代码块与基线 / DFG JIT 数据 | 11.8 |
+  | 未链接字节码 | 10.2 |
+  | CSS 样式规则 | 7.5 |
+  | 字符串 | 4.7 |
+  | 资源数据（SharedBuffer） | 3.3 |
+  | 其余（渲染树 0.8、字体 1.3、图片 0.1 等） | 13.2 |
+
+  即约 116 MiB 属于 JavaScript 引擎，DOM、渲染树、图片合计不到 2 MiB。11-02 的堆快照里存活 JS 对象只有 12.7 MiB，
+  而对象堆块占着 69 MiB：JavaScriptCore 不搬移对象，一块里还有一个存活对象整块就不能还。启动时大量临时对象与长期对象
+  交错分配，留下的是稀疏的块。代码元数据约 47 MiB 则随执行过的函数数量增长（主包 2.3 MB，按函数惰性编译）。
+- 这次运行换了分配器并开了调用栈记录，绝对值只用于归因，不与上表比较。
+- **没有做的**：没有定位启动时是哪些代码分配了那些临时对象（`heap` 只能把一块记到第一次触发分配的函数上，看不出块里
+  后来是谁的垃圾），所以没有改任何代码，差距原样保留。要继续得用 Web Inspector 的分配时间线看启动阶段的分配量。
+  Desktop 一侧没有做同样的归因（V8 的堆不走系统分配器）。
+
+顺带：`vite.config.ts` 原先对所有构建都出 sourcemap，`dist` 整个嵌进二进制，正式包因此带着 20 MB 的 `.map`
+（gzip 后约 5.7 MB），没有任何代码读取。改为只在 debug 包里出。正式包体积的实际变化要等下次发布构建才有数。
+
 ## 复现
 
 ```sh
@@ -1126,4 +1165,5 @@ bun run bench -- --iterations 20 --files 100000 --commits 500
 bun scripts/prepare-e2e.ts         # 带 hasgard-testing 的 debug 包，bench:app 要用
 bun run bench:app                  # 启动、内存与 diff，5 次；--launches、--repo、--no-desktop、--settle、--diff-lines 可调
 BENCH_SCROLL_FRAMES=240 bun run bench:app   # 另测 diff 连续滚动每步耗时与帧间隔；BENCH_SCROLL_STEP 改步长（默认 80 px）
+BENCH_REPOSITORY_HOOK=<命令> bun run bench:app   # 打开仓库静置后跑一条命令（进程号在 BENCH_PIDS），配合 __XPC_Malloc=1 做内存归因
 ```

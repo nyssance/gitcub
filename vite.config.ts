@@ -37,5 +37,12 @@ export default defineConfig({
   },
   clearScreen: false,
   server: { port: 1420, strictPort: true, watch: { ignored: ["**/src-tauri/**"] } },
-  build: { target: "esnext", sourcemap: true, outDir: "dist", emptyOutDir: true }
+  // sourcemap 只进 debug 包（`tauri build --debug` 设 TAURI_ENV_DEBUG，原生测试与排错用）：dist 整个嵌进二进制，
+  // 正式包里 20 MB 的 .map 没有任何代码读取。
+  build: {
+    target: "esnext",
+    sourcemap: process.env.TAURI_ENV_DEBUG === "true",
+    outDir: "dist",
+    emptyOutDir: true
+  }
 })

@@ -727,6 +727,18 @@ async function launchGitCub(
     await sleep(settle)
     const afterRepository = await processTree(child.pid!, helpersBefore)
     if (heapSnapshot) await writeHeapSnapshot(socket, join(heapSnapshot, "repository.heap.json"))
+    // BENCH_REPOSITORY_HOOK=<shell command>: run once the repository is open and settled, with the process ids in
+    // BENCH_PIDS ("<pid>:<command>" per line), e.g. to point vmmap or heap at the WebContent process. Launch with
+    // __XPC_Malloc=1 (and __XPC_MallocStackLogging=lite) to have WebKit's helpers allocate through the system
+    // allocator so those tools can attribute their memory; numbers from such a run are for analysis only.
+    if (process.env.BENCH_REPOSITORY_HOOK) {
+      const hook = Bun.spawn(["sh", "-c", process.env.BENCH_REPOSITORY_HOOK], {
+        stdout: "inherit",
+        stderr: "inherit",
+        env: { ...process.env, BENCH_PIDS: afterRepository.map(entry => `${entry.pid}:${entry.command}`).join("\n") }
+      })
+      await hook.exited
+    }
     const idleFrom = traceSize(directory)
     await sleep(settle)
     const git = gitProcesses(directory, idleFrom)
