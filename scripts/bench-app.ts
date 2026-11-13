@@ -562,6 +562,33 @@ function summarizeFrames(raw: {
   }
 }
 
+// Tauri sends a command as a fetch to its ipc scheme, with the command name as the path; the bridge object itself is
+// not writable, so the trace wraps fetch. The duration ends when the response body has been read.
+const installInvokeTrace = `(() => {
+  window.__benchInvokes = [];
+  if (window.__benchTraced) return true;
+  window.__benchTraced = true;
+  const original = window.fetch;
+  window.fetch = function (input, init) {
+    const url = String(input?.url ?? input);
+    const result = original.call(this, input, init);
+    if (!url.startsWith('ipc:') && !url.includes('ipc.localhost')) return result;
+    const start = performance.now();
+    const entry = [url.split('/').pop(), window.__benchStart === null ? null : start - window.__benchStart, null, null];
+    window.__benchInvokes.push(entry);
+    return result.then(response => {
+      entry[2] = performance.now() - start;
+      const read = response.arrayBuffer.bind(response), text = response.text.bind(response), json = response.json.bind(response);
+      const done = value => { entry[3] = performance.now() - start; return value; };
+      response.arrayBuffer = () => read().then(done);
+      response.text = () => text().then(done);
+      response.json = () => json().then(done);
+      return response;
+    });
+  };
+  return true;
+})()`
+
 /** Opens the probe file's diff and scrolls it to the end, both timed in the page. */
 async function measureDiff(evaluate: (expression: string) => Promise<unknown>, lines: number) {
   await until(
@@ -582,8 +609,13 @@ async function measureDiff(evaluate: (expression: string) => Promise<unknown>, l
   // The probe must not be on screen yet, or the clock would stop at the next unrelated mutation.
   if ((await evaluate(diffShowsExpression(diffLine(0)))) !== 0) throw new Error(`${diffProbe} was already shown`)
   await evaluate(armExpression(diffShowsExpression(diffLine(0)), 1))
+  // BENCH_DIFF_TRACE=1: record each Tauri command issued from the click on, with its start and duration relative to
+  // the click, to see how the open splits between the backend and the page. GitCub only; Desktop has no such bridge.
+  const trace = process.env.BENCH_DIFF_TRACE === "1"
+  if (trace) await evaluate(installInvokeTrace)
   await evaluate(clickExpression(clickDiffRow))
   const openMs = await finished()
+  if (trace) console.error("diff trace", await evaluate("JSON.stringify(window.__benchInvokes ?? null)"))
   // Let the first paint settle so the scroll timing does not include the open.
   await sleep(500)
   // BENCH_SCROLL_FRAMES=<steps>: scroll that many steps, BENCH_SCROLL_STEP px each (80), before the jump to the end.

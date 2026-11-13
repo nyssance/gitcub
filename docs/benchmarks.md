@@ -1213,6 +1213,29 @@ WebKit 的 `performance.now()` 只有 1 ms 精度，GitCub 一侧的数字都是
 - 未覆盖：`purge` 清的是页缓存，不等于重启后的第一次启动（那时系统服务、字体与 WebKit 框架的共享缓存也是冷的）；
   purge 之后只等了 2 秒，系统自身回填缓存的活动会算进两边的数字；没有在机械硬盘或内存紧张的机器上测。
 
+### 打开 5000 行 diff：点选时就发请求，从 45 ms 到 32–36 ms，与 Desktop 持平
+
+`BENCH_DIFF_TRACE=1 bun run bench:app -- --launches 5 --settle 1500 --app src-tauri/target/bench/release/bundle/macos/GitCub.app`
+（当前代码重编的基准包；GitHub Desktop 3.6.10；ms，5 次，从点击到 diff 第一行出现）：
+
+| | GitCub | GitHub Desktop 3.6.10 |
+|---|---:|---:|
+| 改前 | 45（38–56） | 39（34–47） |
+| 改后，第一轮 | 36（33–43） | 38（31–42） |
+| 改后，第二轮 | 32（31–52） | 38（31–45） |
+
+- 改前把这 45 ms 按页面里的时刻拆开（`BENCH_DIFF_TRACE` 记下每条 Tauri 命令相对点击的发出时刻与耗时）：点击后 8–15 ms
+  才发出 `working_directory_diff`，往返 15–21 ms，收到后到第一行出现约 20 ms。前一段是白等：取 diff 的请求写在 App
+  的 effect 里，要等选中状态引起的整棵 App 重渲染结束才发。
+- 改动：点选文件时在同一个事件里选中并发出请求（`useChangesStore.selectFile`），App 的 effect 随后以同样的参数调用
+  `loadDiff` 时接管这次请求，不再发第二次。请求在点击后 0–1 ms 发出，后端与那轮渲染重叠；往返 11–14 ms。
+- 改后两轮的中位数 GitCub 都更低，但两边的范围重叠，**报持平，不宣称更快**。
+- 收到之后的约 20 ms（临时计时点，未入库）：解析 1 ms，App 重渲染 4 ms，diff 组件首次渲染并提交 5 ms，虚拟列表量到
+  滚动区域后渲染出行 11 ms。给虚拟列表预设初始高度（`initialRect`）让第一次渲染就带行，实测反而到 43–46 ms（行渲染了
+  两遍），没有采用。
+- 未覆盖：App 订阅了 diff 与勾选状态，diff 到达时整棵 App 重渲染的 4 ms 仍在；键盘上下移动选中项走的也是同一个入口，
+  没有单独计时；历史页里提交的 diff 仍由 effect 发请求，没有测。
+
 ## 复现
 
 ```sh
@@ -1225,4 +1248,5 @@ BENCH_SCROLL_FRAMES=240 bun run bench:app   # 另测 diff 连续滚动每步耗�
 BENCH_REPOSITORY_HOOK=<命令> bun run bench:app   # 打开仓库静置后跑一条命令（进程号在 BENCH_PIDS），配合 __XPC_Malloc=1 做内存归因
 BENCH_BEFORE_LAUNCH=<命令> bun run bench:app      # 每次启动前跑一条命令并等它结束；测冷启动时在这里清页缓存（脚本自己不提权）
 BENCH_PAGE_CSS=<css> BENCH_SCROLL_FRAMES=240 bun run bench:app   # 连续滚动前给页面加一段样式
+BENCH_DIFF_TRACE=1 bun run bench:app              # 打开 diff 时记下每条 Tauri 命令相对点击的发出时刻与耗时
 ```

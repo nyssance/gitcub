@@ -57,10 +57,28 @@ interface ChangesStore {
   setBlaming: (file: string | null) => void
   setHookProgress: (hookProgress: HookProgress | null) => void
   setSubscribeToCommitOutput: (subscribeToCommitOutput: TerminalOutputListener | null) => void
-  loadDiff: (repo: string | null, selected: string | null, changes: RepoStatus["changes"]) => () => void
+  loadDiff: (
+    repo: string | null,
+    selected: string | null,
+    changes: RepoStatus["changes"],
+    revision: number
+  ) => () => void
+  /** 点选文件：选中并立刻开始取 diff，不等界面重新渲染后的 effect；effect 随后以同样的参数调用 loadDiff 时接管这次请求 */
+  selectFile: (repo: string | null, path: string | null, changes: RepoStatus["changes"], revision: number) => void
 }
 
-export const useChangesStore = create<ChangesStore>()(set => ({
+/** selectFile 已经发出、还没被 loadDiff 接管的那次请求 */
+let early: {
+  repo: string | null
+  selected: string | null
+  changes: RepoStatus["changes"]
+  revision: number
+  cancel: () => void
+} | null = null
+/** 当前这次 diff 请求的取消函数；点选时先取消它，旧文件的结果不会落到新选中的文件上 */
+let cancelCurrent: () => void = () => {}
+
+export const useChangesStore = create<ChangesStore>()((set, get) => ({
   amendRequest: null,
   requestAmend: repo => set({ amendRequest: repo }),
   consumeAmendRequest: () => set({ amendRequest: null }),
@@ -85,7 +103,27 @@ export const useChangesStore = create<ChangesStore>()(set => ({
   setHookProgress: hookProgress => set({ hookProgress }),
   setSubscribeToCommitOutput: subscribeToCommitOutput => set({ subscribeToCommitOutput }),
   // 文件内容可能变了而 Git 状态没变，所以监听刷新（diffKey）也要重新取
-  loadDiff: (repo, selected, changes) => {
+  selectFile: (repo, path, changes, revision) => {
+    if (get().selected === path) return
+    cancelCurrent()
+    early = null
+    set({ selected: path })
+    const cancel = get().loadDiff(repo, path, changes, revision)
+    early = { repo, selected: path, changes, revision, cancel }
+  },
+  loadDiff: (repo, selected, changes, revision) => {
+    const pending = early
+    early = null
+    if (pending) {
+      if (
+        pending.repo === repo &&
+        pending.selected === selected &&
+        pending.changes === changes &&
+        pending.revision === revision
+      )
+        return pending.cancel
+      pending.cancel()
+    }
     set({ diffError: null })
     if (!repo || !selected) {
       set({ diff: null })
@@ -98,7 +136,7 @@ export const useChangesStore = create<ChangesStore>()(set => ({
       return () => {}
     }
     set({ diff: null, lineEndings: null, tokens: undefined })
-    return forkCancelable(
+    cancelCurrent = forkCancelable(
       Effect.all(
         [
           // 语法高亮独立于 diff：失败或太大就只是没颜色
@@ -134,5 +172,6 @@ export const useChangesStore = create<ChangesStore>()(set => ({
         { concurrency: 2 }
       )
     )
+    return cancelCurrent
   }
 }))

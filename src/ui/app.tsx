@@ -509,8 +509,17 @@ export function App() {
   // 从 store 取当前值，旧仓库的文件不会拿去新仓库里起一次 git diff（取消只丢结果，后端进程照样跑完）
   useEffect(() => {
     const current = useChangesStore.getState()
-    return current.loadDiff(repo, current.selected, useRepositoryStore.getState().status.changes)
+    const repository = useRepositoryStore.getState()
+    return current.loadDiff(repo, current.selected, repository.status.changes, repository.diffKey)
   }, [repo, selected, status.changes, diffKey])
+  // 点选时就发出 diff 请求：等这次渲染结束再由上面的 effect 发，后端要白等一轮渲染
+  const selectFile = useCallback(
+    (path: string | null) => {
+      const repository = useRepositoryStore.getState()
+      useChangesStore.getState().selectFile(repo, path, repository.status.changes, repository.diffKey)
+    },
+    [repo]
+  )
 
   /** 克隆：先让用户选父目录，仓库名从 URL 推出来。 */
   const doClone = async (url: string) => {
@@ -2157,10 +2166,10 @@ export function App() {
                             onSelectionChange={paths => {
                               const anchor = paths.at(-1) ?? null
                               setFileSelection({ repo, anchor, paths })
-                              setSelected(anchor)
+                              selectFile(anchor)
                             }}
                             onDiscardMany={setDiscarding}
-                            onSelect={setSelected}
+                            onSelect={selectFile}
                             onIncludeChange={(path, include) =>
                               setFiles(prev => {
                                 const c = prev.get(path)
