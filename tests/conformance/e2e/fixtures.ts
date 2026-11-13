@@ -368,6 +368,9 @@ before(
         TAURI_HASGARD_SOCKET: socket,
         // Keep the native window off the developer's main screen; override with a display index or name.
         TAURI_HASGARD_DISPLAY: process.env.TAURI_HASGARD_DISPLAY ?? "secondary",
+        // Keys go to the window itself (hasgard 0.6.7), so a run neither takes keyboard focus from whoever is
+        // using the machine nor fails when another application comes to the front.
+        TAURI_HASGARD_PRESS: process.env.TAURI_HASGARD_PRESS ?? "window",
         GITCUB_TEST_DATA_DIR: directory,
         GITCUB_TEST_DESKTOP_PROFILE: desktopProfile,
         GITCUB_TEST_UPDATE_ENDPOINT: mockServer.url
