@@ -120,6 +120,7 @@
 - 前端格式化、import / Tailwind 排序与 lint 统一使用 Bun 原生命令，配置放在 `bunfig.toml`；不再引入 Prettier、Oxlint 或 Biome。当前需使用支持 `bun fmt` / `bun lint` 的 Bun Canary，CI 与本地一致。
 - 现代语法规则与 ALwith Desktop 共用 `@nyssance/ts7-lint`，规则只在那个包里，`bunfig.toml` 不放共享规则。直接依次运行 `bun lint` 与 `bun ts7-lint`，供本地 Fabric 和 CI 共用；上游快照、夹具及原版 shadcn/ReUI 组件不参与改写。
 - Rust 继续使用项目 `rustfmt.toml` 与 Clippy；原版上游快照、夹具和生成组件不得被格式化。
+- Rust 只用 stable 工具链：`cargo`、`rustfmt`、`rustc` 不得加 `+nightly`，不得安装 nightly，格式化只用 stable 的 `cargo fmt`。`rustfmt.toml` 中的 `unstable_features` 与 nightly 专属选项是有意保留的配置，不代表允许用 nightly 执行，也不得修改或清理。
 - Fabric / `fab` 仅作为本地开发入口；CI 直接执行 Bun、Cargo 与测试命令，不调用或安装 Fabric。Fabric 是模板命令接线，不为 fabfile 自身编写或保留测试；测试直接覆盖它调用的实际能力。
 - 格式化仅通过本地主动执行 `fab f` / `bun fmt`；不设置格式检查脚本，也不在 CI 或 `fab check` 中执行 Bun / Rust 格式检查。
 
