@@ -466,6 +466,95 @@ const profiledScrollDiffToEnd = `(() => {
   filled();
 })()`
 
+// Continuous scrolling, one fixed step at a time. Each step is timed on the main thread: the synchronous scroll
+// dispatch (the virtualizer rendering the rows that came into view) plus the layout it leaves pending, forced right
+// after. That sum is what has to fit in a refresh period for the scroll to keep up. Steps are driven by animation
+// frames when the page is visible, which also gives the interval between frames; a window that is occluded or parked
+// by Stage Manager gets no animation frames at all, so there the steps run off a MessageChannel and only the per-step
+// cost is reported.
+const scrollFrames = (frames: number, step: number) => `(() => {
+  const scrollers = [...document.querySelectorAll('.diff-container *')].filter(el => el.scrollHeight > el.clientHeight + 1);
+  const target = scrollers.toSorted((a, b) => b.scrollHeight - a.scrollHeight)[0];
+  const count = () => document.querySelectorAll('.diff-container [role=row], .diff-container .row').length;
+  const rowsBefore = count();
+  const visible = document.visibilityState === 'visible';
+  const intervals = [], dispatch = [], layout = [], rows = [];
+  let last = null, left = ${frames};
+  const channel = new MessageChannel();
+  const next = () => (visible ? requestAnimationFrame(frame) : channel.port2.postMessage(0));
+  const frame = () => {
+    const now = performance.now();
+    if (last !== null) intervals.push(now - last);
+    last = now;
+    if (left-- === 0) {
+      window.__benchScrollFrames = { visible, rowsBefore, intervals, dispatch, layout, rows };
+      return;
+    }
+    const start = performance.now();
+    target.scrollTop += ${step};
+    target.dispatchEvent(new Event('scroll'));
+    const dispatched = performance.now();
+    void document.body.offsetHeight;
+    dispatch.push(dispatched - start);
+    layout.push(performance.now() - dispatched);
+    rows.push(count());
+    next();
+  };
+  channel.port1.onmessage = frame;
+  window.__benchScrollFrames = null;
+  next();
+})()`
+
+interface ScrollFrames {
+  steps: number
+  /** False when the window got no animation frames (occluded); the intervals are then not frame intervals. */
+  visible: boolean
+  /** Interval between animation frames, ms; null when not visible. */
+  interval: { median: number; p95: number; max: number; dropped: number } | null
+  /** Main-thread cost of one step, ms: scroll dispatch plus the forced layout after it. */
+  stepMedian: number
+  stepP95: number
+  stepMax: number
+  dispatchMedian: number
+  layoutMedian: number
+  /** Fewest rows mounted right after a step, against the count before scrolling. */
+  rowsMin: number
+  rowsBefore: number
+}
+
+function summarizeFrames(raw: {
+  visible: boolean
+  rowsBefore: number
+  intervals: number[]
+  dispatch: number[]
+  layout: number[]
+  rows: number[]
+}): ScrollFrames {
+  const at = (values: number[], q: number) =>
+    values.toSorted((a, b) => a - b)[Math.min(values.length - 1, Math.floor(values.length * q))]!
+  const steps = raw.dispatch.map((dispatch, index) => dispatch + raw.layout[index]!)
+  const period = at(raw.intervals, 0.5)
+  return {
+    steps: steps.length,
+    visible: raw.visible,
+    interval: raw.visible
+      ? {
+          median: period,
+          p95: at(raw.intervals, 0.95),
+          max: Math.max(...raw.intervals),
+          dropped: raw.intervals.filter(interval => interval > period * 1.5).length
+        }
+      : null,
+    stepMedian: at(steps, 0.5),
+    stepP95: at(steps, 0.95),
+    stepMax: Math.max(...steps),
+    dispatchMedian: at(raw.dispatch, 0.5),
+    layoutMedian: at(raw.layout, 0.5),
+    rowsMin: Math.min(...raw.rows),
+    rowsBefore: raw.rowsBefore
+  }
+}
+
 /** Opens the probe file's diff and scrolls it to the end, both timed in the page. */
 async function measureDiff(evaluate: (expression: string) => Promise<unknown>, lines: number) {
   await until(
@@ -490,6 +579,20 @@ async function measureDiff(evaluate: (expression: string) => Promise<unknown>, l
   const openMs = await finished()
   // Let the first paint settle so the scroll timing does not include the open.
   await sleep(500)
+  // BENCH_SCROLL_FRAMES=<steps>: scroll that many steps, BENCH_SCROLL_STEP px each (80), before the jump to the end.
+  const frameCount = Number(process.env.BENCH_SCROLL_FRAMES ?? 0)
+  if (frameCount > 0) {
+    await evaluate(clickExpression(scrollFrames(frameCount, Number(process.env.BENCH_SCROLL_STEP ?? 80))))
+    const raw = await until(
+      () => evaluate("JSON.stringify(window.__benchScrollFrames ?? null)") as Promise<string>,
+      value => value !== "null",
+      60,
+      "scroll frames",
+      100
+    )
+    console.error("scroll frames", JSON.stringify(summarizeFrames(JSON.parse(raw))))
+    await sleep(300)
+  }
   const profile = process.env.BENCH_SCROLL_PROFILE === "1"
   if (profile) await evaluate(installLayoutProbe)
   await evaluate(armExpression(diffShowsExpression(diffLine(lines - 1)), 1))
@@ -587,6 +690,22 @@ async function launchGitCub(
     const ready = await processTree(child.pid!, helpersBefore)
     if (heapSnapshot) await writeHeapSnapshot(socket, join(heapSnapshot, "ready.heap.json"))
     const target = `document.querySelector(${JSON.stringify(`button[title="${repository}"]`)})`
+    // The rail has one tab per hosting platform and opens on GitHub; a repository without a hosted origin is under
+    // the last one ("Other"), whose panel is only mounted once it is selected.
+    const showOtherTab = `(() => {
+      if (${target}) return true;
+      const tab = [...document.querySelectorAll('[data-slot="tabs-trigger"][title]')].at(-1);
+      for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'])
+        tab?.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0 }));
+      return false;
+    })()`
+    await until(
+      () => hasgard(socket, showOtherTab).catch(() => false),
+      shown => shown === true,
+      60,
+      "GitCub repository rail",
+      200
+    )
     await until(
       () =>
         hasgard(socket, `${gitcubChangesExpression} === ${expected === 1 ? 2 : 1} && !!${target}`).catch(() => false),

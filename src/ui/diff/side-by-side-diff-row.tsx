@@ -122,7 +122,7 @@ export interface IRowSelectableGroupStaticData {
 
 export type CheckBoxIdentifier = `${number}-${"after" | "before"}`
 
-interface ISideBySideDiffRowProps {
+export interface ISideBySideDiffRowProps {
   /**
    * The row data. This contains most of the information used to render the row.
    */

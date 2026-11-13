@@ -24,7 +24,28 @@ import {
   type SimplifiedDiffRowData
 } from "../../upstream/ui/diff/diff-helpers"
 import { getDiffRows } from "./desktop-diff-rows"
-import { type CheckBoxIdentifier, type IRowSelectableGroup, SideBySideDiffRow } from "./side-by-side-diff-row"
+import {
+  type CheckBoxIdentifier,
+  type IRowSelectableGroup,
+  type ISideBySideDiffRowProps,
+  SideBySideDiffRow
+} from "./side-by-side-diff-row"
+
+type RowHandlers = Pick<
+  ISideBySideDiffRowProps,
+  | "onStartSelection"
+  | "onLineNumberCheckedChanged"
+  | "onMouseEnterHunk"
+  | "onMouseLeaveHunk"
+  | "onExpandHunk"
+  | "onClickHunk"
+  | "onContextMenuLine"
+  | "onContextMenuHunk"
+  | "onContextMenuExpandHunk"
+  | "onHideWhitespaceInDiffChanged"
+  | "onHunkExpansionRef"
+>
+const noClassNames: ReadonlyArray<string> = []
 
 export function SplitDiff({
   hideWhitespace = false,
@@ -345,6 +366,153 @@ export function SplitDiff({
         .reduce((sum, item) => sum + item.size, 0)
     }
   }
+  // 行组件对 row 做深比较（原版如此）。每次渲染都给每一行拼一份新对象，深比较就要把内容和 token 逐项走一遍，
+  // 滚动一步约 60 行、每行几十微秒，合起来占掉一步的大半。输入没变就沿用上一次拼好的对象，深比较在引用相等处短路。
+  const isLineSelected = (d: SimplifiedDiffRowData) => {
+    const line = d.diffLineNumber
+    if (line === null) return false
+    const inRange =
+      temporarySelection &&
+      line >= Math.min(temporarySelection.from, temporarySelection.to) &&
+      line <= Math.max(temporarySelection.from, temporarySelection.to)
+    return inRange ? temporarySelection.isSelected : (selection?.isSelected(line) ?? false)
+  }
+  const [decoratedCache] = useState(
+    () =>
+      new Map<
+        number,
+        {
+          row: (typeof rows)[number]
+          tokens: typeof tokens
+          query: typeof query
+          currentMatch: typeof currentMatch
+          before: boolean
+          after: boolean
+          value: DiffRow
+        }
+      >()
+  )
+  const decoratedRow = (index: number): DiffRow => {
+    const row = rows[index]
+    const before =
+      row.type === DiffRowType.Modified
+        ? isLineSelected(row.beforeData)
+        : (row.type === DiffRowType.Added || row.type === DiffRowType.Deleted) && isLineSelected(row.data)
+    const after = row.type === DiffRowType.Modified && isLineSelected(row.afterData)
+    const cached = decoratedCache.get(index)
+    if (
+      cached?.row === row &&
+      cached.tokens === tokens &&
+      cached.query === query &&
+      cached.currentMatch === currentMatch &&
+      cached.before === before &&
+      cached.after === after
+    )
+      return cached.value
+    const value: DiffRow =
+      row.type === DiffRowType.Modified
+        ? {
+            ...row,
+            beforeData: data(row.beforeData, "oldTokens", index),
+            afterData: data(row.afterData, "newTokens", index)
+          }
+        : row.type === DiffRowType.Added || row.type === DiffRowType.Deleted
+          ? {
+              ...row,
+              data: data(row.data, row.type === DiffRowType.Added ? "newTokens" : "oldTokens", index)
+            }
+          : row.type === DiffRowType.Context
+            ? {
+                ...row,
+                beforeTokens: [
+                  ...row.beforeTokens,
+                  searchTokens(row.content, index, "context"),
+                  getTokens(row.beforeLineNumber, tokens?.oldTokens) ??
+                    getTokens(row.afterLineNumber, tokens?.newTokens) ??
+                    {}
+                ],
+                afterTokens: [
+                  ...row.afterTokens,
+                  searchTokens(row.content, index, "context"),
+                  getTokens(row.afterLineNumber, tokens?.newTokens) ??
+                    getTokens(row.beforeLineNumber, tokens?.oldTokens) ??
+                    {}
+                ]
+              }
+            : row
+    // 只需要记住视口附近的行；滚过很长的 diff 时不让它一直涨
+    if (decoratedCache.size > 1000) decoratedCache.clear()
+    decoratedCache.set(index, { row, tokens, query, currentMatch, before, after, value })
+    return value
+  }
+  // 行组件按浅比较决定要不要重渲染（原版是 class 的绑定方法，引用不变）。函数组件每次渲染都会造出新的回调和
+  // 新的分组对象，滚动一步就让视口里的每一行重渲染一遍；这里给行固定的引用，实际逻辑取最新一次渲染的闭包。
+  const latestRowHandlers = useRef<RowHandlers | null>(null)
+  useLayoutEffect(() => {
+    latestRowHandlers.current = {
+      onStartSelection: startSelection,
+      onLineNumberCheckedChanged: select,
+      onMouseEnterHunk: hunk => {
+        if (!drag.current) setHoveredHunk(hunk)
+      },
+      onMouseLeaveHunk: () => setHoveredHunk(null),
+      onExpandHunk: (index, direction) => {
+        const hunk = diff.hunks[index]
+        if (hunk) {
+          lastExpanded.current = { index, direction }
+          onExpand?.(hunk, direction === DiffHunkExpansionType.Down ? "down" : "up")
+        }
+      },
+      onClickHunk: (start, checked) => {
+        if (!selection || !onChange) return
+        const range = findInteractiveOriginalDiffRange(diff.hunks, start)
+        if (!range) return
+        let next = selection
+        for (let line = range.from; line <= range.to; line++) next = next.withLineSelection(line, checked)
+        onChange(next)
+      },
+      onContextMenuLine: context,
+      onContextMenuHunk: contextHunk,
+      onContextMenuExpandHunk: () => onContextLine?.(null),
+      onHideWhitespaceInDiffChanged: hide => onHideWhitespaceChange?.(hide),
+      onHunkExpansionRef: (index, direction, button) => {
+        const key = `${index}-${direction}`
+        if (button) expansionRefs.current.set(key, button)
+        else expansionRefs.current.delete(key)
+      }
+    }
+  })
+  const [rowHandlers] = useState<RowHandlers>(() => ({
+    onStartSelection: (...args) => latestRowHandlers.current?.onStartSelection(...args),
+    onLineNumberCheckedChanged: (...args) => latestRowHandlers.current?.onLineNumberCheckedChanged(...args),
+    onMouseEnterHunk: (...args) => latestRowHandlers.current?.onMouseEnterHunk(...args),
+    onMouseLeaveHunk: (...args) => latestRowHandlers.current?.onMouseLeaveHunk(...args),
+    onExpandHunk: (...args) => latestRowHandlers.current?.onExpandHunk(...args),
+    onClickHunk: (...args) => latestRowHandlers.current?.onClickHunk(...args),
+    onContextMenuLine: (...args) => latestRowHandlers.current?.onContextMenuLine(...args),
+    onContextMenuHunk: (...args) => latestRowHandlers.current?.onContextMenuHunk(...args),
+    onContextMenuExpandHunk: (...args) => latestRowHandlers.current?.onContextMenuExpandHunk(...args),
+    onHideWhitespaceInDiffChanged: (...args) => latestRowHandlers.current?.onHideWhitespaceInDiffChanged(...args),
+    onHunkExpansionRef: (...args) => latestRowHandlers.current?.onHunkExpansionRef(...args)
+  }))
+  // 分组对象内容没变就沿用上一次的引用
+  const [groupCache] = useState(() => new Map<number, IRowSelectableGroup>())
+  const stableGroupFor = (index: number): IRowSelectableGroup | null => {
+    const next = groupFor(index)
+    if (!next) return null
+    const previous = groupCache.get(index)
+    if (
+      previous?.staticData === next.staticData &&
+      previous.isFirst === next.isFirst &&
+      previous.isCheckAllRenderedInRow === next.isCheckAllRenderedInRow &&
+      previous.isHovered === next.isHovered &&
+      previous.selectionState === next.selectionState &&
+      previous.height === next.height
+    )
+      return previous
+    groupCache.set(index, next)
+    return next
+  }
   const context = (originalLine: number) => {
     const displayLine = diff.hunks.flatMap(h => h.lines).findIndex(line => line.originalLineNumber === originalLine)
     const range = findInteractiveOriginalDiffRange(diff.hunks, displayLine)
@@ -410,38 +578,7 @@ export function SplitDiff({
           width: wrap || !contentWidth ? "100%" : `max(100%, ${contentWidth}px)`
         }}>
         {virtual.getVirtualItems().map(item => {
-          const row = rows[item.index]
-          const decorated: DiffRow =
-            row.type === DiffRowType.Modified
-              ? {
-                  ...row,
-                  beforeData: data(row.beforeData, "oldTokens", item.index),
-                  afterData: data(row.afterData, "newTokens", item.index)
-                }
-              : row.type === DiffRowType.Added || row.type === DiffRowType.Deleted
-                ? {
-                    ...row,
-                    data: data(row.data, row.type === DiffRowType.Added ? "newTokens" : "oldTokens", item.index)
-                  }
-                : row.type === DiffRowType.Context
-                  ? {
-                      ...row,
-                      beforeTokens: [
-                        ...row.beforeTokens,
-                        searchTokens(row.content, item.index, "context"),
-                        getTokens(row.beforeLineNumber, tokens?.oldTokens) ??
-                          getTokens(row.afterLineNumber, tokens?.newTokens) ??
-                          {}
-                      ],
-                      afterTokens: [
-                        ...row.afterTokens,
-                        searchTokens(row.content, item.index, "context"),
-                        getTokens(row.afterLineNumber, tokens?.newTokens) ??
-                          getTokens(row.beforeLineNumber, tokens?.oldTokens) ??
-                          {}
-                      ]
-                    }
-                  : row
+          const decorated = decoratedRow(item.index)
           return (
             <div
               key={item.key}
@@ -457,40 +594,21 @@ export function SplitDiff({
                 hideWhitespaceInDiff={hideWhitespace}
                 lineNumberWidth={getLineWidthFromDigitCount(getNumberOfDigits(diff.maxLineNumber))}
                 numRow={item.index}
-                onStartSelection={startSelection}
-                onLineNumberCheckedChanged={select}
-                onMouseEnterHunk={hunk => {
-                  if (!drag.current) setHoveredHunk(hunk)
-                }}
-                onMouseLeaveHunk={() => setHoveredHunk(null)}
-                onExpandHunk={(index, direction) => {
-                  const hunk = diff.hunks[index]
-                  if (hunk) {
-                    lastExpanded.current = { index, direction }
-                    onExpand?.(hunk, direction === DiffHunkExpansionType.Down ? "down" : "up")
-                  }
-                }}
-                onClickHunk={(start, checked) => {
-                  if (!selection || !onChange) return
-                  const range = findInteractiveOriginalDiffRange(diff.hunks, start)
-                  if (!range) return
-                  let next = selection
-                  for (let line = range.from; line <= range.to; line++) next = next.withLineSelection(line, checked)
-                  onChange(next)
-                }}
-                onContextMenuLine={context}
-                onContextMenuHunk={contextHunk}
-                onContextMenuExpandHunk={() => onContextLine?.(null)}
-                afterClassNames={[]}
-                beforeClassNames={[]}
-                onHideWhitespaceInDiffChanged={hide => onHideWhitespaceChange?.(hide)}
-                onHunkExpansionRef={(index, direction, button) => {
-                  const key = `${index}-${direction}`
-                  if (button) expansionRefs.current.set(key, button)
-                  else expansionRefs.current.delete(key)
-                }}
+                onStartSelection={rowHandlers.onStartSelection}
+                onLineNumberCheckedChanged={rowHandlers.onLineNumberCheckedChanged}
+                onMouseEnterHunk={rowHandlers.onMouseEnterHunk}
+                onMouseLeaveHunk={rowHandlers.onMouseLeaveHunk}
+                onExpandHunk={rowHandlers.onExpandHunk}
+                onClickHunk={rowHandlers.onClickHunk}
+                onContextMenuLine={rowHandlers.onContextMenuLine}
+                onContextMenuHunk={rowHandlers.onContextMenuHunk}
+                onContextMenuExpandHunk={rowHandlers.onContextMenuExpandHunk}
+                afterClassNames={noClassNames}
+                beforeClassNames={noClassNames}
+                onHideWhitespaceInDiffChanged={rowHandlers.onHideWhitespaceInDiffChanged}
+                onHunkExpansionRef={rowHandlers.onHunkExpansionRef}
                 showDiffCheckMarks={showDiffCheckMarks}
-                rowSelectableGroup={groupFor(item.index)}
+                rowSelectableGroup={stableGroupFor(item.index)}
               />
             </div>
           )
