@@ -1171,6 +1171,27 @@ WebKit 的 `performance.now()` 只有 1 ms 精度，GitCub 一侧的数字都是
   后来是谁的垃圾），所以没有改任何代码，差距原样保留。要继续得用 Web Inspector 的分配时间线看启动阶段的分配量。
   Desktop 一侧没有做同样的归因（V8 的堆不走系统分配器）。
 
+#### 更正：多出的部分在内存警告下会归还，不是碎片（2026-11-13）
+
+上面「一块里还有一个存活对象整块就不能还」的解释不成立。`BENCH_REPOSITORY_HOOK` 在打开仓库静置 10 秒后，对 WebContent
+记一次 footprint，发 `notifyutil -p org.WebKit.lowMemory`（WebKit 自带的模拟内存警告，走的是系统真有内存压力时的同一条处理），
+5 秒和 15 秒后再各记一次（`--launches 3 --no-desktop --settle 10000`，默认分配器，MiB）：
+
+| 启动 | 警告前 | 5 秒后 | 15 秒后 |
+|---|---:|---:|---:|
+| 1 | 153.6 | 94.6 | 94.5 |
+| 2 | 177.5 | 116.0 | 111.7 |
+| 3 | 161.5 | 97.4 | 92.4 |
+
+- 每次降约 60 MiB，降到 92–112 MiB，落在 Desktop 的 Renderer（静置后 80–107 MiB）同一区间。警告之后的 diff 打开与滚动
+  照常跑完。
+- 所以页面多出的约 70 MiB 主要是**尚未回收的垃圾与可丢弃的缓存**（启动时产生、之后页面空闲不再触发回收），系统内存紧张时
+  WebKit 会自己还掉；它不是泄漏，也不是还不掉的碎片。静置 60 秒不降只说明空闲时引擎不主动做这次回收。
+- 应用自己没法触发这次回收：WKWebView 没有公开接口让页面或宿主要求完整回收，能做到的只有私有接口，正式包不用。
+  因此没有改代码。footprint 的差距在没有内存压力的机器上仍会看到。
+- 未覆盖：没有对 Desktop 发同等的内存警告（Chromium 不听这条通知），它在压力下能降多少没测；没有拆开这 60 MiB 里
+  垃圾对象、JIT 代码和资源缓存各占多少；这条通知是全系统广播，测试时本机其他 WebKit 页面也收到了。
+
 顺带：`vite.config.ts` 原先对所有构建都出 sourcemap，`dist` 整个嵌进二进制，正式包因此带着 20 MB 的 `.map`
 （gzip 后约 5.7 MB），没有任何代码读取。改为只在 debug 包里出。正式包体积的实际变化要等下次发布构建才有数。
 
@@ -1184,4 +1205,6 @@ bun scripts/prepare-e2e.ts         # 带 hasgard-testing 的 debug 包，bench:a
 bun run bench:app                  # 启动、内存与 diff，5 次；--launches、--repo、--no-desktop、--settle、--diff-lines 可调
 BENCH_SCROLL_FRAMES=240 bun run bench:app   # 另测 diff 连续滚动每步耗时与帧间隔；BENCH_SCROLL_STEP 改步长（默认 80 px）
 BENCH_REPOSITORY_HOOK=<命令> bun run bench:app   # 打开仓库静置后跑一条命令（进程号在 BENCH_PIDS），配合 __XPC_Malloc=1 做内存归因
+BENCH_BEFORE_LAUNCH=<命令> bun run bench:app      # 每次启动前跑一条命令并等它结束；测冷启动时在这里清页缓存（脚本自己不提权）
+BENCH_PAGE_CSS=<css> BENCH_SCROLL_FRAMES=240 bun run bench:app   # 连续滚动前给页面加一段样式
 ```

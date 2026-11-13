@@ -631,6 +631,16 @@ const gitcubChangesExpression = `(() => {
   return -1;
 })()`
 
+// BENCH_BEFORE_LAUNCH=<shell command>: run before every launch of either application and waited for. The script
+// never elevates itself; a cold start needs the page cache dropped (`purge`, as root), so the command is where a
+// developer hooks in whatever does that on their machine.
+async function beforeLaunch() {
+  const command = process.env.BENCH_BEFORE_LAUNCH
+  if (!command) return
+  const hook = Bun.spawn(["sh", "-c", command], { stdout: "inherit", stderr: "inherit" })
+  if ((await hook.exited) !== 0) throw new Error(`BENCH_BEFORE_LAUNCH exited with ${hook.exitCode}`)
+}
+
 async function launchGitCub(
   bundle: string,
   repository: string,
@@ -658,6 +668,7 @@ async function launchGitCub(
     })
   )
   const helpersBefore = await webKitHelperPids()
+  await beforeLaunch()
   const started = performance.now()
   const child = spawn(join(bundle, "Contents/MacOS/gitcub"), [], {
     env: {
@@ -921,6 +932,7 @@ async function launchDesktop(repository: string, settle: number, expected: numbe
   const port = await freePort()
   // Electron's helpers are children of the main process; nothing of Desktop's runs under launchd.
   const helpersBefore = null
+  await beforeLaunch()
   const started = performance.now()
   // `--user-data-dir` gives this instance its own profile and single-instance lock, so a GitHub
   // Desktop the developer already has open keeps running untouched and this one starts from scratch.
