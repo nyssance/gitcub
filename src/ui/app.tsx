@@ -57,6 +57,7 @@ import { toPresentableError } from "@/lib/presentable-error"
 import { cherryPickToPullRequest, findPullRequestBranch, sameHostedRepository } from "@/lib/pull-request-checkout"
 import { push } from "@/lib/push"
 import { getRepositoryType } from "@/lib/repository-access"
+import { shasInDiff as getShasInDiff } from "@/lib/shas-in-diff"
 import { handleShortcut } from "@/lib/shortcuts"
 import { getSquashedCommitDescription } from "@/lib/squashed-commit-description"
 import { applySelection, discardLines } from "@/lib/stage"
@@ -1248,20 +1249,10 @@ export function App() {
       ),
     [commits, fileCommits, compared]
   )
-  const shasInDiff = useMemo(() => {
-    if (!rangeLatest) return commitSelection.shas
-    const lookup = commitLookup
-    const selectedShas = new Set(commitSelection.shas)
-    const inDiff = new Set<string>()
-    const pending = [rangeLatest]
-    for (let sha = pending.pop(); sha !== undefined; sha = pending.pop()) {
-      if (inDiff.has(sha)) continue
-      inDiff.add(sha)
-      for (const parent of lookup.get(sha)?.parentSHAs ?? [])
-        if (selectedShas.has(parent) && !inDiff.has(parent)) pending.push(parent)
-    }
-    return [...inDiff]
-  }, [rangeLatest, commitSelection.shas, commitLookup])
+  const shasInDiff = useMemo(
+    () => (rangeLatest ? getShasInDiff(commitSelection.shas, commitLookup) : commitSelection.shas),
+    [rangeLatest, commitSelection.shas, commitLookup]
+  )
   // 选择变了：悬停高亮和对话框都是针对上一份选择的
   useEffect(() => {
     useHistoryStore.getState().setHighlightedShas([])

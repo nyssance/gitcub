@@ -24,6 +24,7 @@ import { completionRepository, mentionableUsersSource } from "../../src/lib/ment
 import { routes } from "../../src/lib/navigate"
 import type { PullRequestTargets } from "../../src/lib/pull-request-navigation"
 import { readEmoji } from "../../src/lib/read-emoji"
+import { shasInDiff } from "../../src/lib/shas-in-diff"
 import type { CheckRun, ImageDiff, PullRequest } from "../../src/models/app-state"
 import type { CommitFile, SearchQuery } from "../../src/models/history"
 import { EmojiAutocompletionProvider } from "../../src/ui/autocompletion/emoji-autocompletion-provider"
@@ -1641,6 +1642,23 @@ test("history: highlighted commits stay opaque while the rest of the list fades 
   expect((await screen.findByText(commit.summary)).closest(".desktop-list-row")).toHaveAttribute("data-highlighted")
   expect(row(commit.summary)).not.toHaveClass("opacity-30")
   expect(row("Initial commit")).toHaveClass("opacity-30")
+})
+test("history: a selected commit on a merged-in line is left out of the combined diff (ShasInDiff)", () => {
+  // 列表按时间排：合并、主线 2、支线、主线 1；支线只是合并的第二个父
+  const lookup = new Map([
+    ["merge", { parentSHAs: ["main2", "side"] }],
+    ["main2", { parentSHAs: ["main1"] }],
+    ["side", { parentSHAs: ["base"] }],
+    ["main1", { parentSHAs: ["base"] }],
+    ["base", { parentSHAs: [] }]
+  ])
+  // 选主线 2 到主线 1：支线夹在中间但走不到
+  expect(shasInDiff(["main2", "side", "main1"], lookup)).toEqual(["main2", "main1"])
+  // 从合并选起：两个父都选中，都在 diff 里
+  expect(shasInDiff(["merge", "main2", "side"], lookup).toSorted()).toEqual(["main2", "merge", "side"])
+  // 最新的那个不在已加载的提交里：只有它自己
+  expect(shasInDiff(["unknown", "main1"], lookup)).toEqual(["unknown"])
+  expect(shasInDiff([], lookup)).toEqual([])
 })
 test("history: :alias: in a commit summary renders as the emoji and the tooltip keeps the shortcode (RichText emoji)", async () => {
   useEmojiStore.setState({ emoji: await readEmoji() })
