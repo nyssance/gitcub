@@ -2,6 +2,7 @@
 import { beforeEach, expect, test } from "bun:test"
 
 import { useChangesStore } from "../../src/features/changes/store"
+import { useHistoryStore } from "../../src/features/history/store"
 import type { RepoStatus } from "../../src/models/repo-status"
 
 const calls: string[] = []
@@ -9,6 +10,10 @@ const text = "diff --git a/a.txt b/a.txt\n--- a/a.txt\n+++ b/a.txt\n@@ -1 +1 @@\
 // 测试入口的 invoke 替身优先用这里给的命令实现，不落到真实 Git
 Object.assign(globalThis, {
   __gitcubNativeFixtures: (command: string, args: { file: string }) => {
+    if (command === "commit_file_diff_raw") {
+      calls.push(`commit:${args.file}`)
+      return text.replaceAll("a.txt", args.file)
+    }
     if (command !== "working_directory_diff") throw new Error(command)
     calls.push(args.file)
     return { text: text.replaceAll("a.txt", args.file), lineEndings: null }
@@ -68,4 +73,18 @@ test("effect 清理时取消被接管的请求，结果不再写入", async () =
   store.loadDiff("/repo", "a.txt", changes, 1)()
   await settle()
   expect(useChangesStore.getState().diff).toBeNull()
+})
+
+test("历史页点选提交里的文件：同样即发、接管一次、参数不同则重发", async () => {
+  const store = useHistoryStore.getState()
+  store.selectCommitFile("/repo", "abc", "a.txt", null, null)
+  expect(useHistoryStore.getState().commitFile).toBe("a.txt")
+  store.loadCommitDiff("/repo", "abc", "a.txt", null, null)
+  await settle()
+  expect(calls).toEqual(["commit:a.txt"])
+  expect(useHistoryStore.getState().commitDiff?.hunks.length).toBe(1)
+  store.selectCommitFile("/repo", "abc", "b.txt", null, null)
+  store.loadCommitDiff("/repo", "def", "b.txt", null, null)
+  await settle()
+  expect(calls).toEqual(["commit:a.txt", "commit:b.txt", "commit:b.txt"])
 })

@@ -1,7 +1,7 @@
 import { emit, listen } from "@tauri-apps/api/event"
 import { confirm, open } from "@tauri-apps/plugin-dialog"
 import { openUrl } from "@tauri-apps/plugin-opener"
-import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react"
+import { type ComponentProps, useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import type { PanelImperativeHandle } from "react-resizable-panels"
 
@@ -173,11 +173,7 @@ export function App() {
   const setSelected = useChangesStore(s => s.setSelected)
   const fileSelection = useChangesStore(s => s.fileSelection)
   const setFileSelection = useChangesStore(s => s.setFileSelection)
-  const files = useChangesStore(s => s.files)
   const setFiles = useChangesStore(s => s.setFiles)
-  const diff = useChangesStore(s => s.diff)
-  const tokens = useChangesStore(s => s.tokens)
-  const lineEndings = useChangesStore(s => s.lineEndings)
   const diffError = useChangesStore(s => s.diffError)
   const blaming = useChangesStore(s => s.blaming)
   const setBlaming = useChangesStore(s => s.setBlaming)
@@ -239,7 +235,6 @@ export function App() {
   const commitReachabilityTab = useHistoryStore(s => s.commitReachabilityTab)
   const highlightedShas = useHistoryStore(s => s.highlightedShas)
   const commitFile = useHistoryStore(s => s.commitFile)
-  const setCommitFile = useHistoryStore(s => s.setCommitFile)
   const commitDiff = useHistoryStore(s => s.commitDiff)
   const commitTokens = useHistoryStore(s => s.commitTokens)
   const historyFile = useHistoryStore(s => s.historyFile)
@@ -498,10 +493,9 @@ export function App() {
     [repo, detailSha, commitFile, commitOldPath, rangeOldest]
   )
 
-  const stateOf = useCallback(
-    (path: string): FileState => files.get(path) ?? { include: DiffSelectionType.All, selection: null },
-    [files]
-  )
+  // 勾选状态只在提交这类动作里读：App 不订阅它，diff 到达（会刷新可选行）时不必整棵重渲染
+  const stateOf = (path: string): FileState =>
+    useChangesStore.getState().files.get(path) ?? { include: DiffSelectionType.All, selection: null }
 
   // A second edit leaves the porcelain status unchanged. The watcher refresh
   // revision must also invalidate the selected diff and syntax tokens.
@@ -976,7 +970,6 @@ export function App() {
     )
   }
 
-  const cur = selected ? stateOf(selected) : null
   const selectedChange = status.changes.find(c => c.path === selected) ?? null
 
   /** 重写历史前问一句。
@@ -1240,7 +1233,7 @@ export function App() {
 
   /** 只丢弃 diff 里的某几行。整文件丢弃走废纸篓那条路，这里只改文件内容。 */
   const doDiscardLines = async (source: IRawDiff, lines: number[]) => {
-    if (!repo || !selected || !diff || busy) return
+    if (!repo || !selected || !useChangesStore.getState().diff || busy) return
     if (!(await ask(t("diff.discardConfirm", { count: lines.length })))) return
     await run(() => discardLines(repo, selected, source, lines))
   }
@@ -2153,15 +2146,13 @@ export function App() {
                               }
                             />
                           )}
-                          <ChangesSidebar
+                          <ConnectedChangesSidebar
                             filterVisible={filterVisible}
                             key={repo}
                             repo={repo}
-                            selectionOf={path => stateOf(path).selection}
                             changes={status.changes}
                             branch={status.branch}
                             selected={selected}
-                            includeOf={p => stateOf(p).include}
                             selectedPaths={selectedPaths}
                             onSelectionChange={paths => {
                               const anchor = paths.at(-1) ?? null
@@ -2376,7 +2367,18 @@ export function App() {
                           autolinks={state.autolinks}
                           files={commitFiles}
                           selected={commitFile}
-                          onSelect={setCommitFile}
+                          onSelect={path => {
+                            const file = commitFiles.find(candidate => candidate.path === path)
+                            useHistoryStore
+                              .getState()
+                              .selectCommitFile(
+                                repo,
+                                detailSha,
+                                path,
+                                file && (file.kind === "renamed" || file.kind === "copied") ? file.oldPath : null,
+                                rangeOldest
+                              )
+                          }}
                           onShowHistory={showFileHistory}>
                           <DiffView
                             file={commitFile}
@@ -2439,26 +2441,11 @@ export function App() {
                         }}
                       />
                     ) : (
-                      <DiffView
+                      <ChangesDiff
                         file={selected}
-                        diff={diff}
-                        selection={cur?.selection ?? null}
-                        tokens={tokens}
                         repo={repo}
                         status={selectedChange && <ChangeStatusIcon file={selectedChange} />}
-                        lineEndings={lineEndings}
                         onDiscardLines={(source, lines) => void doDiscardLines(source, lines)}
-                        onSelectionChange={next =>
-                          selected &&
-                          setFiles(prev =>
-                            new Map(prev).set(selected, {
-                              include: next.getSelectionType(),
-                              selection: next,
-                              diff: diff ?? undefined
-                            })
-                          )
-                        }
-                        error={null}
                       />
                     )}
                   </div>
@@ -2469,5 +2456,50 @@ export function App() {
         </div>
       </FloatingWorkspace>
     </TooltipProvider>
+  )
+}
+
+/** 改动列表连上勾选状态：订阅放在这里而不是 App，勾选或 diff 刷新只重渲染列表。 */
+function ConnectedChangesSidebar(props: Omit<ComponentProps<typeof ChangesSidebar>, "selectionOf" | "includeOf">) {
+  const files = useChangesStore(s => s.files)
+  return (
+    <ChangesSidebar
+      {...props}
+      selectionOf={path => files.get(path)?.selection ?? null}
+      includeOf={path => files.get(path)?.include ?? DiffSelectionType.All}
+    />
+  )
+}
+
+/** 选中文件的 diff 连上 store：diff、语法高亮与行选择到达时只重渲染这一块，不带上整个 App。 */
+function ChangesDiff({
+  file,
+  repo,
+  status,
+  onDiscardLines
+}: Pick<ComponentProps<typeof DiffView>, "file" | "repo" | "status" | "onDiscardLines">) {
+  const diff = useChangesStore(s => s.diff)
+  const tokens = useChangesStore(s => s.tokens)
+  const lineEndings = useChangesStore(s => s.lineEndings)
+  const selection = useChangesStore(s => (file ? (s.files.get(file)?.selection ?? null) : null))
+  const setFiles = useChangesStore(s => s.setFiles)
+  return (
+    <DiffView
+      file={file}
+      diff={diff}
+      selection={selection}
+      tokens={tokens}
+      repo={repo}
+      status={status}
+      lineEndings={lineEndings}
+      onDiscardLines={onDiscardLines}
+      onSelectionChange={next =>
+        file &&
+        setFiles(prev =>
+          new Map(prev).set(file, { include: next.getSelectionType(), selection: next, diff: diff ?? undefined })
+        )
+      }
+      error={null}
+    />
   )
 }

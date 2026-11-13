@@ -1,5 +1,5 @@
 # 照 ALwith U 的发布流程：手动运行只出未签名的安装包当工件；推 v* 标签则签名、公证、
-# 生成更新器元数据并在公开仓 nyssance/releases 建草稿 Release `gitcub-v*`（源码仓保持私有），
+# 生成更新器元数据并在公开仓 nyssance/releases 建草稿 Release `gitcub-v*`，
 # 人工检查发布后再把 latest.json 覆盖到固定的 `gitcub-latest` Release，更新器只读那里。
 # 出 macOS（Apple Silicon，签名公证）和 Windows x64（NSIS 安装包，没有代码签名证书，SmartScreen 会提示未知发布者）。
 # 两个平台并行构建，各自只上传安装包与签名；latest.json 由随后的 manifest 任务按两边的签名一次写出
@@ -59,7 +59,8 @@ jobs:
       - uses: tauri-apps/tauri-action@v1
         with:
           tauriScript: bun tauri
-          args: --target ${{ matrix.target }} ${{ matrix.bundles }}
+          # 测试包不签更新器产物：这里没有更新签名私钥，生成它会让打包在最后一步失败
+          args: --target ${{ matrix.target }} ${{ matrix.bundles }} --config '{"bundle":{"createUpdaterArtifacts":false}}'
           uploadWorkflowArtifacts: true
           workflowArtifactNamePattern: gitcub-[version]-[platform]-[arch]-[bundle]
 

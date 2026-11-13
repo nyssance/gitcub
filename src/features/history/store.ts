@@ -88,6 +88,14 @@ interface HistoryStore {
   selectCommit: (sha: string) => void
   setCommitSha: (sha: string | null) => void
   setCommitFile: (file: string | null) => void
+  /** 点选提交里的文件：选中并立刻开始取 diff，不等界面重新渲染后的 effect；effect 随后以同样的参数调用 loadCommitDiff 时接管这次请求 */
+  selectCommitFile: (
+    repo: string | null,
+    sha: string | null,
+    file: string | null,
+    oldPath: string | null,
+    oldest?: string | null
+  ) => void
   setHistoryFile: (file: string | null) => void
   setCompared: (next: Updater<Comparison | null>) => void
 }
@@ -100,6 +108,11 @@ const fileHistory = createTaskGroup()
 let fileHistoryCursor: string | null = null
 /** 从文件历史里选提交时，文件列表回来后优先选这个文件而不是第一个 */
 let preferredFile: string | null = null
+/** selectCommitFile 已经发出、还没被 loadCommitDiff 接管的那次请求 */
+let earlyCommitDiff: { key: string; cancel: () => void } | null = null
+/** 当前这次提交 diff 请求的取消函数；点选时先取消它，旧文件的结果不会落到新选中的文件上 */
+let cancelCommitDiff: () => void = () => {}
+const commitDiffKey = (...parts: (string | null)[]) => JSON.stringify(parts)
 
 const reportError = (message: string) => useRepositoryStore.getState().setError(message)
 
@@ -356,14 +369,28 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
     )
   },
   // 语法高亮独立于 diff：失败或太大就只是没颜色，不挡住 diff
+  selectCommitFile: (repo, sha, file, oldPath, oldest = null) => {
+    if (get().commitFile === file) return
+    cancelCommitDiff()
+    earlyCommitDiff = null
+    set({ commitFile: file })
+    const cancel = get().loadCommitDiff(repo, sha, file, oldPath, oldest)
+    earlyCommitDiff = { key: commitDiffKey(repo, sha, file, oldPath, oldest), cancel }
+  },
   loadCommitDiff: (repo, sha, file, oldPath, oldest = null) => {
+    const pending = earlyCommitDiff
+    earlyCommitDiff = null
+    if (pending) {
+      if (pending.key === commitDiffKey(repo, sha, file, oldPath, oldest)) return pending.cancel
+      pending.cancel()
+    }
     if (!repo || !sha || !file) {
       set({ commitDiff: null })
       return () => {}
     }
     set({ commitTokens: undefined })
     const range = oldest && oldest !== sha ? oldest : null
-    return forkCancelable(
+    cancelCommitDiff = forkCancelable(
       Effect.all(
         [
           Effect.tryPromise(() => getCommitSyntaxTokens(repo, sha, file, range ? `${range}^` : undefined)).pipe(
@@ -383,6 +410,7 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
         { concurrency: 2 }
       )
     )
+    return cancelCommitDiff
   },
   /** 文件历史里选提交：和普通历史一样选中，另外把这个文件也选上；同一个提交不再拉文件列表，直接在已有的里挑 */
   selectCommit: sha => {
