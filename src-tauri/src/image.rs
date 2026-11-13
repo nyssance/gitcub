@@ -80,6 +80,7 @@ pub fn blob_image(repo: &Path, file: &str, revision: &str) -> Result<Option<Imag
 
 /// 两版图片。`sha` 给了就是看某次提交（和它的父比），
 /// 没给就是看工作区（和 HEAD 比）。
+#[allow(dead_code)] // Single-commit entry point used by the upstream conformance bridge and tests.
 pub fn image_diff(repo: &Path, file: &str, sha: Option<&str>) -> Result<ImageDiff, String> {
     image_diff_from(repo, file, sha, None)
 }

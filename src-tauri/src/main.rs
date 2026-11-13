@@ -144,6 +144,33 @@ fn main() {
         builder
     };
 
+    // 测试窗口被别的窗口挡住、或被台前调度收起时，WebKit 按窗口遮挡状态暂停渲染与动画帧：对话框的关闭动画走不完，
+    // 用例成片超时（2026-11-13 实测一次 60 秒收不到一个动画帧）。测试包关掉遮挡检测，页面始终按可见运行。
+    #[cfg(all(feature = "hasgard-testing", target_os = "macos"))]
+    let builder = builder.plugin(
+        tauri::plugin::Builder::<_, ()>::new("gitcub-test-occlusion")
+            .on_webview_ready(|webview| {
+                let _ = webview.with_webview(|platform: tauri::webview::PlatformWebview| {
+                    use objc2::{
+                        msg_send,
+                        runtime::{AnyObject, Bool},
+                        sel,
+                    };
+                    if let Some(webview) = platform.downcast_ref::<tauri_runtime_wry::Webview>() {
+                        unsafe {
+                            let native: &AnyObject = &*webview.inner().cast();
+                            let responds: Bool =
+                                msg_send![native, respondsToSelector: sel!(_setWindowOcclusionDetectionEnabled:)];
+                            if responds.as_bool() {
+                                let _: () = msg_send![native, _setWindowOcclusionDetectionEnabled: Bool::NO];
+                            }
+                        }
+                    }
+                });
+            })
+            .build(),
+    );
+
     #[cfg_attr(not(feature = "hasgard-testing"), expect(unused_mut))]
     let mut context = tauri::generate_context!();
     #[cfg(feature = "hasgard-testing")]

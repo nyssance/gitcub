@@ -1997,6 +1997,82 @@ test("selecting consecutive commits shows their combined diff, non-consecutive o
   }
 })
 
+test("a selected commit from a merged-in branch is unreachable and left out of the combined diff", async ({
+  mainWindow: page
+}) => {
+  // Desktop getShasInDiff：相邻两行在不同分支上时，沿最新那个的父提交走不到的那行不计入 diff
+  const main = realpathSync(smokeRepoPath)
+  await clickRailRepository(page, main)
+  const head = git("rev-parse", "HEAD")
+  const branch = git("rev-parse", "--abbrev-ref", "HEAD")
+  // 提交时间决定列表顺序：合并、主线 2、支线、主线 1
+  const base = Math.floor(Date.now() / 1000)
+  const commit = (name: string, text: string, summary: string, offset: number) => {
+    writeFileSync(join(smokeRepoPath, name), text)
+    const date = `${base + offset} +0000`
+    execFileSync("git", ["-C", smokeRepoPath, "add", name])
+    execFileSync("git", ["-C", smokeRepoPath, "-c", "commit.gpgsign=false", "commit", "-q", "-m", summary], {
+      env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date }
+    })
+  }
+  const click = (summary: string, modifier: "shiftKey" | null) =>
+    page.evaluate(
+      ({ summary, modifier }) => {
+        const row = document.querySelector(`.desktop-list [title="${summary}"]`)!
+        for (const type of ["mousedown", "mouseup", "click"])
+          row.dispatchEvent(
+            new MouseEvent(type, { bubbles: true, button: 0, ...(modifier ? { [modifier]: true } : {}) })
+          )
+      },
+      { summary, modifier }
+    )
+  try {
+    commit("reach-main.txt", "main one\n", "reach main 1", 1)
+    git("checkout", "-q", "-b", "reach-side", head)
+    commit("reach-side.txt", "side only\n", "reach side", 2)
+    git("checkout", "-q", branch)
+    commit("reach-main.txt", "main one\nmain two\n", "reach main 2", 3)
+    const date = `${base + 4} +0000`
+    execFileSync(
+      "git",
+      ["-C", smokeRepoPath, "-c", "commit.gpgsign=false", "merge", "-q", "--no-ff", "-m", "reach merge", "reach-side"],
+      { env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date } }
+    )
+    await page.locator('[role="tab"]:has-text("History")').click()
+    await page.locator('.desktop-list [title="reach merge"]').first().waitFor({ state: "visible", timeout: 15000 })
+    const order = await page.evaluate(() =>
+      [...document.querySelectorAll(".desktop-list [title^='reach ']")].map(row => row.getAttribute("title")).join(",")
+    )
+    expect(order).toBe("reach merge,reach main 2,reach side,reach main 1")
+    await click("reach main 2", null)
+    await click("reach main 1", "shiftKey")
+    const summary = page.locator("#expandable-commit-summary[data-multiple-commits]")
+    await expect(summary).toContainText("Showing changes from 2 commits", { timeout: 15000 })
+    await expect(summary).toContainText("1 unreachable commit not included")
+    // 文件列表只有主线的文件，diff 是主线两个提交合起来的
+    await page.locator('[data-commit-details] [title="reach-main.txt"]').first().waitFor({ state: "visible" })
+    await expect
+      .poll(() => page.evaluate(() => !!document.querySelector('[data-commit-details] [title="reach-side.txt"]')))
+      .toBe(false)
+    const diff = page.locator(".diff-container")
+    await expect(diff).toContainText("main one", { timeout: 15000 })
+    await expect(diff).toContainText("main two")
+    // 对话框的「不可达」页签列出支线那个提交
+    await page.locator('a:has-text("1 unreachable commit")').first().click()
+    const dialog = page.locator(".unreachable-commits")
+    await expect(dialog).toContainText("reach side", { timeout: 15000 })
+    await expect.poll(() => dialog.evaluate(node => node.textContent?.includes("reach main 2") ?? false)).toBe(false)
+    await dialog.locator('button:has-text("OK")').first().click()
+    await dialog.waitFor({ state: "hidden", timeout: 15000 })
+  } finally {
+    if (git("rev-parse", "--abbrev-ref", "HEAD") !== branch) git("checkout", "-q", "-f", branch)
+    if (git("rev-parse", "HEAD") !== head) git("reset", "-q", "--hard", head)
+    git("branch", "-q", "-D", "reach-side")
+    rmSync(join(smokeRepoPath, "reach-main.txt"), { force: true })
+    rmSync(join(smokeRepoPath, "reach-side.txt"), { force: true })
+  }
+})
+
 test("undoing a local commit from history restores its message in the commit form", async ({ mainWindow: page }) => {
   const main = realpathSync(smokeRepoPath)
   await clickRailRepository(page, main)
