@@ -2,7 +2,8 @@
 # 生成更新器元数据并在公开仓 nyssance/releases 建草稿 Release `gitcub-v*`（源码仓保持私有），
 # 人工检查发布后再把 latest.json 覆盖到固定的 `gitcub-latest` Release，更新器只读那里。
 # 出 macOS（Apple Silicon，签名公证）和 Windows x64（NSIS 安装包，没有代码签名证书，SmartScreen 会提示未知发布者）。
-# 两个平台串行构建：tauri-action 往同一个 Release 的 latest.json 合并平台条目，并行会互相覆盖。
+# 两个平台并行构建，各自只上传安装包与签名；latest.json 由随后的 manifest 任务按两边的签名一次写出
+# （让 tauri-action 各自合并同一份 latest.json，并行会互相覆盖）。
 name: release
 
 on:
@@ -128,7 +129,6 @@ jobs:
       contents: write
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         include:
           - os: macos-26
@@ -179,6 +179,7 @@ jobs:
           releaseId: ${{ needs.release-preflight.outputs.release_id }}
           releaseName: GitCub ${{ github.ref_name }}
           releaseDraft: true
+          uploadUpdaterJson: false
           releaseAssetNamePattern: gitcub_[version]_[platform]_[arch][ext]
           args: --target ${{ matrix.target }} ${{ matrix.bundles }}
       - name: 公证并盖章 DMG
@@ -202,6 +203,51 @@ jobs:
         if: always() && env.GITCUB_SIGNING_DIR != ''
         shell: bash
         run: bash scripts/macos-signing.sh cleanup
+
+  # 两个平台都传完后写更新清单：键与地址照 tauri-action 生成的那份，签名取各自的 .sig。
+  manifest:
+    needs: release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 生成并上传 latest.json
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          RELEASE_TAG: gitcub-${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          gh release download "$RELEASE_TAG" --repo nyssance/releases --pattern '*.sig'
+          gh release view "$RELEASE_TAG" --repo nyssance/releases --json assets --jq '.assets[].name' > assets.txt
+          python3 - "$RELEASE_TAG" "$version" <<'PY'
+          import datetime, json, sys
+          tag, version = sys.argv[1:]
+          assets = set(open("assets.txt").read().split())
+          bundles = {
+              f"gitcub_{version}_darwin_aarch64.app.tar.gz": ["darwin-aarch64", "darwin-aarch64-app"],
+              f"gitcub_{version}_windows_x64.exe": ["windows-x86_64", "windows-x86_64-nsis"],
+          }
+          platforms = {}
+          for name, keys in bundles.items():
+              if name not in assets or f"{name}.sig" not in assets:
+                  raise SystemExit(f"{tag} 缺 {name} 或它的签名")
+              signature = open(f"{name}.sig").read().strip()
+              if not signature:
+                  raise SystemExit(f"{name}.sig 是空的")
+              for key in keys:
+                  platforms[key] = {
+                      "signature": signature,
+                      "url": f"https://github.com/nyssance/releases/releases/download/{tag}/{name}",
+                  }
+          now = datetime.datetime.now(datetime.timezone.utc)
+          manifest = {
+              "version": version,
+              "notes": "",
+              "pub_date": now.strftime("%Y-%m-%dT%H:%M:%S.") + f"{now.microsecond // 1000:03d}Z",
+              "platforms": platforms,
+          }
+          json.dump(manifest, open("latest.json", "w"), indent=2)
+          PY
+          gh release upload "$RELEASE_TAG" latest.json --repo nyssance/releases --clobber
 
   # 发布草稿后手动运行：把该版本的 latest.json 覆盖到固定的 gitcub-latest Release，更新器才看到新版本。
   publish-latest:
