@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Demo &amp; test</title>
+    <style>
+      body { color: #fff; margin: 0 auto; }
+      .a:hover > b::before { content: "x"; }
+    </style>
+    <script type="module">
+      import { h } from "./h.js"
+      const n = 1 + 2 // sum
+      document.body.onload = () => h(`n=${n}`)
+    </script>
+    <script type="text/typescript">const t: number = 1</script>
+    <script type="application/json">{ "a": [1, true, null] }</script>
+  </head>
+  <body onclick="handle(event)" style="background: url(x.png); padding: 1px">
+    <!-- comment -->
+    <p class="x" id=y>text <br/> more</p>
+    <textarea>raw < text</textarea>
+    <unclosed>
+  </body>
+</html>

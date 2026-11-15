@@ -1,0 +1,93 @@
+# 门禁。两件事：
+#   1. 主平台（macOS）直接执行检查命令；Fabric 仅用于本地开发。
+#   2. Windows 至少**编译一遍** —— 它的 cfg 分支在开发机上连语法都没被检查过
+#      （`#[cfg(windows)]` 的窗口效果就是这种），这一格是唯一的保障。不支持 Linux
+name: CI
+
+# 只在打标签时自动跑；平时推送不跑，交付以本地完整验证为准
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # 只有 PR 的新推送取消旧运行；main 上每个提交都跑完，连续推送不会互相取消
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: 全套（macOS）
+    # ARM hosted runner capacity prevented the previous macOS job from starting.
+    # Keep the full native gate on macOS; local Hasgard acceptance also covers ARM.
+    runs-on: macos-26-intel
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: bun install --frozen-lockfile
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.15"
+      - name: 安装原生 E2E 驱动
+        run: cargo install tauri-hasgard-cli --version "^0.6" --locked
+      - name: 类型检查
+        run: bun check --no-script -p tsconfig.json && bun check --no-script -p tsconfig.tools.json
+      - name: 上游清单与同步工具测试
+        run: python -m unittest discover -s tests -p 'test_desktop_catalog.py' -v && python -m unittest discover -s tests -p 'test_vendor.py' -v
+      - name: Rust 编译检查
+        run: cargo check --locked --workspace --all-targets
+        working-directory: src-tauri
+      - name: Hasgard 编译检查
+        run: cargo check --locked --workspace --all-targets --all-features
+        working-directory: src-tauri
+      - name: 上游行为测试
+        run: bun run test:upstream
+      - name: Rust 测试
+        run: cargo test --locked --workspace
+        working-directory: src-tauri
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-e2e
+          path: |
+            test-results/desktop-e2e
+            test-results/macos-workflows
+          if-no-files-found: ignore
+
+  cross:
+    name: 编译（${{ matrix.os }}）
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.os }}
+
+      # --all-targets 连测试代码一起编，这样平台相关的测试也不会漏
+      - name: 编译
+        run: cargo check --locked --workspace --all-targets --all-features
+        working-directory: src-tauri
+      - name: Windows 本地 Desktop 导入回归
+        if: matrix.os == 'windows-latest'
+        working-directory: src-tauri
+        run: |
+          cargo test --locked --bin gitcub credentials
+          cargo test --locked --bin gitcub desktop_import
+          cargo test --locked --bin gitcub windows_integrations
+          cargo test --locked --bin gitcub migration_tests

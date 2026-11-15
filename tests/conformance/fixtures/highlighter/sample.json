@@ -1,0 +1,6 @@
+{
+  "name": "x",
+  "n": -1.5e3,
+  "arr": [true, false, null, "s\"q"],
+  "nested": { "k": [] }
+}

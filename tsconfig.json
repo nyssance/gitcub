@@ -1,0 +1,16 @@
+{
+  "extends": "@nyssance/tsconfig",
+  "compilerOptions": {
+    // src/upstream is an unmodified upstream snapshot: these four rules stay off until it can be excluded.
+    "verbatimModuleSyntax": false,
+    "erasableSyntaxOnly": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./src/*", "./node_modules/@nyssance/shadcn/dist/vega/*"]
+    },
+    "types": ["bun"]
+  },
+  "include": ["src"]
+}
