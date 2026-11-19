@@ -44,7 +44,7 @@ tokio = { version = "1", features = ["sync", "macros", "rt"] }
 tauri = { version = "3.0.0-alpha.6", features = ["unstable"] }
 tauri-runtime-wry = "3.0.0-alpha.6"
 tauri-plugin-dialog = "3.0.0-alpha.4"
-tauri-plugin-hasgard = { version = "0.6", optional = true }
+tauri-plugin-hasgard = { version = "0.7", optional = true }
 tauri-plugin-log = "3.0.0-alpha.3"
 tauri-plugin-opener = "3.0.0-alpha.3"
 tauri-plugin-os = "3.0.0-alpha.3"
