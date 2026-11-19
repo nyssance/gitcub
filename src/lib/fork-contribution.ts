@@ -30,14 +30,14 @@ export async function writeForkContributionTarget(path: string, forkContribution
 }
 
 /** 远端仓库 fork 自哪里；不是 fork 就是 null */
-export async function forkParent(remote: Remote) {
-  const parent = await ipc.pullRequestRepository(remote.host, remote.owner, remote.name)
+export async function forkParent(remote: Remote, repo?: string) {
+  const parent = await ipc.pullRequestRepository(remote.host, remote.owner, remote.name, repo)
   return sameRepository(parent, remote) ? null : parent
 }
 
 /** Desktop getNonForkGitHubRepository：fork 且为上游贡献时是上游，否则是远端本身 */
 export async function contributionRepository(path: string, remote: Remote): Promise<Remote> {
-  const parent = await forkParent(remote)
+  const parent = await forkParent(remote, path)
   if (!parent) return remote
   return (await readForkContributionTarget(path)) === ForkContributionTarget.Self ? remote : parent
 }

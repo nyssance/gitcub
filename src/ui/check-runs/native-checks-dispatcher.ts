@@ -25,6 +25,7 @@ export class ChecksDispatcher {
   readonly supportsRerun = true
   readonly supportsIndividualRerun = true
   private readonly remote: Remote
+  private readonly repo?: string
   private readonly sha: string
   readonly pullRequestUrl: string
   readonly showPopup: (request: RerunRequest) => void
@@ -35,8 +36,10 @@ export class ChecksDispatcher {
     sha: string,
     pullRequestUrl: string,
     showPopup: (request: RerunRequest) => void,
-    onError: (error: string | null) => void
+    onError: (error: string | null) => void,
+    repo?: string
   ) {
+    this.repo = repo
     this.remote = remote
     this.sha = sha
     this.pullRequestUrl = pullRequestUrl
@@ -72,7 +75,13 @@ export class ChecksDispatcher {
   }
   private async fetchChecks(signal: AbortSignal) {
     try {
-      const runs = await ipc.checkRuns(this.remote.host, this.remote.owner, this.remote.name, this.sha)
+      const runs = await ipc.checkRuns(
+        this.remote.host,
+        this.remote.owner,
+        this.remote.name,
+        this.sha,
+        ...(this.repo ? [this.repo] : [])
+      )
       if (signal.aborted) return
       this.runs.clear()
       const checks = runs.map((run, index): IRefCheck => {
@@ -117,7 +126,15 @@ export class ChecksDispatcher {
       const run = this.runs.get(check.id)
       return run ? [run] : []
     })
-    return new Set(await ipc.checkRerunEligibility(this.remote.host, this.remote.owner, this.remote.name, native))
+    return new Set(
+      await ipc.checkRerunEligibility(
+        this.remote.host,
+        this.remote.owner,
+        this.remote.name,
+        native,
+        ...(this.repo ? [this.repo] : [])
+      )
+    )
   }
   async rerequestCheckSuites(_repository: GitHubRepository, checks: ReadonlyArray<IRefCheck>, failedOnly: boolean) {
     const targets = new Map<string, CheckRun>()
@@ -136,7 +153,8 @@ export class ChecksDispatcher {
             ? { kind: "githubCheckSuite", id: run.checkSuiteId }
             : run.retry!,
           individual ? "job" : failedOnly ? "failed" : "all",
-          individual ? run.jobId : undefined
+          individual ? run.jobId : undefined,
+          ...(this.repo ? [this.repo] : [])
         )
       })
     )

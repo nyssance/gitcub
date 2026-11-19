@@ -88,13 +88,27 @@ pub fn import_profile(
     static IMPORT: std::sync::Mutex<()> = std::sync::Mutex::new(());
     let _guard = IMPORT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let mut result = crate::desktop_import::read_profile(profile)?;
-    let hosts = result
-        .repositories
-        .iter()
-        .filter_map(|repo| crate::remote::origin(std::path::Path::new(repo)).ok().flatten())
-        .map(|remote| crate::remote::credential_instance(&remote, known))
-        .collect::<Vec<_>>();
-    import_accounts(&result.accounts, &hosts)?;
+    let mut hosts = Vec::new();
+    let mut instances = known.to_vec();
+    instances.extend(result.account_hosts.iter().cloned());
+    for repo in &result.repositories {
+        let remote = crate::remote::origin(std::path::Path::new(repo))?;
+        let Some(remote) = remote else { continue };
+        let host = crate::remote::credential_instance(&remote, &instances);
+        if let Some(login) = result.repository_logins.get(repo) {
+            let primary = result
+                .accounts
+                .iter()
+                .find(|account| account.host == host)
+                .is_some_and(|account| account.login.eq_ignore_ascii_case(login));
+            result.repository_accounts.insert(
+                repo.clone(),
+                crate::branch::RepositoryAccount { host: host.clone(), login: login.clone(), primary },
+            );
+        }
+        hosts.push(host);
+    }
+    result.additional_accounts = import_accounts(&result.accounts, &hosts)?;
     result.account_hosts.extend(hosts);
     result.account_hosts.sort();
     result.account_hosts.dedup();
@@ -103,10 +117,12 @@ pub fn import_profile(
 
 /// Called only by the user's import action. Existing GitCub credentials win,
 /// including across process restarts. A denied external read is not retried by find().
-pub fn import_accounts(accounts: &[DesktopAccount], hosts: &[String]) -> Result<(), String> {
+pub fn import_accounts(
+    accounts: &[DesktopAccount], hosts: &[String],
+) -> Result<std::collections::BTreeMap<String, Vec<String>>, String> {
     #[cfg(feature = "hasgard-testing")]
     if std::env::var_os("GITCUB_TEST_DATA_DIR").is_some() {
-        return Ok(());
+        return Ok(Default::default());
     }
     import_accounts_with(
         accounts,
@@ -119,7 +135,25 @@ pub fn import_accounts(accounts: &[DesktopAccount], hosts: &[String]) -> Result<
                 .map(|token| Found { token, source: Source::GitCredential, kind: None })
                 .or_else(|| from_cli(host).map(|token| Found { token, source: Source::Cli, kind: None }))
         },
-    )
+    )?;
+    let mut seen = std::collections::HashMap::<&str, std::collections::HashSet<String>>::new();
+    let mut profiles = std::collections::BTreeMap::<String, Vec<String>>::new();
+    for account in accounts {
+        let logins = seen.entry(&account.host).or_default();
+        let first = logins.is_empty();
+        if !logins.insert(account.login.to_ascii_lowercase()) || first || settings::is_ignored(&account.host) {
+            continue;
+        }
+        let key = settings::profile_key(&account.host, &account.login);
+        if settings::stored_credential(&key).is_none() {
+            let Some(value) = read_desktop_credential(&format!("GitHub - {}", account.endpoint), &account.login) else {
+                continue;
+            };
+            settings::save_profile(&account.host, &account.login, &value)?;
+        }
+        profiles.entry(account.host.clone()).or_default().push(account.login.clone());
+    }
+    Ok(profiles)
 }
 
 fn import_accounts_with(

@@ -19,6 +19,7 @@ import type {
   Remote,
   RemoteRepo,
   RepoMeta,
+  RepositoryAccount,
   RepositoryTip,
   ResetMode,
   Resolution,
@@ -95,6 +96,8 @@ function watchRepo(repo: string | null): Promise<void> {
   return next
 }
 export interface DesktopImport {
+  repositoryAccounts?: Record<string, RepositoryAccount>
+  additionalAccounts?: Record<string, string[]>
   accountHosts?: string[]
   repositories: string[]
   selectedRepository: string | null
@@ -163,6 +166,11 @@ export const ipc = {
   accountInfo: (hosts: string[], refresh = false) => invoke<Accounts>("account_info", { hosts, refresh }),
   repoMeta: (host: string, owner: string, name: string, kind: "github" | "gitlab") =>
     invoke<RepoMeta | null>("repo_meta", { host, owner, name, kind }),
+  assignRepositoryAccount: (path: string, account: RepositoryAccount | null) =>
+    invoke<void>("assign_repository_account", { path, account }),
+  addAccountToken: (host: string, token: string, kind: "github" | "gitlab") =>
+    invoke<string>("add_account_token", { host, token, kind }),
+  removeAccountToken: (host: string, login: string) => invoke<void>("remove_account_token", { host, login }),
   setToken: (host: string, token: string) => invoke<void>("set_token", { host, token }),
   setAccountIgnored: (host: string, ignored: boolean) => invoke<void>("set_account_ignored", { host, ignored }),
   myRepos: (host: string, refresh = false) => invoke<RemoteRepo[]>("my_repos", { host, refresh }),
@@ -179,8 +187,14 @@ export const ipc = {
   oauthDefaultClients: () => invoke<Record<string, string>>("oauth_default_clients"),
   oauthDeviceStart: (host: string, clientId: string, kind: "github" | "gitlab", attemptId: string) =>
     invoke<DeviceStart>("oauth_device_start", { host, clientId, kind, attemptId }),
-  oauthDevicePoll: (host: string, clientId: string, deviceCode: string, attemptId: string) =>
-    invoke<PollStatus>("oauth_device_poll", { host, clientId, deviceCode, attemptId }),
+  oauthDevicePoll: (host: string, clientId: string, deviceCode: string, attemptId: string, additional = false) =>
+    invoke<PollStatus | { accountAdded: string }>("oauth_device_poll", {
+      host,
+      clientId,
+      deviceCode,
+      attemptId,
+      additional
+    }),
   oauthDeviceCancel: (host: string, attemptId: string) => invoke<void>("oauth_device_cancel", { host, attemptId }),
   gitIdentity: (repo?: string) => invoke<GitIdentity>("git_identity", { repo }),
   setGitIdentity: (name: string, email: string, repo?: string) =>
@@ -212,24 +226,25 @@ export const ipc = {
   cloneRepo: clone,
   writeGitAttributes: (repo: string) => invoke<void>("write_git_attributes", { repo }),
   /** 某个仓库的开放 PR / MR */
-  pullRequests: (host: string, owner: string, name: string, refresh = false) =>
-    invoke<PullRequest[]>("pull_requests", { host, owner, name, refresh }),
+  pullRequests: (host: string, owner: string, name: string, refresh = false, repo?: string) =>
+    invoke<PullRequest[]>("pull_requests", { host, owner, name, refresh, repo }),
   /** 跟我有关的 PR：等我评审的 / 我开的 */
   involvedPrs: (host: string, kind: "reviewRequested" | "authored", refresh = false) =>
     invoke<PullRequest[]>("involved_prs", { host, kind, refresh }),
   /** 某个提交上的检查项 */
-  checkRuns: (host: string, owner: string, name: string, sha: string) =>
-    invoke<CheckRun[]>("check_runs", { host, owner, name, sha }),
-  checkRerunEligibility: (host: string, owner: string, name: string, checks: CheckRun[]) =>
-    invoke<number[]>("check_rerun_eligibility", { host, owner, name, checks }),
+  checkRuns: (host: string, owner: string, name: string, sha: string, repo?: string) =>
+    invoke<CheckRun[]>("check_runs", { host, owner, name, sha, repo }),
+  checkRerunEligibility: (host: string, owner: string, name: string, checks: CheckRun[], repo?: string) =>
+    invoke<number[]>("check_rerun_eligibility", { host, owner, name, checks, repo }),
   rerunCheck: (
     host: string,
     owner: string,
     name: string,
     target: CheckRetry,
     mode: "failed" | "all" | "job",
-    jobId?: number | null
-  ) => invoke<void>("rerun_check", { host, owner, name, target, mode, jobId }),
+    jobId?: number | null,
+    repo?: string
+  ) => invoke<void>("rerun_check", { host, owner, name, target, mode, jobId, repo }),
   rerunFailedJobs: (host: string, owner: string, name: string, target: CheckRetry) =>
     invoke<void>("rerun_failed_jobs", { host, owner, name, target }),
   /** Fork 到自己名下，返回克隆地址 */
@@ -243,10 +258,11 @@ export const ipc = {
   /** 新建 PR / MR，返回网页地址 */
   pullRequestTargets: (repo: string, remoteName: string) =>
     invoke<import("./pull-request-navigation").PullRequestTargets>("pull_request_targets", { repo, remoteName }),
-  pullRequestRepository: (host: string, owner: string, name: string) =>
-    invoke<Remote>("pull_request_repository", { host, owner, name }),
-  pullRequestSource: (host: string, owner: string, name: string, number: number) =>
+  pullRequestRepository: (host: string, owner: string, name: string, repo?: string) =>
+    invoke<Remote>("pull_request_repository", { host, owner, name, repo }),
+  pullRequestSource: (host: string, owner: string, name: string, number: number, repo?: string) =>
     invoke<import("./pull-request-checkout").PullRequestSource & { kind: "github" | "gitlab" }>("pull_request_source", {
+      repo,
       host,
       owner,
       name,
@@ -262,8 +278,8 @@ export const ipc = {
     base: string
   ) => invoke<string>("create_pull_request", { host, owner, name, title, body, head, base }),
   /** 在远端建一个空仓库，返回克隆地址 */
-  createRemoteRepo: (host: string, name: string, private_: boolean) =>
-    invoke<string>("create_remote_repo", { host, name, private: private_ }),
+  createRemoteRepo: (host: string, name: string, private_: boolean, profile?: RepositoryAccount) =>
+    invoke<string>("create_remote_repo", { host, name, private: private_, profile }),
   /** 逐行追溯 */
   blame: (repo: string, file: string) => invoke<BlameLine[]>("blame", { repo, file }),
   /** 搜索提交：GitLens 查询语法（message: author: file: change: #sha …），错误即语法校验信息 */
@@ -323,14 +339,14 @@ export const ipc = {
   /** 给这个仓库装上 LFS 过滤器 */
   lfsInstall: (repo: string) => invoke<void>("lfs_install", { repo }),
   /** 写提交信息时 `#` 补全用的 issue 号 */
-  issuesForCompletion: (host: string, owner: string, name: string) =>
-    invoke<Issue[]>("issues_for_completion", { host, owner, name }),
+  issuesForCompletion: (host: string, owner: string, name: string, repo?: string) =>
+    invoke<Issue[]>("issues_for_completion", { host, owner, name, repo }),
   /** 提交信息 `@` 补全与共同作者候选（Desktop fetchMentionables；GitLab 是项目里能被 @ 的用户） */
-  mentionables: (host: string, owner: string, name: string) =>
-    invoke<IMentionableUser[]>("mentionables", { host, owner, name }),
+  mentionables: (host: string, owner: string, name: string, repo?: string) =>
+    invoke<IMentionableUser[]>("mentionables", { host, owner, name, repo }),
   /** 共同作者手填用户名的精确解析；目前只有 GitLab 需要（GitHub 走 Desktop GitHubUserStore） */
-  mentionableUser: (host: string, login: string) =>
-    invoke<IMentionableUser | null>("mentionable_user", { host, login }),
+  mentionableUser: (host: string, login: string, repo?: string) =>
+    invoke<IMentionableUser | null>("mentionable_user", { host, login, repo }),
   /** 两版图片本身。sha 给了是看某次提交，没给是看工作区 */
   /** `base`：旧的一侧取哪个版本，默认是 `<sha>^` */
   imageDiff: (repo: string, file: string, sha?: string, base?: string) =>

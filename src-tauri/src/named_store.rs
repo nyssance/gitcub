@@ -61,6 +61,49 @@ fn open(app: &AppHandle, scope: StoreScope, store: &str) -> Result<std::sync::Ar
     app.state::<NamedStoreState>().store_in(scope, store)
 }
 
+pub fn repository_accounts(app: &AppHandle) -> Result<std::sync::Arc<Store>, String> {
+    open(app, StoreScope::Data, "repository-accounts")
+}
+
+pub fn assigned_account(app: &AppHandle, path: &str) -> Result<Option<crate::branch::RepositoryAccount>, String> {
+    repository_accounts(app)?.get(path).map(serde_json::from_value).transpose().map_err(|error| error.to_string())
+}
+
+pub async fn account_for_path(
+    app: &AppHandle, path: Option<String>,
+) -> Result<Option<crate::branch::RepositoryAccount>, String> {
+    let Some(path) = path else {
+        return Ok(None);
+    };
+    let app = app.clone();
+    blocking(move || assigned_account(&app, &path)).await
+}
+
+#[tauri::command]
+pub async fn assign_repository_account(
+    app: AppHandle, path: String, account: Option<crate::branch::RepositoryAccount>,
+) -> Result<(), String> {
+    blocking(move || write_assignment(&app, path, account, false).map(|_| ())).await
+}
+
+pub fn write_assignment(
+    app: &AppHandle, path: String, account: Option<crate::branch::RepositoryAccount>, preserve_existing: bool,
+) -> Result<Option<crate::branch::RepositoryAccount>, String> {
+    static WRITES: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _guard = WRITES.lock().map_err(|_| "Repository account store unavailable")?;
+    let store = repository_accounts(app)?;
+    let previous = store.get(&path);
+    if preserve_existing && let Some(value) = previous {
+        return serde_json::from_value(value).map(Some).map_err(|error| error.to_string());
+    }
+    match &account {
+        Some(value) => store.set(path, serde_json::to_value(value).map_err(|error| error.to_string())?)?,
+        None if previous.is_some() => store.remove(&path)?,
+        None => {}
+    }
+    Ok(account)
+}
+
 async fn blocking<T: Send + 'static>(task: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
     tauri::async_runtime::spawn_blocking(task).await.map_err(|error| error.to_string())?
 }

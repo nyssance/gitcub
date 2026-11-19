@@ -432,7 +432,9 @@ pub(crate) mod in_process {
                     let header = section.header();
                     !header.name().eq_ignore_ascii_case(b"includeIf")
                         || header.subsection_name().is_some_and(|condition| {
-                            [&b"gitdir:"[..], b"gitdir/i:", b"onbranch:"].iter().any(|prefix| condition.starts_with(prefix))
+                            [&b"gitdir:"[..], b"gitdir/i:", b"onbranch:"]
+                                .iter()
+                                .any(|prefix| condition.starts_with(prefix))
                         })
                 })
             };

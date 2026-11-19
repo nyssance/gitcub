@@ -24,6 +24,12 @@ pub struct DesktopImport {
     pub external_terminal: Option<String>,
     pub skipped: Vec<String>,
     pub account_hosts: Vec<String>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub additional_accounts: BTreeMap<String, Vec<String>>,
+    #[serde(skip)]
+    pub repository_logins: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub repository_accounts: BTreeMap<String, crate::branch::RepositoryAccount>,
     #[serde(skip)]
     pub(crate) accounts: Vec<DesktopAccount>,
 }
@@ -214,6 +220,9 @@ pub fn read_profile(profile: &Path) -> Result<DesktopImport, String> {
                     result.selected_repository = Some(selected_path);
                 }
                 if let std::collections::hash_map::Entry::Vacant(entry) = seen.entry(canonical) {
+                    if let Some(login) = property(&value, "login").filter(|login| !login.is_empty()) {
+                        result.repository_logins.insert(root.clone(), login.to_owned());
+                    }
                     entry.insert(root.clone());
                     result.repositories.push(root);
                 }
@@ -256,7 +265,7 @@ pub struct DesktopAccount {
 
 fn credential_accounts(settings: &BTreeMap<String, String>) -> Vec<DesktopAccount> {
     let mut accounts = Vec::new();
-    let mut add = |endpoint: &str, login: &str| {
+    let mut add = |endpoint: &str, login: &str, github: bool| {
         let Ok(url) = reqwest::Url::parse(endpoint) else { return };
         if url.scheme() != "https"
             || !url.username().is_empty()
@@ -268,25 +277,30 @@ fn credential_accounts(settings: &BTreeMap<String, String>) -> Vec<DesktopAccoun
             return;
         }
         let Some(host) = url.host_str() else { return };
-        let host = if host == "api.github.com" {
-            "github.com".to_string()
-        } else if let Some(port) = url.port() {
-            format!("{host}:{port}")
+        let hostname = if github && host == "api.github.com" {
+            "github.com"
+        } else if github && host.ends_with(".ghe.com") {
+            host.strip_prefix("api.").unwrap_or(host)
         } else {
-            host.to_owned()
+            host
         };
+        let mut host = url.port().map_or_else(|| hostname.to_owned(), |port| format!("{hostname}:{port}"));
+        let path = url.path().trim_end_matches('/');
+        if !github && !path.is_empty() {
+            host.push_str(path);
+        }
         accounts.push(DesktopAccount { host, endpoint: endpoint.to_owned(), login: login.to_owned() });
     };
     if let Some(users) = settings.get("users").and_then(|v| serde_json::from_str::<Vec<serde_json::Value>>(v).ok()) {
         for user in users {
             if let (Some(endpoint), Some(login)) = (user["endpoint"].as_str(), user["login"].as_str()) {
-                add(endpoint, login);
+                add(endpoint, login, true);
             }
         }
     }
     for (key, login) in settings {
         if let Some(endpoint) = key.strip_prefix("genericGitAuth/username/") {
-            add(endpoint, login);
+            add(endpoint, login, false);
         }
     }
     accounts
@@ -372,6 +386,11 @@ mod tests {
         assert_eq!(accounts[0].endpoint, "https://api.github.com");
         assert_eq!(accounts[1].host, "gitlab.example:8443");
         assert_eq!(accounts[1].endpoint, "https://gitlab.example:8443/");
+        let nested = credential_accounts(&BTreeMap::from([(
+            "genericGitAuth/username/https://gitlab.example:8443/team/".into(),
+            "work".into(),
+        )]));
+        assert_eq!(nested[0].host, "gitlab.example:8443/team");
     }
 
     #[test]

@@ -225,6 +225,7 @@ export function PullRequests({
       {inspecting && inspectedRequest && target && (
         <NativeChecks
           key={`${target.host}/${target.owner}/${target.name}/${inspectedRequest.headSha}`}
+          repo={repo}
           remote={target}
           request={inspectedRequest}
           anchor={inspecting.anchor}

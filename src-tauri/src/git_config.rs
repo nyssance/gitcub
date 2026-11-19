@@ -239,7 +239,9 @@ mod tests {
         std::fs::create_dir(r.join("sub")).unwrap();
         assert!(crate::raw_diff::in_process::open(&r.join("sub")).is_err());
         // 不认识的条件让位
-        with("[user]\n\tname = Kept\n[includeIf \"hasconfig:remote.*.url:https://example.invalid/**\"]\n\tpath = conditional\n");
+        with(
+            "[user]\n\tname = Kept\n[includeIf \"hasconfig:remote.*.url:https://example.invalid/**\"]\n\tpath = conditional\n",
+        );
         let repo = open();
         assert_eq!(effective_from(&crate::raw_diff::in_process::config(&repo).unwrap(), "user.name"), None);
     }

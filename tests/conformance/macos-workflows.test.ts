@@ -22,6 +22,31 @@ import { expect, type Page, recordNativeMemory, skipWelcome, test } from "./e2e/
 import { smokeRepoPath } from "./upstream/desktop/e2e/test-helpers.ts"
 const git = (...args: string[]) => execFileSync("git", ["-C", smokeRepoPath, ...args], { encoding: "utf8" }).trim()
 
+test("repository account assignments persist independently through native IPC", async ({ mainWindow: page }) => {
+  await page.locator("#desktop-app-container").waitFor({ state: "visible", timeout: 30000 })
+  const actual = await page.evaluate(async () => {
+    const invoke = window.__TAURI_INTERNALS__.invoke
+    const host = "git.example.invalid:8443/team"
+    const paths = ["/fixture/personal", "/fixture/work"]
+    try {
+      await invoke("assign_repository_account", { path: paths[0], account: { host, login: "personal" } })
+      await invoke("assign_repository_account", { path: paths[1], account: { host, login: "work" } })
+      const before = (await invoke<AppState>("load_state")).repositoryAccounts
+      await invoke("assign_repository_account", { path: paths[0], account: null })
+      const after = (await invoke<AppState>("load_state")).repositoryAccounts
+      return [
+        before?.[paths[0]!]?.login,
+        before?.[paths[1]!]?.login,
+        after?.[paths[0]!]?.login ?? null,
+        after?.[paths[1]!]?.login
+      ]
+    } finally {
+      for (const path of paths) await invoke("assign_repository_account", { path, account: null })
+    }
+  })
+  assert.deepEqual(actual, ["personal", "work", null, "work"])
+})
+
 test("first-run Desktop import can be declined and stays declined after reload", async ({ mainWindow: page }) => {
   await page.locator('button:has-text("Not now")').waitFor({ state: "visible", timeout: 30000 })
   const disabled = await page.evaluate(

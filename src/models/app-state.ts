@@ -16,6 +16,8 @@ export interface AppState {
   /** 仓库归属的手动修正，优先于按 origin owner 的自动判定 */
   repoOwnership: Record<string, Ownership>
   /** 手动加过的实例主机名（自建 GitLab 等）；公有实例和仓库里出现过的 host 不用记 */
+  additionalAccounts?: Record<string, string[]>
+  repositoryAccounts?: Record<string, RepositoryAccount>
   accountHosts: string[]
   /** 各实例的 OAuth client_id。设备码流程不需要 client secret，所以它不是密钥 */
   oauthClients: Record<string, string>
@@ -24,6 +26,12 @@ export interface AppState {
   autolinks?: AutolinkRule[]
   /** 欢迎流程走完或跳过了。存在 Rust 侧，不用 localStorage（macOS 下 tauri:// 的 localStorage 不落盘） */
   welcomed?: boolean
+}
+
+export interface RepositoryAccount {
+  host: string
+  login: string
+  primary?: boolean
 }
 
 export type Ownership = "mine" | "third"

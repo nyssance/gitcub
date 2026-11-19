@@ -196,6 +196,8 @@ export function Preferences({
     }
   }
 
+  if (!open) return null
+
   return (
     <Dialog
       open={open}
@@ -229,13 +231,17 @@ export function Preferences({
           </TabsList>
 
           <PreferencesDraftContext value={draft}>
-            <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <DialogHeader className="px-4 py-3">
                 <DialogTitle>{t("prefs.title")}</DialogTitle>
               </DialogHeader>
 
               <TabsContent value="accounts" className="min-h-0 overflow-y-auto p-4">
                 <AccountsTab
+                  additionalAccounts={state.additionalAccounts}
+                  onProfilesChanged={(host, profiles) =>
+                    onPatch({ additionalAccounts: { ...state.additionalAccounts, [host]: profiles } })
+                  }
                   hosts={hosts}
                   accounts={accounts}
                   clients={state.oauthClients}
@@ -275,7 +281,7 @@ export function Preferences({
               </TabsContent>
               <TabsContent value="advanced" className="min-h-0 overflow-y-auto p-4">
                 <BackgroundUpdatesSettings />
-                <DesktopImportSettings state={state} onPatch={onPatch} />
+                <DesktopImportSettings state={state} onPatch={onPatch} onAccountsChanged={onAccountsChanged} />
                 <AdvancedTab language={view.language} onChange={language => patchDraft({ language })} />
                 <SettingGroup>
                   <AutolinkRules rules={view.autolinks ?? []} onChange={autolinks => patchDraft({ autolinks })} />
@@ -309,6 +315,8 @@ export function Preferences({
  * 所以每行要说清「从哪儿来的」。退出登录会把系统里那份也一并停用，
  * 否则删掉自己的令牌下一秒又被捡回来。 */
 export function AccountsTab({
+  additionalAccounts = {},
+  onProfilesChanged,
   hosts,
   accounts,
   clients,
@@ -318,6 +326,8 @@ export function AccountsTab({
   onAddHost,
   onSetClient
 }: {
+  additionalAccounts?: Record<string, string[]>
+  onProfilesChanged?: (host: string, profiles: string[]) => void
   hosts: string[]
   accounts: Accounts
   clients: Record<string, string>
@@ -379,7 +389,7 @@ export function AccountsTab({
   }
 
   /** The backend also cancels persistence of responses already in flight. */
-  const signIn = async (host: string) => {
+  const signIn = async (host: string, additional = false) => {
     // 用户填过就用他的，否则用内置的（后端也会兜一次）
     const clientId = clients[host] ?? builtin[host] ?? ""
     if (!clientId) return
@@ -407,7 +417,16 @@ export function AccountsTab({
 
       const outcome = await pollDeviceAuthorization(
         start,
-        () => ipc.oauthDevicePoll(host, clientId, start.deviceCode, attemptId),
+        async () => {
+          const status = await ipc.oauthDevicePoll(host, clientId, start.deviceCode, attemptId, additional)
+          if (typeof status === "string") return status
+          const login = status.accountAdded
+          onProfilesChanged?.(host, [
+            ...(additionalAccounts[host] ?? []).filter(name => name.toLowerCase() !== login.toLowerCase()),
+            login
+          ])
+          return "done"
+        },
         attempt.signal
       )
       if (attempt.signal.aborted) return
@@ -510,6 +529,80 @@ export function AccountsTab({
           </Field>
         )}
 
+        {onProfilesChanged && (signedIn || !!additionalAccounts[host]?.length) && (
+          <>
+            {signedIn && (clients[host] ?? builtin[host]) && (
+              <Button size="sm" variant="outline" disabled={busy} onClick={() => void signIn(host, true)}>
+                {t("prefs.signInWithAnotherAccount")}
+              </Button>
+            )}
+            <div className="flex items-center gap-2">
+              <Input
+                type="password"
+                aria-label={t("prefs.additionalAccountToken")}
+                placeholder={t("prefs.additionalAccountToken")}
+                value={draft[`profile:${host}`] ?? ""}
+                onChange={e => {
+                  const value = e.currentTarget.value
+                  setDraft(d => ({ ...d, [`profile:${host}`]: value }))
+                }}
+              />
+              <Button
+                size="sm"
+                disabled={busy || !draft[`profile:${host}`]}
+                onClick={async () => {
+                  setBusy(true)
+                  setError(null)
+                  try {
+                    const login = await ipc.addAccountToken(
+                      host,
+                      draft[`profile:${host}`]!,
+                      a.kind ?? providers[host] ?? (host === "gitlab.com" ? "gitlab" : "github")
+                    )
+                    onProfilesChanged(host, [
+                      ...(additionalAccounts[host] ?? []).filter(name => name.toLowerCase() !== login.toLowerCase()),
+                      login
+                    ])
+                    setDraft(d => ({ ...d, [`profile:${host}`]: "" }))
+                  } catch (error) {
+                    setError(String(error))
+                  } finally {
+                    setBusy(false)
+                  }
+                }}>
+                {t("prefs.addAccount")}
+              </Button>
+            </div>
+            {(additionalAccounts[host] ?? []).map(login => (
+              <Item size="sm" key={login} className="px-0">
+                <ItemContent>{login}</ItemContent>
+                <ItemActions>
+                  <Button
+                    disabled={busy}
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      setBusy(true)
+                      setError(null)
+                      try {
+                        await ipc.removeAccountToken(host, login)
+                        onProfilesChanged(
+                          host,
+                          (additionalAccounts[host] ?? []).filter(name => name !== login)
+                        )
+                      } catch (error) {
+                        setError(String(error))
+                      } finally {
+                        setBusy(false)
+                      }
+                    }}>
+                    {t("prefs.signOut")}
+                  </Button>
+                </ItemActions>
+              </Item>
+            ))}
+          </>
+        )}
         {/* client_id 不是密钥，设备码流程不需要 client secret。每个自建实例的应用都不一样，所以按实例填；
             有内置应用 ID 的实例（github.com）不用让用户看到这一行 */}
         {!a.login && !builtin[host] && (
@@ -935,7 +1028,11 @@ function IntegrationSettings({ state, onPatch }: { state: AppState; onPatch: (pa
   )
 }
 
-function DesktopImportSettings({ state, onPatch }: { state: AppState; onPatch: (patch: Partial<AppState>) => void }) {
+function DesktopImportSettings({
+  state,
+  onPatch,
+  onAccountsChanged
+}: Pick<Props, "state" | "onPatch" | "onAccountsChanged">) {
   const { t } = useTranslation()
   const current = useRef(state)
   current.current = state
@@ -958,12 +1055,22 @@ function DesktopImportSettings({ state, onPatch }: { state: AppState; onPatch: (
         accountHosts: [...new Set([...previous.accountHosts, ...(data.accountHosts ?? [])])],
         desktopImportHandled: true
       }
+      if (data.repositoryAccounts)
+        patch.repositoryAccounts = { ...previous.repositoryAccounts, ...data.repositoryAccounts }
+      if (data.additionalAccounts) {
+        const profiles = { ...previous.additionalAccounts }
+        for (const [host, logins] of Object.entries(data.additionalAccounts)) {
+          profiles[host] = [...new Set([...(profiles[host] ?? []), ...logins])]
+        }
+        patch.additionalAccounts = profiles
+      }
       if (!previous.selectedRepository) patch.selectedRepository = data.selectedRepository ?? repositories[0] ?? null
       if (data.theme !== null) patch.theme = data.theme
       if (data.sidebarWidth !== null) patch.sidebarWidth = data.sidebarWidth
       if (data.externalEditor !== null) patch.externalEditor = data.externalEditor
       if (data.externalTerminal !== null) patch.externalTerminal = data.externalTerminal
       onPatch(patch)
+      onAccountsChanged()
       setMessage(
         t("prefs.desktopImported", {
           count: repositories.length - previous.repositories.length,

@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 
 import { useAccountsStore } from "../../features/accounts/store"
+import { useAppStateStore } from "../../features/app-state/store"
 import { useEmojiStore } from "../../features/emoji/store"
 import { getHTMLURL } from "../../lib/api"
 import type { IMentionableUser } from "../../lib/databases/github-user-database"
@@ -21,8 +22,10 @@ export function useAutocompletionProviders(
   issues: readonly Issue[],
   mentionables: readonly IMentionableUser[],
   remote: Remote | null,
-  accounts: ReadonlyArray<Account>
+  accounts: ReadonlyArray<Account>,
+  repo?: string
 ) {
+  const assigned = useAppStateStore(s => (repo ? s.state?.repositoryAccounts?.[repo] : undefined))
   const platformAccounts = useAccountsStore(s => s.accounts)
   const emoji = useEmojiStore(s => s.emoji)
   const runtime = getDesktopRuntime()
@@ -49,11 +52,16 @@ export function useAutocompletionProviders(
       const repository = completionRepository(remote, gitlab)
       const account = gitlab
         ? undefined
-        : accounts.find(account => new URL(getHTMLURL(account.endpoint)).host === remote.host)
+        : accounts.find(
+            account =>
+              new URL(getHTMLURL(account.endpoint)).host === remote.host &&
+              (!assigned ||
+                (assigned.host === remote.host && account.login.toLowerCase() === assigned.login.toLowerCase()))
+          )
       const source = mentionableUsersSource(
         mentionables,
         runtime.gitHubUserStore,
-        gitlab ? login => ipc.mentionableUser(remote.host, login).catch(() => null) : undefined
+        gitlab ? login => ipc.mentionableUser(remote.host, login, repo).catch(() => null) : undefined
       )
       providers.push(
         new UserAutocompletionProvider(source, repository, account),
@@ -61,5 +69,5 @@ export function useAutocompletionProviders(
       )
     }
     return providers
-  }, [issues, mentionables, remote, accounts, platformAccounts, runtime, emoji])
+  }, [issues, mentionables, remote, accounts, assigned, repo, platformAccounts, runtime, emoji])
 }

@@ -149,6 +149,31 @@ fn main() {
     #[cfg(all(feature = "hasgard-testing", target_os = "macos"))]
     let builder = builder.plugin(
         tauri::plugin::Builder::<_, ()>::new("gitcub-test-occlusion")
+            .on_window_ready(|window| {
+                if window.label() != "main" || std::env::var_os("GITCUB_TEST_DATA_DIR").is_none() {
+                    return;
+                }
+                // Hasgard 0.6.9 no longer places or shows the test window.
+                if let Ok(display) = std::env::var("TAURI_HASGARD_DISPLAY")
+                    && let Ok(monitors) = window.available_monitors()
+                {
+                    let primary = window.primary_monitor().ok().flatten();
+                    let target = if display.eq_ignore_ascii_case("secondary") {
+                        monitors.iter().find(|m| primary.as_ref().is_some_and(|p| p.position() != m.position()))
+                    } else if let Ok(index) = display.parse::<usize>() {
+                        monitors.get(index)
+                    } else {
+                        monitors.iter().find(|m| m.name().is_some_and(|name| name.eq_ignore_ascii_case(&display)))
+                    };
+                    if let Some(target) = target {
+                        let position = target.position().to_logical::<f64>(target.scale_factor());
+                        let _ = window.set_position(position);
+                    }
+                }
+                if let Err(error) = window.show() {
+                    log::error!("Unable to show the native test window: {error}");
+                }
+            })
             .on_webview_ready(|webview| {
                 let _ = webview.with_webview(|platform: tauri::webview::PlatformWebview| {
                     use objc2::{
@@ -180,8 +205,10 @@ fn main() {
         context.config_mut().identifier = "day.dreamer.gitcub.conformance".into();
         for window in &mut context.config_mut().app.windows {
             window.incognito = true;
-            // 先隐藏：hasgard 按 TAURI_HASGARD_DISPLAY 把窗口挪到测试显示器后再显示，主屏上不闪一下。
-            window.visible = false;
+            // 先定位到测试显示器再显示，主屏上不闪一下。
+            if cfg!(target_os = "macos") {
+                window.visible = false;
+            }
         }
     }
     // 测试更新服务：换掉 plugins.updater 的端点与公钥，tauri-plugin-updater 和 desktop shell 都从这里读
@@ -211,6 +238,8 @@ fn main() {
             commands::repo_remote,
             commands::repo_remotes,
             commands::account_info,
+            account::add_account_token,
+            account::remove_account_token,
             commands::repo_meta,
             commands::set_token,
             commands::set_account_ignored,
@@ -230,6 +259,7 @@ fn main() {
             commands::set_git_identity,
             commands::load_state,
             named_store::store_entries,
+            named_store::assign_repository_account,
             named_store::store_set,
             named_store::store_delete,
             named_store::store_clear,

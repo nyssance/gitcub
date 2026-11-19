@@ -139,7 +139,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
       repo.workflowPreferences,
       repo.isTutorialRepository,
       repo.gitDir,
-      repo.mainWorktreePath
+      repo.mainWorktreePath,
+      repo.login
     )
   }
 
@@ -256,7 +257,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
       repository.workflowPreferences,
       repository.isTutorialRepository,
       repository.gitDir,
-      repository.mainWorktreePath
+      repository.mainWorktreePath,
+      repository.login
     )
   }
 
@@ -275,7 +277,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
       repository.workflowPreferences,
       repository.isTutorialRepository,
       gitDir,
-      repository.mainWorktreePath
+      repository.mainWorktreePath,
+      repository.login
     )
   }
 
@@ -338,7 +341,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
       repository.workflowPreferences,
       repository.isTutorialRepository,
       gitDir,
-      mainWorktreePath
+      mainWorktreePath,
+      repository.login
     )
   }
 
@@ -391,7 +395,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
         repository.workflowPreferences,
         repository.isTutorialRepository,
         gitDir,
-        mainWorktreePath
+        mainWorktreePath,
+        repository.login
       ),
       existingRepository: false
     }
@@ -523,7 +528,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
       repo.workflowPreferences,
       repo.isTutorialRepository,
       repo.gitDir,
-      repo.mainWorktreePath
+      repo.mainWorktreePath,
+      repo.login
     )
 
     assertIsRepositoryWithGitHubRepository(updatedRepo)

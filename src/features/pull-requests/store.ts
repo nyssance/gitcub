@@ -15,6 +15,7 @@ import type { PullRequest, Remote } from "@/models/app-state"
 interface PullRequestsStore {
   /** 请求针对的本地仓库与其远端 */
   repo: string | null
+  login?: string
   remote: Remote | null
   /** 实际列 PR 的仓库：fork 且为上游贡献时是上游（Desktop getNonForkGitHubRepository） */
   target: Remote | null
@@ -22,7 +23,7 @@ interface PullRequestsStore {
   loading: boolean
   error: string | null
   /** 远端变了才重新加载；同一个远端什么都不做 */
-  load: (repo: string | null, remote: Remote | null) => void
+  load: (repo: string | null, remote: Remote | null, login?: string) => void
   /** 打开页签时用：同一个远端就保留列表重新取，换了远端就从头加载 */
   revalidate: (repo: string | null, remote: Remote | null) => void
   refresh: () => void
@@ -36,7 +37,9 @@ let cancel = () => {}
 const fetchPullRequests = (repo: string, remote: Remote) =>
   Effect.gen(function* () {
     const target = yield* call("contributionRepository", () => contributionRepository(repo, remote))
-    const list = yield* call("pullRequests", ipc => ipc.pullRequests(target.host, target.owner, target.name, true))
+    const list = yield* call("pullRequests", ipc =>
+      ipc.pullRequests(target.host, target.owner, target.name, true, repo)
+    )
     usePullRequestsStore.setState({ target, list, loading: false })
   }).pipe(
     Effect.catch(error =>
@@ -51,10 +54,10 @@ export const usePullRequestsStore = create<PullRequestsStore>((set, get) => ({
   list: [],
   loading: false,
   error: null,
-  load: (repo, remote) => {
-    if (get().repo === repo && sameRemote(get().remote, remote)) return
+  load: (repo, remote, login) => {
+    if (get().repo === repo && sameRemote(get().remote, remote) && get().login === login) return
     cancel()
-    set({ repo, remote, target: null, list: [], error: null, loading: !!repo && !!remote })
+    set({ repo, remote, login, target: null, list: [], error: null, loading: !!repo && !!remote })
     cancel = repo && remote ? forkCancelable(fetchPullRequests(repo, remote)) : () => {}
   },
   revalidate: (repo, remote) =>

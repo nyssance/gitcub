@@ -24,11 +24,11 @@ import {
   type Updater
 } from "@/features/effect-runtime"
 import { createCoalescingRunner } from "@/lib/coalescing-runner"
-import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import type { IMentionableUser } from "@/lib/databases/github-user-database"
+import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import { contributionRepository } from "@/lib/fork-contribution"
-import { getRepositoryType } from "@/lib/repository-access"
 import { toPresentableError } from "@/lib/presentable-error"
+import { getRepositoryType } from "@/lib/repository-access"
 import type { Issue, LfsState, Remote, StashEntry } from "@/models/app-state"
 import { MultiCommitOperationKind } from "@/models/multi-commit-operation"
 import type { RepoStatus } from "@/models/repo-status"
@@ -370,10 +370,10 @@ export const useRepositoryStore = create<RepositoryStore>()((set, get) => ({
         // 两样各自失败各自空：Issue 取不到不该连带 @ 补全也没有
         yield* Effect.all(
           [
-            call("issuesForCompletion", ipc => ipc.issuesForCompletion(target.host, target.owner, target.name)).pipe(
-              Effect.match({ onFailure: () => set({ issues: [] }), onSuccess: issues => set({ issues }) })
-            ),
-            call("mentionables", ipc => ipc.mentionables(target.host, target.owner, target.name)).pipe(
+            call("issuesForCompletion", ipc =>
+              ipc.issuesForCompletion(target.host, target.owner, target.name, repo)
+            ).pipe(Effect.match({ onFailure: () => set({ issues: [] }), onSuccess: issues => set({ issues }) })),
+            call("mentionables", ipc => ipc.mentionables(target.host, target.owner, target.name, repo)).pipe(
               Effect.match({
                 onFailure: () => set({ mentionables: [] }),
                 onSuccess: mentionables => set({ mentionables })

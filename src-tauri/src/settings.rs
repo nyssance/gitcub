@@ -71,6 +71,29 @@ pub fn stored_credential(host: &str) -> Option<String> {
     read(host)
 }
 
+pub(crate) fn profile_key(host: &str, login: &str) -> String {
+    // Bound both the Keychain item name and the development filename for long instance paths.
+    let mut hash = gix::hash::hasher(gix::hash::Kind::Sha256);
+    hash.update(host.as_bytes());
+    hash.update(&[0]);
+    hash.update(login.to_ascii_lowercase().as_bytes());
+    format!("/accounts/{}", hash.try_finalize().expect("SHA-256 is enabled"))
+}
+
+pub fn save_profile(host: &str, login: &str, token: &str) -> Result<(), String> {
+    set_host_token(&profile_key(host, login), token)
+}
+
+pub async fn profile_token(host: String, login: String) -> Result<String, String> {
+    let key = profile_key(&host, &login);
+    crate::oauth::refresh_profile(&host, &key).await?;
+    tauri::async_runtime::spawn_blocking(move || {
+        read(&key).and_then(|value| access_token(&value)).ok_or_else(|| format!("Sign in as {login} on {host}"))
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
 pub fn access_token(value: &str) -> Option<String> {
     if value.starts_with(crate::oauth::PREFIX) {
         return crate::oauth::access_token(value);
@@ -151,6 +174,66 @@ fn dev_token_file(key: &str) -> String {
 
 #[cfg(all(test, debug_assertions))]
 mod tests {
+    #[cfg(feature = "hasgard-testing")]
+    #[test]
+    fn scoped_credentials_survive_restart_and_individual_sign_out() {
+        const PHASE: &str = "GITCUB_PROFILE_TEST_PHASE";
+        let host = "profiles.invalid";
+        let token = |login| super::read(&super::profile_key(host, login));
+        match std::env::var(PHASE).as_deref() {
+            Ok("save") => {
+                super::save_profile(host, "Alice", "fixture-a").unwrap();
+                super::save_profile(host, "Bob", "fixture-b").unwrap();
+            }
+            Ok("remove") => {
+                assert_eq!(token("alice").as_deref(), Some("fixture-a"));
+                assert_eq!(token("bob").as_deref(), Some("fixture-b"));
+                super::save_profile(host, "ALICE", "").unwrap();
+            }
+            Ok("verify") => {
+                assert_eq!(token("alice"), None);
+                assert_eq!(token("bob").as_deref(), Some("fixture-b"));
+                assert_eq!(super::stored_credential(host), None);
+            }
+            _ => {
+                let directory = tempfile::tempdir().unwrap();
+                for phase in ["save", "remove", "verify"] {
+                    let result = std::process::Command::new(std::env::current_exe().unwrap())
+                        .args([
+                            "--exact",
+                            "settings::tests::scoped_credentials_survive_restart_and_individual_sign_out",
+                        ])
+                        .env("GITCUB_TEST_DATA_DIR", directory.path())
+                        .env(PHASE, phase)
+                        .output()
+                        .unwrap();
+                    assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stdout));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn repository_accounts_isolate_users_ports_and_instance_paths() {
+        use super::{dev_token_file, profile_key, validate_destinations};
+        use crate::branch::RepositoryAccount;
+        let profile = RepositoryAccount { primary: false, host: "git.example:8443/team".into(), login: "Alice".into() };
+        let key = |host: &str, login: &str| dev_token_file(&profile_key(host, login));
+        assert_eq!(key(&profile.host, "Alice"), key(&profile.host, "alice"));
+        assert_ne!(key(&profile.host, "alice"), key(&profile.host, "bob"));
+        assert_ne!(key(&profile.host, "alice"), key("git.example/team", "alice"));
+        assert!(key(&format!("git.example/{}", "tenant".repeat(35)), &"user".repeat(20)).len() < 255);
+        let known = vec![profile.host.clone()];
+        let check = |urls: &[&str]| {
+            validate_destinations(&urls.iter().map(|s| s.to_string()).collect::<Vec<_>>(), &known, Some(&profile))
+        };
+        assert_eq!(check(&["https://git.example:8443/team/group/project"]).unwrap(), Some(profile.host.clone()));
+        assert!(check(&["https://git.example:8443/other/group/project"]).is_err());
+        assert!(check(&["https://git.example/team/group/project"]).is_err());
+        assert!(check(&["http://git.example:8443/team/group/project"]).is_err());
+        assert!(check(&["https://git.example:8443/team/group/project", "https://elsewhere.invalid/a/b"]).is_err());
+    }
+
     #[test]
     fn 子路径实例的开发期令牌文件不与其他主机重名() {
         assert_eq!(super::dev_token_file("git.example:8443"), "git_example_8443");
@@ -251,37 +334,68 @@ pub fn set_git_identity(repo: Option<&Path>, id: &GitIdentity) -> Result<(), Str
     Ok(())
 }
 
-/// 按远端 URL 猜是 GitHub 还是 GitLab。
-/// 取某个远端的 URL，用来决定用哪份 token。
-pub fn remote_url(repo: &Path, remote: &str) -> Option<String> {
-    crate::remote_ops::get_url(repo, remote).ok().flatten()
-}
-
 /// 该仓库该远端对应的 token，只读取 GitCub 已保存或一次导入的凭据。
 pub async fn token_for(app: &tauri::AppHandle, repo: &Path, remote: &str) -> Result<Option<String>, String> {
+    let path = repo.to_string_lossy().into_owned();
     let repo = repo.to_path_buf();
     let remote = remote.to_owned();
-    let url = tauri::async_runtime::spawn_blocking(move || remote_url(&repo, &remote))
+    let url = tauri::async_runtime::spawn_blocking(move || crate::remote_ops::get_url(&repo, &remote))
         .await
         .map_err(|error| error.to_string())?;
-    let Some(url) = url else {
+    let Some(url) = url? else {
         return Ok(None);
     };
-    token_for_url(app, &url).await
+    repository_token(app, &path, &[url]).await
 }
 
 pub async fn token_for_push(app: &tauri::AppHandle, repo: &Path, remote: &str) -> Result<Option<String>, String> {
+    let path = repo.to_string_lossy().into_owned();
     let repo = repo.to_path_buf();
     let remote = remote.to_owned();
     let urls = tauri::async_runtime::spawn_blocking(move || crate::remote_ops::push_urls(&repo, &remote))
         .await
         .map_err(|error| error.to_string())??;
-    let known = crate::store::known_instances(app).await?;
-    let first = credential_instance(&urls[0], &known);
-    if urls.iter().any(|url| credential_instance(url, &known) != first) {
+    repository_token(app, &path, &urls).await
+}
+
+async fn repository_token(app: &tauri::AppHandle, path: &str, urls: &[String]) -> Result<Option<String>, String> {
+    let handle = app.clone();
+    let path = path.to_owned();
+    let (known, assigned) = tauri::async_runtime::spawn_blocking(move || {
+        let assigned = crate::named_store::assigned_account(&handle, &path)?;
+        Ok::<_, String>((crate::store::load(&handle)?.account_hosts, assigned))
+    })
+    .await
+    .map_err(|error| error.to_string())??;
+    let instance = validate_destinations(urls, &known, assigned.as_ref())?;
+    if let Some(ref profile) = assigned
+        && urls.iter().all(|url| url.starts_with("https://"))
+    {
+        return crate::account::repository_auth(&profile.host, profile).await.map(|(_, token)| Some(token));
+    }
+    if assigned.is_some() {
+        return Ok(None);
+    }
+    token_for_instance(instance, &urls[0]).await
+}
+
+fn validate_destinations(
+    urls: &[String], known: &[String], assigned: Option<&crate::branch::RepositoryAccount>,
+) -> Result<Option<String>, String> {
+    let first = credential_instance(urls.first().ok_or("Missing Git destination")?, known);
+    if urls.iter().any(|url| credential_instance(url, known) != first) {
         return Err("Push destinations use different hosts; push to each remote separately".into());
     }
-    token_for_instance(first, &urls[0]).await
+    if let Some(profile) = assigned {
+        let https = urls.iter().filter(|url| url.starts_with("https://")).count();
+        if https > 0 && (https != urls.len() || first.as_deref() != Some(&profile.host)) {
+            return Err("The assigned account requires matching HTTPS destinations".into());
+        }
+        if urls.iter().any(|url| url.to_ascii_lowercase().starts_with("http://")) {
+            return Err("The assigned account requires HTTPS".into());
+        }
+    }
+    Ok(first)
 }
 
 /// 凭据按实例标识（`host[:port][/子路径]`）取：URL 落在哪个已知实例下就用哪个实例的令牌，

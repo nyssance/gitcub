@@ -1,9 +1,9 @@
 {
   "project": "gitlens",
   "repository": "https://github.com/gitkraken/vscode-gitlens",
-  "commit": "6e577dafd58316b45a0b84a665a80d84bcb37004",
+  "commit": "c71ffd29b5fffe897670e18ab2602307cc150f45",
   "note": "Source-file inventory only. All entries remain pending until upstream scenarios and assertions are verified against GitCub. Reference features do not imply test coverage or equivalent behavior. Entries marked excluded are VS Code extension host / webview / E2E or GitKraken Plus suites that the user ruled out on 2026-10-27; they are not product gaps. See tests/conformance/README.md. Files in or under any \"plus\" directory are covered by GitLens Pro License (LICENSE.plus) and are excluded from porting on 2026-10-27 regardless of their subject. On 2026-10-27 every remaining pending file was triaged one by one: suites that test GitLens's own infrastructure (exec queue, command classifier, caches, watcher sessions, health monitors, its own parsers and models) or GitLens-only features that Desktop does not have and the user has not authorized are excluded with the reason and the Desktop source or grep used to decide; they are not product gaps. The remaining pending files assert Git behaviour of capabilities GitCub has.",
-  "support_sha256": "227c6e11a02dc4c48dee6aebb9097b7072e90a759231db8f5dc756c35732fafe",
+  "support_sha256": "3f9ce7c7e0fb595c8a07b6fbc0d3ce41e864d23c0f7e7ad014acf7bfba887fb1",
   "features": [
     {
       "name": "blame",
@@ -175,7 +175,7 @@
     },
     "packages/git-cli/src/parsers/__tests__/blameParser.test.ts": {
       "sha256": "76234267ad06135d6533a20ae6d1f77fa09dbce30c3442c7655e8e1634142600",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/blameParser.test.ts",
@@ -191,7 +191,7 @@
     },
     "packages/git-cli/src/parsers/__tests__/indexParser.test.ts": {
       "sha256": "2294411cae36cb83e60391c1e422fbae959f14b945d3169742071dcd15cb4183",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/indexParser.test.ts",
@@ -200,7 +200,7 @@
       }
     },
     "packages/git-cli/src/parsers/__tests__/logParser.test.ts": {
-      "sha256": "9116989f6bfb07289373afcc9ceff6bb257f760bae498d0987743e1d26a375ab",
+      "sha256": "326aa650fcf78d777a27bb1092fba470d176ffa6ec94134f596904fd9c3f82c3",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：测试 GitLens 自定义分隔符的 log 记录格式（非 -z 的 --raw/--numstat 文本、批量异步解析、截断保护）；GitCub 走 Desktop 的 -z 格式（history::parse_raw_with_numstat），输入格式不同，转换输入即重写解析。"
@@ -212,13 +212,13 @@
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：解析 git-rebase-todo 供 GitLens 交互式变基编辑器使用；Desktop 只读 rebase-merge/{msgnum,end,onto,head-name}（app/src/lib/git/rebase.ts），squash/reorder 只写 todo 不解析，GitCub interactive.rs 相同。"
     },
     "packages/git-cli/src/parsers/__tests__/refParser.test.ts": {
-      "sha256": "19395d374e5f2233eeb69878d4aba701b9239aa18f5a43379432704e73776e12",
+      "sha256": "799370fec4b4074b59980d3aa688aef41d4c5a1d6f0d7e038d011466d25b95fb",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：测试 GitLens 自定义 for-each-ref 记录格式（分隔符、worktreePath、%(push) 字段顺序、解析器缓存）；GitCub branch::list 用自己的 NUL 格式，输入契约不同。"
     },
     "packages/git-cli/src/parsers/__tests__/reflogParser.test.ts": {
-      "sha256": "bbb1216ba22a884685f476948512740b2e03cf9213d76fc769ab7802e1124d3b",
+      "sha256": "728c0a16f6833075b2ca82efa791dd517fa32cc07b0f7dd26f258c253b15c7fe",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：解析 GitLens reflog 视图的记录（按命令过滤、去重、hasMore 分页）；Desktop 仅用 reflog 取最近分支与检出（app/src/lib/git/reflog.ts，GitCub ops::recent_branches/branch_checkouts 已由 Desktop 测试覆盖），无 reflog 视图。"
@@ -243,7 +243,7 @@
     },
     "packages/git-cli/src/parsers/__tests__/statusParser.test.ts": {
       "sha256": "f775188561e336a1cbe8d0c4f0f3f47792e15b705d6f2f78a907b63b9c1c2e72",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/statusParser.test.ts",
@@ -253,7 +253,7 @@
     },
     "packages/git-cli/src/parsers/__tests__/worktreeParser.test.ts": {
       "sha256": "06b2f48e6ab83c6169327a60117945f265140a6b9e5d7b3dda611f13aa7121c5",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/worktreeParser.test.ts",
@@ -389,7 +389,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/branches.test.ts": {
       "sha256": "75b21bf347064e249191d0740c11f8c9a9d0bbb7934b69c0457666f0256d88da",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/branches.test.ts",
@@ -406,7 +406,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/clone.test.ts": {
       "sha256": "2e96cf67fcd03b7ecaa7f882efe0278d29654c8401a16e301e7a9a1a12882378",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/clone.test.ts",
@@ -429,7 +429,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/commits.searchTypeMerge.test.ts": {
       "sha256": "2b0b8370f35d6277a9172537c5f9b02600cdd50b597e83b13324cda2202f27e3",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/commits.searchTypeMerge.test.ts",
@@ -439,7 +439,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/commits.test.ts": {
       "sha256": "6bcf27ce250c70a10862ae8bf0e463547859a114f92295c6a2a333bf1d7f4f05",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/commits.test.ts",
@@ -474,7 +474,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/config.test.ts": {
       "sha256": "29b69478d0b52bbbbe8b421623c1f8960408aed58048145dd58ae520201846e0",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/config.test.ts",
@@ -485,7 +485,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/config.upstreamKeys.test.ts": {
       "sha256": "e48673b201563a65a4eb608ae60252764c461ea24e31d2366d285f4851c6b2a9",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/config.upstreamKeys.test.ts",
@@ -506,9 +506,14 @@
       "rust_tests": [],
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：测试 GitLens DiffSubProvider 的任意两引用 diff、includeUntracked、intent-to-add / 临时 index 评审（#5586、#5604 服务于 AI/Composer 评审）、uris 计数与 errors 选项；Desktop 只按文件取提交/工作区/merge-base diff（app/src/lib/git/diff.ts），GitCub 同，没有对应 API。"
     },
+    "packages/git-cli/src/providers/__tests__/integration/embeddedSeparators.test.ts": {
+      "sha256": "f9deb092daebbb1561d16b1072dbbf8584f1205213ab20a86d78baad674f14ea",
+      "status": "pending",
+      "rust_tests": []
+    },
     "packages/git-cli/src/providers/__tests__/integration/env.gitDir.test.ts": {
       "sha256": "1baae29a175f012493f05cd99a30d93a565978a0716395315b9898880eb8cc72",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/env.gitDir.test.ts",
@@ -518,7 +523,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/gitIgnoreFilter.test.ts": {
       "sha256": "964b333bef0bbb67c8ad8f8c17137bd497ac83d010127f3d0150729e873ae7e4",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/gitIgnoreFilter.test.ts",
@@ -546,7 +551,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/graph.slashRemote.test.ts": {
       "sha256": "d1a0e64942dd65deec68a83b36e49243fb8d3a6623f7ab26af02cb29a4c190a9",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/graph.slashRemote.test.ts",
@@ -556,7 +561,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/graph.stashRows.test.ts": {
       "sha256": "33e03c110a932335788007e097e8e3466dd6a5c0d2315ffbdfa3240bcaa38daa",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/graph.stashRows.test.ts",
@@ -626,7 +631,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/operations.indexLockHook.test.ts": {
       "sha256": "15245b783aa5667202a8378687a5f3bc1680e757436843e124c03e4394491f77",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/operations.indexLockHook.test.ts",
@@ -636,7 +641,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/operations.test.ts": {
       "sha256": "00cd944266e5050340f4ed63dc71f3e183a4b9a1042454a7641d61838351aa0a",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/operations.test.ts",
@@ -647,7 +652,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/operations.upstreamRemote.test.ts": {
       "sha256": "ad1a524aa5a1342f45f5858bba58913fa7c82a67ae990d8cb753644a53f103f5",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/operations.upstreamRemote.test.ts",
@@ -658,7 +663,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/pausedOperations.test.ts": {
       "sha256": "cccba92fb24d8be35c827b17185f620449b1e34463f946160e3343209629204a",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/pausedOperations.test.ts",
@@ -669,7 +674,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/provider.test.ts": {
       "sha256": "06c904fca16e3fe830985a225669964492df13f4031bec66b22996adcbda94d0",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/provider.test.ts",
@@ -686,7 +691,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/refs.test.ts": {
       "sha256": "26c1a677a366e5b6d32b04f9caa64fcdb972a419cb0db0e928c67e317f75b308",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/refs.test.ts",
@@ -697,7 +702,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/remotes.test.ts": {
       "sha256": "b20fbc78032d57a278a1bb1b7f2ece0a909b68485fbf20e4fc942a2078f67f89",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/remotes.test.ts",
@@ -714,7 +719,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/revParseGitDir.test.ts": {
       "sha256": "f0838e11405ff60265e7d4560eefc8e6b3a88b78c1fe5196defdbdb30bb18542",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/revParseGitDir.test.ts",
@@ -725,7 +730,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/revision.test.ts": {
       "sha256": "07624728a8ec56aafa7af35a339fe9cd32b7ddc3bdcd3e075a8d14f51a22cdb1",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/revision.test.ts",
@@ -748,7 +753,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/stash.test.ts": {
       "sha256": "a41569a4af378106208fdb092d571cda111239936c81f921088ddc2b44212181",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/stash.test.ts",
@@ -759,7 +764,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/status.test.ts": {
       "sha256": "913ff1d09d8c43a1a4d305ee4068e6bd1301de9494ebbc5be71d12e8383f26cd",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/status.test.ts",
@@ -770,7 +775,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/tags.test.ts": {
       "sha256": "528de9aacd1ba9740f02f078f3145994b82d854060e4e2d71b40c8e21aef1192",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/tags.test.ts",
@@ -780,7 +785,7 @@
       "exclusion": "getTags 不报告附注/轻量的区分。 Excluded blocks: getTags reports annotated vs lightweight tags. All other assertions are retained."
     },
     "packages/git-cli/src/providers/__tests__/integration/worktreeSummary.measure.test.ts": {
-      "sha256": "d2905ceae1ebe00d595a11715648fef5241b19c3c4edf40bf047a97a8f9e0353",
+      "sha256": "33f349c7fb66f1352bd4c981b91db4091ad988ada6b2e7098487ef1113b774ad",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：统计 WorktreeSummaryService 在 fetch/配置写入后的 git 进程数，属 GitLens 性能基础设施。"
@@ -793,7 +798,7 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/worktrees.test.ts": {
       "sha256": "2ab8f26ad46fc64a895287bf43cdb804309336e78fdbf88d6ef639282790b272",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/integration/worktrees.test.ts",
@@ -809,7 +814,7 @@
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：打桩断言 push/fetch/pull/checkout/rebase 的 argv、错误类映射、refspec 变更广播与 onRebaseCapableOperation 钩子，均为 GitLens provider 内部契约；真实 git 行为见 integration/operations（标为 port）。"
     },
     "packages/git-cli/src/providers/__tests__/refs.test.ts": {
-      "sha256": "9abedeec4179695c77bd3fa7bc348f0e3c894e10bbcfec53bd76a9bad7a30b1c",
+      "sha256": "d1bfecb5a41a2b200962e5fe858ca39beda14990bb55ffa428cda0238c8a1647",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens 内部实现，GitCub 不共享该机制（2026-10-27 逐文件分诊）：打桩测试 RefsGitSubProvider 的 symbolic name 缺失判定、getRefTips/getRefsContainingShas 解析、update-ref argv 与变更钩子，属 GitLens provider 内部。"
@@ -923,14 +928,14 @@
       "exclusion": "GitLabRemoteProvider 是 GitLens 的远端模型，GitCub 没有对应入口，原套件不运行。其中嵌套子组的 `group/sub/project#<num>` / `!<num>` 引用正则（f168f8dd1）已移植到 src/lib/autolink-rules.ts，由 tests/conformance/autolinks.test.ts 的独立回归覆盖；parseRemoteFileUri 与跨 fork 创建合并请求的 URL 在 GitCub 没有对应功能（Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-11-12 逐文件分诊））。"
     },
     "packages/git/src/remotes/__tests__/matcher.test.ts": {
-      "sha256": "023ad3926d1ec9e8aa09973b5726dcd31958d62971bd3acf74a681272cc9a957",
+      "sha256": "36e7f04f05a8e1b0ebb5c13941954690f2f32eff482ecb1f25af685b04d316ab",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "Desktop 无此功能且用户未授权，按 AGENTS.md 不新增（2026-10-27 逐文件分诊）：多平台远端提供方匹配（Bitbucket/Azure/Gitea/Gerrit/Google Source、自定义正则配置）；GitCub 按已登录账号的 endpoint 识别 GitHub/GitLab（Desktop 按账号匹配），不做域名启发式。"
     },
     "packages/git/src/utils/__tests__/autolink.utils.test.ts": {
       "sha256": "dc6e72037ca176567a18186c23f20dc41448558ea454afc71be873378f37d837",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/autolink.utils.test.ts",
@@ -946,7 +951,7 @@
     },
     "packages/git/src/utils/__tests__/branch.utils.test.ts": {
       "sha256": "a14dd07e0d799bdfc5b476d1c6563c0b0b4656252190ebeaef061923e49042bb",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/branch.utils.test.ts",
@@ -975,7 +980,7 @@
     },
     "packages/git/src/utils/__tests__/fileStatus.utils.test.ts": {
       "sha256": "d645439cc9bbaaca9b8e90fdf8dda3823253b27af87bd30c4f8857df83cdce4f",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/fileStatus.utils.test.ts",
@@ -1027,7 +1032,7 @@
     },
     "packages/git/src/utils/__tests__/remote.test.ts": {
       "sha256": "0575a8da6fd65b3f9618c362a7cfe67782e69caf4037fc1894e87a165396fb01",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/remote.test.ts",
@@ -1037,7 +1042,7 @@
     },
     "packages/git/src/utils/__tests__/revision.utils.test.ts": {
       "sha256": "93b4699fa322609dd77bf7179bf96360fed5744db657435962c6575f3db24b18",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/revision.utils.test.ts",
@@ -1048,7 +1053,7 @@
     },
     "packages/git/src/utils/__tests__/search.utils.test.ts": {
       "sha256": "469c5a51e30e99fcd3c550e73f48d0cdb43a9cc6af45d47797c9c8e861e10e9f",
-      "status": "partial",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/search.utils.test.ts",
@@ -2558,13 +2563,13 @@
       "exclusion": "VS Code extension runtime utilities (@gitlens/utils), not Git behaviour — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "packages/utils/src/keys/__tests__/chord.test.ts": {
-      "sha256": "c3ed632983c5b5d86fbb7f1b7643abeed93e3c82f13238d18c093e4295925bb2",
+      "sha256": "a6c93dddb7bd68344038f3144838afc8cee12623954b43e6d9c12f17541c12e3",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension runtime utilities (@gitlens/utils), not Git behaviour — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "packages/utils/src/keys/__tests__/keybinding.test.ts": {
-      "sha256": "7549213be45c2197342c28d82c7173ca7e57b62920e78a61bf16915f48cba48a",
+      "sha256": "1db01ef043575607bd432dfa599e4e89e240e5ccbe6d3db66201db528bee176a",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension runtime utilities (@gitlens/utils), not Git behaviour — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -2691,7 +2696,7 @@
     },
     "src/autolinks/__tests__/autolinks.test.ts": {
       "sha256": "ae39274426b17a1d21ee50035e20a25e6a7224e49a89bf4e9b495aa648af6473",
-      "status": "ported",
+      "status": "stale",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/gitlens/autolinks.test.ts",
@@ -2778,7 +2783,7 @@
       "exclusion": "VS Code extension host code (commands, container, decorators, views, quick picks, terminal, virtual FS); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "src/env/node/kepler/__tests__/keplerInstall.test.ts": {
-      "sha256": "ab291bd5d2038385cf9244850952e44bc4043b985fc75f9eac0b30bd65f2aee7",
+      "sha256": "18031e4c515642224b883c60725de3a0f67d58566a5eb1a25a484971497bb058",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitKraken Plus / AI / agent feature of the VS Code extension; outside GitCub scope — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -3048,13 +3053,13 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/plus/kepler/__tests__/keplerRelease.test.ts": {
-      "sha256": "de1a073ea86b01076640d9b4a294deb5f9710ceed39001b4615fe4e041c8f3f3",
+      "sha256": "ec57b53d513a6437e7b4ed2219e0d67665ea5072e6e0477a7ab6a0d599c38800",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/plus/kepler/__tests__/keplerService.test.ts": {
-      "sha256": "a636dfcffed02d48281167bbabda7645ce321e95cbb76bca406102d5c38b5542",
+      "sha256": "5ecef6318ae34b62affbe5823890cb6b169da4f8095381a6d6b8b8d98f2f8b98",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -3882,7 +3887,7 @@
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
     },
     "src/webviews/plus/graph/__tests__/graphWebview.utils.test.ts": {
-      "sha256": "693240da61e6047545f5cc7d9f8362a5bde5b449e8b4785aa134053c6d58f5a6",
+      "sha256": "da4b9e85c9181e0c1ea07c841c8f694f4bf4e04cbdd2774c8ca8cdeaf9a2650f",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "GitLens Pro License（LICENSE.plus）：任何 plus 目录下的文件不是 MIT，禁止复制、移植或改写；此类功能只能自研或参考 MIT 实现，于 2026-10-27 从移植范围移出。"
@@ -4043,6 +4048,11 @@
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
+    "tests/e2e/specs/cloudPatches.test.ts": {
+      "sha256": "90653689ab0760f117c47b7c3a915710cf80b82578adee7392da7016eb6ec35e",
+      "status": "pending",
+      "rust_tests": []
+    },
     "tests/e2e/specs/graphConflictResolution.test.ts": {
       "sha256": "7615d3ca17b481b8adf4eb2d184a5fc1389915d50fa275977f39da80d48351b5",
       "status": "excluded",
@@ -4050,7 +4060,7 @@
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/graphDetails.test.ts": {
-      "sha256": "937ad2ec53dac2c8c61474f3ada008b1f80623fd0947d533763db2b7648003fc",
+      "sha256": "4c45bee9999d1b21e66230416475cdd2b23e92b56bcf0b0dc108a564e25c2b4e",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -4080,7 +4090,7 @@
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/graphReview.test.ts": {
-      "sha256": "86786be38d2257faf72a320ca3c11f96bcb83075f01ac895992fae4d72d60c41",
+      "sha256": "8bf639ad028744e19c5fd881dbe30a50eb8ae99da7875969b9b465e09d42c6e4",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -4128,13 +4138,13 @@
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/launchpadSignedIn.test.ts": {
-      "sha256": "b1375e86b160fe19a6cc7cc2a493eb4087e4515cadb4c332152e101db09707a5",
+      "sha256": "45f271f15dfae1a4df06fa97b503169f277fc22ead741fbefe2aeecd028998dc",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/localization.test.ts": {
-      "sha256": "7d6735cd908fa948c263cb80837812c3f677b2644bbf3ca9ad2b5966a43060cb",
+      "sha256": "8fca29267a8901540d0e213c7d915ee2594a2b855c12f76302aa3ee8d8e75a2a",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -4164,13 +4174,13 @@
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/mcpGitlensWritePath.test.ts": {
-      "sha256": "2a9a5a19ce654022b392ac563169c9c734fbcd0a1931d86d525889f3e5296301",
+      "sha256": "7d411443f317a14de2794cc99d2771a04c2b7de11805bf8bacf7031816c30468",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/mcpGitlensWritePathSignedIn.test.ts": {
-      "sha256": "e5ecf1f64bd0745ecdf4f4970cb56b2308a98ede60d2abaa8af2c3a727570756",
+      "sha256": "25aabb09e994a351b88ae8cfcd54e8093a4ad5a0fe304be310e53b234e2642b5",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
@@ -4218,10 +4228,15 @@
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
     },
     "tests/e2e/specs/startWorkSignedIn.test.ts": {
-      "sha256": "94c530080661b017d7aed751e9ed2ce8d4fad6a80df7399884070b2f62ed7db5",
+      "sha256": "5b613f34f7139629e64c44f3af3f42a359d993f8fd081b6d2e69bc948c163a50",
       "status": "excluded",
       "rust_tests": [],
       "exclusion": "VS Code extension E2E (Playwright driving VS Code); GitCub has no VS Code host — excluded 2026-10-27 per user (VS Code / GitKraken scope not considered)"
+    },
+    "tests/e2e/specs/subscriptionGates.test.ts": {
+      "sha256": "9081c5e98b0a202e6ebd2b35f40613912d2a6056be2c1ba3a592580bc5ef85d1",
+      "status": "pending",
+      "rust_tests": []
     },
     "tests/e2e/specs/treeView.test.ts": {
       "sha256": "dd637f8a11c3610508c164f0a3c52f269cfeccdbb236fc4b19386c1f4c3a4ccb",

@@ -9,6 +9,7 @@ import type { IAPIWorkflowJobStep } from "../../lib/api"
 import { getCheckRunConclusionAdjective, type ICombinedRefCheck, type IRefCheck } from "../../lib/ci-checks/ci-checks"
 import type { CommitStatusDispatcher as Dispatcher } from "../../lib/commit-status-dispatcher"
 import type { GitHubRepository } from "../../models/github-repository"
+import type { Repository } from "../../models/repository"
 import { Octicon, type OcticonSymbol } from "../octicons"
 import * as octicons from "../octicons/octicons.generated"
 
@@ -22,6 +23,7 @@ interface ICIStatusProps {
   readonly repository: GitHubRepository
 
   /** The commit ref (can be a SHA or a Git ref) for which to fetch status. */
+  readonly localRepository: Repository
   readonly commitRef: string
 
   /** A callback to bubble up whether there is a check displayed */
@@ -38,7 +40,11 @@ export class CIStatus extends React.PureComponent<ICIStatusProps, ICIStatusState
 
   public constructor(props: ICIStatusProps) {
     super(props)
-    const check = props.dispatcher.tryGetCommitStatus(this.props.repository, this.props.commitRef)
+    const check = props.dispatcher.tryGetCommitStatus(
+      this.props.repository,
+      this.props.localRepository,
+      this.props.commitRef
+    )
     this.state = {
       check
     }
@@ -50,6 +56,7 @@ export class CIStatus extends React.PureComponent<ICIStatusProps, ICIStatusState
 
     this.statusSubscription = this.props.dispatcher.subscribeToCommitStatus(
       this.props.repository,
+      this.props.localRepository,
       this.props.commitRef,
       this.onStatus
     )
@@ -64,10 +71,18 @@ export class CIStatus extends React.PureComponent<ICIStatusProps, ICIStatusState
 
   public override componentDidUpdate(prevProps: ICIStatusProps) {
     // Re-subscribe if we're being reused to show a different status.
-    if (this.props.repository !== prevProps.repository || this.props.commitRef !== prevProps.commitRef) {
-      this.setState({
-        check: this.props.dispatcher.tryGetCommitStatus(this.props.repository, this.props.commitRef)
-      })
+    if (
+      this.props.repository !== prevProps.repository ||
+      this.props.localRepository !== prevProps.localRepository ||
+      this.props.commitRef !== prevProps.commitRef
+    ) {
+      this.onStatus(
+        this.props.dispatcher.tryGetCommitStatus(
+          this.props.repository,
+          this.props.localRepository,
+          this.props.commitRef
+        )
+      )
       this.subscribe()
     }
   }

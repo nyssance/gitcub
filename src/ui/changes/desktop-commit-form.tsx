@@ -103,7 +103,7 @@ export function DesktopCommitForm(props: Props) {
         )
     )
   const prepopulate = files.length === 1
-  const providers = useAutocompletionProviders(props.issues, props.mentionables, props.remote, accounts)
+  const providers = useAutocompletionProviders(props.issues, props.mentionables, props.remote, accounts, props.repo)
   async function commit(context: ICommitContext) {
     if (props.unresolved || busy) return false
     setBusy(true)

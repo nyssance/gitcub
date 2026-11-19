@@ -82,8 +82,8 @@ pub fn plain_git_dir(path: &Path) -> Option<PathBuf> {
             "GIT_CONFIG_COUNT",
             "GIT_TEST_ASSUME_DIFFERENT_OWNER",
         ]
-            .iter()
-            .any(|name| std::env::var_os(name).is_some())
+        .iter()
+        .any(|name| std::env::var_os(name).is_some())
         {
             return None;
         }
@@ -213,7 +213,20 @@ mod tests {
             let path = root.join(name);
             std::fs::create_dir_all(&path).unwrap();
             git(&path, &["init", "-q", "-b", "main"]);
-            git(&path, &["-c", "user.name=T", "-c", "user.email=t@example.invalid", "commit", "-q", "--allow-empty", "-m", "base"]);
+            git(
+                &path,
+                &[
+                    "-c",
+                    "user.name=T",
+                    "-c",
+                    "user.email=t@example.invalid",
+                    "commit",
+                    "-q",
+                    "--allow-empty",
+                    "-m",
+                    "base",
+                ],
+            );
             path
         };
         let describe = |kind: RepositoryType| match kind {

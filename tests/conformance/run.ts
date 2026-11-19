@@ -103,6 +103,11 @@ const suites = [
     file: "desktop/git/refreshable-credentials-test.ts",
     globals: false,
     imports: {
+      "../../../src/models/repository": join(root, "../../src/models/repository.ts"),
+      "../../../src/models/github-repository": join(root, "../../src/models/github-repository.ts"),
+      "../../../src/models/owner": join(root, "../../src/models/owner.ts"),
+      "../../../src/lib/stores/repositories-store": join(root, "../../src/lib/stores/repositories-store.ts"),
+      "../../helpers/databases": join(root, "upstream/desktop/helpers/databases/test-repositories-database.ts"),
       "../../../src/lib/git": join(root, "../../src/lib/git-authenticated.ts"),
       "../../../src/models/account": join(root, "../../src/models/account.ts"),
       "../../../src/lib/stores/accounts-store": join(root, "../../src/lib/stores/accounts-store.ts"),
@@ -140,8 +145,7 @@ const suites = [
     unbundled: true,
     globals: false,
     imports: {
-      "../../../src/main-process/menu": join(root, "../../src/lib/menu/build-default-menu.ts"),
-      "../../../src/lib/feature-flag": join(root, "../../src/lib/desktop-features.ts")
+      "../../../src/main-process/menu": join(root, "../../src/lib/menu/build-default-menu.ts")
     }
   },
 
@@ -352,19 +356,13 @@ const suites = [
     file: "desktop/ui/welcome-and-sign-in-wrappers-test.ts",
     globals: false,
     imports: {
-      "../../../src/models/account": join(root, "../../src/models/account.ts"),
       "../../../src/lib/stores/sign-in-store": join(root, "../../src/lib/stores/sign-in-store.ts"),
       "../../../src/ui/dispatcher": join(root, "../../src/ui/sign-in-contract.ts"),
       "../../../src/ui/welcome/configure-git": join(root, "../../src/ui/welcome/configure-git.tsx"),
       "../../../src/ui/welcome/sign-in-enterprise": join(root, "../../src/ui/welcome/sign-in-enterprise.tsx"),
       "../../../src/ui/lib/sign-in": join(root, "../../src/ui/sign-in/sign-in-flow.tsx"),
       "../../../src/ui/sign-in/sign-in": join(root, "../../src/ui/sign-in/sign-in.tsx"),
-      "../../../src/lib/trampoline/trampoline-ui-helper": join(
-        root,
-        "../../src/lib/trampoline/trampoline-ui-helper.ts"
-      ),
       "../../../src/models/popup": join(root, "../../src/models/popup.ts"),
-      "../../helpers/app-store-test-harness": join(root, "upstream/desktop/helpers/app-store-test-harness.ts"),
       "../../helpers/ui/render": join(root, "upstream/desktop/helpers/ui/render.tsx")
     }
   },
@@ -694,6 +692,7 @@ const suites = [
     imports: {
       "../../../src/lib/stores/issues-store": join(root, "../../src/lib/stores/issues-store.ts"),
       "../../../src/models/github-repository": join(root, "../../src/models/github-repository.ts"),
+      "../../../src/models/repository": join(root, "../../src/models/repository.ts"),
       "../../../src/models/owner": join(root, "../../src/models/owner.ts"),
       "../../../src/ui/autocompletion/issues-autocompletion-provider": join(
         root,
@@ -725,6 +724,7 @@ const suites = [
       "../../../src/lib/api": join(root, "../../src/lib/api.ts"),
       "../../../src/lib/ci-checks/ci-checks": join(root, "../../src/lib/ci-checks/ci-checks.ts"),
       "../../../src/models/github-repository": join(root, "../../src/models/github-repository.ts"),
+      "../../../src/models/repository": join(root, "../../src/models/repository.ts"),
       "../../../src/models/owner": join(root, "../../src/models/owner.ts"),
       "../../../src/ui/branches/ci-status": join(root, "../../src/ui/branches/ci-status.tsx"),
       "../../../src/ui/dispatcher": join(root, "../../src/lib/commit-status-dispatcher.ts"),

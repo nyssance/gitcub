@@ -15,6 +15,26 @@ export function accountEquals(x: Account, y: Account) {
   return x.endpoint === y.endpoint && x.id === y.id
 }
 
+export interface IAccountIdentity {
+  readonly endpoint: string
+  readonly login: string
+}
+
+/**
+ * Get a key uniquely identifying an account by its endpoint and login.
+ *
+ * Multiple accounts can be signed in to the same endpoint, so the endpoint
+ * alone doesn't identify an account. Logins are compared case-insensitively.
+ */
+export function getAccountKey(account: IAccountIdentity): string {
+  return `${account.endpoint}/users/${account.login}`.toLowerCase()
+}
+
+/** Whether both refer to the same account, by endpoint and login. */
+export function isSameAccount(x: IAccountIdentity, y: IAccountIdentity | null | undefined): boolean {
+  return y != null && getAccountKey(x) === getAccountKey(y)
+}
+
 /**
  * A GitHub account, representing the user found on GitHub The Website or GitHub Enterprise.
  *

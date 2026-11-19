@@ -35,6 +35,8 @@ pub struct AppState {
     /// 手动加过的实例主机名（自建 GitLab 等）
     #[serde(default)]
     pub account_hosts: Vec<String>,
+    pub additional_accounts: std::collections::HashMap<String, Vec<String>>,
+    pub repository_accounts: std::collections::HashMap<String, crate::branch::RepositoryAccount>,
     /// 各实例的 OAuth client_id。**不是密钥**（设备码流程不需要 client secret），
     /// 所以进配置文件而不是钥匙串；每个自建实例的应用都不一样，写死没有意义。
     #[serde(default)]
@@ -73,6 +75,8 @@ impl Default for AppState {
             canvas_trackpad_gestures: false,
             repo_ownership: std::collections::HashMap::new(),
             account_hosts: Vec::new(),
+            additional_accounts: Default::default(),
+            repository_accounts: Default::default(),
             oauth_clients: std::collections::HashMap::new(),
             oauth_providers: std::collections::HashMap::new(),
             autolinks: Vec::new(),
@@ -144,6 +148,15 @@ pub fn prune(mut state: AppState) -> AppState {
 }
 
 pub fn merge_desktop_import(state: &mut AppState, data: crate::desktop_import::DesktopImport) {
+    state.repository_accounts.extend(data.repository_accounts);
+    for (host, logins) in data.additional_accounts {
+        let current = state.additional_accounts.entry(host).or_default();
+        for login in logins {
+            if !current.iter().any(|name| name.eq_ignore_ascii_case(&login)) {
+                current.push(login);
+            }
+        }
+    }
     for host in &data.account_hosts {
         if !state.account_hosts.contains(host) {
             state.account_hosts.push(host.clone());

@@ -105,6 +105,7 @@ export interface IEndpointEntryState extends ISignInState {
  * signing in to a GitHub Enterprise instance.
  */
 export interface IAuthenticationState extends ISignInState {
+  readonly expectedLogin?: string
   readonly kind: typeof SignInStep.Authentication
 
   /**

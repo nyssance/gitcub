@@ -2,22 +2,22 @@ import {
   CopilotClient,
   CopilotSession,
   RuntimeConnection,
-  AssistantMessageEvent,
-  MessageOptions,
   SessionConfig,
   ModelBillingTokenPrices,
   GitHubTokenProvider,
+  CopilotClientOptions,
 } from '@github/copilot-sdk'
 import { AccountsStore } from './accounts-store'
 import { Account, isDotComAccount } from '../../models/account'
 import {
   ICopilotCommitMessage,
+  CopilotCommitMessageResponseSchema,
   parseCopilotCommitMessage,
 } from '../copilot-commit-message'
-import { getCopilotPaymentRequiredErrorFromSessionError } from '../copilot-error'
 import {
   CopilotValidationError,
   ConflictResolutionSystemPrompt,
+  CopilotConflictResolutionResponseSchema,
   ICopilotConflictReference,
   IReassembledConflictResolutionResponse,
   IConflictResolutionProgress,
@@ -38,14 +38,36 @@ import {
   createCopilotInMemorySessionFsProvider,
   getCopilotInMemorySessionFsConfig,
 } from '../copilot-in-memory-session-fs-provider'
+import {
+  awaitCancellableCopilotOperation,
+  getCopilotMessageSession,
+  getCopilotPlanningClient,
+  getCopilotPlanningSession,
+  ICopilotPlanningClient,
+  sendCopilotMessageRequest,
+  sendCopilotPlanningRequest,
+} from '../copilot-operation'
+import {
+  CopilotAssistedCommitResponse,
+  getAssistedCommitClientEnvironment,
+  ICopilotAssistedCommitPlanningOptions,
+} from '../copilot-assisted-commit'
+import {
+  DefaultCopilotRequestTimeoutMs,
+  runAssistedCommitPlanningRequest,
+} from '../copilot-assisted-commit-request'
+import {
+  generateCommitMessagePromptTags,
+  getCleanedEnforcedRuleDescriptions,
+  ICommitMessagePromptTags,
+} from '../copilot-prompt'
+import { IAssistedCommitAnalysis } from '../../models/assisted-commit'
 import { getCopilotRuntimePath } from '../copilot-runtime'
 import { startTimer } from '../../ui/lib/timing'
 import { join } from 'path'
-import { randomBytes } from 'crypto'
 import { BaseStore } from './base-store'
 import { IRepoRulesMetadataRule } from '../../models/repo-rules'
 import { pathExists } from '../path-exists'
-import { enableCopilotSdkCommitMessageGeneration } from '../feature-flag'
 import type { AccountQuotaSnapshot, Model } from '../copilot/types'
 import { isGHE } from '../endpoint-capabilities'
 import {
@@ -65,12 +87,16 @@ export const DefaultCopilotModel = 'auto'
 export const DefaultConflictResolutionReasoningEffort: ReasoningEffort =
   'medium'
 
-/**
- * Default per-request timeout (in milliseconds) for Copilot SDK calls such
- * as commit message generation. Custom BYOK providers may override this
- * via {@link CopilotModelRequest.timeoutMs}.
- */
-export const DefaultCopilotRequestTimeoutMs = 60000
+export {
+  AssistedCommitCleanupTimeoutMs,
+  DefaultCopilotRequestTimeoutMs,
+} from '../copilot-assisted-commit-request'
+export {
+  generateCommitMessagePromptTags,
+  getCleanedEnforcedRuleDescriptions,
+  getEnforcedRuleDescriptions,
+  ICommitMessagePromptTags,
+} from '../copilot-prompt'
 
 /**
  * Provider configuration forwarded to the Copilot SDK when generating a
@@ -106,7 +132,10 @@ export type CopilotModelRequest =
     }
 
 /** Copilot features that support per-model selection. */
-export type CopilotFeature = 'commit-message-generation' | 'conflict-resolution'
+export type CopilotFeature =
+  | 'commit-message-generation'
+  | 'conflict-resolution'
+  | 'assisted-commit'
 
 /**
  * Stable identifiers for attributing Copilot CLI telemetry to Desktop features.
@@ -118,6 +147,7 @@ export type CopilotFeature = 'commit-message-generation' | 'conflict-resolution'
 const CopilotClientNames: Readonly<Record<CopilotFeature, string>> = {
   'commit-message-generation': 'github/desktop:commit-message-generation',
   'conflict-resolution': 'github/desktop:conflict-resolution',
+  'assisted-commit': 'github/desktop:assisted-commit',
 }
 
 /** Concrete session config produced by resolving a {@link CopilotModelRequest}. */
@@ -305,7 +335,7 @@ contents of the changeset for other developers reading the commit history.
 
 The commit description can be longer, and should provide more context about the
 changeset, including why the changeset is being made, and any other relevant
-information. The commit description is optional, so you can omit it if the
+information. The commit description is optional, so use an empty string if the
 changeset is small enough that it can be described in the commit title or if you
 don't have enough context.
 
@@ -327,80 +357,6 @@ the JSON object, just return it as plain text. For example:
   "description": "The login form was not submitting correctly. This commit fixes that issue by adding a missing \`name\` attribute to the submit button."
 }
 `
-
-/**
- * Returns the human-readable descriptions of all rules that github.com
- * will evaluate when the user pushes the commit. This includes rules the
- * current user is permitted to bypass (since github.com still evaluates
- * them) but excludes rules that are not enforced for the current user.
- *
- * Exported for testing.
- */
-export function getEnforcedRuleDescriptions(
-  rules: ReadonlyArray<IRepoRulesMetadataRule>
-): ReadonlyArray<string> {
-  return rules
-    .filter(r => r.enforced === true || r.enforced === 'bypass')
-    .map(r => r.humanDescription)
-}
-
-/**
- * Strips control characters (including newlines) and surrounding whitespace
- * from a single rule description so it renders as a single bullet line and
- * can't fragment the surrounding delimited block.
- */
-function sanitizeRuleDescription(description: string): string {
-  return description.replace(/[\u0000-\u001F\u007F]+/g, ' ').trim()
-}
-
-/**
- * Returns the cleaned, deduplicated, non-empty rule descriptions that should
- * be embedded in the commit-message user prompt. Combines
- * {@link getEnforcedRuleDescriptions} with sanitisation so callers (the
- * user-prompt builder and the system-prompt `hasRules` decision) operate on
- * the exact same set and can't drift apart.
- *
- * Exported for testing.
- */
-export function getCleanedEnforcedRuleDescriptions(
-  rules: ReadonlyArray<IRepoRulesMetadataRule> | undefined
-): ReadonlyArray<string> {
-  if (!rules) {
-    return []
-  }
-
-  const descriptions = getEnforcedRuleDescriptions(rules)
-  return [...new Set(descriptions.map(sanitizeRuleDescription))].filter(
-    d => d.length > 0
-  )
-}
-
-/**
- * Per-request delimiter tags used to wrap untrusted user-prompt sections so
- * the model can distinguish data from instructions. Generated fresh for each
- * commit-message generation request so untrusted content can't predict (and
- * therefore can't close) the wrapping tags.
- */
-export interface ICommitMessagePromptTags {
-  readonly diffOpen: string
-  readonly diffClose: string
-  readonly repoRulesOpen: string
-  readonly repoRulesClose: string
-}
-
-/**
- * Generates a fresh set of {@link ICommitMessagePromptTags} for one Copilot
- * session. Exported for testing.
- */
-export function generateCommitMessagePromptTags(): ICommitMessagePromptTags {
-  const token = randomBytes(8).toString('hex')
-  return {
-    diffOpen: `<diff-${token}>`,
-    diffClose: `</diff-${token}>`,
-    repoRulesOpen: `<repo-rules-${token}>`,
-    repoRulesClose: `</repo-rules-${token}>`,
-  }
-}
 
 /**
  * Builds the system prompt to use for commit message generation. When the
@@ -662,11 +618,11 @@ interface IRunConflictResolutionTurnOptions {
  * Supports real cancellation via an `AbortSignal`: when the signal aborts, the
  * turn is torn down immediately — all listeners are removed and the promise is
  * rejected with a {@link CopilotConflictResolutionAbortError}. The session is
- * always destroyed exactly once before this function returns, whether the turn
+ * always disconnected exactly once before this function returns, whether the turn
  * succeeded, failed, or was aborted.
  *
- * Note: destroying the session tears down the local SDK turn immediately;
- * whether the backend stops generating depends on the SDK's `destroy()`
+ * Note: disconnecting the session tears down the local SDK turn immediately;
+ * whether the backend stops generating depends on the SDK's `disconnect()`
  * semantics.
  */
 export async function runConflictResolutionTurn(
@@ -675,90 +631,52 @@ export async function runConflictResolutionTurn(
   options: IRunConflictResolutionTurnOptions
 ): Promise<string> {
   const { timeoutMs, signal, onReasoningSnippet } = options
-
+  const deadline = new AbortController()
+  const turnSignal =
+    signal === undefined
+      ? deadline.signal
+      : AbortSignal.any([signal, deadline.signal])
+  const cancellationError = () =>
+    signal?.aborted
+      ? new CopilotConflictResolutionAbortError()
+      : new Error('Copilot conflict resolution timed out')
+  const timer = setTimeout(() => deadline.abort(), timeoutMs)
+  const unsubs: Array<() => void> = []
+  let reasoningBuffer = ''
+  const sentenceTerminator = /(?<!\d)([.!?])\s+|\n+/
+  const flushReasoning = (force: boolean) => {
+    while (true) {
+      const match = sentenceTerminator.exec(reasoningBuffer)
+      if (match === null) {
+        break
+      }
+      const end = match.index + match[0].length
+      const sentence = reasoningBuffer.slice(0, end).trim()
+      reasoningBuffer = reasoningBuffer.slice(end)
+      if (sentence.length > 0) {
+        if (__DEV__) {
+          log.info(`[Copilot SDK] reasoning sentence: ${sentence}`)
+        }
+        onReasoningSnippet?.(sentence)
+      }
+    }
+    if (force && reasoningBuffer.trim().length > 0) {
+      if (__DEV__) {
+        log.info(
+          `[Copilot SDK] reasoning sentence (forced): ${reasoningBuffer.trim()}`
+        )
+      }
+      onReasoningSnippet?.(reasoningBuffer.trim())
+      reasoningBuffer = ''
+    }
+  }
   try {
-    return await new Promise<string>((resolve, reject) => {
-      let settled = false
-      let reasoningBuffer = ''
-
-      // Unsub handles are collected here as listeners are attached, so
-      // `cleanup()` is safe to call from any early path (e.g. an already-aborted
-      // signal, where the array is still empty).
-      const unsubs: Array<() => void> = []
-
-      // Match a sentence terminator (`.`, `!`, `?`, or newline) — when we see
-      // one, flush the accumulated reasoning text as a single user-facing
-      // snippet. Negative lookbehind for digits avoids splitting list markers
-      // like `1. ` mid-sentence.
-      const sentenceTerminator = /(?<!\d)([.!?])\s+|\n+/
-
-      const flushReasoning = (force: boolean) => {
-        while (true) {
-          const match = sentenceTerminator.exec(reasoningBuffer)
-          if (match === null) {
-            break
-          }
-          const end = match.index + match[0].length
-          const sentence = reasoningBuffer.slice(0, end).trim()
-          reasoningBuffer = reasoningBuffer.slice(end)
-          if (sentence.length > 0) {
-            if (__DEV__) {
-              log.info(`[Copilot SDK] reasoning sentence: ${sentence}`)
-            }
-            onReasoningSnippet?.(sentence)
-          }
-        }
-        if (force && reasoningBuffer.trim().length > 0) {
-          if (__DEV__) {
-            log.info(
-              `[Copilot SDK] reasoning sentence (forced): ${reasoningBuffer.trim()}`
-            )
-          }
-          onReasoningSnippet?.(reasoningBuffer.trim())
-          reasoningBuffer = ''
-        }
-      }
-
-      // Remove every subscription, the timeout, and the abort listener. Called
-      // once, from finish(), which gates on `settled`.
-      const cleanup = () => {
-        clearTimeout(timer)
-        signal?.removeEventListener('abort', onAbort)
-        for (const unsub of unsubs) {
-          unsub()
-        }
-      }
-
-      // Run a terminal action (resolve/reject) at most once, cleaning up first.
-      const finish = (action: () => void) => {
-        if (settled) {
-          return
-        }
-        settled = true
-        cleanup()
-        action()
-      }
-
-      const onAbort = () => {
-        finish(() => reject(new CopilotConflictResolutionAbortError()))
-      }
-
-      const timer = setTimeout(() => {
-        finish(() => reject(new Error('Copilot conflict resolution timed out')))
-      }, timeoutMs)
-
-      // If the signal already aborted before we got here, tear down now. The
-      // outer `finally` still destroys the session.
-      if (signal?.aborted) {
-        onAbort()
-        return
-      }
-      signal?.addEventListener('abort', onAbort)
-
-      // Stream the model's extended-thinking text sentence-by-sentence so the
-      // UI can show what Copilot is currently reasoning about.
-      unsubs.push(
-        session.on('assistant.reasoning_delta', event => {
+    if (turnSignal.aborted) {
+      throw cancellationError()
+    }
+    unsubs.push(
+      session.on('assistant.reasoning_delta', event => {
+        if (event.agentId === undefined) {
           if (__DEV__) {
             log.info(
               `[Copilot SDK] reasoning_delta: ${JSON.stringify(
@@ -768,45 +686,32 @@ export async function runConflictResolutionTurn(
           }
           reasoningBuffer += event.data.deltaContent
           flushReasoning(false)
-        })
-      )
-
-      // First message_delta marks the transition into the actual response (the
-      // JSON payload). Flush any leftover reasoning so it isn't stranded —
-      // idempotent once the reasoning buffer is empty.
-      unsubs.push(
-        session.on('assistant.message_delta', () => {
+        }
+      }),
+      session.on('assistant.message_delta', event => {
+        if (event.agentId === undefined) {
           flushReasoning(true)
-        })
-      )
-
-      // The assistant.message event contains the complete, final response
-      // content. This is the authoritative source — NOT the accumulated deltas.
-      unsubs.push(
-        session.on('assistant.message', event => {
-          const content = event.data.content
-          if (!content) {
-            finish(() => reject(new Error('No response from Copilot')))
-          } else {
-            finish(() => resolve(content))
-          }
-        })
-      )
-
-      unsubs.push(
-        session.on('session.error', event => {
-          finish(() =>
-            reject(new Error(`Copilot error: ${event.data.message}`))
-          )
-        })
-      )
-
-      // Send the prompt (fire-and-forget; events drive completion)
-      session.send({ prompt }).catch(err => {
-        finish(() => reject(err))
+        }
       })
-    })
+    )
+    const response = await sendCopilotPlanningRequest(
+      getCopilotPlanningSession(session),
+      { prompt, responseSchema: CopilotConflictResolutionResponseSchema },
+      turnSignal,
+      cancellationError,
+      data => new Error(`Copilot error: ${data.message}`)
+    )
+    if (turnSignal.aborted) {
+      throw cancellationError()
+    }
+    if (!response?.data.content) {
+      throw new Error('No response from Copilot')
+    }
+    flushReasoning(true)
+    return response.data.content
   } finally {
+    clearTimeout(timer)
+    unsubs.forEach(unsubscribe => unsubscribe())
     await session.disconnect().catch(() => {})
   }
 }
@@ -903,7 +808,8 @@ export class CopilotStore extends BaseStore {
     repositoryPath?: string,
     credentials: ICopilotCredentialContext = this.createCredentialContext(
       account
-    )
+    ),
+    options: Pick<CopilotClientOptions, 'logLevel' | 'env'> = {}
   ): Promise<CopilotClient> {
     const runtimePath = getCopilotRuntimePath(join(__dirname, 'copilot'))
     if (!(await pathExists(runtimePath))) {
@@ -922,12 +828,14 @@ export class CopilotStore extends BaseStore {
         path: runtimePath,
       }),
       env: {
+        ...options.env,
         GH_HOST: getCopilotGHHost(account),
         GITHUB_COPILOT_INTEGRATION_ID: `copilot-desktop${
           __DEV__ ? '-dev' : ''
         }`,
       },
       workingDirectory: repositoryPath,
+      logLevel: options.logLevel,
       sessionFs: getCopilotInMemorySessionFsConfig(
         repositoryPath,
         __WIN32__ ? 'windows' : 'posix'
@@ -940,11 +848,28 @@ export class CopilotStore extends BaseStore {
     return client
   }
 
+  /** Preserve custom instructions without discovering hooks, config, or skills. */
   private createSession(client: CopilotClient, config: SessionConfig) {
+    const provider = config.provider
+    // The runtime reserves 'auto' for Copilot routing. Use a session alias
+    // for custom providers where, for whatever reason, the model is named 'auto',
+    // while keeping the provider's actual model name on the wire.
+    const isProviderAuto = provider !== undefined && config.model === 'auto'
+
     return client.createSession({
       ...config,
+      enableFileHooks: false,
+      enableConfigDiscovery: false,
+      enableSkills: false,
+      model: isProviderAuto ? 'byok-auto' : config.model,
+      provider: isProviderAuto
+        ? {
+            ...provider,
+            wireModel: provider.wireModel ?? config.model,
+          }
+        : provider,
       gitHubTokenProvider:
-        config.provider === undefined
+        provider === undefined
           ? this.clientTokenProviders.get(client)
           : undefined,
     })
@@ -964,171 +889,85 @@ export class CopilotStore extends BaseStore {
     })
   }
 
+  /** Whether the packaged SDK runtime needed for assisted commit planning is installed. */
+  public async isAssistedCommitRuntimeAvailable(): Promise<boolean> {
+    return pathExists(getCopilotRuntimePath(join(__dirname, 'copilot')))
+  }
+
+  /** Reuse current session-bound authentication with the planner's isolated runtime policy. */
+  protected async createAssistedCommitClient(
+    account: Account,
+    repositoryPath: string
+  ): Promise<ICopilotPlanningClient> {
+    const client = await this.createClient(
+      account,
+      repositoryPath,
+      this.createCredentialContext(account),
+      {
+        logLevel: 'none',
+        env: getAssistedCommitClientEnvironment(),
+      }
+    )
+    return getCopilotPlanningClient(client, config =>
+      this.createSession(client, config)
+    )
+  }
+
   private async createCancellableSession(
     client: CopilotClient,
     config: SessionConfig,
-    signal?: AbortSignal
-  ): Promise<CopilotSession> {
-    return this.withCancellation(
-      () => this.createSession(client, config),
-      signal,
-      session => session.disconnect()
-    )
-  }
-
-  /** Cancel this waiter without aborting shared renewal or model discovery. */
-  private async withCancellation<T>(
-    action: () => Promise<T>,
     signal: AbortSignal | undefined,
-    onCancelledResult?: (result: T) => void | Promise<void>
-  ): Promise<T> {
-    if (signal?.aborted) {
-      throw new CommitMessageGenerationCancelledError()
-    }
-
-    const operation = action()
-    if (signal === undefined) {
-      return operation
-    }
-
-    let resultWasReturned = false
-    let resultWasDiscarded = false
-    const discardResult = async (result: T) => {
-      if (resultWasDiscarded) {
-        return
+    cancellationError: () => Error
+  ): Promise<CopilotSession> {
+    return awaitCancellableCopilotOperation(
+      () => this.createSession(client, config),
+      {
+        signal,
+        cancellationError,
+        disposeLateValue: session => session.disconnect(),
       }
-      resultWasDiscarded = true
-      try {
-        await onCancelledResult?.(result)
-      } catch (error) {
-        log.error('CopilotStore: Failed to clean up cancelled operation', error)
-      }
-    }
-    // The race observes failures; this handler only owns abandoned results.
-    void operation.then(
-      result => {
-        if (signal.aborted && !resultWasReturned) {
-          void discardResult(result)
-        }
-      },
-      () => {}
     )
-
-    let rejectAbort: ((error: Error) => void) | null = null
-    const abortPromise = new Promise<never>((_, reject) => {
-      rejectAbort = reject
-    })
-
-    const onAbort = () => {
-      rejectAbort?.(new CommitMessageGenerationCancelledError())
-    }
-
-    signal.addEventListener('abort', onAbort)
-
-    try {
-      if (signal.aborted) {
-        onAbort()
-      }
-
-      const result = await Promise.race([operation, abortPromise])
-      if (signal.aborted) {
-        void discardResult(result)
-        throw new CommitMessageGenerationCancelledError()
-      }
-      resultWasReturned = true
-      return result
-    } catch (error) {
-      if (signal.aborted) {
-        throw new CommitMessageGenerationCancelledError()
-      }
-
-      throw error
-    } finally {
-      signal.removeEventListener('abort', onAbort)
-    }
   }
 
   /**
-   * Sends a prompt on the given session and waits for the assistant
-   * response, while capturing any `session.error` events emitted during
-   * the round-trip.
+   * Propose messages and exact opaque-ID ownership for frozen selected changes.
    *
-   * If the SDK emits a `session.error` whose upstream HTTP status code is
-   * 402 (Payment Required), the corresponding `CopilotError` is thrown
-   * instead of whatever {@link CopilotSession.sendAndWait} would have
-   * rejected with — the underlying rejection is intentionally swallowed
-   * because the SDK surfaces the same failure twice (once on the event
-   * channel, once on the awaited promise) and only the parsed 402 error
-   * carries actionable billing metadata for the UI.
-   *
-   * Any other `session.error` event is logged and otherwise ignored so
-   * the original `sendAndWait` rejection (or success) is propagated
-   * unchanged.
+   * This method never reads selected files, changes CommitMessage drafts, or
+   * mutates Git. Use the caller-selected assisted-commit model and existing
+   * account eligibility/consent gates. Pass its response to planAssistedCommits,
+   * which checks every cumulative tree before integration may execute anything.
+   * Empty selections must bypass this method with an explicit caller title.
    */
-  private async sendAndWait(
-    session: CopilotSession,
-    options: MessageOptions,
-    timeoutMs: number,
-    signal?: AbortSignal
-  ): Promise<AssistantMessageEvent | undefined> {
-    let paymentRequiredError: Error | undefined
-    let rejectAbort: ((error: Error) => void) | null = null
-
-    const abortPromise = new Promise<never>((_, reject) => {
-      rejectAbort = reject
-    })
-
-    const onAbort = () => {
-      rejectAbort?.(new CommitMessageGenerationCancelledError())
-    }
-
-    const unsubscribe = session.on('session.error', e => {
-      const captured = getCopilotPaymentRequiredErrorFromSessionError(e.data)
-      if (captured !== null) {
-        paymentRequiredError = captured
-      } else {
-        const sessionError = new Error(e.data.message)
-        if (e.data.stack !== undefined) {
-          sessionError.stack = e.data.stack
+  public async proposeAssistedCommitPlan(
+    account: Account,
+    analysis: IAssistedCommitAnalysis,
+    repositoryPath: string,
+    options: ICopilotAssistedCommitPlanningOptions = {}
+  ): Promise<CopilotAssistedCommitResponse> {
+    return runAssistedCommitPlanningRequest(analysis, repositoryPath, options, {
+      createClient: () =>
+        this.createAssistedCommitClient(account, repositoryPath),
+      resolveModel: () => {
+        const request = options.request
+        if (request?.kind === 'byok') {
+          return {
+            model: request.modelId,
+            reasoningEffort: request.reasoningEffort,
+            provider: request.provider,
+          }
         }
-
-        log.error(
-          `CopilotStore: Session error (${e.data.errorType})`,
-          sessionError
-        )
-      }
-    })
-
-    signal?.addEventListener('abort', onAbort)
-
-    try {
-      if (signal?.aborted) {
-        onAbort()
-        throw new CommitMessageGenerationCancelledError()
-      }
-
-      const response = session.sendAndWait(options, timeoutMs).catch(e => {
-        if (signal?.aborted) {
-          throw new CommitMessageGenerationCancelledError()
+        const models = this.getCachedModelList(account)
+        const requested = request?.modelId
+        const resolved = requested
+          ? models?.find(model => model.id === requested)
+          : getPreferredDefaultModel(models ?? [])
+        return {
+          model: resolved?.id ?? requested ?? DefaultCopilotModel,
+          reasoningEffort: undefined,
+          provider: undefined,
         }
-
-        throw paymentRequiredError ?? e
-      })
-      void response.catch(() => {})
-
-      return signal === undefined
-        ? await response
-        : await Promise.race([response, abortPromise])
-    } catch (e) {
-      if (signal?.aborted) {
-        throw new CommitMessageGenerationCancelledError()
-      }
-
-      throw e
-    } finally {
-      signal?.removeEventListener('abort', onAbort)
-      unsubscribe()
-    }
+      },
+    })
   }
 
   /**
@@ -1183,9 +1022,12 @@ export class CopilotStore extends BaseStore {
     } else {
       const requestedModelId =
         request?.kind === 'copilot' ? request.modelId : null
-      const cachedModels = await this.withCancellation(
+      const cachedModels = await awaitCancellableCopilotOperation(
         () => this.getCachedModels(account),
-        signal
+        {
+          signal,
+          cancellationError: () => new CommitMessageGenerationCancelledError(),
+        }
       )
       throwIfCancelled()
       const resolvedModel = requestedModelId
@@ -1205,10 +1047,13 @@ export class CopilotStore extends BaseStore {
       null
 
     try {
-      client = await this.withCancellation(
+      client = await awaitCancellableCopilotOperation(
         () => this.createClient(account, repositoryPath, credentials),
-        signal,
-        lateClient => this.stopClient(lateClient)
+        {
+          signal,
+          cancellationError: () => new CommitMessageGenerationCancelledError(),
+          disposeLateValue: lateClient => this.stopClient(lateClient),
+        }
       )
       throwIfCancelled()
 
@@ -1240,7 +1085,8 @@ export class CopilotStore extends BaseStore {
             kind: 'reject',
           }),
         },
-        signal
+        signal,
+        () => new CommitMessageGenerationCancelledError()
       )
 
       throwIfCancelled()
@@ -1255,11 +1101,17 @@ export class CopilotStore extends BaseStore {
         cleanedRuleDescriptions
       )
 
-      const response = await this.sendAndWait(
-        session,
-        { prompt: userPrompt },
+      const response = await sendCopilotMessageRequest(
+        getCopilotMessageSession(session),
+        {
+          prompt: userPrompt,
+          responseSchema: CopilotCommitMessageResponseSchema,
+        },
         timeoutMs,
-        signal
+        {
+          signal,
+          cancellationError: () => new CommitMessageGenerationCancelledError(),
+        }
       )
 
       throwIfCancelled()
@@ -1386,14 +1238,17 @@ export class CopilotStore extends BaseStore {
     const clientTimer = startTimer('createClient')
     let client: CopilotClient
     try {
-      client = await this.withCancellation(
+      client = await awaitCancellableCopilotOperation(
         () => this.createClient(account, repositoryPath),
-        signal,
-        lateClient => this.stopClient(lateClient)
+        {
+          signal,
+          cancellationError: () => new CopilotConflictResolutionAbortError(),
+          disposeLateValue: lateClient => this.stopClient(lateClient),
+        }
       )
     } catch (error) {
-      if (error instanceof CommitMessageGenerationCancelledError) {
-        throw new CopilotConflictResolutionAbortError()
+      if (isCopilotConflictResolutionAbortError(error)) {
+        throw error
       }
       throw new CopilotConflictResolutionError(error, 'create-client')
     }
@@ -1571,7 +1426,8 @@ export class CopilotStore extends BaseStore {
               kind: 'reject',
             }),
           },
-          signal
+          signal,
+          () => new CopilotConflictResolutionAbortError()
         )
         sessionTimer.done()
 
@@ -1619,9 +1475,6 @@ export class CopilotStore extends BaseStore {
           references: parsed.references,
         }
       } catch (e) {
-        if (e instanceof CommitMessageGenerationCancelledError) {
-          throw new CopilotConflictResolutionAbortError()
-        }
         lastError = e instanceof Error ? e : new Error(String(e))
         lastStage = stage
 
@@ -1680,19 +1533,16 @@ export class CopilotStore extends BaseStore {
    * Lists the available Copilot models for the account from the SDK, using a
    * cached result if it is less than {@link ModelListCacheTTL} old.
    *
-   * Returns `null` when the model list is unavailable (the account cannot use
-   * the SDK, it is no longer signed in, or the SDK fetch failed and we have no
-   * prior cache). Callers should distinguish this from an empty array, which
+   * Returns `null` when the model list is unavailable (the account is no longer
+   * signed in, or the SDK fetch failed and we have no prior cache).
+   * Callers should distinguish this from an empty array, which
    * would mean Copilot legitimately reports no models.
    */
   public async listModels(
     account: Account
   ): Promise<ReadonlyArray<Model> | null> {
     const key = getCopilotModelCacheKey(account)
-    if (
-      !this.signedInAccountKeys.has(key) ||
-      !enableCopilotSdkCommitMessageGeneration(account)
-    ) {
+    if (!this.signedInAccountKeys.has(key)) {
       return null
     }
 
@@ -1715,10 +1565,7 @@ export class CopilotStore extends BaseStore {
     account: Account
   ): Promise<CopilotQuotaSnapshots | null> {
     const key = getCopilotAccountCacheKey(account)
-    if (
-      !this.signedInAccountKeys.has(key) ||
-      !enableCopilotSdkCommitMessageGeneration(account)
-    ) {
+    if (!this.signedInAccountKeys.has(key)) {
       return null
     }
 

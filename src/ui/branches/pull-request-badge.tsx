@@ -8,7 +8,7 @@ import { CIStatusIcon } from "../pull-requests/ci-status-icon"
 
 /** Desktop pull-request-badge.tsx：分支按钮里当前分支的 PR 编号与 CI 状态。
  *  有 CI 状态时才可点，点开检查项弹层（原版 CICheckRunPopover，本项目是 NativeChecks）。 */
-export function PullRequestBadge({ request, remote }: { request: PullRequest; remote: Remote }) {
+export function PullRequestBadge({ repo, request, remote }: { repo?: string; request: PullRequest; remote: Remote }) {
   const { t } = useTranslation()
   const badge = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
@@ -33,6 +33,7 @@ export function PullRequestBadge({ request, remote }: { request: PullRequest; re
       {open && badge.current && (
         <NativeChecks
           key={`${remote.host}/${remote.owner}/${remote.name}/${request.headSha}`}
+          repo={repo}
           remote={remote}
           request={request}
           anchor={badge.current}

@@ -87,6 +87,80 @@ async fn authenticated(host: &str) -> Result<(Account, String), String> {
     authenticated_with(host, false).await
 }
 
+pub async fn verify_login(host: &str, token: &str, kind: Kind) -> Result<String, String> {
+    let found = credentials::Found { token: token.to_owned(), source: Source::Settings, kind: Some(kind) };
+    identify_uncached(host, &found)
+        .await?
+        .login
+        .filter(|login| !login.is_empty())
+        .ok_or_else(|| "Missing account login".into())
+}
+
+#[tauri::command]
+pub async fn add_account_token(host: String, token: String, kind: Kind) -> Result<String, String> {
+    let login = verify_login(&host, &token, kind).await?;
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::oauth::change_account(&host, || crate::settings::save_profile(&host, &login, &token))?;
+        Ok(login)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+pub async fn remove_account_token(host: String, login: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::oauth::change_account(&host, || crate::settings::save_profile(&host, &login, ""))
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+async fn authenticate_repository(
+    host: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<(Account, String), String> {
+    match profile {
+        Some(profile) => repository_auth(host, profile).await,
+        None => authenticated(host).await,
+    }
+}
+
+pub async fn repository_auth(
+    host: &str, profile: &crate::branch::RepositoryAccount,
+) -> Result<(Account, String), String> {
+    if profile.host != host {
+        return Err("The repository account belongs to a different instance".into());
+    }
+    let (identity, token) = if profile.primary {
+        authenticated(host).await?
+    } else {
+        let token = crate::settings::profile_token(profile.host.clone(), profile.login.clone()).await?;
+        let found = credentials::Found { token, source: Source::Settings, kind: None };
+        (identify(host, &found, false).await?, found.token)
+    };
+    if !identity.login.as_ref().is_some_and(|name| name.eq_ignore_ascii_case(&profile.login)) {
+        return Err("The repository account no longer matches its credential".into());
+    }
+    Ok((identity, token))
+}
+
+pub async fn selected_clone_token(host: &str, selected: &crate::branch::CloneAccount) -> Result<String, String> {
+    let (account, token) = authenticated(host).await?;
+    let endpoint = match account.kind {
+        Some(Kind::Github) if host == "github.com" => crate::host_url::DOT_COM_API_ENDPOINT.to_owned(),
+        Some(Kind::Github) if host.ends_with(".ghe.com") => format!("https://api.{host}"),
+        Some(Kind::Github) => format!("https://{host}/api/v3"),
+        Some(Kind::Gitlab) => format!("https://{host}/api/v4"),
+        None => return Err("Unknown account provider".into()),
+    };
+    if selected.endpoint.trim_end_matches('/') != endpoint
+        || !account.login.as_ref().is_some_and(|login| login.eq_ignore_ascii_case(&selected.login))
+    {
+        return Err("The selected account is unavailable for this clone destination".into());
+    }
+    Ok(token)
+}
+
 async fn authenticated_with(host: &str, refresh: bool) -> Result<(Account, String), String> {
     crate::oauth::refresh(host).await?;
     let found = credentials::find_async(host).await.ok_or_else(|| format!("{host} 还没登录"))?;
@@ -379,8 +453,10 @@ pub struct PullRequest {
 }
 
 /// 某个仓库的开放 PR / MR 列表。
-pub async fn pull_requests(host: &str, owner: &str, name: &str) -> Result<Vec<PullRequest>, String> {
-    let (account, token) = authenticated(host).await?;
+pub async fn pull_requests(
+    host: &str, owner: &str, name: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<Vec<PullRequest>, String> {
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
 
     match kind {
@@ -634,8 +710,10 @@ pub struct Issue {
     pub title: String,
 }
 
-pub async fn issues(host: &str, owner: &str, name: &str) -> Result<Vec<Issue>, String> {
-    let (account, token) = authenticated(host).await?;
+pub async fn issues(
+    host: &str, owner: &str, name: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<Vec<Issue>, String> {
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
 
     let url = match kind {
@@ -676,8 +754,10 @@ pub struct MentionableUser {
 }
 
 /// Desktop `API.fetchMentionables`：GitHub 走 mentionables 接口；GitLab 对应的是项目里能被 @ 的用户
-pub async fn mentionables(host: &str, owner: &str, name: &str) -> Result<Vec<MentionableUser>, String> {
-    let (account, token) = authenticated(host).await?;
+pub async fn mentionables(
+    host: &str, owner: &str, name: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<Vec<MentionableUser>, String> {
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     let items = match kind {
         Kind::Github => {
@@ -724,8 +804,10 @@ fn mentionable_user(host: &str, kind: Kind, item: &serde_json::Value) -> Option<
 
 /// 手填共同作者用户名的精确解析。GitHub 由前端 Desktop GitHubUserStore.getByLogin 处理；
 /// GitLab 账号不在 Desktop 账号库里，在这里按用户名查。查不到是 None，不是错误
-pub async fn mentionable_user_by_login(host: &str, login: &str) -> Result<Option<MentionableUser>, String> {
-    let (account, token) = authenticated(host).await?;
+pub async fn mentionable_user_by_login(
+    host: &str, login: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<Option<MentionableUser>, String> {
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     if kind != Kind::Gitlab {
         return Ok(None);
@@ -821,8 +903,10 @@ pub enum CheckRetry {
     GitlabJob { id: u64 },
 }
 
-pub async fn check_runs(host: &str, owner: &str, name: &str, sha: &str) -> Result<Vec<CheckRun>, String> {
-    let (account, token) = authenticated(host).await?;
+pub async fn check_runs(
+    host: &str, owner: &str, name: &str, sha: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<Vec<CheckRun>, String> {
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     if kind == Kind::Gitlab {
         let project = urlencoding(&format!("{owner}/{name}"));
@@ -914,9 +998,9 @@ pub async fn check_runs(host: &str, owner: &str, name: &str, sha: &str) -> Resul
 /// Desktop rerun dialog: read eligibility only when the user opens confirmation.
 /// A failed eligibility request leaves the dialog retryable; it does not start CI.
 pub async fn check_rerun_eligibility(
-    host: &str, owner: &str, name: &str, checks: Vec<CheckRun>,
+    host: &str, owner: &str, name: &str, checks: Vec<CheckRun>, profile: Option<&crate::branch::RepositoryAccount>,
 ) -> Result<Vec<u64>, String> {
-    let (account, token) = authenticated(host).await?;
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or("Unknown hosting platform")?;
     let mut eligible = Vec::new();
     let mut suites = HashMap::new();
@@ -1067,8 +1151,9 @@ fn check_rerun_endpoint(
 
 pub async fn rerun_check(
     host: &str, owner: &str, name: &str, target: CheckRetry, mode: &str, job_id: Option<u64>,
+    profile: Option<&crate::branch::RepositoryAccount>,
 ) -> Result<(), String> {
-    let (account, token) = authenticated(host).await?;
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     let url = check_rerun_endpoint(host, owner, name, kind, target, mode, job_id)?;
     post(&url, &token, &serde_json::json!({})).await.map(|_| ())
@@ -1112,8 +1197,10 @@ pub async fn create_pull_request(
 }
 
 /// 在远端建一个空仓库，用于「发布」本地仓库。返回克隆地址。
-pub async fn create_remote_repo(host: &str, name: &str, private: bool) -> Result<String, String> {
-    let (account, token) = authenticated(host).await?;
+pub async fn create_remote_repo(
+    host: &str, name: &str, private: bool, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<String, String> {
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
 
     let (url, payload, link_field) = match kind {
@@ -1261,8 +1348,10 @@ pub async fn desktop_session(host: &str) -> Result<Option<(String, String)>, Str
 }
 
 /// Desktop getNonForkGitHubRepository: fork contributions default to their parent.
-pub async fn pull_request_repository(host: &str, owner: &str, name: &str) -> Result<crate::remote::Remote, String> {
-    let (account, token) = authenticated(host).await?;
+pub async fn pull_request_repository(
+    host: &str, owner: &str, name: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<crate::remote::Remote, String> {
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     let url = match kind {
         Kind::Github => format!("{}/repos/{}/{}", github_base(host), urlencoding(owner), urlencoding(name)),
@@ -1289,12 +1378,12 @@ fn contribution_repository(
 
 /// Resolve the source repository, not just its potentially ambiguous branch name.
 pub async fn pull_request_source(
-    host: &str, owner: &str, name: &str, number: u64,
+    host: &str, owner: &str, name: &str, number: u64, profile: Option<&crate::branch::RepositoryAccount>,
 ) -> Result<serde_json::Value, String> {
     if number == 0 {
         return Err("Invalid pull request number".into());
     }
-    let (account, token) = authenticated(host).await?;
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     let (project, branch) = match kind {
         Kind::Github => {
@@ -1328,11 +1417,13 @@ fn source_within(clone_url: &str, host: &str) -> Option<crate::remote::Remote> {
 }
 
 /// Repository metadata for the platform's native pull-request creation page.
-pub async fn pull_request_targets(remote: &crate::remote::Remote) -> Result<serde_json::Value, String> {
+pub async fn pull_request_targets(
+    remote: &crate::remote::Remote, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<serde_json::Value, String> {
     let host = &remote.host;
     let owner = &remote.owner;
     let name = &remote.name;
-    let (account, token) = authenticated(host).await?;
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     let base = match kind {
         Kind::Github => format!("{}/repos/{}/{}", github_base(host), urlencoding(owner), urlencoding(name)),
@@ -1364,9 +1455,11 @@ pub async fn pull_request_targets(remote: &crate::remote::Remote) -> Result<serd
     Ok(serde_json::json!({"kind": kind, "sourceId": source["id"], "remote": remote, "targets": targets}))
 }
 
-pub async fn branch_policy(remote: &crate::remote::Remote, branch: &str) -> Result<serde_json::Value, String> {
+pub async fn branch_policy(
+    remote: &crate::remote::Remote, branch: &str, profile: Option<&crate::branch::RepositoryAccount>,
+) -> Result<serde_json::Value, String> {
     let host = &remote.host;
-    let (account, token) = authenticated(host).await?;
+    let (account, token) = authenticate_repository(host, profile).await?;
     let kind = account.kind.ok_or_else(|| format!("无法识别 {host} 的托管平台"))?;
     let base = match kind {
         Kind::Github => {

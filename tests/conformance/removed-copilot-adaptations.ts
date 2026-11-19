@@ -1,6 +1,13 @@
 /** Explicit scope change: Copilot was removed at the user's request on 2026-10-21.
  * Snapshots stay unchanged. Shared suites retain all non-Copilot assertions. */
 export function withoutRemovedCopilot(file: string, source: string): string {
+  if (file === "desktop/repository-state-cache-test.ts") {
+    const firstCommonImport = source.indexOf("import { describe, it } from 'node:test'")
+    const assistedSuite = source.indexOf("describe('repository state transfer during assisted runs'")
+    if (firstCommonImport === -1 || assistedSuite === -1)
+      throw new Error("Review upstream repository-state-cache test boundaries")
+    return source.slice(firstCommonImport, assistedSuite)
+  }
   if (file === "desktop/oauth-authentication-test.ts") {
     // Token exchange + profile + emails + flags; the Copilot GraphQL call was removed.
     return source.replaceAll("harness.fetchMock.mock.callCount(), 5", "harness.fetchMock.mock.callCount(), 4")

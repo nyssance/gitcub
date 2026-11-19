@@ -41,6 +41,7 @@ export class Repository {
   public readonly workflowPreferences: WorkflowPreferences
   public readonly isTutorialRepository: boolean
   public readonly gitDir: string | undefined
+  public readonly login: string | null
   public readonly mainWorktreePath: string | undefined
 
   public constructor(
@@ -72,8 +73,10 @@ export class Repository {
      * it, so the worktree set is not always discoverable after the fact. This
      * records the main worktree while it is still known.
      */
-    mainWorktreePath: string | undefined = undefined
+    mainWorktreePath: string | undefined = undefined,
+    login: string | null = null
   ) {
+    this.login = login
     this.path = path
     this.id = id
     this.gitHubRepository = gitHubRepository
@@ -93,7 +96,8 @@ export class Repository {
       this.missing,
       this.alias,
       this.workflowPreferences.forkContributionTarget,
-      this.isTutorialRepository
+      this.isTutorialRepository,
+      this.login
     )
   }
 
@@ -106,6 +110,10 @@ export class Repository {
   public get resolvedGitDir(): string {
     return this.gitDir ?? Path.join(this.path, ".git")
   }
+}
+
+export function getRepositoryStateKey(repository: Repository): string {
+  return repository.id < 0 ? `hash:${repository.hash}` : `${repository.id}:${repository.path}`
 }
 
 /** Identical to `Repository`, except it **must** have a `gitHubRepository` */

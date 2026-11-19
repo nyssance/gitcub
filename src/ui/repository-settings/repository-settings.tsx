@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useAccountsStore } from "@/features/accounts/store"
+import { useAppStateStore } from "@/features/app-state/store"
 import {
   addRemote,
   getConfigValue,
@@ -36,6 +37,7 @@ import type { IRemote } from "@/upstream/models/remote"
 import { ForkContributionTarget } from "@/upstream/models/workflow-preferences"
 import { gitAuthorNameIsValid, InvalidGitAuthorNameMessage } from "@/upstream/ui/lib/identifier-rules"
 
+import { Select } from "../desktop/select"
 import { NoRemote } from "./no-remote"
 
 /** Desktop repository-settings.tsx RepositorySettingsTab；Fork Behavior 只在远端是 fork 时出现 */
@@ -75,6 +77,11 @@ export function RepositorySettings({
 }) {
   const { t } = useTranslation()
   const repository = new Repository(repo, -1, null, false)
+  const assigned = useAppStateStore(s => s.state?.repositoryAccounts?.[repo])
+  const profiles = useAppStateStore(s => (hosted ? s.state?.additionalAccounts?.[hosted.host] : undefined))
+  const primaryLogin = useAccountsStore(s => (hosted ? s.accounts[hosted.host]?.login : null))
+  const [login, setLogin] = useState(assigned?.login ?? "")
+  const choices = [...new Set([...(primaryLogin ? [primaryLogin] : []), ...(profiles ?? [])])]
   const [tab, setTab] = useState<Tab>("remote")
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [remoteUrl, setRemoteUrl] = useState<string | null>(null)
@@ -140,7 +147,7 @@ export function RepositorySettings({
       .catch((e: unknown) => active && setErrors([String(e)]))
     // 查不到上游（离线、没登录）就当不是 fork：Fork Behavior 页签不出现，其余照常
     if (hosted)
-      void forkParent(hosted)
+      void forkParent(hosted, repo)
         .then(value => active && setParent(value))
         .catch(() => {})
     return () => {
@@ -199,6 +206,22 @@ export function RepositorySettings({
     } catch (e) {
       failures.push(String(e))
     }
+    if (failures.length === 0 && hosted && login !== (assigned?.login ?? "")) {
+      try {
+        const account = login
+          ? { host: hosted.host, login, primary: login === primaryLogin && !profiles?.includes(login) }
+          : null
+        await ipc.assignRepositoryAccount(repo, account)
+        useAppStateStore.getState().update(state => {
+          const repositoryAccounts = { ...state.repositoryAccounts }
+          if (account) repositoryAccounts[repo] = account
+          else delete repositoryAccounts[repo]
+          return { ...state, repositoryAccounts }
+        })
+      } catch (error) {
+        failures.push(String(error))
+      }
+    }
     if (failures.length === 0) onDismissed()
     else {
       setErrors(failures)
@@ -247,6 +270,25 @@ export function RepositorySettings({
               {loaded &&
                 (primary ? (
                   <FieldGroup>
+                    {hosted && (choices.length > 0 || assigned) && (
+                      <Select
+                        label={t("prefs.currentRepositoryAccount")}
+                        value={login}
+                        disabled={disabled}
+                        onChange={event => setLogin(event.currentTarget.value)}>
+                        <option value="">{t("prefs.defaultAccount")}</option>
+                        {assigned && !choices.includes(assigned.login) && (
+                          <option disabled value={assigned.login}>
+                            {assigned.login}
+                          </option>
+                        )}
+                        {choices.map(name => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </Select>
+                    )}
                     <Field>
                       <FieldLabel htmlFor="primary-remote-url">
                         {t("repositorySettings.primaryRemoteRepositoryUrl", { name: primary.name })}

@@ -22,16 +22,36 @@ use std::path::Path;
 
 #[tauri::command]
 pub async fn load_state(app: tauri::AppHandle) -> Result<store::AppState, String> {
-    tauri::async_runtime::spawn_blocking(move || store::load(&app).map(store::prune))
-        .await
-        .map_err(|error| error.to_string())?
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut state = store::prune(store::load(&app)?);
+        state.repository_accounts = crate::named_store::repository_accounts(&app)?
+            .entries()
+            .into_iter()
+            .map(|(path, value)| {
+                serde_json::from_value(value).map(|account| (path, account)).map_err(|error| error.to_string())
+            })
+            .collect::<Result<_, _>>()?;
+        Ok(state)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+fn import_desktop_profile(app: &tauri::AppHandle) -> Result<crate::desktop_import::DesktopImport, String> {
+    let known = store::load(app)?.account_hosts;
+    let mut data = crate::credentials::import_profile(&crate::desktop_import::profile_path()?, &known)?;
+    for (path, account) in &mut data.repository_accounts {
+        if let Some(saved) = crate::named_store::write_assignment(app, path.clone(), Some(account.clone()), true)? {
+            *account = saved;
+        }
+    }
+    Ok(data)
 }
 
 #[tauri::command]
 pub async fn read_desktop_import(app: tauri::AppHandle) -> Result<crate::desktop_import::DesktopImport, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let known = store::load(&app)?.account_hosts;
-        let data = crate::credentials::import_profile(&crate::desktop_import::profile_path()?, &known)?;
+        let data = import_desktop_profile(&app)?;
         for host in &data.account_hosts {
             cache::invalidate(&app, &format!("account-{host}"));
         }
@@ -187,10 +207,10 @@ pub async fn oauth_device_start(
 /// 轮询一次。成功时令牌直接进钥匙串，不经过前端。
 #[tauri::command]
 pub async fn oauth_device_poll(
-    host: String, client_id: String, device_code: String, attempt_id: String,
+    host: String, client_id: String, device_code: String, attempt_id: String, additional: Option<bool>,
 ) -> Result<oauth::PollStatus, String> {
     let id = oauth::client_id_for(&host, Some(&client_id)).ok_or_else(|| format!("{host} 还没有应用 ID"))?;
-    oauth::device_poll(&host, &id, &device_code, &attempt_id).await
+    oauth::device_poll(&host, &id, &device_code, &attempt_id, additional.unwrap_or(false)).await
 }
 
 #[tauri::command]
@@ -914,10 +934,13 @@ pub async fn graph(
 /// 某个仓库的开放 PR / MR。
 #[tauri::command]
 pub async fn pull_requests(
-    app: tauri::AppHandle, host: String, owner: String, name: String, refresh: bool,
+    app: tauri::AppHandle, host: String, owner: String, name: String, refresh: bool, repo: Option<String>,
 ) -> Result<Vec<account::PullRequest>, String> {
+    if let Some(profile) = crate::named_store::account_for_path(&app, repo).await? {
+        return account::pull_requests(&host, &owner, &name, Some(&profile)).await;
+    }
     let key = format!("prs-{host}-{owner}-{name}");
-    cache::get_or_fetch(&app, &key, ttl::LISTS, refresh, || account::pull_requests(&host, &owner, &name)).await
+    cache::get_or_fetch(&app, &key, ttl::LISTS, refresh, || account::pull_requests(&host, &owner, &name, None)).await
 }
 
 /// 跟我有关的 PR：等我评审的 / 我开的。用搜索接口一次问完。
@@ -932,9 +955,10 @@ pub async fn involved_prs(
 /// 某个提交上的检查项（CI 的各个 job）。
 #[tauri::command]
 pub async fn check_runs(
-    host: String, owner: String, name: String, sha: String,
+    app: tauri::AppHandle, repo: Option<String>, host: String, owner: String, name: String, sha: String,
 ) -> Result<Vec<account::CheckRun>, String> {
-    account::check_runs(&host, &owner, &name, &sha).await
+    let profile = crate::named_store::account_for_path(&app, repo).await?;
+    account::check_runs(&host, &owner, &name, &sha, profile.as_ref()).await
 }
 
 /// 重跑失败的任务。
@@ -948,25 +972,34 @@ pub async fn rerun_failed_jobs(
 /// 写提交信息时 `#` 补全用的 issue 号。缓存一刻钟——号码不会一直变。
 #[tauri::command]
 pub async fn issues_for_completion(
-    app: tauri::AppHandle, host: String, owner: String, name: String,
+    app: tauri::AppHandle, repo: Option<String>, host: String, owner: String, name: String,
 ) -> Result<Vec<account::Issue>, String> {
+    if let Some(profile) = crate::named_store::account_for_path(&app, repo).await? {
+        return account::issues(&host, &owner, &name, Some(&profile)).await;
+    }
     let key = format!("issues-{host}-{owner}-{name}");
-    cache::get_or_fetch(&app, &key, ttl::LISTS, false, || account::issues(&host, &owner, &name)).await
+    cache::get_or_fetch(&app, &key, ttl::LISTS, false, || account::issues(&host, &owner, &name, None)).await
 }
 
 /// 提交信息 `@` 补全与共同作者候选，和 Issue 一样按列表缓存
 #[tauri::command]
 pub async fn mentionables(
-    app: tauri::AppHandle, host: String, owner: String, name: String,
+    app: tauri::AppHandle, repo: Option<String>, host: String, owner: String, name: String,
 ) -> Result<Vec<account::MentionableUser>, String> {
+    if let Some(profile) = crate::named_store::account_for_path(&app, repo).await? {
+        return account::mentionables(&host, &owner, &name, Some(&profile)).await;
+    }
     let key = format!("mentionables-{host}-{owner}-{name}");
-    cache::get_or_fetch(&app, &key, ttl::LISTS, false, || account::mentionables(&host, &owner, &name)).await
+    cache::get_or_fetch(&app, &key, ttl::LISTS, false, || account::mentionables(&host, &owner, &name, None)).await
 }
 
 /// 共同作者手填用户名的精确解析（GitLab）
 #[tauri::command]
-pub async fn mentionable_user(host: String, login: String) -> Result<Option<account::MentionableUser>, String> {
-    account::mentionable_user_by_login(&host, &login).await
+pub async fn mentionable_user(
+    app: tauri::AppHandle, repo: Option<String>, host: String, login: String,
+) -> Result<Option<account::MentionableUser>, String> {
+    let profile = crate::named_store::account_for_path(&app, repo).await?;
+    account::mentionable_user_by_login(&host, &login, profile.as_ref()).await
 }
 
 /// Fork 到自己名下，返回克隆地址。
@@ -999,8 +1032,10 @@ pub async fn create_pull_request(
 
 /// 在远端建一个空仓库，返回克隆地址。「发布」本地仓库用。
 #[tauri::command]
-pub async fn create_remote_repo(host: String, name: String, private: bool) -> Result<String, String> {
-    account::create_remote_repo(&host, &name, private).await
+pub async fn create_remote_repo(
+    host: String, name: String, private: bool, profile: Option<branch::RepositoryAccount>,
+) -> Result<String, String> {
+    account::create_remote_repo(&host, &name, private, profile.as_ref()).await
 }
 
 /// 逐行追溯：每一行最后是谁、在哪次提交改的。
@@ -1506,12 +1541,30 @@ pub async fn clone_repo_output(
     app: tauri::AppHandle, url: String, path: String, options: branch::CloneOptions,
     progress: tauri::ipc::Channel<crate::progress::Progress>,
 ) -> Result<serde_json::Value, String> {
-    let token = settings::token_for_url(&app, &url).await?;
+    let token = if let Some(profile) = &options.repository_account {
+        let parsed = crate::remote::parse(&url).ok_or("Invalid clone destination")?;
+        let known = crate::store::known_instances(&app).await?;
+        if !url.starts_with("https://") || crate::remote::credential_instance(&parsed, &known) != profile.host {
+            return Err("The assigned account belongs to a different instance".into());
+        }
+        Some(account::repository_auth(&profile.host, profile).await?.1)
+    } else if let Some(selected) = &options.account {
+        let parsed = crate::remote::parse(&url).ok_or("The clone destination has no account endpoint")?;
+        let known = crate::store::known_instances(&app).await?;
+        let host = crate::remote::credential_instance(&parsed, &known);
+        Some(crate::account::selected_clone_token(&host, selected).await?)
+    } else {
+        settings::token_for_url(&app, &url).await?
+    };
 
     let output = tauri::async_runtime::spawn_blocking(move || {
-        branch::clone_output_stream(&url, Path::new(&path), token.as_deref(), &options, |event| {
+        let result = branch::clone_output_stream(&url, Path::new(&path), token.as_deref(), &options, |event| {
             let _ = progress.send(event);
-        })
+        })?;
+        if result.status.success() {
+            crate::named_store::write_assignment(&app, path, options.repository_account, false)?;
+        }
+        Ok::<_, String>(result)
     })
     .await
     .map_err(|error| error.to_string())??;
@@ -2115,27 +2168,32 @@ pub async fn native_renew_token(host: String, refresh_token: String) -> Result<O
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments, reason = "Preserve the existing flat Tauri IPC parameters for reruns")]
 pub async fn rerun_check(
-    host: String, owner: String, name: String, target: account::CheckRetry, mode: String, job_id: Option<u64>,
+    app: tauri::AppHandle, repo: Option<String>, host: String, owner: String, name: String,
+    target: account::CheckRetry, mode: String, job_id: Option<u64>,
 ) -> Result<(), String> {
-    account::rerun_check(&host, &owner, &name, target, &mode, job_id).await
+    let profile = crate::named_store::account_for_path(&app, repo).await?;
+    account::rerun_check(&host, &owner, &name, target, &mode, job_id, profile.as_ref()).await
 }
 
 #[tauri::command]
 pub async fn pull_request_targets(
     app: tauri::AppHandle, repo: String, remote_name: String,
 ) -> Result<serde_json::Value, String> {
+    let profile = crate::named_store::account_for_path(&app, Some(repo.clone())).await?;
     let url = tauri::async_runtime::spawn_blocking(move || crate::remote_ops::push_url(Path::new(&repo), &remote_name))
         .await
         .map_err(|error| error.to_string())??;
     let remote = account_remote(app, &url).await?.ok_or("远端不是托管平台仓库")?;
-    account::pull_request_targets(&remote).await
+    account::pull_request_targets(&remote, profile.as_ref()).await
 }
 
 #[tauri::command]
 pub async fn branch_policy(
     app: tauri::AppHandle, repo: String, branch: String,
 ) -> Result<Option<serde_json::Value>, String> {
+    let profile = crate::named_store::account_for_path(&app, Some(repo.clone())).await?;
     let target =
         tauri::async_runtime::spawn_blocking(move || crate::remote_ops::branch_target(Path::new(&repo), &branch))
             .await
@@ -2144,7 +2202,7 @@ pub async fn branch_policy(
         return Ok(None);
     };
     let Some(remote) = account_remote(app, &url).await? else { return Ok(None) };
-    account::branch_policy(&remote, &target_branch).await.map(Some)
+    account::branch_policy(&remote, &target_branch, profile.as_ref()).await.map(Some)
 }
 
 /// 解析远端并把主机规整到用户添加过的实例（SSH 远端不带 Web 端口）。
@@ -2155,9 +2213,10 @@ async fn account_remote(app: tauri::AppHandle, url: &str) -> Result<Option<remot
 
 #[tauri::command]
 pub async fn pull_request_source(
-    host: String, owner: String, name: String, number: u64,
+    app: tauri::AppHandle, repo: Option<String>, host: String, owner: String, name: String, number: u64,
 ) -> Result<serde_json::Value, String> {
-    account::pull_request_source(&host, &owner, &name, number).await
+    let profile = crate::named_store::account_for_path(&app, repo).await?;
+    account::pull_request_source(&host, &owner, &name, number, profile.as_ref()).await
 }
 
 #[tauri::command]
@@ -2166,8 +2225,11 @@ pub async fn available_integrations() -> Result<Vec<serde_json::Value>, String> 
 }
 
 #[tauri::command]
-pub async fn pull_request_repository(host: String, owner: String, name: String) -> Result<remote::Remote, String> {
-    account::pull_request_repository(&host, &owner, &name).await
+pub async fn pull_request_repository(
+    app: tauri::AppHandle, repo: Option<String>, host: String, owner: String, name: String,
+) -> Result<remote::Remote, String> {
+    let profile = crate::named_store::account_for_path(&app, repo).await?;
+    account::pull_request_repository(&host, &owner, &name, profile.as_ref()).await
 }
 
 #[tauri::command]
@@ -2187,14 +2249,7 @@ pub async fn detect_desktop_import(app: tauri::AppHandle) -> Result<crate::deskt
 #[tauri::command]
 pub async fn finish_desktop_import(app: tauri::AppHandle, import: bool) -> Result<store::AppState, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let data = if import {
-            Some(crate::credentials::import_profile(
-                &crate::desktop_import::profile_path()?,
-                &store::load(&app)?.account_hosts,
-            )?)
-        } else {
-            None
-        };
+        let data = if import { Some(import_desktop_profile(&app)?) } else { None };
         let mut state = store::load(&app)?;
         if let Some(data) = data {
             for host in &data.account_hosts {
@@ -2212,7 +2267,9 @@ pub async fn finish_desktop_import(app: tauri::AppHandle, import: bool) -> Resul
 
 #[tauri::command]
 pub async fn check_rerun_eligibility(
-    host: String, owner: String, name: String, checks: Vec<account::CheckRun>,
+    app: tauri::AppHandle, repo: Option<String>, host: String, owner: String, name: String,
+    checks: Vec<account::CheckRun>,
 ) -> Result<Vec<u64>, String> {
-    account::check_rerun_eligibility(&host, &owner, &name, checks).await
+    let profile = crate::named_store::account_for_path(&app, repo).await?;
+    account::check_rerun_eligibility(&host, &owner, &name, checks, profile.as_ref()).await
 }

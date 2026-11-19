@@ -183,8 +183,24 @@ fn dirs_home() -> Option<std::path::PathBuf> {
 #[derive(Default, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CloneOptions {
+    pub repository_account: Option<RepositoryAccount>,
+    pub account: Option<CloneAccount>,
     pub branch: Option<String>,
     pub default_branch: Option<String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RepositoryAccount {
+    #[serde(default)]
+    pub primary: bool,
+    pub host: String,
+    pub login: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct CloneAccount {
+    pub endpoint: String,
+    pub login: String,
 }
 
 pub fn clone(url: &str, path: &Path, token: Option<&str>) -> Result<(), String> {

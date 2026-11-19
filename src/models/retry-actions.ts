@@ -1,6 +1,6 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 
-import type { CloneOptions } from "../upstream/models/clone-options"
+import type { GitCubCloneOptions } from "../lib/clone"
 import type { IStashEntry } from "../upstream/models/stash-entry"
 import type { WorkingDirectoryFileChange } from "../upstream/models/status"
 import type { Branch } from "./branch"
@@ -35,7 +35,7 @@ export type RetryAction =
       name: string
       url: string
       path: string
-      options: CloneOptions
+      options: GitCubCloneOptions
     }
   | {
       type: typeof RetryActionType.Checkout

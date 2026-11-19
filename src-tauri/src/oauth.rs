@@ -144,13 +144,14 @@ pub struct DeviceStart {
     pub expires_in: u64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PollStatus {
     /// 用户还没在浏览器里点同意
     Pending,
     /// 轮太快了，下次间隔加 5 秒（RFC 8628 的要求）
     SlowDown,
+    AccountAdded(String),
     Done,
     Denied,
     Expired,
@@ -188,7 +189,7 @@ pub async fn device_start(
 /// 轮询一次。拿到令牌就直接存进钥匙串并解除登出标记——令牌不经过前端，
 /// 界面没有任何需要它的地方。
 pub async fn device_poll(
-    host: &str, client_id: &str, device_code: &str, attempt_id: &str,
+    host: &str, client_id: &str, device_code: &str, attempt_id: &str, additional: bool,
 ) -> Result<PollStatus, String> {
     let kind = {
         let attempts = ATTEMPTS.lock().map_err(|_| "Account session lock unavailable")?;
@@ -212,11 +213,27 @@ pub async fn device_poll(
 
     if v.get("access_token").is_some() {
         let credential = Credential::from_response(&v, kind, client_id, None)?;
-        finish_attempt(host, attempt_id, || {
-            settings::set_host_token(host, &credential.encode()?)?;
-            settings::set_ignored(host, false)
-        })?;
-        return Ok(PollStatus::Done);
+        let login = if additional {
+            Some(crate::account::verify_login(host, &credential.access_token, kind).await?)
+        } else {
+            None
+        };
+        let host = host.to_owned();
+        let attempt = attempt_id.to_owned();
+        return tauri::async_runtime::spawn_blocking(move || {
+            finish_attempt(&host, &attempt, || {
+                let value = credential.encode()?;
+                if let Some(login) = login {
+                    settings::save_profile(&host, &login, &value)?;
+                    return Ok(PollStatus::AccountAdded(login));
+                }
+                settings::set_host_token(&host, &value)?;
+                settings::set_ignored(&host, false)?;
+                Ok(PollStatus::Done)
+            })
+        })
+        .await
+        .map_err(|error| error.to_string())?;
     }
 
     match v.get("error").and_then(|e| e.as_str()) {
@@ -371,17 +388,23 @@ static REFRESH: LazyLock<Mutex<HashMap<String, std::sync::Arc<tauri::async_runti
     LazyLock::new(|| Mutex::new(HashMap::new()));
 /// Serialize rotating-token exchanges; retain credentials on transient failures.
 pub async fn refresh(host: &str) -> Result<(), String> {
-    refresh_inner(host, None).await
+    refresh_inner(host, host, None).await
 }
-async fn refresh_inner(host: &str, expected_refresh: Option<&str>) -> Result<(), String> {
-    let lock = REFRESH.lock().map_err(|_| "Account refresh lock unavailable")?.entry(host.into()).or_default().clone();
+pub async fn refresh_profile(host: &str, key: &str) -> Result<(), String> {
+    refresh_inner(host, key, None).await
+}
+
+async fn refresh_inner(host: &str, key: &str, expected_refresh: Option<&str>) -> Result<(), String> {
+    let lock = REFRESH.lock().map_err(|_| "Account refresh lock unavailable")?.entry(key.into()).or_default().clone();
     let _refresh = lock.lock().await;
-    if settings::is_ignored(host) {
-        return Ok(());
-    }
-    let Some(stored) = settings::stored_credential(host) else {
-        return Ok(());
-    };
+    let primary = host == key;
+    let read_key = key.to_owned();
+    let stored = tauri::async_runtime::spawn_blocking(move || {
+        if primary && settings::is_ignored(&read_key) { None } else { settings::stored_credential(&read_key) }
+    })
+    .await
+    .map_err(|error| error.to_string())?;
+    let Some(stored) = stored else { return Ok(()) };
     let Some(credential) = decode(&stored)? else {
         return Ok(());
     };
@@ -398,11 +421,18 @@ async fn refresh_inner(host: &str, expected_refresh: Option<&str>) -> Result<(),
     }
     let next = renew(&credential, &endpoint(host, credential.kind, false)?).await?;
     // Compare under the same lock used by explicit sign-in/out. A replaced account wins.
-    let _attempts = ATTEMPTS.lock().map_err(|_| "Account session lock unavailable")?;
-    if settings::is_ignored(host) || settings::stored_credential(host).as_deref() != Some(stored.as_str()) {
-        return Err("Account changed while renewing credentials".into());
-    }
-    settings::set_host_token(host, &next.encode()?)
+    let key = key.to_owned();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _attempts = ATTEMPTS.lock().map_err(|_| "Account session lock unavailable")?;
+        if (primary && settings::is_ignored(&key))
+            || settings::stored_credential(&key).as_deref() != Some(stored.as_str())
+        {
+            return Err("Account changed while renewing credentials".into());
+        }
+        settings::set_host_token(&key, &next.encode()?)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 pub async fn resolve_token(host: &str, token: &str) -> Result<Option<String>, String> {
     refresh(host).await?;
@@ -466,7 +496,7 @@ pub async fn renew_for_desktop(host: &str, refresh_token: &str) -> Result<Option
     if settings::is_ignored(host) {
         return Err("The account has signed out".into());
     }
-    refresh_inner(host, Some(refresh_token)).await?;
+    refresh_inner(host, host, Some(refresh_token)).await?;
     let stored = settings::stored_credential(host).ok_or("The account has signed out")?;
     let credential = decode(&stored)?.ok_or("The account has been replaced")?;
     if credential.refresh_token.as_deref() != Some(refresh_token)

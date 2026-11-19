@@ -68,7 +68,7 @@ export function useNativeMenu(context: NativeMenuContext & { hasBranchStash: boo
       }
       if (remote && status.branch) {
         const target = await contributionRepository(repo, remote)
-        const prs = await ipc.pullRequests(target.host, target.owner, target.name, true)
+        const prs = await ipc.pullRequests(target.host, target.owner, target.name, true, repo)
         const details = (await ipc.branchDetails(repo, `refs/heads/${status.branch}`))[0]
         const head = details?.upstreamWithoutRemote ?? status.branch
         const sourceRemote =
@@ -80,7 +80,7 @@ export function useNativeMenu(context: NativeMenuContext & { hasBranchStash: boo
           : null
         let found = false
         for (const pr of prs.filter(pr => pr.head === head)) {
-          const source = await ipc.pullRequestSource(target.host, target.owner, target.name, pr.number)
+          const source = await ipc.pullRequestSource(target.host, target.owner, target.name, pr.number, repo)
           if (sameHostedRepository(sourceRepository, await ipc.parseRemote(source.cloneUrl))) {
             found = true
             break

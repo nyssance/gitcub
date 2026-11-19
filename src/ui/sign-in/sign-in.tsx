@@ -1,6 +1,7 @@
 import { platform } from "@tauri-apps/plugin-os"
 // Desktop MIT port; platform imports adapted to Tauri.
 import * as React from "react"
+import { Trans } from "react-i18next"
 
 import { getHTMLURL } from "../../lib/api"
 import {
@@ -10,6 +11,7 @@ import {
   type SignInState,
   SignInStep
 } from "../../lib/stores/sign-in-store"
+import { PopupType } from "../../models/popup"
 import { assertNever } from "../../upstream/lib/fatal-error"
 import { Dialog, DialogContent, DialogError, DialogFooter } from "../desktop/dialog"
 import { OkCancelButtonGroup } from "../desktop/dialog/ok-cancel-button-group"
@@ -57,6 +59,9 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
   }
 
   public override componentDidUpdate(prevProps: ISignInProps) {
+    if (prevProps.signInState?.kind !== SignInStep.Success && this.props.signInState?.kind === SignInStep.Success) {
+      this.props.dispatcher.closePopup(PopupType.SignIn)
+    }
     // Whenever the sign in step changes we replace the dialog contents which
     // means we need to re-focus the first suitable child element as it's
     // essentially a "new" dialog we're showing only the dialog component itself
@@ -64,14 +69,6 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
     if (prevProps.signInState !== null && this.props.signInState !== null) {
       if (prevProps.signInState.kind !== this.props.signInState.kind) {
         this.dialogRef.current?.focusFirstSuitableChild()
-      }
-    }
-  }
-
-  public override componentWillReceiveProps(nextProps: ISignInProps) {
-    if (nextProps.signInState !== this.props.signInState) {
-      if (nextProps.signInState?.kind === SignInStep.Success) {
-        this.onDismissed()
       }
     }
   }
@@ -98,7 +95,6 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
         this.props.dispatcher.requestBrowserAuthentication()
         break
       case SignInStep.Success:
-        this.onDismissed()
         break
       default:
         assertNever(state, `Unknown sign in step ${stepKind}`)
@@ -195,6 +191,16 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
 
     return (
       <DialogContent>
+        {state.expectedLogin !== undefined && (
+          <p>
+            <Trans
+              i18nKey="prefs.signInAsAccountOnHostToContinue"
+              defaults="Sign in as <0>{{login}}</0> on <1>{{host}}</1> to continue."
+              values={{ login: state.expectedLogin, host: new URL(getHTMLURL(state.endpoint)).host }}
+              components={[<Ref key="login" />, <Ref key="host" />]}
+            />
+          </p>
+        )}
         {credentialHelperInfo}
         {browserSignInInfoContent}
       </DialogContent>
@@ -261,6 +267,7 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
   }
 
   private onDismissed = () => {
+    if (!this.props.signInState || this.props.signInState.kind === SignInStep.Success) return
     this.props.dispatcher.resetSignInState()
     this.props.onDismissed()
   }

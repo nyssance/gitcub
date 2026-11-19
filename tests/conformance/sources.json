@@ -691,8 +691,8 @@
     "desktop/oauth-token-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/oauth-token-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "269169cb1dacf029a2f7374836c19955164843b47c6f25c740bb6ca72e964cdb"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "6669455a3bc4564926fa8435e368b7e3e33a43661e044a1608c617618cda1079"
     },
     "desktop/api-error-handling-test.ts": {
       "project": "desktop",
@@ -727,8 +727,8 @@
     "desktop/repository-matching-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/repository-matching-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "5dc3e40eec8688d9fb3f64100369abde8581309900201b2e31ffe59d5e22362e"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "3f4117de2561907410285fbeca367dcea7d3e6d58908bbfddbe9d0a4f0d075b2"
     },
     "desktop/find-upstream-remote-test.ts": {
       "project": "desktop",
@@ -757,8 +757,8 @@
     "desktop/repositories-list-grouping-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/repositories-list-grouping-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "5ce2ac1c0696cdf1210e1b8efc1eae36e662b1a4bf801a88a24c6e0d5db9acef"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "ddd839337350d308456498d202fedc60229650785daac424c4b1600a66b5e8b7"
     },
     "desktop/repositories-clone-grouping-test.ts": {
       "project": "desktop",
@@ -841,8 +841,8 @@
     "desktop/api-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/api-test.ts",
-      "commit": "9a47fa5cfc07cbf797cd666e9b73c2ef483625fb",
-      "sha256": "0e1925a0af2ef041fcfda3e38695ba762416bc5e75527bdbed1747094f92a138"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "8dfd8c2e8cecf859a9c7c661a8620baaf5ed536a10cc89decfae9f269ccd43b6"
     },
     "desktop/ci-checks-test.ts": {
       "project": "desktop",
@@ -871,26 +871,26 @@
     "desktop/accounts-store-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/accounts-store-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "5dbb0e3533a1b7dd1be497a5347420644a9d4bb73df5b3fba2a49f9931456873"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "6697a4a53e29211c065a69bb4bc6600989a608483df49065822e95a26830f9fa"
     },
     "desktop/credential-sessions-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/credential-sessions-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "0baf0d6fb37c16f927ddd588e16d63a6a046eeb9b66acb53ece3a4cc663c07ab"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "11f7b7d666e99a8620195a948d12cef9360e3dd280d9bd31aac009a92adb4347"
     },
     "desktop/sign-in-store-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/sign-in-store-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "85d6dc284465eeeb29e6069bb52d52ae57c2c9867cf3cff5e67cf5b191c2406f"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "43d99403bdd2d0c3759a90c60c18f8f4f44643c93ba7cf1e3b1f4922f1650165"
     },
     "desktop/oauth-authentication-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/oauth-authentication-test.ts",
-      "commit": "9a47fa5cfc07cbf797cd666e9b73c2ef483625fb",
-      "sha256": "d675ce0ac4f54c2cdb89d73c8b14dee364508ee654bfb7a150e8a5617433e30f"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "5f76731fd51d88b6ffc08d8e2a95d46b6fc5e54082d05545e0f01eb718a549c8"
     },
     "desktop/mock-api-test.ts": {
       "project": "desktop",
@@ -1053,8 +1053,8 @@
     "desktop/repositories-store-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/repositories-store-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "8869373ea9f62e4dadc16d78b78068ea37a17c3ec23991f9d165331a915bb6d7"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "270a3aba9454c318fe9746aa4f2014879f72cdb89c6152ebc831c5eace10ec67"
     },
     "desktop/stores/github-user-store-test.ts": {
       "project": "desktop",
@@ -1119,8 +1119,8 @@
     "desktop/ui/ci-status-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/ci-status-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "c2e408cced3a5ae31766460280f3563f534d779f075f39362f0e6c8b8b0da6f0"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "124757d94e76a319ca5371580d91ec57e00939d8e66c6b358e9a98a744b550eb"
     },
     "desktop/ui/appearance-test.ts": {
       "project": "desktop",
@@ -1131,8 +1131,8 @@
     "desktop/ui/issues-autocompletion-provider-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/issues-autocompletion-provider-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "0557894221bb2548b81d3efa044788785190e5817dfadc90bf78e9fdd3fd5cd4"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "d9ee3e6172f75bbd2b8a8633168e48ac7eb68c1cc4535b1d34c9274abba1f29b"
     },
     "desktop/welcome-test.ts": {
       "project": "desktop",
@@ -1173,8 +1173,8 @@
     "desktop/repository-state-cache-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/repository-state-cache-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "5e5f01772de66f453de967ea8c7d0ed3b61ece9c5df3d7893b615a7976f3d090"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "aeffe53b4c089e9f3f6a9bd3416d46abbd188b0e045ef66858836f154f9750df"
     },
     "desktop/git-store-test.ts": {
       "project": "desktop",
@@ -1185,8 +1185,8 @@
     "desktop/git-store-cache-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git-store-cache-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "a25a1a593496dee6c9a6cef8ef3bd6f9fdb3967799c1626ce11176ede5a69756"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "95115ce31d45070edb7dba90cb85046aaff3205c6893fd0151730b685cab1d88"
     },
     "desktop/stores/updates/update-remote-url-test.ts": {
       "project": "desktop",
@@ -1209,8 +1209,8 @@
     "desktop/account-token-lifecycle-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/account-token-lifecycle-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "5cbb3739fdfec775554a00a0b8e30e18ec6cb1160e72e912af49f80f65f273ec"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "aecce5afaf7b97c4886854cb21aba539cbd28bef2c7480fd2c3d64f320a8ea8f"
     },
     "desktop/app-store-test-harness-test.ts": {
       "project": "desktop",
@@ -1221,8 +1221,8 @@
     "desktop/ui/rulesets-and-publish-surfaces-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/rulesets-and-publish-surfaces-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "f7c5243083e7699fb3af39bbd19c77881fe35e67a5e1cb58b61be2674be02c96"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "87600c9143705452d1459a042d36b101713b6e87012eb8319449208311ce672b"
     },
     "desktop/ui/copilot-custom-providers-dialog-test.ts": {
       "project": "desktop",
@@ -1234,14 +1234,14 @@
     "desktop/ui/invalidated-token-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/invalidated-token-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "e919d6255d46fc66d978b9870aa0f763ec9a3a4457c28cbb50146fe7c09a96c2"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "5243d1c8b2ef88cd41a5eda5295a19810af82b5f7f35a4d92aefa77d2d8da147"
     },
     "desktop/ui/test-token-expiration-dialog-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/test-token-expiration-dialog-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "a68872ffb92520e6e6d29a6bd80ca24452f555281d32aee58ad3eb5b6fe52bab"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "5968d4e57290082c0b289c0dd0742c48af294abe0f48dcd7b185798aa9a18d00"
     },
     "desktop/ui/test-copilot-snapshot-card-dialog-test.ts": {
       "project": "desktop",
@@ -1357,8 +1357,8 @@
     "desktop/ui/copilot-preferences-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/copilot-preferences-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "c05884ca715766c2a97ad662756c51a0c49977c2ae29b2d7bc276596004b6658",
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "e041aaa31eb14f12250287bbdb45c22915baa995911f1e45225199697278bbf8",
       "excluded": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "desktop/main-process-proxy-test.ts": {
@@ -1407,8 +1407,8 @@
     "desktop/ui/welcome-and-sign-in-wrappers-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/welcome-and-sign-in-wrappers-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "59188da2838286c4d05452173bcddd2fa4f3f92c41b881e9f318c5c160a514fc"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "4a75e706432291d0a9967ed5d2832d16c925b6d4f7e917032cc2dca24b57e2c0"
     },
     "desktop/ui/tutorial-welcome-surfaces-test.ts": {
       "project": "desktop",
@@ -1461,8 +1461,8 @@
     "desktop/stats-store-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/stats-store-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "9715d7d6ba81ad4d2c976151cb2470e12be99bde3eb07665792e09d1609158ce"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "2e98db10e709b00a7c4a61aeaf5a9317b216ac8df046da6462c34d889832c655"
     },
     "desktop/usage-data-test.ts": {
       "project": "desktop",
@@ -1473,20 +1473,20 @@
     "desktop/notifications-store-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/notifications-store-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "103177c13084f385dbfd2ff4f7ee1aa63e400dc91f11b7ac28e321a26c2e50b5"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "7de0d92d8e60fcfb71ab11e4432e7675ac8a445674194464db857f21414c4bdc"
     },
     "desktop/ui/clone-repository-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/clone-repository-test.tsx",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "03edfe174cf69d1328e039971cdbb9f245861a2880c33b6cfb1dfbf2e35108bb"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "46298756ef7b95660ec0308007adfe7b555e8e3d1dffc863c5e168c89a8c5b86"
     },
     "desktop/refresh-token-consumers-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/refresh-token-consumers-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "7461b2f56cbc54e35892fd033fe3bb38fcca35548480e5ad7397d8a93e61dc07"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "e7cb8701451c95b20b536cda7178551496702f945d815766ca4863a86091289d"
     },
     "desktop/copilot-sdk-auth-test.ts": {
       "project": "desktop",
@@ -1498,8 +1498,8 @@
     "desktop/stores/copilot-store-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/stores/copilot-store-test.ts",
-      "commit": "3700c7ff3c878cf9390828c2387a166e296cca7d",
-      "sha256": "b7c693d927aa21f94bbded2447d05c39e8a87e4ad24388f18a3688c394b46d94",
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "b8808bb0dd61b85f0fb08659a9a7a0c9fd4dafafcabd8af2c8db45c0a61db7da",
       "excluded": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "desktop/stores/copilot-store-credentials-test.ts": {
@@ -1543,8 +1543,8 @@
     "desktop/main-process/menu-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/main-process/menu-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "432f455915be1a372553f72358556ed9c54d810e15e0da8a50d9d14a3ce1c0fb"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "8db294f8fb2f2ad0f8772a0a62e24e366d84d26447774e17e692e42fc74ff73a"
     },
     "desktop/main-process/spell-checker-menu-test.ts": {
       "project": "desktop",
@@ -1561,27 +1561,27 @@
     "desktop/git/refreshable-credentials-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/git/refreshable-credentials-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "a66137493d9ce8ce884b840743c538be4491f071c0043ab21200961c4f5a2998"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "b548615f18132d471d38e4508ac5d0b26c5bf1f1cc44fcb6aea803c4589d4ab0"
     },
     "desktop/ui/commit-message-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/ui/commit-message-test.tsx",
-      "commit": "db99902e7baffa50610e59d4bb2e1f85fda16e37",
-      "sha256": "1b63ec6cee54fc15bad9c35c425ffb5187bfa9988fb6a289dafe16175ef224e8",
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "82d90fa0421c29b2bb449c716cffa490cb828ab2d5b42dda0d0dc8217dc77e2a",
       "excluded": "User requested removal of Copilot on 2026-10-21. Feature and runtime packaging removed; retained snapshot is provenance only, not executed or claimed compatible."
     },
     "desktop/stores/app-store-indicators-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/stores/app-store-indicators-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "4f54e8d3b88d3faee1cc0fcb6812021c18476ae67c094fb2568e35c07722747b"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "443254dec2f89d01087e7b28b8ddefab6f8768192b46d0340f649ee4b4ded7bf"
     },
     "desktop/stores/app-store-token-refresh-stats-test.ts": {
       "project": "desktop",
       "source": "app/test/unit/stores/app-store-token-refresh-stats-test.ts",
-      "commit": "bebc062caafcf818993b9f53397b976d33484231",
-      "sha256": "622aeea4535c924e9819f562f009238327d65ff13ffe17fb44a23d669d339700"
+      "commit": "9dab986e40a2e1a23045648ad1c11a93a1808804",
+      "sha256": "ac434d0a212344fd98b33f65f26dbce3ffbe6e08a9f702fc7df18c78eb33e6c2"
     },
     "desktop/e2e/app-launch-test.ts": {
       "project": "desktop",
@@ -3086,7 +3086,7 @@
     "upstream/desktop/repositories-helper.ts": {
       "project": "desktop",
       "source": "app/test/helpers/repositories.ts",
-      "sha256": "f51be39304aa414f6b0ee7edae0a724e2c6854ccea09314de66a84642083ab1b"
+      "sha256": "7c9a6d9be60401f930d449575c89435978c17a1a84e31cbed9fb5d617c110330"
     },
     "fixtures/repo-with-non-updated-branches/README.md": {
       "project": "desktop",
@@ -3431,7 +3431,7 @@
     "../../src/upstream/lib/remote-parsing.ts": {
       "project": "desktop",
       "source": "app/src/lib/remote-parsing.ts",
-      "sha256": "0210111beaa6e5bcf1fb5242aab58d51fa87db15dcc7f78845eca96fd42f2b14"
+      "sha256": "1a3a6d4e8ce337fc05f3d32d2dfeb1f9354a00116826a98c4604b1680a99b728"
     },
     "../../src/upstream/lib/status.ts": {
       "project": "desktop",
@@ -6356,7 +6356,7 @@
     "upstream/desktop/production/models/account.ts": {
       "project": "desktop",
       "source": "app/src/models/account.ts",
-      "sha256": "0ed5c4a1280d78383c2d4f032c2090fb442810fc58a330e34ceb3c3a081e7e1f"
+      "sha256": "507539c5d0174c0776d442404c2352e872d391c2822c8c2ccc5e2be0ef999238"
     },
     "upstream/desktop/production/lib/unique-coauthors-as-authors.ts": {
       "project": "desktop",
@@ -6381,12 +6381,12 @@
     "upstream/desktop/production/lib/api.ts": {
       "project": "desktop",
       "source": "app/src/lib/api.ts",
-      "sha256": "1906d2386564cdf2b3ec4d354d504f45c0a19ad44b493c2810c34ed4faab1d39"
+      "sha256": "7407371a0c8afbcf4a57a87f8a5074dade63e535aa3f2d7a3c3a5e9d072bf253"
     },
     "upstream/desktop/production/lib/git/interpret-trailers.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/interpret-trailers.ts",
-      "sha256": "036377b0a218ebba8929071388063794e6cd605e8e688c2c2367ef898716826e"
+      "sha256": "223766535192e6b7302f4e0207567b934a7073e838f75bdeb710dc7a9241082c"
     },
     "upstream/desktop/production/lib/markdown-filters/issue-mention-filter.ts": {
       "project": "desktop",
@@ -6461,7 +6461,7 @@
     "upstream/desktop/production/lib/oauth-token.ts": {
       "project": "desktop",
       "source": "app/src/lib/oauth-token.ts",
-      "sha256": "9a8686422cf7fbb4a868ec969d1f9f3fa25dd811b114b7fe56cd45620276b6ad"
+      "sha256": "27a960c217847bf8ecde94c72cfa0b927557ae57659bd5d0378fc8d288df3e04"
     },
     "../../src/upstream/models/workflow-preferences.ts": {
       "project": "desktop",
@@ -6476,7 +6476,7 @@
     "upstream/desktop/production/models/repository.ts": {
       "project": "desktop",
       "source": "app/src/models/repository.ts",
-      "sha256": "1e2381fd645aeff9ed564879aa981b179f542b00176dc16a32fc5d9c34710f6e"
+      "sha256": "ae1222406d083ae1f92fdcc2dc61a46ef022b71d094127cee4b5c5c85461a1d0"
     },
     "upstream/desktop/production/models/cloning-repository.ts": {
       "project": "desktop",
@@ -6491,7 +6491,7 @@
     "upstream/desktop/production/lib/repository-matching.ts": {
       "project": "desktop",
       "source": "app/src/lib/repository-matching.ts",
-      "sha256": "38bbfe15c5757e23d401c017fa026ee5e42e5ceff431eb2895e338d704c8d6e8"
+      "sha256": "1bb415cf5a4f28252918ca39f0b5757098fb0ed193dcbb04527cd83272949791"
     },
     "upstream/desktop/production/lib/stores/helpers/find-upstream-remote.ts": {
       "project": "desktop",
@@ -6516,7 +6516,7 @@
     "upstream/desktop/production/ui/repositories-list/group-repositories.ts": {
       "project": "desktop",
       "source": "app/src/ui/repositories-list/group-repositories.ts",
-      "sha256": "becab82f2b206051cc91e28fb1b38d355967c88912a5bd839809875557a4f671"
+      "sha256": "abeb3a725e98fb52b01353995f98b5b90857c113fffac5a751a74d32341c1c4f"
     },
     "upstream/desktop/production/ui/clone-repository/group-repositories.ts": {
       "project": "desktop",
@@ -6531,7 +6531,7 @@
     "upstream/desktop/production/lib/copilot-conflict-resolution.ts": {
       "project": "desktop",
       "source": "app/src/lib/copilot-conflict-resolution.ts",
-      "sha256": "b1d83b6b06a849e7fee816b6fcb22821b875521997932c148955c5897886fdb1"
+      "sha256": "e28cfad764eb849abc69302c042a01c85442d49a4cc4b3648d42901972e5dea8"
     },
     "upstream/desktop/production/lib/git/log.ts": {
       "project": "desktop",
@@ -6561,7 +6561,7 @@
     "upstream/desktop/production/lib/stores/copilot-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/copilot-store.ts",
-      "sha256": "42c53b5da697119e3d92ab0f70aad2d3eb7199a619d91bac43e93d2792651df9"
+      "sha256": "80c6f54d4d29e43145783babd2aa997d597c1d2c6b50b5e46f781cb70a06880c"
     },
     "upstream/desktop/production/lib/copilot/conflict-resolution-model.ts": {
       "project": "desktop",
@@ -6571,7 +6571,7 @@
     "upstream/desktop/production/lib/copilot-in-memory-session-fs-provider.ts": {
       "project": "desktop",
       "source": "app/src/lib/copilot-in-memory-session-fs-provider.ts",
-      "sha256": "c790bb73187f74ca2c9ba9baff906a7592af1c9c0dd0387628bcfc501b91b45b"
+      "sha256": "877fbba1697fc94216918fa37a579793f178f5f44b04c362589dcc7cbd0a6349"
     },
     "upstream/desktop/production/lib/helpers/repo-rules.ts": {
       "project": "desktop",
@@ -6656,22 +6656,22 @@
     "upstream/desktop/production/lib/credential-sessions.ts": {
       "project": "desktop",
       "source": "app/src/lib/credential-sessions.ts",
-      "sha256": "46ac5f9f6a6fb6ce0d533164e8c6c9e67b99d6503e27843a01394837b7ca6a65"
+      "sha256": "4ac881a1ea724798e6bbbc281de22773e8a223a49a6356a5979a85be838f4912"
     },
     "upstream/desktop/production/lib/stores/accounts-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/accounts-store.ts",
-      "sha256": "757dd1851606692c9398c9767e8bb6f4393f394c257b8dbbb465f982c0f5517b"
+      "sha256": "6d4c1bdb7678a6c282739c702af497bcf82f961ceb33853e72e8590d39a377a5"
     },
     "upstream/desktop/production/lib/stores/sign-in-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/sign-in-store.ts",
-      "sha256": "7df98c23ea6191ea6cd5babb0751f7739b8616afd0280d26b167906ed9265287"
+      "sha256": "75f49615eeeb2f361e3f6200e2d9698caade50aae39cb587174713ab5df90bed"
     },
     "upstream/desktop/production/lib/feature-flag.ts": {
       "project": "desktop",
       "source": "app/src/lib/feature-flag.ts",
-      "sha256": "a4581c968114aae9f6ab076ab23404ee314d45beff0cd70524f2744d46e7276c"
+      "sha256": "49d02a78e5264daea45297e54c43a3b5d5aa12e06ba8e8b89bc9d17d157bf4fe"
     },
     "upstream/desktop/helpers/stores/index.ts": {
       "project": "desktop",
@@ -6696,7 +6696,7 @@
     "../../src/upstream/models/clone-options.ts": {
       "project": "desktop",
       "source": "app/src/models/clone-options.ts",
-      "sha256": "e88d74eb298afe1bcbf8cecefaaf94c41f05b16e37837344866445bc8e5c70e5"
+      "sha256": "fec5d8b8159d0e6a65afc559e0b9cb1ad8ee76e87288ff3aa57c7e8cbbcd3446"
     },
     "../../src/upstream/models/progress.ts": {
       "project": "desktop",
@@ -6711,7 +6711,7 @@
     "upstream/desktop/production/models/retry-actions.ts": {
       "project": "desktop",
       "source": "app/src/models/retry-actions.ts",
-      "sha256": "92ed468494dc83b23374ac5ee43e52bdea569cf5af04ffee0bd7ed908a3f47c5"
+      "sha256": "3ac05b5200a15a800604f2c1de98a90a8dff5fb99cb2f214bea02457cc88b2fe"
     },
     "upstream/desktop/production/lib/git-error-context.ts": {
       "project": "desktop",
@@ -6721,12 +6721,12 @@
     "upstream/desktop/production/lib/error-with-metadata.ts": {
       "project": "desktop",
       "source": "app/src/lib/error-with-metadata.ts",
-      "sha256": "00826824ce9d9a361ecae58f1fcbe27c9604bc5e01bc25ee71a657c5c44aefdd"
+      "sha256": "25de00c98d38c747ef562379ac1a1ec9048326f681bdbf3d35e15ccc1d4202cb"
     },
     "upstream/desktop/production/lib/stores/cloning-repositories-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/cloning-repositories-store.ts",
-      "sha256": "2d02d3c1c65c2e7448f94bf0c5e2d6d21ea916ffc741465db20c044a4195e34f"
+      "sha256": "8e41962673a95de52f4b28dca055491d76fe7e1c6dcdb8ad9fd5c1f6a148ee3d"
     },
     "upstream/desktop/production/lib/stores/ahead-behind-store.ts": {
       "project": "desktop",
@@ -6831,7 +6831,7 @@
     "upstream/desktop/production/lib/app-state.ts": {
       "project": "desktop",
       "source": "app/src/lib/app-state.ts",
-      "sha256": "1935be5439622d600e9584e9d2bf08c67fa0129b79072a64ec66d2357f48e172"
+      "sha256": "3ba6b84925b81d63588d8777b02ba9b569741bf150b881c99b8e21f0bb19cc3f"
     },
     "upstream/desktop/production/lib/clamp.ts": {
       "project": "desktop",
@@ -6846,7 +6846,7 @@
     "upstream/desktop/helpers/ui/setup.ts": {
       "project": "desktop",
       "source": "app/test/helpers/ui/setup.ts",
-      "sha256": "d405e0d5eaa048ccc27ccc330c046c8ddc6391fe8a773837202d0aa8f49b1a9f"
+      "sha256": "81c45c61e30da55407c22ca6cfe4af1696008e38fe09d6fcb17c908ff9375d0a"
     },
     "upstream/desktop/production/ui/lib/aria-types.ts": {
       "project": "desktop",
@@ -7121,12 +7121,12 @@
     "upstream/desktop/production/lib/git/core.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/core.ts",
-      "sha256": "63b4a5f1c85cc89d12b0a82b1fd2d24d1f78b27a0c5a26d12ccd51df7ff7a38d"
+      "sha256": "75b2421577e29c66c5cbad48c776470f10dd927bf43c5f4fe28805d4f66eb39c"
     },
     "upstream/desktop/production/ui/app-error.tsx": {
       "project": "desktop",
       "source": "app/src/ui/app-error.tsx",
-      "sha256": "fc5daff1cc41a5baf03f847462429287827362dd01bd6953ab77f0b8af0dd158"
+      "sha256": "4803cabb3d5d9d00d4b446ecb1b5ee5db889e86e135912235f8dccc27445c257"
     },
     "upstream/desktop/production/ui/dialog/index.ts": {
       "project": "desktop",
@@ -7161,7 +7161,7 @@
     "upstream/desktop/production/lib/databases/repositories-database.ts": {
       "project": "desktop",
       "source": "app/src/lib/databases/repositories-database.ts",
-      "sha256": "4085cf52a19962dc2c52d893e084315dd8d35aec48f7283504ef77d275d95523"
+      "sha256": "5a57bd4736c8d2d9a0ed4997d0dd7b4ee20264c61b3d1107caccd9e9314aaefd"
     },
     "upstream/desktop/production/lib/databases/github-user-database.ts": {
       "project": "desktop",
@@ -7196,7 +7196,7 @@
     "upstream/desktop/production/lib/stores/repositories-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/repositories-store.ts",
-      "sha256": "e1131f085e5c4e4904f2cea86f8f2a59d57cad65be8e98061204331ed3ed3bfe"
+      "sha256": "81d758da64a3dc740d9f8f99e67f5c60bca36c77f5944bcd2b2bf6c0ae38641a"
     },
     "upstream/desktop/helpers/databases/test-repositories-database.ts": {
       "project": "desktop",
@@ -7296,17 +7296,17 @@
     "upstream/desktop/production/lib/stores/commit-status-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/commit-status-store.ts",
-      "sha256": "376a206df31b8f912c2b71acebd472cc65e93d4ce0dabe92e18e723d67ba279d"
+      "sha256": "1809cbd0aa11c2360ce05e5449402273fc7ba97ecac7db58cc3e74dc1489b945"
     },
     "upstream/desktop/production/ui/dispatcher/dispatcher.ts": {
       "project": "desktop",
       "source": "app/src/ui/dispatcher/dispatcher.ts",
-      "sha256": "e55f554bc4ee6f34c4833f9e791a47caf1c8bd9033191e917ba2542e9fa61e34"
+      "sha256": "b46593393dfa2f87a6b650c996c77aa4aabf675d99bcde7636aeefea2237a637"
     },
     "upstream/desktop/production/ui/branches/ci-status.tsx": {
       "project": "desktop",
       "source": "app/src/ui/branches/ci-status.tsx",
-      "sha256": "ecbf5a3afef7b3eb159456e020f15bf4a4921875c503ad889aefbbdfa09e9039"
+      "sha256": "2bd32b4f3a0f46d18b922945b1b47325e49a8666136e3a9f688a443bad7af431"
     },
     "upstream/desktop/production/ui/lib/theme-source.ts": {
       "project": "desktop",
@@ -7321,7 +7321,7 @@
     "upstream/desktop/production/lib/stores/app-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/app-store.ts",
-      "sha256": "bd1403171f36d7e769fb7e6fd7f8d3642b49da4493275de65081458e08bc842c"
+      "sha256": "d1d1c732e6c40e04a232ad065886c41fbc751b7604a06dbd29fd2524e392cb7f"
     },
     "../../public/static/ghd_dark.svg": {
       "project": "desktop",
@@ -7356,7 +7356,7 @@
     "upstream/desktop/production/ui/autocompletion/issues-autocompletion-provider.tsx": {
       "project": "desktop",
       "source": "app/src/ui/autocompletion/issues-autocompletion-provider.tsx",
-      "sha256": "2f7b8a882ef4831d2a6f07979de247b7fb60baa3f10d92e5b2b744061bf7262e"
+      "sha256": "c07444dc47728f9b55e7e5c5ba90ebf87a59b6a99b786947f0b41a5514ce7b82"
     },
     "upstream/desktop/helpers/databases/test-issues-database.ts": {
       "project": "desktop",
@@ -7396,12 +7396,12 @@
     "upstream/desktop/production/lib/stats/stats-database.ts": {
       "project": "desktop",
       "source": "app/src/lib/stats/stats-database.ts",
-      "sha256": "09566dabbc55b94f5998cb91d5ba77dddd42f9218b7957c6b0e6d0d91e45d21e"
+      "sha256": "2494ab3433b37b047139a4833028cab5a3475ff99f60a7af2027cc4eacbb9939"
     },
     "upstream/desktop/production/lib/stats/stats-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stats/stats-store.ts",
-      "sha256": "f18f924ad61257f92e408ecdd94fd927a8197d556bcbe22fe91fab833755161a"
+      "sha256": "9c1d23cf27d73da0cc47286268a71eba9fdd8e3c857222237d84c5efa54e947b"
     },
     "upstream/desktop/production/models/rebase.ts": {
       "project": "desktop",
@@ -7421,7 +7421,7 @@
     "upstream/desktop/helpers/changes-state-helper.ts": {
       "project": "desktop",
       "source": "app/test/helpers/changes-state-helper.ts",
-      "sha256": "7de12758a9fd4b92396e85cd2cc9370289acc7501e359d589c25834699ef9b58"
+      "sha256": "b7c2f97fa712123387f44c0b73b59adfc3fc5db62560e06e9189cc52d646f4be"
     },
     "upstream/desktop/helpers/test-stats-store.ts": {
       "project": "desktop",
@@ -7446,12 +7446,12 @@
     "upstream/desktop/production/lib/stores/repository-state-cache.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/repository-state-cache.ts",
-      "sha256": "1deda2b78399b6eaf35fd6387150c989121ccb8a7689e70716142d3ddfd5af34"
+      "sha256": "1e7afd60a0039b420423ebf42fcc302540b9bbfe528f9244de651cb1efc1d746"
     },
     "upstream/desktop/production/lib/stores/git-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/git-store.ts",
-      "sha256": "331e4faed09ab95d46f5ecd34be6db136513cc38ed003f5db02343fdb6879ead"
+      "sha256": "66c57d5f50a4f4fc4af45bad50f072b978de948475b88efb11df0f57f52245d7"
     },
     "upstream/desktop/production/lib/stores/upstream-already-exists-error.ts": {
       "project": "desktop",
@@ -7461,7 +7461,7 @@
     "upstream/desktop/production/lib/stores/git-store-cache.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/git-store-cache.ts",
-      "sha256": "2ab613e68fb881c4b1e9034d92cece65bcfaf527eed1bb06f5e0052bfacbd6d3"
+      "sha256": "77c6e76f06e7ab17420fed05cc7dbb4e2c63b6fa1fea396f0cfdb591b2605c91"
     },
     "upstream/desktop/production/lib/stores/updates/update-remote-url.ts": {
       "project": "desktop",
@@ -7486,17 +7486,17 @@
     "upstream/desktop/production/lib/git/update-ref.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/update-ref.ts",
-      "sha256": "e7dda78295f09b2e4444b09a4aae1d567a2728c15075d27775ce66e1db84cbe6"
+      "sha256": "9708fda8db644d76312c2746770dda3ebd11f8493000575482936c8b4212427f"
     },
     "upstream/desktop/production/lib/git/reset.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/reset.ts",
-      "sha256": "a98473a80d0e067b79edcb4ea91aa2bda372f6107aae21ec96e267615e7a5fbd"
+      "sha256": "d534a2c513881dd278e40b06bbb2637c6dbe8c415fa861e1061b28c31407bf73"
     },
     "upstream/desktop/production/lib/git/checkout.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/checkout.ts",
-      "sha256": "a79ec4365fd3d2c8f234bb50391a32b9368627bc45d1a34e0805f97f90110eb1"
+      "sha256": "ecba9651c49e4ac6e16dba48caa23e72464c2924c76cc295eddd2f0a6a4d7524"
     },
     "upstream/desktop/production/lib/git/rev-list.ts": {
       "project": "desktop",
@@ -7511,7 +7511,7 @@
     "upstream/desktop/production/lib/git/rm.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/rm.ts",
-      "sha256": "eec3dc1f9ebbbddb8d4560e2c35780c313be5cfe8af1ddbe54716eecacf381af"
+      "sha256": "cf60c151bbcba15b550dee0221aa95bf97360ffdb289cbf1b440b557fe866641"
     },
     "upstream/desktop/helpers/test-app-shell.ts": {
       "project": "desktop",
@@ -7571,7 +7571,7 @@
     "upstream/desktop/production/lib/stores/pull-request-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/pull-request-store.ts",
-      "sha256": "6a262da3886c85e88337c943d912b2cac4db38dde520e516a74966f888c5f6c7"
+      "sha256": "1b2447ca0dad12268aca65f9c1eea0b93fc8e45e1af49752e9023d87583ce586"
     },
     "upstream/desktop/production/lib/stores/api-repositories-store.ts": {
       "project": "desktop",
@@ -7581,7 +7581,7 @@
     "upstream/desktop/helpers/app-store-test-harness.ts": {
       "project": "desktop",
       "source": "app/test/helpers/app-store-test-harness.ts",
-      "sha256": "f46e2a210a4b3eaa264c44a44468f27bb198407e03b8917f3ce918b3652b1514"
+      "sha256": "21e94883f61f14323891d1d2fa76a9c86550cf446589872e0d7ff374948d8d1e"
     },
     "upstream/desktop/helpers/databases/test-github-user-database.ts": {
       "project": "desktop",
@@ -8116,7 +8116,7 @@
     "upstream/desktop/production/ui/repository-settings/no-remote.tsx": {
       "project": "desktop",
       "source": "app/src/ui/repository-settings/no-remote.tsx",
-      "sha256": "9f4dd7688950c0e67a67f706c034eccc9a1c21744a6b4f1d1f2ca64308e7a03d"
+      "sha256": "b54026e92d7b8ab91f5e97d86fadb93356410a5fed9a17eb7452896669fad2dd"
     },
     "upstream/desktop/production/ui/repository-rules/repo-rulesets-for-branch-link.tsx": {
       "project": "desktop",
@@ -8136,17 +8136,17 @@
     "upstream/desktop/production/ui/preferences/accounts.tsx": {
       "project": "desktop",
       "source": "app/src/ui/preferences/accounts.tsx",
-      "sha256": "aed4ef20d5e59b37125a35c85fa4fc11040d070a882f522b218397c442d18ab2"
+      "sha256": "b3dc12cb1b83dc6f84d002ceed73509a6d0269bcd1a9358818f477bd95f701b5"
     },
     "upstream/desktop/production/ui/invalidated-token/invalidated-token.tsx": {
       "project": "desktop",
       "source": "app/src/ui/invalidated-token/invalidated-token.tsx",
-      "sha256": "ffd7a0b91bdd16e4290961f1ef6dfc8990f8a5e4031f50b3eb83205d0724f25b"
+      "sha256": "2c6cc12c6555dad928eb38defe4956a0689a292e09469ba2f2414577c856d96d"
     },
     "upstream/desktop/production/ui/preferences/test-token-expiration-dialog.tsx": {
       "project": "desktop",
       "source": "app/src/ui/preferences/test-token-expiration-dialog.tsx",
-      "sha256": "885c834952d2557babb0dba1f04007296d01a711b0bea7cb6cdfbf0f3ee68a32"
+      "sha256": "e255cca266c25a4434e68248167f935ff77c287ae7345c1e6735da72871ca844"
     },
     "upstream/desktop/production/ui/preferences/snapshot-card.tsx": {
       "project": "desktop",
@@ -8186,12 +8186,12 @@
     "upstream/desktop/production/ui/lib/focus-container.tsx": {
       "project": "desktop",
       "source": "app/src/ui/lib/focus-container.tsx",
-      "sha256": "e8afb38eedf85bdd5a30b31f2d9e306ffaaa31e93e2e0a65ff618dda55c7b603"
+      "sha256": "d4dae627998eaf51045ce4c85e093292e791c7189e57287a2a47f8c4513826a5"
     },
     "upstream/desktop/production/ui/lib/popover.tsx": {
       "project": "desktop",
       "source": "app/src/ui/lib/popover.tsx",
-      "sha256": "975bfb80699a5875a313dda3241464ce6d978bc39269a8e1ca5cfc8993923de1"
+      "sha256": "de9582968e5e3b9b9ff1c895bf94faf0bed680e6644df1ad2a4673ef74de556b"
     },
     "upstream/desktop/production/ui/diff/whitespace-hint-popover.tsx": {
       "project": "desktop",
@@ -8301,7 +8301,7 @@
     "upstream/desktop/production/ui/repository-settings/repository-settings.tsx": {
       "project": "desktop",
       "source": "app/src/ui/repository-settings/repository-settings.tsx",
-      "sha256": "c8ba120bfd3c89ff24cf3cb17fff415357060a622ececf4408990280e5844d94"
+      "sha256": "75ad96e58b7537ef7ab69e3d28a69dc9f73ff3bd1f618fa3fc8b9cf824c4c12a"
     },
     "upstream/desktop/production/ui/history/unreachable-commits-dialog.tsx": {
       "project": "desktop",
@@ -8316,12 +8316,12 @@
     "upstream/desktop/production/models/popup.ts": {
       "project": "desktop",
       "source": "app/src/models/popup.ts",
-      "sha256": "7c8218067d4de9e2b37f7a0dcd9b10a0922bcd4a39b69f9968465a35c6224a4c"
+      "sha256": "1dd25e4a0ac0f858db7172b9d693d31a56b0eab4f4a4951320e6b66f04333143"
     },
     "upstream/desktop/production/lib/popup-manager.ts": {
       "project": "desktop",
       "source": "app/src/lib/popup-manager.ts",
-      "sha256": "16322308933fef1ee3d8e5388436ee04d5418ff36fb0c0a74e707a7b11e54bee"
+      "sha256": "a02a73f4f7bf66ada91b62769b5a06c00e3290d8825d20c5888a6b87113532c5"
     },
     "upstream/desktop/production/ui/copilot/copilot-disclaimer.tsx": {
       "project": "desktop",
@@ -8336,12 +8336,12 @@
     "upstream/desktop/production/ui/preferences/copilot.tsx": {
       "project": "desktop",
       "source": "app/src/ui/preferences/copilot.tsx",
-      "sha256": "95ce4109814aee7c3f607e8b4e078716042cec62248c67809f902259720136ff"
+      "sha256": "e1c0a6d9ca41a0adf6603b261cf3c869cd7f9bf00a8788ed18879af0813fdab0"
     },
     "upstream/desktop/production/ui/preferences/copilot-user-settings.tsx": {
       "project": "desktop",
       "source": "app/src/ui/preferences/copilot-user-settings.tsx",
-      "sha256": "c1619578934ff4682823fefc3432de9d86a3705e362d8cf6720c575b57cc5b5b"
+      "sha256": "21bca36c2b3607f3a8ca2bb87112e8d066a60b78162be2577032a3aa6431af66"
     },
     "upstream/desktop/production/ui/preferences/copilot-model-selection-info.tsx": {
       "project": "desktop",
@@ -8411,7 +8411,7 @@
     "upstream/desktop/production/ui/add-repository/add-existing-repository.tsx": {
       "project": "desktop",
       "source": "app/src/ui/add-repository/add-existing-repository.tsx",
-      "sha256": "eb3b6963353fbb1b8bfca10cddf54197f024912183f6c6a8f760b989af6faf1f"
+      "sha256": "cca264fdfa694a2fb92070fabe8c64cb127651d6f15ee41be944f74cf9760b09"
     },
     "upstream/desktop/production/ui/missing-repository.tsx": {
       "project": "desktop",
@@ -8441,12 +8441,12 @@
     "upstream/desktop/production/ui/lib/sign-in.tsx": {
       "project": "desktop",
       "source": "app/src/ui/lib/sign-in.tsx",
-      "sha256": "8609fc5d92a67a03ee09c33ebb476e44cd25c242bb6def19870ba0661831afb8"
+      "sha256": "2fc69cbca2fa06319b84fb744775ac483fc9802fc33213d3ae975e7ba92a3d9e"
     },
     "upstream/desktop/production/ui/sign-in/sign-in.tsx": {
       "project": "desktop",
       "source": "app/src/ui/sign-in/sign-in.tsx",
-      "sha256": "4f828cbe7e4c21cddd079d26ef2be02d2d0775079303444013d8f7cc3824c88a"
+      "sha256": "3a8e77da2b4a56de7cdd242973617710f733a39e65d616b3bee14cb4086fdc7b"
     },
     "upstream/desktop/production/ui/lib/authentication-form.tsx": {
       "project": "desktop",
@@ -8496,7 +8496,7 @@
     "upstream/desktop/production/lib/trampoline/trampoline-ui-helper.ts": {
       "project": "desktop",
       "source": "app/src/lib/trampoline/trampoline-ui-helper.ts",
-      "sha256": "3c568f0ebdc15c959dcabb5c9e5e2b45ead5aa6bdf43efd34383e17598b3b6a8"
+      "sha256": "e169d2fdbc430ed10b8b7ce1164941840cac741762a145f8caa0fe67acd68935"
     },
     "upstream/desktop/production/models/git-account.ts": {
       "project": "desktop",
@@ -8661,7 +8661,7 @@
     "../../docs/process/usage-data.json": {
       "project": "desktop",
       "source": "docs/process/usage-data.json",
-      "sha256": "da27579c71b0dc5d61f701052ffe94cc4fd410369e2c2c18467bdab3546f5c1a"
+      "sha256": "206abf0ad552e6b35ffb4e5ddfe890c3e8f91f2e233a46dd072d027b04286863"
     },
     "upstream/desktop/production/ui/lib/ui-activity-monitor.ts": {
       "project": "desktop",
@@ -8681,7 +8681,7 @@
     "upstream/desktop/production/lib/stores/notifications-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/notifications-store.ts",
-      "sha256": "cf84171d8d43228519f5de6627d026a1987641dba3eefb13c06d47be96c51070"
+      "sha256": "cc324a829c01b0c20e86ee1650d678be103b598820b540e2505ea81515cb54a9"
     },
     "upstream/desktop/production/lib/get-renderer-guid.ts": {
       "project": "desktop",
@@ -8701,7 +8701,7 @@
     "upstream/desktop/production/lib/git/push.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/push.ts",
-      "sha256": "6c0e5b0c1850bed7bec1fbe5820b671c205ed5722c0fd8e82444c8d0c680a237"
+      "sha256": "b07a99f5d31f80a5fb7caf9f7ffb21114a2bbf56807738e841ee14e3de5c431f"
     },
     "../../src/upstream/lib/errno-exception.ts": {
       "project": "desktop",
@@ -8711,7 +8711,7 @@
     "upstream/desktop/production/lib/stores/alive-store.ts": {
       "project": "desktop",
       "source": "app/src/lib/stores/alive-store.ts",
-      "sha256": "1cd2f825732bd06f7bc25ca7dd00d5eae7598997c7e0655c2866997ece1fa0fe"
+      "sha256": "f998c087d7b3fef29deb6ca1f8f4db63bc4658fe80eebb3fbb3556bfa3bce28a"
     },
     "upstream/desktop/production/lib/stores/pull-request-coordinator.ts": {
       "project": "desktop",
@@ -8731,7 +8731,7 @@
     "../../src/upstream/models/clone-repository-tab.ts": {
       "project": "desktop",
       "source": "app/src/models/clone-repository-tab.ts",
-      "sha256": "ef3bd51248baafd6bdf32457585ed8718ea33321a0cbad9b4b53725643db55f7"
+      "sha256": "9006493d329c7b0673cda9fd375d3b454c687cc30715a045a72cbe86cc11aac9"
     },
     "upstream/desktop/production/ui/lib/default-dir.ts": {
       "project": "desktop",
@@ -8741,12 +8741,12 @@
     "upstream/desktop/production/ui/clone-repository/clone-repository.tsx": {
       "project": "desktop",
       "source": "app/src/ui/clone-repository/clone-repository.tsx",
-      "sha256": "45505186dfda26d180c8ad781fa75d88d30da8d09d0db840b62f1c9340e853fe"
+      "sha256": "9960127f46b35e6dcebe7332c4b74849883280893c11348de33df74cbcc69b7d"
     },
     "upstream/desktop/production/ui/clone-repository/clone-github-repository.tsx": {
       "project": "desktop",
       "source": "app/src/ui/clone-repository/clone-github-repository.tsx",
-      "sha256": "cfe6390a9493e330e535ff616990c09ca6053db0b7a2c87c8f8fb3152bd28612"
+      "sha256": "7ab8be80ddb42b2d9fe2ad04e89f8185dcb0bac7fe28d48a0bee3ebf00c68515"
     },
     "upstream/desktop/production/ui/clone-repository/clone-generic-repository.tsx": {
       "project": "desktop",
@@ -8761,7 +8761,7 @@
     "upstream/desktop/production/ui/account-picker.tsx": {
       "project": "desktop",
       "source": "app/src/ui/account-picker.tsx",
-      "sha256": "a66f2c7521206540f12c2d249608e51a6514d212485c3317503ca646225a88bd"
+      "sha256": "612f398597e459814bb33154891ecb919d7dc3ce4bd1e19448ece91b7b093567"
     },
     "upstream/desktop/production/lib/generic-git-auth.ts": {
       "project": "desktop",
@@ -8786,7 +8786,7 @@
     "upstream/desktop/production/lib/trampoline/find-account.ts": {
       "project": "desktop",
       "source": "app/src/lib/trampoline/find-account.ts",
-      "sha256": "007abfd1dad1fb2a01e61731e7e9b8dd289b357937ae22506bd1da5e939674a8"
+      "sha256": "6d40f6ef359832e47807451183ed63e5ffd5bbb58cee09be6fe919e0c06847d7"
     },
     "upstream/desktop/production/lib/git/credential.ts": {
       "project": "desktop",
@@ -8796,12 +8796,12 @@
     "upstream/desktop/production/lib/trampoline/trampoline-environment.ts": {
       "project": "desktop",
       "source": "app/src/lib/trampoline/trampoline-environment.ts",
-      "sha256": "a1ce9fe873abd9ac1e95b8123b8074d2692fee235789dc5eda433c24d12b8c28"
+      "sha256": "5831dd1044ce631e2262b63fc2a70ce42fbbc5454764e9c04c4a17784f48fd98"
     },
     "upstream/desktop/production/lib/trampoline/trampoline-credential-helper.ts": {
       "project": "desktop",
       "source": "app/src/lib/trampoline/trampoline-credential-helper.ts",
-      "sha256": "3bd0f9b9e0fe75e6360b9ed888bc186d1489f0eb28a4203f5466d1a5e0d737be"
+      "sha256": "99fb6aebbce443dc0f357934c8ac5d41b0ee82a5573ea73d4a3f0c9546dbbe82"
     },
     "upstream/desktop/production/lib/copilot-runtime.ts": {
       "project": "desktop",
@@ -8861,7 +8861,7 @@
     "upstream/desktop/vendor/desktop-notifications/package.json": {
       "project": "desktop",
       "source": "vendor/desktop-notifications/package.json",
-      "sha256": "823d5f68e9d127189110fe7493e232ce44a92af285bf7e3949b974270100a855"
+      "sha256": "4be864cc9a5d7831dbc35651c8d65f907ca3378af558f75785eb64725141c8fc"
     },
     "upstream/desktop/vendor/desktop-notifications/tsconfig.json": {
       "project": "desktop",
@@ -8981,7 +8981,7 @@
     "upstream/desktop/production/main-process/menu/build-default-menu.ts": {
       "project": "desktop",
       "source": "app/src/main-process/menu/build-default-menu.ts",
-      "sha256": "e066d0c28745ffe95c3cef0fe0c5834c61ca3f8ce709efffcf23b21949e7c088"
+      "sha256": "23463c3b725e9e3d148015102f314a14e2b0da185ad17adbc5c62467fbf721fb"
     },
     "upstream/desktop/production/main-process/menu/build-spell-check-menu.ts": {
       "project": "desktop",
@@ -9021,7 +9021,7 @@
     "upstream/desktop/production/lib/menu-update.ts": {
       "project": "desktop",
       "source": "app/src/lib/menu-update.ts",
-      "sha256": "dbb1362baffe64989114ba77769289a88d8df973922cc6e7f0038bf2f3c5047d"
+      "sha256": "9c090787e61211ca415aa72beab4f14ed9ae54ee264b9708966e849cfae64724"
     },
     "upstream/desktop/production/lib/menu-item.ts": {
       "project": "desktop",
@@ -9086,12 +9086,12 @@
     "upstream/desktop/production/ui/changes/commit-message.tsx": {
       "project": "desktop",
       "source": "app/src/ui/changes/commit-message.tsx",
-      "sha256": "045cff6577437a47d1037a0d25d97b9c0f060aa291291f68d7abbf111a51bd29"
+      "sha256": "e70602a360d5845118715b2dee8a04d0c56fd36bba59b83c3c5a36a8ebe4bf9c"
     },
     "upstream/desktop/production/ui/changes/commit-message-avatar.tsx": {
       "project": "desktop",
       "source": "app/src/ui/changes/commit-message-avatar.tsx",
-      "sha256": "6502364bf0c99eb0d23d1b970711655289cf70e6425fd79ab776605f971dc3a0"
+      "sha256": "c44411d7f1db6b49fad9531f123c86866a2c57283aa737e1540907a974c169dd"
     },
     "upstream/desktop/production/ui/lib/toggletipped-content.tsx": {
       "project": "desktop",
@@ -9101,12 +9101,12 @@
     "upstream/desktop/production/ui/lib/author-input/author-input.tsx": {
       "project": "desktop",
       "source": "app/src/ui/lib/author-input/author-input.tsx",
-      "sha256": "469488f0bdb54c6dc5cba863bb7b728e30ea08f3e32d850bd80d58496362dffd"
+      "sha256": "50f0141a648c983f2acc888dbe41fa4c4dc6c3e3608438b7020c656e3d08ae3f"
     },
     "upstream/desktop/production/ui/lib/author-input/author-handle.tsx": {
       "project": "desktop",
       "source": "app/src/ui/lib/author-input/author-handle.tsx",
-      "sha256": "a578754a12e0d0610169dcc862761e8fd13783e99e6848c919c1e85045f7ffd7"
+      "sha256": "13792092be3fc2b8bb366b99da3a559b47719a364838312a2cdf19c6e1e88bd1"
     },
     "upstream/desktop/production/ui/lib/author-input/author-text.ts": {
       "project": "desktop",
@@ -9116,7 +9116,7 @@
     "upstream/desktop/production/ui/autocompletion/autocompleting-text-input.tsx": {
       "project": "desktop",
       "source": "app/src/ui/autocompletion/autocompleting-text-input.tsx",
-      "sha256": "c7a8e99e918ee29243f41881ed253ca3d7779395bab93c5cf335523e15870dd3"
+      "sha256": "cfcf63dfcd33d26627792de8ab4af7216b37a1a3281e415b88607e1a553cd0af"
     },
     "upstream/desktop/production/ui/autocompletion/user-autocompletion-provider.tsx": {
       "project": "desktop",
@@ -9141,12 +9141,12 @@
     "upstream/desktop/production/lib/get-account-for-repository.ts": {
       "project": "desktop",
       "source": "app/src/lib/get-account-for-repository.ts",
-      "sha256": "a47d615602b0e464373c9fe031fa2f6d690110cc9d66c33074794bda99d7973d"
+      "sha256": "c41aaeac22903c0cd818cb71a60937d1172baeeb2af47a8532a7018cfeadd85d"
     },
     "upstream/desktop/production/lib/format-commit-message.ts": {
       "project": "desktop",
       "source": "app/src/lib/format-commit-message.ts",
-      "sha256": "3716c1a98695607a8546d668b7a7958acde06be114a243613d8c336c0ffe3eb6"
+      "sha256": "3eb93386cf03125516447b06c477a93289e92f9b90db224d198a5df4c9351239"
     },
     "upstream/desktop/production/lib/stores/helpers/repository-indicator-updater.ts": {
       "project": "desktop",
@@ -9231,7 +9231,7 @@
     "upstream/desktop/production/ui/changes/filter-changes-list.tsx": {
       "project": "desktop",
       "source": "app/src/ui/changes/filter-changes-list.tsx",
-      "sha256": "195a65d515c09812a5048f15b11fd5e9473995ca8fd34ee4e49f7534f22994e3"
+      "sha256": "43efacd0aa0d805d5a12a2176f594acfa23f87c938c874efa90593c4c2474bf8"
     },
     "upstream/desktop/e2e/test-helpers.ts": {
       "project": "desktop",
@@ -9271,7 +9271,7 @@
     "upstream/desktop/production/lib/git/worktree.ts": {
       "project": "desktop",
       "source": "app/src/lib/git/worktree.ts",
-      "sha256": "988d9b53bed4b02beb8124d20bb381ae59c8b7dc85d3f89b8a0e00b803b2e001"
+      "sha256": "d2725bb9df9db671113c3dd43823af42f058e9e1cc2b0a828c97d26f42915e9f"
     },
     "upstream/desktop/production/ui/stash-changes/stash-and-switch-branch-dialog.tsx": {
       "project": "desktop",
@@ -9286,7 +9286,7 @@
     "upstream/desktop/production/ui/worktrees/worktree-list-item-context-menu.ts": {
       "project": "desktop",
       "source": "app/src/ui/worktrees/worktree-list-item-context-menu.ts",
-      "sha256": "0eaa41c573b13da9686d1661fdf01ec463aa9a7b7ae18f03f75834c67ccdf616"
+      "sha256": "0dfa8dc77ac86eead4fdbf755e273c2957c4c5f4295920f7ec3d4826b89b31a4"
     },
     "upstream/gitlens/packages/git-cli/src/providers/__tests__/integration/helpers.ts": {
       "project": "gitlens",

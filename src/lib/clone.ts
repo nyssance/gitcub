@@ -1,15 +1,20 @@
 import { Channel, invoke } from "@tauri-apps/api/core"
 
+import type { RepositoryAccount } from "../models/app-state"
+import type { CloneRepositoryOptions } from "../upstream/models/clone-options"
 import type { GitCommandResult } from "./git-result"
 
 export { GitError as GitCommandError, isGitError } from "./git-error"
 export type { GitCommandResult } from "./git-result"
 
 import { GitError as GitCommandError } from "./git-error"
+export type GitCubCloneOptions = CloneRepositoryOptions & {
+  readonly repositoryAccount?: RepositoryAccount
+}
 export async function clone(
   url: string,
   path: string,
-  options: { branch?: string; defaultBranch?: string } = {},
+  options: GitCubCloneOptions = {},
   progressCallback?: (progress: { kind: "clone"; title: string; value: number; description?: string }) => void
 ) {
   progressCallback?.({ kind: "clone", title: `Cloning into ${path}`, value: 0 })

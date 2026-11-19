@@ -1,4 +1,5 @@
 import { GearIcon, TriangleDownIcon } from "@primer/octicons-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -19,8 +20,9 @@ export function DiffOptions(props: {
   onWrapChanged: (value: boolean) => void
 }) {
   const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
           <Button
@@ -34,45 +36,47 @@ export function DiffOptions(props: {
         <GearIcon size={16} />
         <TriangleDownIcon size={16} />
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 gap-4 text-xs">
-        <PopoverHeader>
-          <PopoverTitle className="text-sm">{t("diff.settings")}</PopoverTitle>
-        </PopoverHeader>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 font-semibold">{t("diff.whitespace")}</legend>
-          <Label className="text-xs font-normal">
-            <Checkbox
-              checked={props.hideWhitespaceChanges}
-              onCheckedChange={value => props.onHideWhitespaceChangesChanged(value)}
-            />
-            {t("diff.hideWhitespace")}
-          </Label>
-          {props.isInteractiveDiff && <p className="text-muted-foreground">{t("diff.hideWhitespaceHint")}</p>}
-        </fieldset>
-        <fieldset>
-          <legend className="mb-2 font-semibold">{t("diff.display")}</legend>
-          <RadioGroup
-            value={props.showSideBySideDiff ? "split" : "unified"}
-            onValueChange={value => props.onShowSideBySideDiffChanged(value === "split")}
-            className="gap-2">
+      {open && (
+        <PopoverContent align="end" className="w-64 gap-4 text-xs">
+          <PopoverHeader>
+            <PopoverTitle className="text-sm">{t("diff.settings")}</PopoverTitle>
+          </PopoverHeader>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 font-semibold">{t("diff.whitespace")}</legend>
             <Label className="text-xs font-normal">
-              <RadioGroupItem value="unified" />
-              {t("diff.unified")}
+              <Checkbox
+                checked={props.hideWhitespaceChanges}
+                onCheckedChange={value => props.onHideWhitespaceChangesChanged(value)}
+              />
+              {t("diff.hideWhitespace")}
             </Label>
+            {props.isInteractiveDiff && <p className="text-muted-foreground">{t("diff.hideWhitespaceHint")}</p>}
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 font-semibold">{t("diff.display")}</legend>
+            <RadioGroup
+              value={props.showSideBySideDiff ? "split" : "unified"}
+              onValueChange={value => props.onShowSideBySideDiffChanged(value === "split")}
+              className="gap-2">
+              <Label className="text-xs font-normal">
+                <RadioGroupItem value="unified" />
+                {t("diff.unified")}
+              </Label>
+              <Label className="text-xs font-normal">
+                <RadioGroupItem value="split" />
+                {t("diff.split")}
+              </Label>
+            </RadioGroup>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 font-semibold">{t("diff.lines")}</legend>
             <Label className="text-xs font-normal">
-              <RadioGroupItem value="split" />
-              {t("diff.split")}
+              <Checkbox checked={props.wrap} onCheckedChange={value => props.onWrapChanged(value)} />
+              {t("diff.wrap")}
             </Label>
-          </RadioGroup>
-        </fieldset>
-        <fieldset>
-          <legend className="mb-2 font-semibold">{t("diff.lines")}</legend>
-          <Label className="text-xs font-normal">
-            <Checkbox checked={props.wrap} onCheckedChange={value => props.onWrapChanged(value)} />
-            {t("diff.wrap")}
-          </Label>
-        </fieldset>
-      </PopoverContent>
+          </fieldset>
+        </PopoverContent>
+      )}
     </Popover>
   )
 }

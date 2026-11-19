@@ -374,6 +374,13 @@
     "forbidden": "This account is not allowed to do that (HTTP 403)"
   },
   "prefs": {
+    "signInAsAccountOnHostToContinue": "Sign in as <0>{{login}}</0> on <1>{{host}}</1> to continue.",
+    "signInWithAnotherAccount": "Sign in with another account",
+    "cloneWithAccount": "Clone with account",
+    "additionalAccountToken": "Additional account token",
+    "addAccount": "Add account",
+    "currentRepositoryAccount": "Current repository account",
+    "defaultAccount": "Default account",
     "formatting": "Formatting",
     "dateFormat": "Date Format",
     "timeFormat": "Time Format",

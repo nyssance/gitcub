@@ -2074,7 +2074,7 @@ const preferencesState = {
   accountHosts: [],
   oauthClients: {}
 }
-function preferences(overrides: Parameters<typeof installNativeFixtures>[0], state = {}) {
+function preferences(overrides: Parameters<typeof installNativeFixtures>[0], state = {}, onAccountsChanged = mock()) {
   fixtures(overrides)
   const onPatch = mock()
   render(
@@ -2083,7 +2083,7 @@ function preferences(overrides: Parameters<typeof installNativeFixtures>[0], sta
       initialTab="advanced"
       onOpenChange={() => {}}
       onPatch={onPatch}
-      onAccountsChanged={() => {}}
+      onAccountsChanged={onAccountsChanged}
       hosts={["github.com", "gitlab.com"]}
       accounts={{}}
       state={{ ...preferencesState, ...state } as never}
@@ -2093,6 +2093,7 @@ function preferences(overrides: Parameters<typeof installNativeFixtures>[0], sta
 }
 test("preferences: importing Desktop merges repositories and reports imported and skipped counts (ImportLocalDesktop)", async () => {
   const user = userEvent.setup()
+  const onAccountsChanged = mock()
   const onPatch = preferences(
     {
       read_desktop_import: () => ({
@@ -2105,7 +2106,8 @@ test("preferences: importing Desktop merges repositories and reports imported an
         skipped: ["/missing"]
       })
     },
-    { repositories: ["/existing"], selectedRepository: "/existing" }
+    { repositories: ["/existing"], selectedRepository: "/existing" },
+    onAccountsChanged
   )
   await user.click(await screen.findByRole("button", { name: t("prefs.desktopImportAction") }))
   await waitFor(() =>
@@ -2119,6 +2121,7 @@ test("preferences: importing Desktop merges repositories and reports imported an
       externalTerminal: "com.apple.Terminal"
     })
   )
+  expect(onAccountsChanged).toHaveBeenCalledTimes(1)
   expect(screen.getByRole("status")).toHaveTextContent(t("prefs.desktopImported", { count: 1, skipped: 1 }))
 })
 test("preferences: a failed Desktop import patches nothing and can be retried (ImportLocalDesktopFailure)", async () => {

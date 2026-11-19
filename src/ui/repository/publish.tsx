@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
+import { useAccountsStore } from "@/features/accounts/store"
+import { useAppStateStore } from "@/features/app-state/store"
 import { hookFailureHandling } from "@/features/dialogs/store"
 import { ipc } from "@/lib/ipc"
 
@@ -31,16 +33,34 @@ export function PublishRepository({
 }) {
   const { t } = useTranslation()
   const [name, setName] = useState(repo.split("/").findLast(Boolean) ?? "")
-  const [host, setHost] = useState(hosts[0] ?? "github.com")
+  const accounts = useAccountsStore(s => s.accounts)
+  const extra = useAppStateStore(s => s.state?.additionalAccounts)
+  const choices = [...new Set([...hosts, ...Object.keys(extra ?? {})])].flatMap(host => {
+    const primary = accounts[host]
+    const logins = extra?.[host] ?? []
+    return [
+      ...(primary?.login && !primary.ignored && !primary.unauthorized && !logins.includes(primary.login)
+        ? [{ host, login: primary.login, primary: true }]
+        : []),
+      ...logins.map(login => ({ host, login, primary: false }))
+    ]
+  })
+  const [choice, setChoice] = useState<string | null>(null)
+  const selected = choice === null ? choices[0] : choices.find(account => JSON.stringify(account) === choice)
   const [isPrivate, setPrivate] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const submit = async () => {
+    if (!selected || busy) return
     setBusy(true)
     setError(null)
     try {
-      const url = await ipc.createRemoteRepo(host, name.trim(), isPrivate)
+      const url = await ipc.createRemoteRepo(selected.host, name.trim(), isPrivate, selected)
+      await ipc.assignRepositoryAccount(repo, selected)
+      useAppStateStore
+        .getState()
+        .update(state => ({ ...state, repositoryAccounts: { ...state.repositoryAccounts, [repo]: selected } }))
       await ipc.addRemote(repo, "origin", url)
       // Desktop _publishRepository 走 _push：pre-push 失败时问，中止就不报错（仓库已经建好）
       const { onHookFailure, ignoreAborted } = hookFailureHandling()
@@ -74,12 +94,13 @@ export function PublishRepository({
             <FieldLabel htmlFor="publish-host">{t("publish.host")}</FieldLabel>
             <NativeSelect
               id="publish-host"
-              value={host}
-              onChange={e => setHost(e.currentTarget.value)}
+              value={selected ? JSON.stringify(selected) : ""}
+              disabled={busy}
+              onChange={e => setChoice(e.currentTarget.value)}
               className="border-input h-8 rounded-md border bg-transparent px-2 text-xs">
-              {hosts.map(h => (
-                <option key={h} value={h}>
-                  {h}
+              {choices.map(account => (
+                <option key={JSON.stringify(account)} value={JSON.stringify(account)}>
+                  {account.login} · {account.host}
                 </option>
               ))}
             </NativeSelect>
@@ -97,7 +118,7 @@ export function PublishRepository({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.cancel")}
           </Button>
-          <Button disabled={busy || !name.trim()} onClick={() => void submit()}>
+          <Button disabled={busy || !selected || !name.trim()} onClick={() => void submit()}>
             {t("publish.submit")}
           </Button>
         </DialogFooter>

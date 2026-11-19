@@ -2,6 +2,7 @@
 import type { Disposable } from "event-kit"
 
 import type { GitHubRepository } from "../models/github-repository"
+import type { Repository } from "../models/repository"
 import type { ICombinedRefCheck } from "./ci-checks/ci-checks"
 import type { CommitStatusStore, StatusCallBack } from "./stores/commit-status-store"
 export class CommitStatusDispatcher {
@@ -10,14 +11,20 @@ export class CommitStatusDispatcher {
   constructor(commitStatusStore: CommitStatusStore) {
     this.commitStatusStore = commitStatusStore
   }
-  public tryGetCommitStatus(repository: GitHubRepository, ref: string, branchName?: string): ICombinedRefCheck | null {
-    return this.commitStatusStore.tryGetStatus(repository, ref, branchName)
+  public tryGetCommitStatus(
+    repository: GitHubRepository,
+    localRepository: Repository,
+    ref: string,
+    branchName?: string
+  ): ICombinedRefCheck | null {
+    return this.commitStatusStore.tryGetStatus(repository, localRepository, ref, branchName)
   }
 
   /**
    * Subscribe to commit status updates for a particular ref.
    *
    * @param repository The GitHub repository to use when looking up commit status.
+   * @param localRepository The local repository providing the account assignment.
    * @param ref        The commit ref (can be a SHA or a Git ref) for which to
    *                   fetch status.
    * @param callback   A callback which will be invoked whenever the
@@ -27,10 +34,11 @@ export class CommitStatusDispatcher {
    */
   public subscribeToCommitStatus(
     repository: GitHubRepository,
+    localRepository: Repository,
     ref: string,
     callback: StatusCallBack,
     branchName?: string
   ): Disposable {
-    return this.commitStatusStore.subscribe(repository, ref, callback, branchName)
+    return this.commitStatusStore.subscribe(repository, localRepository, ref, callback, branchName)
   }
 }

@@ -47,6 +47,27 @@ export interface IDailyMeasures {
   /** Recoverable token refresh failures that retain credentials. */
   readonly tokenRefreshTransientFailureCount: number
 
+  /** Token refresh requests that reach Desktop's timeout deadline. */
+  readonly tokenRefreshTransientFailureTimeoutCount: number
+
+  /** Token refresh requests that fail before receiving an HTTP response. */
+  readonly tokenRefreshTransientFailureNetworkCount: number
+
+  /** Token refresh requests rejected by HTTP or OAuth rate limiting. */
+  readonly tokenRefreshTransientFailureRateLimitedCount: number
+
+  /** Token refresh requests receiving an HTTP 5xx response. */
+  readonly tokenRefreshTransientFailureServerCount: number
+
+  /** Other unsuccessful HTTP token refresh responses. */
+  readonly tokenRefreshTransientFailureOtherHttpCount: number
+
+  /** Unrecognized OAuth errors in token refresh responses. */
+  readonly tokenRefreshTransientFailureOtherOAuthCount: number
+
+  /** Token refresh failures without a recognized request failure kind. */
+  readonly tokenRefreshTransientFailureUnknownCount: number
+
   /** Rejected refresh tokens or malformed replacement credentials. */
   readonly tokenRefreshNonTransientFailureCount: number
 
@@ -661,7 +682,10 @@ export interface IDailyMeasures {
   /** The number of times the user adjust the filter from warnings about hidden changes */
   adjustedFiltersForHiddenChangesCount: 0
 
-  /** The number of enterprise accounts the user is signed in to */
+  /**
+   * The number of enterprise accounts the user is signed in to. A host can
+   * have several accounts, see `enterpriseHostCount` for the number of hosts.
+   */
   readonly enterpriseAccountCount: number
 
   /** The number of times a user has clicked the "Generate commit message" button */
@@ -750,6 +774,62 @@ export interface IDailyMeasures {
 
   /** The number of Copilot conflict resolutions that took over 120 seconds */
   readonly copilotConflictResolutionOver120sCount: number
+  /** The number of sign-ins that added another account on an endpoint that already had a signed-in account */
+  readonly additionalAccountSignInCount: number
+
+  /** The number of confirmed sign-outs of an account with assigned repositories */
+  readonly accountSignOutWithAssignmentsCount: number
+
+  /** The number of confirmed sign-outs that cleared the account's repository assignments */
+  readonly accountSignOutClearedAssignmentsCount: number
+
+  /** The number of times the user cancelled signing out an account with assigned repositories */
+  readonly accountSignOutCancelledCount: number
+
+  /** The number of times a repository's account was changed in repository settings */
+  readonly repositoryAccountChangedFromSettingsCount: number
+
+  /** The number of times a repository's account was changed from the repository list context menu */
+  readonly repositoryAccountChangedFromContextMenuCount: number
+
+  /** The number of URL clones assigned to the only account with access, without asking */
+  readonly cloneAccountAutoAssignedCount: number
+
+  /** The number of URL clones where the user chose between several accounts with access */
+  readonly cloneAccountChosenCount: number
+
+  /** The number of URL clones left without an assigned account */
+  readonly cloneAccountUnassignedCount: number
+
+  /** The number of clones from the account picker for an endpoint with more than one signed-in account */
+  readonly cloneFromAccountPickerOnMultiAccountEndpointCount: number
+
+  /** The number of added GitHub repositories assigned to the only account with access, without asking */
+  readonly addRepositoryAccountAutoAssignedCount: number
+
+  /** The number of added GitHub repositories where the user chose between several accounts with access */
+  readonly addRepositoryAccountChosenCount: number
+
+  /** The number of added GitHub repositories left without an assigned account */
+  readonly addRepositoryAccountUnassignedCount: number
+
+  /** The number of repositories published with an account on an endpoint with more than one signed-in account */
+  readonly publishOnMultiAccountEndpointCount: number
+
+  /** The number of Git credential requests answered with the repository's assigned account without prompting */
+  readonly gitCredentialFromAssignedAccountCount: number
+
+  /** The number of Git credential requests answered after prompting for the repository's account */
+  readonly gitCredentialAfterPromptCount: number
+
+  /** The number of background Git credential requests for a repository without a usable account */
+  readonly gitCredentialUnavailableInBackgroundCount: number
+
+  /** The number of foreground Git credential requests for a GitHub repository that ended without a credential */
+  readonly gitCredentialNotProvidedCount: number
+
+  /** The number of times Git rejected a GitHub account credential */
+  readonly gitCredentialRejectedCount: number
 }
 
 export class StatsDatabase extends Dexie {

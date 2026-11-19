@@ -17,7 +17,12 @@ import type { ICommitMessage } from "@/upstream/models/commit-message"
 /** prompt：原版 Prompts 页里对应的那一项；弹窗带「不再显示」，关掉后直接放行 */
 type Asking = { message: string; prompt?: Prompt; dontAskAgain: boolean; resolve: (ok: boolean) => void }
 type WarnForcePush = { operation: string; resolve: (begin: boolean) => void }
-type AskingText = { message: string; value: string; resolve: (value: string | null) => void }
+type AskingText = {
+  choices?: readonly string[]
+  message: string
+  value: string
+  resolve: (value: string | null) => void
+}
 type StashPrompt = {
   name: string
   current: string
@@ -88,7 +93,7 @@ interface DialogsStore {
   answerWarnForcePush: (begin: boolean, askForConfirmationOnForcePush?: boolean) => void
   setDontAskAgain: (value: boolean) => void
   answer: (ok: boolean) => void
-  askText: (message: string, initial?: string) => Promise<string | null>
+  askText: (message: string, initial?: string, choices?: readonly string[]) => Promise<string | null>
   setAskingTextValue: (value: string) => void
   answerText: (value: string | null) => void
   promptStashAndSwitch: (name: string, current: string, hasAssociatedStash: boolean) => Promise<boolean | "carry">
@@ -160,8 +165,8 @@ export const useDialogsStore = create<DialogsStore>()((set, get) => ({
     asking?.resolve(ok)
     set({ asking: null })
   },
-  askText: (message, initial = "") =>
-    new Promise<string | null>(done => set({ askingText: { message, value: initial, resolve: done } })),
+  askText: (message, initial = "", choices) =>
+    new Promise<string | null>(done => set({ askingText: { message, value: initial, choices, resolve: done } })),
   setAskingTextValue: value =>
     set(store => (store.askingText ? { askingText: { ...store.askingText, value } } : store)),
   answerText: value => {

@@ -370,6 +370,13 @@
     "forbidden": "当前账号没有权限执行此操作（HTTP 403）"
   },
   "prefs": {
+    "signInAsAccountOnHostToContinue": "请以 <0>{{login}}</0> 的身份登录 <1>{{host}}</1> 以继续。",
+    "signInWithAnotherAccount": "登录另一个账号",
+    "cloneWithAccount": "选择克隆使用的账号",
+    "additionalAccountToken": "其他账号的令牌",
+    "addAccount": "添加账号",
+    "currentRepositoryAccount": "当前仓库的账号",
+    "defaultAccount": "默认账号",
     "formatting": "格式",
     "dateFormat": "日期格式",
     "timeFormat": "时间格式",

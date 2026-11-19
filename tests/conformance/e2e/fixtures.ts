@@ -391,6 +391,14 @@ before(
       30_000,
       250
     )
+    if (process.platform === "darwin") {
+      await poll(
+        () => hasgard<string>("eval", "document.visibilityState"),
+        state =>
+          assert.equal(state, "visible", "The native workflow window must be visible for WebKit to render frames"),
+        5000
+      )
+    }
   },
   { timeout: 45_000 }
 )

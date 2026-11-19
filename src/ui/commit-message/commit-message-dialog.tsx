@@ -81,7 +81,7 @@ export function CommitMessageDialog(props: ICommitMessageDialogProps) {
   const storedAuthor = useRepositoryStore(s => s.author)
   const [author, setAuthor] = useState(storedAuthor)
   useEffect(() => setAuthor(storedAuthor), [storedAuthor])
-  const providers = useAutocompletionProviders(issues, mentionables, props.remote, accounts)
+  const providers = useAutocompletionProviders(issues, mentionables, props.remote, accounts, props.repo)
   const showCommitLengthWarning = usePreferencesStore(s => s.showCommitLengthWarning)
   const [spellcheck, setSpellcheck] = useState(true)
   const [options, setOptions] = useState({ skipCommitHooks: false, signOffCommits: false, allowEmptyCommit: false })

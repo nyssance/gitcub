@@ -116,6 +116,8 @@
 
 ## 开发工具链
 
+- macOS 界面调试与验收只用 Hasgard，只在副屏操作。启动时指定 `TAURI_HASGARD_DISPLAY=secondary`，通过目标实例的专用 socket 核实窗口实际位于副屏后再操作。此规则也适用于已安装的正式版、设置、账号导入和登录授权窗口。无法确认副屏位置或无法用 Hasgard 控制时，停止该界面步骤；禁止回退到主屏或其他桌面自动化工具。
+
 - 项目自有 TypeScript 代码和构建脚本统一使用 TypeScript 7 检查；不引入旧版编译器。Vendor 与原版测试快照保持原样，必要的测试 API 适配仍调用 TS7 编译器。
 - 前端格式化、import / Tailwind 排序与 lint 统一使用 Bun 原生命令，配置放在 `bunfig.toml`；不再引入 Prettier、Oxlint 或 Biome。当前需使用支持 `bun fmt` / `bun lint` 的 Bun Canary，CI 与本地一致。
 - 现代语法规则与 ALwith Desktop 共用 `@nyssance/ts7-lint`，规则只在那个包里，`bunfig.toml` 不放共享规则。直接依次运行 `bun lint` 与 `bun ts7-lint`，供本地 Fabric 和 CI 共用；上游快照、夹具及原版 shadcn/ReUI 组件不参与改写。

@@ -15,7 +15,7 @@ import {
   RepositorySectionTab
 } from "../../models/desktop-changes-state"
 import type { PullRequest } from "../../models/pull-request"
-import type { Repository } from "../../models/repository"
+import { getRepositoryStateKey, type Repository } from "../../models/repository"
 import { type Tip, TipState } from "../../models/tip"
 import type { WorktreeEntry } from "../../models/worktree"
 import { merge } from "../../upstream/lib/merge"
@@ -36,13 +36,13 @@ export class RepositoryStateCache {
 
   /** Get the state for the repository. */
   public get(repository: Repository): IRepositoryState {
-    const existing = this.repositoryState.get(repository.hash)
+    const existing = this.repositoryState.get(getRepositoryStateKey(repository))
     if (existing != null) {
       return existing
     }
 
     const newItem = getInitialRepositoryState()
-    this.repositoryState.set(repository.hash, newItem)
+    this.repositoryState.set(getRepositoryStateKey(repository), newItem)
     return newItem
   }
 
@@ -67,7 +67,7 @@ export class RepositoryStateCache {
       newTip.branch.tip.sha === newState.commitToAmend.sha &&
       newState.changesState.conflictState === null
 
-    this.repositoryState.set(repository.hash, {
+    this.repositoryState.set(getRepositoryStateKey(repository), {
       ...newState,
       commitToAmend: isAmending ? newState.commitToAmend : null
     })

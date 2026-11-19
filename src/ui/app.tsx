@@ -114,6 +114,7 @@ import { DiffSelectionType } from "@/upstream/models/diff/diff-selection"
 import type { IMultiCommitOperationProgress } from "@/upstream/models/progress"
 import { UncommittedChangesStrategy } from "@/upstream/models/uncommitted-changes-strategy"
 
+import { Select as AccountSelect } from "./desktop/select"
 import { Worktrees } from "./worktrees/worktrees"
 
 /** Desktop dispatcher.postError：进错误对话框；后端回来的 git 输出照 Desktop 识别种类、配上说明 */
@@ -315,7 +316,17 @@ export function App() {
 
   // Desktop 选中仓库时就加载开放的 PR（分支下拉页签上的数量）；换远端时中断上一次请求
   const selectedRemote = repo ? (remotes[repo] ?? null) : null
-  useEffect(() => usePullRequestsStore.getState().load(repo, selectedRemote), [repo, selectedRemote])
+  const assignedLogin = repo ? state?.repositoryAccounts?.[repo]?.login : undefined
+  const profileAvailable = !!(
+    assignedLogin &&
+    selectedRemote &&
+    state?.additionalAccounts?.[selectedRemote.host]?.includes(assignedLogin)
+  )
+  useEffect(() => {
+    usePullRequestsStore
+      .getState()
+      .load(repo, selectedRemote, assignedLogin && JSON.stringify([assignedLogin, profileAvailable]))
+  }, [repo, selectedRemote, assignedLogin, profileAvailable])
   const pullRequestCount = usePullRequestsStore(s => s.list.length)
   const pullRequestTarget = usePullRequestsStore(s => s.target)
   // Desktop currentPullRequest：当前分支对应的开放 PR（按 PR 检出的分支叫 pr/<号>）
@@ -421,7 +432,10 @@ export function App() {
   }, [repo, stateLoaded])
 
   const currentRemote = remotes[repo ?? ""]
-  useEffect(() => useRepositoryStore.getState().loadCompletions(repo, currentRemote), [repo, currentRemote])
+  useEffect(
+    () => useRepositoryStore.getState().loadCompletions(repo, currentRemote),
+    [repo, currentRemote, assignedLogin, profileAvailable]
+  )
 
   // 提交人：头像用它的首字母
   useEffect(() => useRepositoryStore.getState().loadAuthor(repo), [repo])
@@ -524,23 +538,53 @@ export function App() {
       showError(t("noRepos.invalidCloneName"))
       return
     }
-    await cloneInto(url, `${parent}/${name}`, name)
+    const remote = await ipc.parseRemote(url)
+    const host = remote && accountRemoteFor(remote, state.accountHosts).host
+    const account = host ? accounts[host] : undefined
+    let options: import("../lib/clone").GitCubCloneOptions = {}
+    if (host && account?.login && account.kind && url.startsWith("https://")) {
+      const endpoint =
+        account.kind === "gitlab"
+          ? `https://${host}/api/v4`
+          : host === "github.com"
+            ? "https://api.github.com"
+            : host.endsWith(".ghe.com")
+              ? `https://api.${host}`
+              : `https://${host}/api/v3`
+      options = { account: { endpoint, login: account.login } }
+    }
+    const profiles = host ? state.additionalAccounts?.[host] : undefined
+    if (host && profiles?.length && url.startsWith("https://")) {
+      const choices = [...new Set([...(account?.login ? [account.login] : []), ...profiles])]
+      const login = await askText(t("prefs.cloneWithAccount"), choices[0], choices)
+      if (!login) return
+      options = { repositoryAccount: { host, login, primary: !profiles.includes(login) } }
+    }
+    await cloneInto(url, `${parent}/${name}`, name, options)
   }
   /** Desktop _clone：失败时带上 RetryActionType.Clone，错误对话框给「重新克隆」 */
-  const cloneInto = async (url: string, dest: string, name: string) => {
+  const cloneInto = async (
+    url: string,
+    dest: string,
+    name: string,
+    options: import("../lib/clone").GitCubCloneOptions = {}
+  ) => {
     if (!state) return
     await run(async () => {
       await ipc
-        .cloneRepo(url, dest, {}, progress => showProgress(progress.description ?? progress.title))
+        .cloneRepo(url, dest, options, progress => showProgress(progress.description ?? progress.title))
         .catch((error: unknown) => {
           throw new ErrorWithMetadata(toPresentableError(error), {
-            retryAction: { type: RetryActionType.Clone, name, url, path: dest, options: {} }
+            retryAction: { type: RetryActionType.Clone, name, url, path: dest, options }
           })
         })
       setState(current =>
         current
           ? {
               ...current,
+              ...(options.repositoryAccount && {
+                repositoryAccounts: { ...current.repositoryAccounts, [dest]: options.repositoryAccount }
+              }),
               selectedRepository: dest,
               repositories: [dest, ...current.repositories.filter(path => path !== dest)]
             }
@@ -1004,7 +1048,7 @@ export function App() {
       case RetryActionType.Fetch:
         return void doFetch(retryAction.repository.path)
       case RetryActionType.Clone:
-        return void cloneInto(retryAction.url, retryAction.path, retryAction.name)
+        return void cloneInto(retryAction.url, retryAction.path, retryAction.name, retryAction.options)
       case RetryActionType.Checkout:
         return void doCheckout(retryAction.branch.name)
       case RetryActionType.Merge:
@@ -1323,9 +1367,9 @@ export function App() {
             const sourceRemote =
               sources.find(([name]) => name === upstream) ?? sources.find(([name]) => name === "origin")
             const head = details?.upstreamWithoutRemote ?? status.branch
-            const prs = await ipc.pullRequests(target.host, target.owner, target.name, true)
+            const prs = await ipc.pullRequests(target.host, target.owner, target.name, true, repo)
             for (const pr of prs.filter(pr => pr.head === head)) {
-              const source = await ipc.pullRequestSource(target.host, target.owner, target.name, pr.number)
+              const source = await ipc.pullRequestSource(target.host, target.owner, target.name, pr.number, repo)
               if (
                 sourceRemote &&
                 sameHostedRepository(
@@ -1575,17 +1619,30 @@ export function App() {
         <AlertDialogHeader>
           <AlertDialogTitle>{askingText.message}</AlertDialogTitle>
         </AlertDialogHeader>
-        <Input
-          autoFocus
-          value={askingText.value}
-          onChange={e => setAskingTextValue(e.target.value)}
-          onKeyDown={e => {
-            // 回车即确定——填个名字还要伸手去点按钮太笨
-            if (e.key === "Enter" && askingText.value.trim()) {
-              answerText(askingText.value.trim())
-            }
-          }}
-        />
+        {askingText.choices ? (
+          <AccountSelect
+            label={askingText.message}
+            value={askingText.value}
+            onChange={event => setAskingTextValue(event.currentTarget.value)}>
+            {askingText.choices.map(login => (
+              <option key={login} value={login}>
+                {login}
+              </option>
+            ))}
+          </AccountSelect>
+        ) : (
+          <Input
+            autoFocus
+            value={askingText.value}
+            onChange={e => setAskingTextValue(e.target.value)}
+            onKeyDown={e => {
+              // 回车即确定——填个名字还要伸手去点按钮太笨
+              if (e.key === "Enter" && askingText.value.trim()) {
+                answerText(askingText.value.trim())
+              }
+            }}
+          />
+        )}
         <AlertDialogFooter>
           <AlertDialogCancel
             onClick={() => {
@@ -1970,7 +2027,9 @@ export function App() {
                 pullRequestCount={pullRequestCount}
                 pullRequestBadge={
                   currentPullRequest &&
-                  pullRequestTarget && <PullRequestBadge request={currentPullRequest} remote={pullRequestTarget} />
+                  pullRequestTarget && (
+                    <PullRequestBadge repo={repo} request={currentPullRequest} remote={pullRequestTarget} />
+                  )
                 }
                 renderPullRequests={
                   remotes[repo ?? ""]
@@ -1983,7 +2042,8 @@ export function App() {
                                 remote.host,
                                 remote.owner,
                                 remote.name,
-                                request.number
+                                request.number,
+                                repo
                               )
                               try {
                                 await cherryPickToPullRequest(
@@ -2016,7 +2076,8 @@ export function App() {
                                 remote.host,
                                 remote.owner,
                                 remote.name,
-                                request.number
+                                request.number,
+                                repo
                               )
                               const branch = await findPullRequestBranch(
                                 repo,
