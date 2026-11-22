@@ -71,7 +71,7 @@ export function withoutRemovedCopilot(file: string, source: string): string {
     // The protected destination flow belongs to the removed assisted-commit feature.
     return source
       .replace(/^import \{ protectAssistedCommitResources \}[^\n]*\n/m, "")
-      .replace(/\n  it\('blocks protected clone destinations[\s\S]*?\n  \}\)\n/, "\n")
+      .replace(/\n {2}it\('blocks protected clone destinations[\s\S]*?\n {2}\}\)\n/, "\n")
   }
   if (file === "desktop/usage-data-test.ts") {
     // The checked-in example still lists Desktop's Copilot measures and dimension; compare the rest byte for byte.
