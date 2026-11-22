@@ -508,8 +508,9 @@
     },
     "packages/git-cli/src/providers/__tests__/integration/embeddedSeparators.test.ts": {
       "sha256": "f9deb092daebbb1561d16b1072dbbf8584f1205213ab20a86d78baad674f14ea",
-      "status": "pending",
-      "rust_tests": []
+      "status": "partial",
+      "rust_tests": ["history::tests::embedded_record_and_field_separators_survive_history_fast_path"],
+      "adaptation": "GitCub Rust history fast path now preserves embedded ASCII record/field separators in commit subjects and bodies, verified against git. Graph, annotated-tag message, stash-message, and getCommitForFile variants remain unported and are tracked separately."
     },
     "packages/git-cli/src/providers/__tests__/integration/env.gitDir.test.ts": {
       "sha256": "1baae29a175f012493f05cd99a30d93a565978a0716395315b9898880eb8cc72",

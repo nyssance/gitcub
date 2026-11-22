@@ -2498,6 +2498,17 @@ mod tests {
         assert!(commits[0].trailers.contains("Co-authored-by: Other <other@example.test>"));
     }
 
+    #[test]
+    fn embedded_record_and_field_separators_survive_history_fast_path() {
+        let (_directory, root) = repo();
+        let message = "Add file \u{1e} with a record sep\n\nbody \u{1d} with a field sep \u{1e}\u{1d}";
+        commit_verbatim(&root, "1700000000 +0000", message);
+        let details = query_details(&root, Some("HEAD"), Some(1), None, &[]).unwrap();
+        assert_eq!(details.len(), 1);
+        assert_eq!(details[0].summary, "Add file \u{1e} with a record sep");
+        assert!(details[0].body.contains("body \u{1d} with a field sep \u{1e}\u{1d}"));
+    }
+
     /// 测试里故意直接调 git，不走 crate::git 的封装——
     /// 那是被测对象，用它验自己等于没验。
     fn git(r: &Path, args: &[&str]) -> String {
