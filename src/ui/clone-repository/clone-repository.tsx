@@ -696,7 +696,10 @@ export class CloneRepository extends React.Component<ICloneRepositoryProps, IClo
       return new Error("Unable to read path on disk. Please check the path and try again.")
     }
 
-    if (platform() === "macos" && Path.basename(Path.resolve(path)).toLowerCase().endsWith(".app")) {
+    const isMacOS =
+      platform() === "macos" ||
+      (globalThis as typeof globalThis & { __DARWIN__?: boolean }).__DARWIN__ === true
+    if (isMacOS && Path.basename(Path.resolve(path)).toLowerCase().endsWith(".app")) {
       return new Error(
         "The local path cannot end in .app on macOS. Choose a different folder name to avoid creating an application bundle."
       )
