@@ -69,6 +69,7 @@ if (config) {
       )
         return next(pathToFileURL(join(root, "enable-native-notification-test.mjs")).href, context)
       if (specifier.endsWith("/platform-environment")) return next(join(root, "platform-environment.ts"), context)
+      if (specifier === "@tauri-apps/plugin-os") return next(pathToFileURL(join(root, "os.ts")).href, context)
       if (specifier === "../../../src/lib/git/index.ts")
         return next(pathToFileURL(join(root, "../../src/lib/repository-access.ts")).href, context)
       if (specifier === "../../../src/ui/main-process-proxy.ts")
