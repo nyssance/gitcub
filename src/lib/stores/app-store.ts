@@ -269,6 +269,17 @@ export class AppStore extends BaseStore {
   /**
    * Refresh indicator in repository list for a specific repository
    */
+  public async _loadStatus(
+    repository: Repository,
+    _clearPartialState = false,
+    _propagateErrors = false
+  ): Promise<IStatusResult | null> {
+    const status = await this.gitStoreCache.get(repository).loadStatus()
+    await this.updateSidebarIndicator(repository, status)
+    if (status === null) this.emitUpdate()
+    return status
+  }
+
   private refreshIndicatorForRepository = async (repository: Repository) => {
     const lookup = this.localRepositoryStateLookup
 

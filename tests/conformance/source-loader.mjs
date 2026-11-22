@@ -53,6 +53,8 @@ if (config) {
         return next(pathToFileURL(join(root, "../../src/lib/databases/index.ts")).href, context)
       if (specifier === "../../../src/lib/path-exists")
         return next(join(root, "../../src/lib/native-path-exists.ts"), context)
+      if (specifier === "../../../src/lib/app-state" || specifier === "../../src/lib/app-state")
+        return next(pathToFileURL(join(root, "../../src/models/desktop-changes-state.ts")).href, context)
 
       if (
         entry.includes("desktop-native-notifications-test.") &&

@@ -42,10 +42,17 @@ export function withoutRemovedCopilot(file: string, source: string): string {
       .replace(/describe\('getEnforcedRuleDescriptions',[\s\S]*$/, "")
   }
   if (file.startsWith("desktop/stores/app-store-")) {
-    return source
+    source = source
       .replace(/ {4}const \{ CopilotStore \} = await import\([\s\S]*?\n {4}\)\n/, "")
       .replace(/,\s*new CopilotStore\([^\n]*\)/, "")
       .replaceAll(/^.*appStore\['updateCopilot[^\n]*\n/gm, "")
+    if (file === "desktop/stores/app-store-indicators-test.ts") {
+      source = source.replace(
+        / {2}it\('keeps the changes view and repository indicator in sync when switching to Changes'[\s\S]*?(?= {2}it\()/,
+        ""
+      )
+    }
+    return source
   }
   if (file === "desktop/stats-store-test.ts") {
     return source.replace(
