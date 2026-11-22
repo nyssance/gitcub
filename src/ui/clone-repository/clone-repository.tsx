@@ -417,7 +417,7 @@ export class CloneRepository extends React.Component<ICloneRepositoryProps, IClo
     const changed = previous === null || account === null ? previous !== account : !isSameAccount(previous, account)
     this.githubTabAccount = account
     if (!changed) return
-    this.setGitHubTabState({ selectedItem: null, filterText: "" }, CloneRepositoryTab.DotCom)
+    this.setGitHubTabState({ selectedAccount: account, selectedItem: null, filterText: "" }, CloneRepositoryTab.DotCom)
     this.setTabState({ url: "", lastParsedIdentifier: null, error: null }, CloneRepositoryTab.DotCom)
   }
 
