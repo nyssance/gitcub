@@ -2,7 +2,15 @@ import { execFileSync } from "node:child_process"
 import { release } from "node:os"
 export function platform() {
   const flags = globalThis as typeof globalThis & { __WIN32__?: boolean; __DARWIN__?: boolean }
-  return flags.__WIN32__ ? "windows" : flags.__DARWIN__ ? "macos" : "linux"
+  return flags.__WIN32__
+    ? "windows"
+    : flags.__DARWIN__
+      ? "macos"
+      : process.platform === "win32"
+        ? "windows"
+        : process.platform === "darwin"
+          ? "macos"
+          : "linux"
 }
 
 export function version() {

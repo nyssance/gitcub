@@ -56,14 +56,14 @@ if (config) {
 
       if (
         entry.includes("desktop-native-notifications-test.") &&
-        parent.endsWith("/notifications/native-module.ts") &&
+        parentPosix.endsWith("/notifications/native-module.ts") &&
         specifier === "./native-binding"
       )
         return next(pathToFileURL(join(root, "native-notification-binding.cjs")).href, context)
       if (
         entry.includes("desktop-native-notifications-windows-test.") &&
         specifier === "node:test" &&
-        !parent.endsWith("enable-native-notification-test.mjs")
+        !parentPosix.endsWith("enable-native-notification-test.mjs")
       )
         return next(pathToFileURL(join(root, "enable-native-notification-test.mjs")).href, context)
       if (specifier.endsWith("/platform-environment")) return next(join(root, "platform-environment.ts"), context)
@@ -72,23 +72,23 @@ if (config) {
       if (specifier === "../../../src/ui/main-process-proxy.ts")
         return next(pathToFileURL(join(root, "../../src/ui/native-dialogs.ts")).href, context)
       if (specifier.startsWith("lodash/") && !specifier.endsWith(".js")) return next(`${specifier}.js`, context)
-      if (specifier === "focus-trap-react" && parent.endsWith("/focus-trap.tsx")) return next(specifier, context)
+      if (specifier === "focus-trap-react" && parentPosix.endsWith("/focus-trap.tsx")) return next(specifier, context)
       if (specifier in overrides) return next(overrides[specifier], context)
       if (specifier in imports) return next(pathToFileURL(imports[specifier]).href, context)
       const gitlens = resolveGitLensModule(specifier, parentPosix, root)
       if (gitlens) return next(pathToFileURL(gitlens).href, context)
       if (specifier.startsWith("dom-helpers/") && !specifier.endsWith(".js"))
         return next(`dom-helpers/cjs/${specifier.slice("dom-helpers/".length)}.js`, context)
-      if (parent.includes("/node_modules/") && parent !== entry) return next(specifier, context)
-      if (parent.endsWith("/src/ui/preferences/config-lock-file-exists.tsx") && specifier === "../../lib/native-files")
+      if (parentPosix.includes("/node_modules/") && parent !== entry) return next(specifier, context)
+      if (parentPosix.endsWith("/src/ui/preferences/config-lock-file-exists.tsx") && specifier === "../../lib/native-files")
         return next("node:fs/promises", context)
       if (
-        (parent.endsWith("/src/lib/desktop-features.ts") || parent.endsWith("/src/lib/stats/stats-store.ts")) &&
+        (parentPosix.endsWith("/src/lib/desktop-features.ts") || parentPosix.endsWith("/src/lib/stats/stats-store.ts")) &&
         (specifier === "./build-environment" || specifier === "../build-environment")
       )
         return next(
           pathToFileURL(
-            join(root, parent.endsWith("/stats/stats-store.ts") ? "stats-build-environment.ts" : "build-environment.ts")
+            join(root, parentPosix.endsWith("/stats/stats-store.ts") ? "stats-build-environment.ts" : "build-environment.ts")
           ).href,
           context
         )

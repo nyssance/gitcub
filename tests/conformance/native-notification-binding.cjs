@@ -1,4 +1,4 @@
-// Node native-addon ABI boundary, replaced by the unchanged upstream cache mock.
-exports.showNotification = () => {
-  throw new Error("Native addon not available in Node transport")
-}
+// Resolve through the package's canonical addon path so the upstream test's
+// require.cache mock replaces the same module that the adapted production
+// wrapper loads.
+module.exports = require("desktop-notifications/build/Release/desktop-notifications.node")
