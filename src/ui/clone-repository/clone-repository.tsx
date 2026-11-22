@@ -32,8 +32,8 @@ import { CloneGithubRepository } from "./clone-github-repository"
 
 enum CloneRepositoryTab {
   DotCom,
-  Enterprise,
-  Generic
+  Generic,
+  Enterprise
 }
 
 interface ICloneRepositoryProps {
