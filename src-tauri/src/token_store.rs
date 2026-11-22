@@ -119,7 +119,7 @@ mod tests {
         for service in [
             "GitHub - https://api.github.com",
             "GitCub - Copilot BYOK provider",
-            "Quipu - https://api.github.com",
+            "LegacyApp - https://api.github.com",
             "GitCub - file:///tmp/key",
             "GitCub - invalid",
         ] {
