@@ -62,12 +62,14 @@ fn bundled() -> Option<&'static PathBuf> {
 }
 
 /// 打包的 git（没打包时为 PATH 上的 git）；钩子代理用它跑 `git hook run`（原版 resolveGitBinary）
+#[cfg(unix)]
 pub fn binary() -> PathBuf {
     bundled().map_or_else(|| PathBuf::from("git"), |root| executable(root))
 }
 
 /// 打包的 git 读的系统级配置（`GIT_CONFIG_SYSTEM`）；用 PATH 上的 git 时为 `None`。
 /// 进程内快速路径据此判断 gix 读到的系统配置是不是 git 实际会读的那份。
+#[cfg(unix)]
 pub fn bundled_system_config() -> Option<PathBuf> {
     bundled().filter(|_| !cfg!(windows)).map(|root| root.join("etc").join("gitconfig"))
 }
@@ -159,6 +161,17 @@ impl Git {
             None => Command::new("git"),
         };
         if let Some(r) = repo {
+            #[cfg(windows)]
+            let r = {
+                let text = r.to_string_lossy();
+                if let Some(unc) = text.strip_prefix(r"\\?\UNC\") {
+                    PathBuf::from(format!(r"\\{}", unc))
+                } else {
+                    PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text))
+                }
+            };
+            #[cfg(not(windows))]
+            let r = r.to_path_buf();
             cmd.arg("-C").arg(r);
         }
         // 从终端、git hook 或另一个 git 进程里启动时，环境里可能带着别的仓库位置；

@@ -478,6 +478,7 @@ pub(crate) fn tracked_threads() -> usize {
 }
 
 /// stat 预检的线程数：fstatat / lstat 在 4 个线程时最快（分解测量见 docs/benchmarks.md）。
+#[cfg(unix)]
 pub(crate) fn preload_threads() -> usize {
     std::thread::available_parallelism().map_or(1, usize::from).min(4)
 }
@@ -491,16 +492,24 @@ pub(crate) fn walk_threads() -> usize {
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Tuning {
     /// 先按目录 fstatat 预检，stat 相符的条目让 gix 跳过（见 `preload`）
+    #[cfg(unix)]
     pub(crate) preload: bool,
     /// HEAD 与索引按 cache-tree 跳过没变的子树（见 `tree_index`）
     pub(crate) cache_tree: bool,
     /// 未跟踪缓存校验记录时用预检取到的目录 lstat（见 `untracked_cache::Prepared::share_dir_stats`）
+    #[cfg(unix)]
     pub(crate) share_dir_stats: bool,
 }
 
 impl Default for Tuning {
     fn default() -> Self {
-        Tuning { preload: true, cache_tree: true, share_dir_stats: true }
+        Tuning {
+            #[cfg(unix)]
+            preload: true,
+            cache_tree: true,
+            #[cfg(unix)]
+            share_dir_stats: true,
+        }
     }
 }
 
@@ -534,7 +543,10 @@ pub(crate) fn status_tuned(repo_path: &Path, tuning: Tuning) -> Result<RepoStatu
         // 先取走发送端：之后任何一步出错或 panic，发送端都随之丢掉，等它的遍历线程不会一直等
         #[cfg(unix)]
         let sender = dir_stats.borrow_mut().take();
+        #[cfg(unix)]
         let mut worktree_index: gix::worktree::IndexPersistedOrInMemory = index.clone().into();
+        #[cfg(not(unix))]
+        let worktree_index: gix::worktree::IndexPersistedOrInMemory = index.clone().into();
         // 先预检 stat：相符的条目不再交给 gix，全部相符时 gix 一个条目也不用看。
         // gix 自己遍历未跟踪文件时要用完整索引判断哪些路径已跟踪，那时不预检。
         #[cfg(unix)]
@@ -1113,6 +1125,7 @@ pub(crate) mod untracked {
 
         /// 只从 `root`（工作区相对路径）起单线程遍历一次，由 `delegate` 决定进不进子目录。
         /// 未跟踪缓存用它重读变了的目录；`accelerate` 是忽略大小写时的索引查找表。
+        #[cfg(unix)]
         pub(crate) fn walk_at(
             &mut self, accelerate: Option<&gix::index::AccelerateLookup<'_>>, root: &BStr, delegate: &mut dyn Delegate,
         ) -> Result<(), String> {
@@ -1138,10 +1151,12 @@ pub(crate) mod untracked {
             .map_err(|e| e.to_string())
         }
 
+        #[cfg(unix)]
         pub(crate) fn index(&self) -> &'index gix::index::State {
             self.index
         }
 
+        #[cfg(unix)]
         pub(crate) fn ignore_case(&self) -> bool {
             self.options.ignore_case
         }
@@ -1846,6 +1861,7 @@ mod tests {
     }
 
     /// gix status 自己的单线程目录遍历报出的未跟踪路径（并行遍历要逐字相同）。
+    #[cfg(unix)]
     fn untracked_via_gix(root: &Path) -> Vec<String> {
         let repo = open_with_excludes(root).unwrap();
         let mut out: Vec<String> = repo
@@ -1863,6 +1879,7 @@ mod tests {
     }
 
     /// `git status --untracked-files=all` 的 `??` 条目（嵌套仓库带结尾的 `/`，去掉后比较）。
+    #[cfg(unix)]
     fn untracked_via_git(root: &Path) -> Vec<String> {
         let out = git(root, &["status", "--porcelain=2", "-z", "--untracked-files=all"]);
         let mut paths: Vec<String> = out
@@ -1876,6 +1893,7 @@ mod tests {
 
     /// 并行遍历在每个含已跟踪文件的目录处都切分（`min_directories = 1`），1～8 个线程的结果都要与
     /// gix 的单线程遍历逐字相同，并与 git 的未跟踪集合一致；`status` 的未跟踪条目也要相同。
+    #[cfg(unix)]
     fn assert_parallel_walk_matches(root: &Path) -> Vec<String> {
         let serial = untracked_via_gix(root);
         let repo = open_with_excludes(root).unwrap();
@@ -1909,6 +1927,7 @@ mod tests {
         serial
     }
 
+    #[cfg(unix)]
     fn write(root: &Path, path: &str, content: &str) {
         let path = root.join(path);
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();

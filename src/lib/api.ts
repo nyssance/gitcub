@@ -933,6 +933,14 @@ export class API {
     }
   }
 
+  /** Fetch repository metadata for access probing: 404 means no access, other
+   * HTTP and transport failures remain observable to the caller. */
+  public async fetchRepositoryIfAccessible(owner: string, name: string): Promise<IAPIFullRepository | null> {
+    const response = await this.ghRequest("GET", `repos/${owner}/${name}`, { reloadCache: true })
+    if (response.status === HttpStatusCode.NotFound) return null
+    return parsedResponse<IAPIFullRepository>(response)
+  }
+
   /**
    * Fetch info needed to clone a repository. That includes:
    *  - The canonical clone URL for a repository, respecting the protocol

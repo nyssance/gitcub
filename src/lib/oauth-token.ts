@@ -1,5 +1,3 @@
-// Desktop MIT port; platform imports adapted to Tauri.
-
 import { isRecord } from "../upstream/lib/is-record"
 import { getAbsoluteUrl, getUserAgent } from "./http"
 
@@ -32,6 +30,17 @@ export class OAuthRefreshRejectedError extends Error {
   public constructor() {
     super("The OAuth refresh token was rejected.")
     this.name = "OAuthRefreshRejectedError"
+  }
+}
+
+/** Safe diagnostic categories for token request failures that retain credentials. */
+export type TokenRefreshFailureKind =
+  "timeout" | "network" | "rateLimited" | "server" | "otherHttp" | "otherOAuth" | "unknown"
+
+/** A sanitized request failure with no response body, URL, or original cause. */
+export class OAuthTokenRequestError extends Error {
+  public constructor(public readonly kind: TokenRefreshFailureKind) {
+    super(kind === "timeout" ? "The OAuth token request timed out." : "The OAuth token request failed.")
   }
 }
 
@@ -119,52 +128,69 @@ async function requestOAuthToken(
   const deadline = new Promise<never>((_, reject) => {
     timeout = setTimeout(() => {
       controller.abort()
-      reject(new Error("The OAuth token request timed out."))
+      reject(new OAuthTokenRequestError("timeout"))
     }, requestTimeout)
   })
 
-  let failure: Error
   try {
     const request = async () => {
-      const response = await fetch(getAbsoluteUrl(htmlEndpoint, "login/oauth/access_token"), {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "User-Agent": getUserAgent()
-        },
-        body: JSON.stringify({
-          client_id: ClientID,
-          client_secret: ClientSecret,
-          ...parameters
-        }),
-        signal: controller.signal,
-        redirect: "error",
-        cache: "no-store"
-      })
+      const url = getAbsoluteUrl(htmlEndpoint, "login/oauth/access_token")
+      let response: Response
+      try {
+        response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": getUserAgent()
+          },
+          body: JSON.stringify({
+            client_id: ClientID,
+            client_secret: ClientSecret,
+            ...parameters
+          }),
+          signal: controller.signal,
+          redirect: "error",
+          cache: "no-store"
+        })
+      } catch {
+        throw new OAuthTokenRequestError("network")
+      }
+
+      // Classify these statuses even if the body is HTML or cannot be read.
+      if (
+        response.status === 429 ||
+        (response.status === 403 &&
+          (response.headers.get("x-ratelimit-remaining") === "0" || response.headers.has("retry-after")))
+      ) {
+        throw new OAuthTokenRequestError("rateLimited")
+      }
+      if (response.status >= 500) {
+        throw new OAuthTokenRequestError("server")
+      }
 
       let value: unknown
       try {
         value = await response.json()
       } catch {
         if (!response.ok) {
-          throw new Error("The OAuth token request failed.")
+          throw new OAuthTokenRequestError("otherHttp")
         }
         throw new OAuthTokenResponseError()
       }
 
-      if (response.status >= 500) {
-        throw new Error("The OAuth token request failed.")
-      }
       if (isRecord(value) && "error" in value) {
         if (refreshing && (value.error === "bad_refresh_token" || value.error === "invalid_grant")) {
           throw new OAuthRefreshRejectedError()
         }
-        throw new Error("The OAuth token request failed.")
+        if (value.error === "slow_down" || value.error === "rate_limit_exceeded") {
+          throw new OAuthTokenRequestError("rateLimited")
+        }
+        throw new OAuthTokenRequestError("otherOAuth")
       }
 
       if (!response.ok) {
-        throw new Error("The OAuth token request failed.")
+        throw new OAuthTokenRequestError("otherHttp")
       }
 
       const token = parseOAuthToken(value, issuedAt)
@@ -177,19 +203,22 @@ async function requestOAuthToken(
 
     return await Promise.race([request(), deadline])
   } catch (error) {
+    const timedOut = controller.signal.aborted
+    // Stop discarded response bodies without treating cleanup as a timeout.
+    controller.abort()
+    if (timedOut) {
+      throw new OAuthTokenRequestError("timeout")
+    }
     if (
-      !controller.signal.aborted &&
-      (error instanceof OAuthTokenResponseError || error instanceof OAuthRefreshRejectedError)
+      error instanceof OAuthTokenResponseError ||
+      error instanceof OAuthRefreshRejectedError ||
+      error instanceof OAuthTokenRequestError
     ) {
       throw error
     }
-    // Deliberately discard the raw cause: fetch/JSON errors can contain tokens,
-    // URLs or response bodies. Only this sanitized error may leave the boundary.
-    failure = new Error(
-      controller.signal.aborted ? "The OAuth token request timed out." : "The OAuth token request failed."
-    )
+    // Fetch and JSON errors can contain credentials, URLs, or response bodies.
+    throw new OAuthTokenRequestError("unknown")
   } finally {
     clearTimeout(timeout)
   }
-  throw failure
 }

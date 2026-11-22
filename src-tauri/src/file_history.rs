@@ -1392,6 +1392,7 @@ mod tests {
     #[test]
     fn 读过gitattributes的遍历不留游标() {
         let (_d, r) = repo();
+        git(&r, &["config", "core.autocrlf", "false"]);
         let mut at = 1_700_000_000;
         std::fs::write(r.join("crlf.txt"), lines("z", 10).replace('\n', "\r\n")).unwrap();
         git(&r, &["add", "."]);

@@ -8,12 +8,14 @@
 //! `--gitcub-hook-proxy` 模式（和 askpass 同一种短路），连接走临时目录里的 Unix socket。
 //! shell 环境由前端照原版 get-shell-env.ts 取好再传进来。其余行为照原版。
 
+#[cfg(unix)]
 use std::collections::HashMap;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
 /// 应用以钩子代理身份被拉起时的 argv[1]
+#[cfg(unix)]
 pub const PROXY_ARG: &str = "--gitcub-hook-proxy";
 #[cfg(unix)]
 const SOCKET_ENV: &str = "GITCUB_HOOKS_SOCKET";
@@ -73,17 +75,22 @@ const EXCLUDED_ENV_VARS: [&str; 7] = [
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HooksEnv {
+    #[cfg(unix)]
     #[serde(default)]
     pub env: Option<HashMap<String, String>>,
+    #[cfg(unix)]
     #[serde(default)]
     pub failure: Option<ShellFailure>,
 }
 
 /// 原版 ShellEnvResult 的 failure（找不到 shell）与 getShellEnv 抛错两种情况
+#[cfg(unix)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellFailure {
+    #[cfg(unix)]
     NotFound { shell_kind: Option<String> },
+    #[cfg(unix)]
     Error,
 }
 
@@ -91,15 +98,22 @@ pub enum ShellFailure {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HookEvent {
+    #[cfg(unix)]
     Progress { id: u64, hook_name: String, status: &'static str },
+    #[cfg(unix)]
     Failure { id: u64, hook_name: String, terminal_output: Vec<u8> },
 }
 
 /// 原版 HookCallbackOptions：进度，以及失败时问用户（true 为忽略并继续）
 pub trait HookCallbacks: Send + Sync {
+    #[cfg(unix)]
     fn progress(&self, id: u64, hook_name: &str, status: &'static str);
+    #[cfg(unix)]
     fn failure(&self, id: u64, hook_name: &str, terminal_output: &[u8]) -> bool;
 }
+
+#[cfg(not(unix))]
+impl HookCallbacks for () {}
 
 /// 原版 getRepoHooks：仓库里实际存在、可执行、在 `filter` 里的已知钩子
 pub fn repo_hooks(repo: &Path, filter: Option<&[String]>) -> Vec<String> {
@@ -238,11 +252,6 @@ pub fn abort(_: u64) {}
 
 #[cfg(not(unix))]
 pub fn resolve_failure(_: u64, _: bool) {}
-
-#[cfg(not(unix))]
-pub fn wait_for_failure(_: u64, _: impl FnOnce() -> bool) -> bool {
-    false
-}
 
 #[cfg(unix)]
 mod proxy {

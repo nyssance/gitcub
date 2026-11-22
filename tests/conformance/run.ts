@@ -1346,9 +1346,11 @@ const suites = [
     globals: false,
     imports: {
       "../../src/lib/repository-matching": join(root, "../../src/lib/repository-matching.ts"),
+      "../../src/lib/remote-parsing": join(root, "../../src/upstream/lib/remote-parsing.ts"),
       "../../src/models/account": join(root, "../../src/models/account.ts"),
       "../../src/models/github-repository": join(root, "../../src/models/github-repository.ts"),
-      "../helpers/github-repo-builder": join(root, "upstream/desktop/helpers/github-repo-builder.ts")
+      "../helpers/github-repo-builder": join(root, "upstream/desktop/helpers/github-repo-builder.ts"),
+      "../helpers/mock-api": join(root, "upstream/desktop/helpers/mock-api.ts")
     }
   },
   {
@@ -2543,10 +2545,12 @@ try {
               return path ? { path } : undefined
             })
             build.onResolve({ filter: /^dugite$/ }, args =>
-              args.importer.endsWith("/helpers/repository-builder-branch-pruner.ts") ? { path: fixtures } : undefined
+              args.importer.replaceAll("\\", "/").endsWith("/helpers/repository-builder-branch-pruner.ts")
+                ? { path: fixtures }
+                : undefined
             )
             build.onResolve({ filter: /^\.\.\/\.\.\/src\// }, args => {
-              if (!args.importer.endsWith("/helpers/repository-builder-branch-pruner.ts")) return
+              if (!args.importer.replaceAll("\\", "/").endsWith("/helpers/repository-builder-branch-pruner.ts")) return
               const paths: Record<string, string> = {
                 "../../src/lib/stores": "../../src/lib/stores/index.ts",
                 "../../src/lib/stores/repository-state-cache": "../../src/lib/stores/repository-state-cache.ts"
@@ -2554,7 +2558,9 @@ try {
               return paths[args.path] ? { path: join(root, paths[args.path]) } : undefined
             })
             build.onResolve({ filter: /^\.\/temp$/ }, args =>
-              args.importer.endsWith("/helpers/git-config.ts") ? { path: fixtures } : undefined
+              args.importer.replaceAll("\\", "/").endsWith("/helpers/git-config.ts")
+                ? { path: fixtures }
+                : undefined
             )
             build.onResolve({ filter: /^\.\.\/\.\.\/src\// }, args => {
               if (!/(changes-state-helper|test-stats-store)\.ts$/.test(args.importer)) return
@@ -2570,11 +2576,13 @@ try {
               return paths[args.path] ? { path: join(root, paths[args.path]) } : undefined
             })
 
-            build.onResolve({ filter: /^\.\.\/\.\.\/\.\.\/src\/lib\/databases$/ }, args =>
-              args.importer.includes("/helpers/databases/")
-                ? { path: join(root, "../../src/lib/databases/index.ts") }
-                : undefined
-            )
+            build.onResolve({ filter: /^\.\.\/\.\.\/\.\.\/src\/lib\/databases$/ }, () => ({
+              path: join(root, "../../src/lib/databases/index.ts")
+            }))
+
+            build.onResolve({ filter: /^\.\.\/utils\/status\.utils\.js$/ }, () => ({
+              path: join(root, "gitlens-status-utils.ts")
+            }))
 
             build.onResolve({ filter: /^node:test$/ }, args =>
               suite.file === "desktop/reset-test.ts" && args.importer !== join(root, "enable-reset-test.mjs")
@@ -2595,12 +2603,32 @@ try {
             build.onResolve({ filter: /^@tauri-apps\/plugin-opener$/ }, () => ({ path: join(root, "opener.ts") }))
 
             build.onResolve({ filter: /^\.\/build-environment$/ }, args =>
-              args.importer.endsWith("/src/lib/desktop-features.ts")
+              args.importer.replaceAll("\\", "/").endsWith("/src/lib/desktop-features.ts")
                 ? { path: join(root, "build-environment.ts") }
                 : undefined
             )
+            build.onResolve({ filter: /./ }, args => {
+              const specifier = args.path.replaceAll("\\", "/")
+              const importer = args.importer.replaceAll("\\", "/")
+              if (!importer.endsWith("/helpers/github-repo-builder.ts")) return
+              if (
+                specifier === "../../src/models/github-repository" ||
+                specifier === "../../src/models/owner" ||
+                specifier === "../../src/lib/api"
+              )
+                return {
+                  path: join(
+                    root,
+                    specifier === "../../src/lib/api"
+                      ? "../../src/lib/api.ts"
+                      : `${specifier.replace("../../src/", "../../src/")}.ts`
+                  )
+                }
+            })
             build.onResolve({ filter: /^\.\.\/\.\.\/src\/lib\/api$/ }, args =>
-              args.importer.endsWith("/helpers/mock-api.ts") ? { path: join(root, "../../src/lib/api.ts") } : undefined
+              args.importer.replaceAll("\\", "/").endsWith("/helpers/mock-api.ts")
+                ? { path: join(root, "../../src/lib/api.ts") }
+                : undefined
             )
 
             build.onResolve(

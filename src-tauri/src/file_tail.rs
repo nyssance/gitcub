@@ -52,6 +52,11 @@ impl Watches {
 fn watch_file(
     path: &Path, active: Arc<Mutex<bool>>, send: impl Fn(serde_json::Value) + Send + 'static,
 ) -> Result<FileWatcher, String> {
+    let target = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    #[cfg(windows)]
+    let watch_path = path.parent().unwrap_or(path);
+    #[cfg(not(windows))]
+    let watch_path = path;
     let mut watcher = FileWatcher::new(
         move |result: notify::Result<notify::Event>| {
             let guard = active.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -60,6 +65,14 @@ fn watch_file(
             }
             match result {
                 Ok(event) => {
+                    #[cfg(windows)]
+                    if !event
+                        .paths
+                        .iter()
+                        .any(|candidate| std::fs::canonicalize(candidate).ok().as_ref() == Some(&target))
+                    {
+                        return;
+                    }
                     let kind = match event.kind {
                         notify::EventKind::Modify(notify::event::ModifyKind::Name(_))
                         | notify::EventKind::Remove(_)
@@ -75,7 +88,13 @@ fn watch_file(
         notify::Config::default(),
     )
     .map_err(|e| e.to_string())?;
-    watcher.watch(path, RecursiveMode::NonRecursive).map_err(|e| e.to_string())?;
+    watcher.watch(watch_path, RecursiveMode::NonRecursive).map_err(|e| e.to_string())?;
+    #[cfg(windows)]
+    if watch_path != path {
+        // ReadDirectoryChangesW may report a file subscription more reliably
+        // than its parent when the file is opened with delete-on-close.
+        let _ = watcher.watch(path, RecursiveMode::NonRecursive);
+    }
     Ok(watcher)
 }
 
@@ -145,16 +164,17 @@ mod tests {
     }
     #[test]
     fn watching_reports_actual_appends_and_stops() {
-        let mut file = tempfile::NamedTempFile::new().unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("tail.log");
+        std::fs::File::create(&path).unwrap();
         let watches = Watches::default();
         let (tx, rx) = std::sync::mpsc::channel();
         let id = watches
-            .watch(file.path(), move |event| {
+            .watch(&path, move |event| {
                 let _ = tx.send(event);
             })
             .unwrap();
-        file.write_all(b"first\n").unwrap();
-        file.flush().unwrap();
+        std::fs::OpenOptions::new().append(true).open(&path).unwrap().write_all(b"first\n").unwrap();
         let deadline = std::time::Instant::now() + Duration::from_secs(5);
         loop {
             let event = rx.recv_timeout(deadline.saturating_duration_since(std::time::Instant::now())).unwrap();
@@ -164,8 +184,7 @@ mod tests {
         }
         watches.unwatch(id).unwrap();
         while rx.try_recv().is_ok() {}
-        file.write_all(b"second\n").unwrap();
-        file.flush().unwrap();
+        std::fs::OpenOptions::new().append(true).open(&path).unwrap().write_all(b"second\n").unwrap();
         assert!(rx.recv_timeout(Duration::from_millis(200)).is_err());
     }
 }

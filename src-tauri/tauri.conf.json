@@ -21,6 +21,7 @@
         "dragDropEnabled": true,
         "label": "main",
         "transparent": true,
+        "decorations": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true
       }

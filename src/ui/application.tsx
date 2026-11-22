@@ -21,6 +21,7 @@ import { Preferences } from "./preferences/preferences"
 import type { WelcomeDispatcher } from "./welcome-dispatcher"
 import { DesktopImportWelcome } from "./welcome/desktop-import"
 import { Welcome } from "./welcome/welcome"
+import { TitleBar } from "./window/title-bar"
 
 export function Application() {
   const { i18n } = useTranslation()
@@ -140,7 +141,8 @@ export function Application() {
 
   return (
     <div id="desktop-app-container">
-      <DialogStackContext.Provider value={{ isTopMost: true }}>
+      <TitleBar>
+        <DialogStackContext.Provider value={{ isTopMost: true }}>
         {welcome === null ? null : welcome ? (
           <DesktopImportWelcome onImported={setNativeState}>
             <Welcome key={welcomeKey} accounts={accounts} dispatcher={dispatcher} signInState={signIn} />
@@ -204,7 +206,8 @@ export function Application() {
             </StandardButton>
           </div>
         )}
-      </DialogStackContext.Provider>
+        </DialogStackContext.Provider>
+      </TitleBar>
     </div>
   )
 }

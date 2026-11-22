@@ -1,7 +1,7 @@
 import { platform } from "@tauri-apps/plugin-os"
 import type { Disposable } from "event-kit"
 
-import { Account, isDotComAccount } from "../../models/account"
+import { Account, getAccountKey, isDotComAccount, isSameAccount } from "../../models/account"
 import { compare, compareDescending } from "../../upstream/lib/compare"
 import { fatalError } from "../../upstream/lib/fatal-error"
 import { TypedBaseStore } from "../../upstream/lib/stores/base-store"
@@ -142,8 +142,8 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
   public async getAccountWithFreshToken(account: Account, minimumValidity = refreshMargin): Promise<Account> {
     await this.loadingPromise
     const token = await this.credentials.getFreshToken(account, minimumValidity)
-    const current = this.accounts.find(a => a.endpoint === account.endpoint)
-    if (current?.id !== account.id) {
+    const current = this.accounts.find(a => isSameAccount(a, account))
+    if (current === undefined) {
       throw new AccountRequiresSignInError()
     }
     return this.credentials.inheritSession(current, current.withToken(token))
@@ -159,8 +159,8 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
   ): Promise<{ readonly account: Account; readonly release: () => void }> {
     await this.loadingPromise
     const lease = await this.credentials.leaseToken(account, holder)
-    const current = this.accounts.find(a => a.endpoint === account.endpoint)
-    if (current?.id !== account.id) {
+    const current = this.accounts.find(a => isSameAccount(a, account))
+    if (current === undefined) {
       lease.release()
       throw new AccountRequiresSignInError()
     }
@@ -232,15 +232,24 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
     return retired
   }
 
-  private onTokenRenewed = (endpoint: string, accessToken: string) => {
+  private onTokenRenewed = (account: Account, accessToken: string) => {
     this.accounts = this.accounts.map(a =>
-      a.endpoint === endpoint ? this.credentials.inheritSession(a, a.withToken(accessToken)) : a
+      isSameAccount(a, account)
+        ? this.credentials.inheritSession(a, a.withToken(accessToken))
+        : a
     )
     this.save()
   }
 
   private onSignedIn = (account: Account) => {
-    this.accounts = sortAccounts([...this.accounts.filter(a => a.endpoint !== account.endpoint), account])
+    const index = this.accounts.findIndex(a => isSameAccount(a, account))
+    if (index !== -1) {
+      const next = [...this.accounts]
+      next[index] = account
+      this.accounts = next
+    } else {
+      this.accounts = sortAccounts([...this.accounts, account])
+    }
     this.save()
   }
 
@@ -287,14 +296,14 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
    * credentials that rotated while the profile request was in flight.
    */
   private async tryUpdateAccount(account: Account): Promise<void> {
-    const currentToken = this.credentials.trackToken(account.endpoint)
+    const currentToken = this.credentials.trackToken(account)
     try {
       const fresh = await this.getAccountWithFreshToken(account)
       const updated = await updatedAccount(fresh)
       const token = currentToken()
       if (token !== null) {
         this.accounts = this.accounts.map(a =>
-          a.endpoint === account.endpoint ? this.credentials.inheritSession(a, updated.withToken(token)) : a
+          isSameAccount(a, account) ? this.credentials.inheritSession(a, updated.withToken(token)) : a
         )
         this.save()
       }
@@ -305,12 +314,12 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
   }
 
   private retireAccount(account: Account): Account | null {
-    const current = this.accounts.find(a => a.endpoint === account.endpoint)
-    if (current?.id !== account.id) {
+    const current = this.accounts.find(a => isSameAccount(a, account))
+    if (current === undefined) {
       return null
     }
-    this.credentials.retire(account.endpoint)
-    this.accounts = this.accounts.filter(a => a.endpoint !== account.endpoint)
+    this.credentials.retire(account)
+    this.accounts = this.accounts.filter(a => !isSameAccount(a, account))
     this.save()
     return current
   }
@@ -375,8 +384,9 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
     const migratedAccounts = this.getMigratedGHEAccounts(parsedAccounts)
     const rawAccounts = migratedAccounts ?? parsedAccounts
 
-    // Duplicate endpoints keep the last entry, like CredentialSessions.restore.
-    const accountsByEndpoint = new Map<string, Account>()
+    // Duplicate account identities keep the last entry; multiple users may
+    // legitimately share one GitHub or Enterprise endpoint.
+    const accountsByKey = new Map<string, Account>()
     let removedInvalidAccounts = false
     for (const account of rawAccounts) {
       const accountWithoutToken = new Account(
@@ -406,7 +416,7 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
         }
         const loaded = accountWithoutToken.withToken(credential?.accessToken ?? "")
         const restored = this.credentials.restore(loaded, credential)
-        accountsByEndpoint.set(restored.endpoint, restored)
+        accountsByKey.set(getAccountKey(restored), restored)
       } catch (caught) {
         const e = caught as Error
         log.error(`Error getting token for '${key}'. Skipping.`, e)
@@ -415,7 +425,7 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
       }
     }
 
-    this.accounts = sortAccounts([...accountsByEndpoint.values()])
+    this.accounts = sortAccounts([...accountsByKey.values()])
     // If any account was migrated, make sure to persist the new value
     if (migratedAccounts !== null || removedInvalidAccounts) {
       this.save() // Save already emits an update
@@ -429,6 +439,16 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
     this.dataStore.setItem("users", JSON.stringify(usersWithoutTokens))
 
     this.emitUpdate(this.accounts)
+  }
+
+  /** Return persisted identities even when secure credentials cannot be read. */
+  public async getPersistedIdentities(): Promise<ReadonlyArray<{ login: string; endpoint: string }>> {
+    await this.loadingPromise
+    const raw = this.dataStore.getItem("users")
+    if (!raw?.length) return []
+    const accounts: ReadonlyArray<IAccount> = JSON.parse(raw)
+    const migrated = this.getMigratedGHEAccounts(accounts) ?? accounts
+    return migrated.map(({ login, endpoint }) => ({ login, endpoint }))
   }
 }
 

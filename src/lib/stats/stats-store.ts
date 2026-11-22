@@ -88,6 +88,13 @@ const DefaultDailyMeasures: IDailyMeasures = {
   tokenRefreshAttemptCount: 0,
   tokenRefreshSuccessCount: 0,
   tokenRefreshTransientFailureCount: 0,
+  tokenRefreshTransientFailureTimeoutCount: 0,
+  tokenRefreshTransientFailureNetworkCount: 0,
+  tokenRefreshTransientFailureRateLimitedCount: 0,
+  tokenRefreshTransientFailureServerCount: 0,
+  tokenRefreshTransientFailureOtherHttpCount: 0,
+  tokenRefreshTransientFailureOtherOAuthCount: 0,
+  tokenRefreshTransientFailureUnknownCount: 0,
   tokenRefreshNonTransientFailureCount: 0,
   tokenRefreshAbandonedCount: 0,
   tokenRefreshRequiredSignInCount: 0,
@@ -676,7 +683,23 @@ export class StatsStore implements IStatsStore {
 
   /** Count a single token refresh lifecycle event without credential metadata. */
   public recordTokenRefreshEvent(event: TokenRefreshEvent): Promise<void> {
-    const measures: Readonly<Record<TokenRefreshEvent, keyof NumericMeasures>> = {
+    if (event.kind === "transient-failure") {
+      const measures: Readonly<Record<typeof event.failureKind, keyof NumericMeasures>> = {
+        timeout: "tokenRefreshTransientFailureTimeoutCount",
+        network: "tokenRefreshTransientFailureNetworkCount",
+        rateLimited: "tokenRefreshTransientFailureRateLimitedCount",
+        server: "tokenRefreshTransientFailureServerCount",
+        otherHttp: "tokenRefreshTransientFailureOtherHttpCount",
+        otherOAuth: "tokenRefreshTransientFailureOtherOAuthCount",
+        unknown: "tokenRefreshTransientFailureUnknownCount"
+      }
+      const subtype = measures[event.failureKind]
+      return this.updateDailyMeasures(current => ({
+        tokenRefreshTransientFailureCount: current.tokenRefreshTransientFailureCount + 1,
+        [subtype]: current[subtype] + 1
+      }) as unknown as Pick<IDailyMeasures, keyof IDailyMeasures>)
+    }
+    const measures: Readonly<Record<TokenRefreshEvent["kind"], keyof NumericMeasures>> = {
       attempt: "tokenRefreshAttemptCount",
       success: "tokenRefreshSuccessCount",
       "transient-failure": "tokenRefreshTransientFailureCount",
@@ -684,7 +707,7 @@ export class StatsStore implements IStatsStore {
       abandoned: "tokenRefreshAbandonedCount",
       "required-sign-in": "tokenRefreshRequiredSignInCount"
     }
-    return this.increment(measures[event])
+    return this.increment(measures[event.kind])
   }
 
   /** Report any stats which are eligible for reporting. */
@@ -808,7 +831,13 @@ export class StatsStore implements IStatsStore {
 
     return {
       eventType: "usage",
-      version: releaseChannel === "development" ? "dev" : getVersion(),
+      version:
+        releaseChannel === "development" ||
+        (globalThis as typeof globalThis & { __RELEASE_CHANNEL__?: string }).__RELEASE_CHANNEL__ === "development" ||
+        (globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }).process?.env
+          ?.TEST_ENV
+          ? "dev"
+          : getVersion(),
       osVersion: getOS(),
       platform: platform() === "macos" ? "darwin" : platform() === "windows" ? "win32" : "linux",
       architecture: await getAppArchitecture(),

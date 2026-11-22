@@ -42,6 +42,13 @@ export interface IDailyMeasures {
 
   /** Recoverable token refresh failures that retain credentials. */
   readonly tokenRefreshTransientFailureCount: number
+  readonly tokenRefreshTransientFailureTimeoutCount: number
+  readonly tokenRefreshTransientFailureNetworkCount: number
+  readonly tokenRefreshTransientFailureRateLimitedCount: number
+  readonly tokenRefreshTransientFailureServerCount: number
+  readonly tokenRefreshTransientFailureOtherHttpCount: number
+  readonly tokenRefreshTransientFailureOtherOAuthCount: number
+  readonly tokenRefreshTransientFailureUnknownCount: number
 
   /** Rejected refresh tokens or malformed replacement credentials. */
   readonly tokenRefreshNonTransientFailureCount: number

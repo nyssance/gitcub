@@ -16,7 +16,7 @@ const build = spawnSync(
     "--features",
     "hasgard-testing",
     "--bundles",
-    process.platform === "darwin" ? "app" : "none",
+    process.platform === "darwin" ? "app" : process.platform === "win32" ? "nsis" : "none",
     // 测试包不出更新器产物：生产配置开了 createUpdaterArtifacts，没有签名私钥时 tauri build 会直接失败
     "--config",
     JSON.stringify({ bundle: { createUpdaterArtifacts: false } })

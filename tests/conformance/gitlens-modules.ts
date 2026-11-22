@@ -6,6 +6,7 @@ import { join } from "node:path"
 // plus the two stand-ins for modules the snapshots do not include: the logging/memoize/serializable decorators
 // and the l10n-backed status.utils formatting that GitStatus only reaches from its static helpers.
 export function resolveGitLensModule(specifier: string, importer: string, root: string): string | undefined {
+  importer = importer.replaceAll("\\", "/")
   if (specifier.startsWith("@gitlens/utils/decorators/")) return join(root, "gitlens-decorators.ts")
   if (
     specifier === "../utils/status.utils.js" &&

@@ -296,7 +296,7 @@ behavior merely to silence them.
 
 `macos-workflows.test.ts` 与原版快照分开，使用隔离的真实 Tauri 应用，检查统一登录入口、
 远端分支检出、重载后的冲突中止、十万行 diff 虚拟化、原生／Desktop 凭据共享及退出保护、
-连续文件变更后的 diff 收敛。Rust `macos_tests`、`oauth::tests`、`watch::tests` 补充验证
+连续文件变更后的 diff 收敛。Rust `production_tests`、`oauth::tests`、`watch::tests` 补充验证
 跟踪远端、多端口实例、流式进度、令牌续期请求、取消与替换登录、linked worktree 监听。
 原生 UI 测试也覆盖 macOS `/var` 路径别名、Git 状态未变时的二次内容刷新、凭据轮换存储兼容、
 首次欢迎页的语言恢复与两栏布局。
@@ -437,7 +437,7 @@ Diff 的展开改写。文件切换、后台刷新和空白过滤会使旧菜单
 - `highlighter.test.ts`：diff 高亮 worker 的逐行 token 快照（`fixtures/highlighter/`），快照由原 @codemirror/lang-* 实现生成，
   证明改为直接拼 @lezer 解析器后 8 种语言、嵌套 HTML/CSS/JS、Markdown 内联 HTML 与 CRLF 输出不变；运行 `bun test tests/conformance/highlighter.test.ts`。
 - `macos-workflows.test.ts`：真实 WebView 展开、丢弃确认及工作区／index 断言。
-- `macos_tests.rs`：merge／cherry-pick／revert 在继续失败后可中止恢复，再重新解决并继续；rebase 由既有恢复用例覆盖。
+- `production_tests.rs`：merge／cherry-pick／revert 在继续失败后可中止恢复，再重新解决并继续；rebase 由既有恢复用例覆盖。
 - 文件列表复用 Desktop `List`；改动列表保留 checkbox，使用其 list/listitem 模式。
   对应本地 ARIA 适配去掉 listitem 的 aria-selected，使用 aria-current，不改原版快照。
 

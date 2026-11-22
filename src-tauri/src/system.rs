@@ -202,6 +202,9 @@ mod tests {
         let d = tempfile::tempdir().unwrap();
         let p = d.path().join("r");
         init_repo(&p, "main").unwrap();
+        // The contract being tested is the default LF append path. A user's
+        // global autocrlf must not make this unit test machine-dependent.
+        crate::git::Git::new(Some(&p)).args(["config", "core.autocrlf", "true"]).run().unwrap();
 
         assert_eq!(read_gitignore(&p).unwrap(), "", "没有这个文件不该报错");
         write_gitignore(&p, "target\nnode_modules").unwrap();

@@ -35,8 +35,6 @@ mod image;
 mod index_parser;
 mod interactive;
 mod lfs;
-#[cfg(test)]
-mod macos_tests;
 mod menu;
 mod named_store;
 mod net;
@@ -45,6 +43,8 @@ mod oauth;
 mod ops;
 #[cfg(unix)]
 mod pack_reader;
+#[cfg(test)]
+mod production_tests;
 // Desktop 形状的 porcelain v2 解析只作一致性基准（应用状态含子模块走 gix）；GitLens 形状由 system::submodule_info 复用。
 #[expect(dead_code)]
 mod porcelain;
@@ -53,6 +53,7 @@ mod progress;
 mod raw_diff;
 mod remote;
 mod remote_ops;
+#[cfg(unix)]
 mod rename;
 mod repository;
 mod search_query;
@@ -71,7 +72,10 @@ mod token_store;
 mod trampoline;
 mod trending_webview;
 mod watch;
+#[cfg(windows)]
+mod windows_frame;
 mod windows_integrations;
+#[cfg(unix)]
 mod xdiff;
 
 fn main() {
@@ -87,7 +91,10 @@ fn main() {
         return;
     }
 
-    let builder = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(windows)]
+    let builder = builder.plugin(tauri_plugin_window_decorations::init());
+    let builder = builder
         .runtime(tauri_runtime_wry::Wry::default())
         // 没有它的话，各模块里的 log::warn! 全是空调用——出了问题只能靠猜
         // 当前正在监听哪个仓库。切仓库时旧的直接丢掉
@@ -115,6 +122,15 @@ fn main() {
                 Err(error) => log::warn!("取资源目录失败，改用系统 git: {error}"),
             }
             Ok(())
+        })
+        .on_page_load(|webview, payload| {
+            #[cfg(windows)]
+            if webview.label() == "main"
+                && matches!(payload.event(), tauri::webview::PageLoadEvent::Finished)
+                && let Some(window) = webview.app_handle().get_webview_window("main")
+            {
+                tauri::async_runtime::spawn(windows_frame::activate(window));
+            }
         })
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())

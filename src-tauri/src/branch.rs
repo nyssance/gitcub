@@ -269,7 +269,17 @@ pub fn clone_output_stream(
     if let Some(branch) = &options.branch {
         git = git.args(["-b", branch]);
     }
-    git = git.args(["--", url]).arg(&resolved);
+    // Windows `canonicalize` returns an extended-length `\\?\` path. Git for Windows
+    // rejects that prefix for clone destinations, even though Win32 APIs accept it.
+    #[cfg(windows)]
+    let git_destination = {
+        let value = resolved.to_string_lossy();
+        let value = value.strip_prefix(r"\\?\").unwrap_or(&value);
+        std::path::PathBuf::from(value)
+    };
+    #[cfg(not(windows))]
+    let git_destination = resolved;
+    git = git.args(["--", url]).arg(&git_destination);
     if let Some(token) = token {
         git = git.with_token(token, None);
     }

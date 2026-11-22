@@ -48,6 +48,9 @@ if (config) {
       if (entry.includes("desktop-tailer-test.") && specifier === "./native-file-streams")
         return next("node:fs", context)
       const parent = context.parentURL?.startsWith("file:") ? fileURLToPath(context.parentURL) : ""
+      const parentPosix = parent.replaceAll("\\", "/")
+      if (specifier === "../../../src/lib/databases")
+        return next(pathToFileURL(join(root, "../../src/lib/databases/index.ts")).href, context)
       if (specifier === "../../../src/lib/path-exists")
         return next(join(root, "../../src/lib/native-path-exists.ts"), context)
 
@@ -72,7 +75,7 @@ if (config) {
       if (specifier === "focus-trap-react" && parent.endsWith("/focus-trap.tsx")) return next(specifier, context)
       if (specifier in overrides) return next(overrides[specifier], context)
       if (specifier in imports) return next(pathToFileURL(imports[specifier]).href, context)
-      const gitlens = resolveGitLensModule(specifier, parent, root)
+      const gitlens = resolveGitLensModule(specifier, parentPosix, root)
       if (gitlens) return next(pathToFileURL(gitlens).href, context)
       if (specifier.startsWith("dom-helpers/") && !specifier.endsWith(".js"))
         return next(`dom-helpers/cjs/${specifier.slice("dom-helpers/".length)}.js`, context)
@@ -115,6 +118,27 @@ if (config) {
           "app/src/lib/stats/stats-store.ts",
           "src/lib/stats/stats-store.ts"
         )
+        // Bun 1.4.6 on Windows can bypass the preload resolver for imports
+        // originating in an unbundled snapshot helper. Apply the same
+        // adaptation at source-load time without modifying the immutable
+        // upstream snapshot.
+        source = source
+          .replaceAll(
+            'from "../../../src/lib/databases"',
+            `from ${JSON.stringify(join(root, "../../src/lib/databases/index.ts"))}`
+          )
+          .replaceAll(
+            "from '../../../src/lib/databases'",
+            `from ${JSON.stringify(join(root, "../../src/lib/databases/index.ts"))}`
+          )
+          .replaceAll(
+            'from "../utils/status.utils.js"',
+            `from ${JSON.stringify(join(root, "gitlens-status-utils.ts"))}`
+          )
+          .replaceAll(
+            "from '../utils/status.utils.js'",
+            `from ${JSON.stringify(join(root, "gitlens-status-utils.ts"))}`
+          )
         if (process.versions.bun) {
           source = source.replaceAll(
             /(\bfrom\s+|\bimport\s*|\b(?:import|require|mock\.module)\(\s*)(['"])([^'"\n]+)\2/g,

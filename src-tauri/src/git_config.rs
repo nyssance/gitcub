@@ -71,6 +71,7 @@ fn effective_from(config: &crate::raw_diff::in_process::Config<'_>, key: &str) -
 }
 
 /// `section.name` or `section.subsection.name` in the plain form git accepts without quoting rules to consider.
+#[cfg(unix)]
 fn simple_key(key: &str) -> bool {
     let Some((section, rest)) = key.split_once('.') else { return false };
     let name = rest.rsplit_once('.').map_or(rest, |(_, name)| name);

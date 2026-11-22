@@ -141,7 +141,7 @@ export class GitStore extends BaseStore {
 
   private _stashEntryCount = 0
 
-  private readonly repository: Repository
+  private repository: Repository
   private readonly shell: IAppShell
   private readonly statsStore: IStatsStore
 
@@ -152,6 +152,14 @@ export class GitStore extends BaseStore {
     this.statsStore = statsStore
 
     this._tagsToPush = getTagsToPush(repository)
+  }
+
+  public get repositorySnapshot(): Repository {
+    return this.repository
+  }
+
+  public setRepository(repository: Repository): void {
+    this.repository = repository
   }
 
   /**

@@ -1,5 +1,7 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss";
+@import "@alwith/module-desktop-shell/styles.css";
+@import "@alwith/module-desktop-shell/theme.css";
 @source "../../node_modules/@nyssance/shadcn/dist/vega";
 @source "../../node_modules/@nyssance/reui/dist/vega/components/reui/stepper.js";
 @import "./scrollbars.css";

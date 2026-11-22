@@ -107,7 +107,6 @@ import { ChangeStatusIcon, CommitStatusIcon } from "@/ui/shared/status-icon"
 import { StashAndSwitchBranch } from "@/ui/stash-changes/stash-and-switch-branch-dialog"
 import { ToolbarRight } from "@/ui/toolbar/toolbar"
 import { Discover } from "@/ui/trending/discover"
-import { TitleBar, useIsWindows } from "@/ui/window/title-bar"
 import { sanitizeCloneName } from "@/upstream/lib/remote-parsing"
 import type { IRawDiff } from "@/upstream/models/diff"
 import { DiffSelectionType } from "@/upstream/models/diff/diff-selection"
@@ -249,7 +248,6 @@ export function App() {
   const setCompared = useHistoryStore(s => s.setCompared)
   const selectHistoryCommit = useHistoryStore(s => s.selectCommit)
 
-  const isWindows = useIsWindows()
   const sidebarPanel = useRef<PanelImperativeHandle>(null)
 
   const repo = state?.selectedRepository ?? null
@@ -1728,7 +1726,6 @@ export function App() {
         {askDialog}
         {askTextDialog}
         <div className="h-screen">
-          <TitleBar />
           {errors[0] && (
             <AppError
               key="app-error"
@@ -1915,9 +1912,6 @@ export function App() {
           onPushed={() => void refresh()}
         />
       )}
-      {/* Windows 是 frame:false，自绘按钮和缩放边框都在这条里；
-          macOS 的红绿灯由画布顶部工具栏让位。 */}
-      {isWindows && <TitleBar />}
       {/* 右侧浮板保留常驻仓库列表与当前工作区，切换画布不卸载。 */}
       <FloatingWorkspace
         page={canvasPage}

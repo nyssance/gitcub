@@ -1505,7 +1505,9 @@ mod tests {
         };
         let dir = tempfile::tempdir().unwrap();
         let repo = dir.path();
-        let magic = ":(glob)*.txt";
+        // `:`/`*` are forbidden in Windows filenames. Brackets still exercise
+        // literal pathspec handling and are legal on every supported platform.
+        let magic = if cfg!(windows) { "a[bc].txt" } else { ":(glob)*.txt" };
         run(repo, &["init", "-q", "-b", "main", "."]);
         run(repo, &["config", "user.email", "t@t.t"]);
         run(repo, &["config", "user.name", "t"]);

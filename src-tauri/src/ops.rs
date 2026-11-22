@@ -790,7 +790,23 @@ pub fn move_worktree_command(
         .into_iter()
         .find(|wt| wt.main)
         .ok_or_else(|| "Could not determine the main worktree of the repository".to_string())?;
-    Ok((main.path.into(), ["worktree", "move", "--", old_path, new_path].map(String::from).to_vec()))
+    #[cfg(windows)]
+    fn git_path(path: &str) -> String {
+        if let Some(unc) = path.strip_prefix(r"\\?\UNC\") {
+            format!(r"\\{}", unc)
+        } else {
+            path.strip_prefix(r"\\?\").unwrap_or(path).to_owned()
+        }
+    }
+    #[cfg(not(windows))]
+    fn git_path(path: &str) -> String {
+        path.to_owned()
+    }
+
+    Ok((
+        main.path.into(),
+        ["worktree", "move", "--", &git_path(old_path), &git_path(new_path)].map(String::from).to_vec(),
+    ))
 }
 
 /// 移动（重命名）一个链接工作树。
@@ -1886,7 +1902,9 @@ mod tests {
     fn 移动工作树不在被移动的目录里运行() {
         for case in ["own", "main", "sibling"] {
             let parent = tempfile::tempdir().unwrap();
-            let main = parent.path().canonicalize().unwrap().join("repo");
+            // `canonicalize` returns an extended `\\?\` path on Windows;
+            // Git for Windows rejects that spelling even though Win32 accepts it.
+            let main = parent.path().join("repo");
             std::fs::create_dir(&main).unwrap();
             git(&main, &["init", "-b", "main"]);
             git(&main, &["config", "user.email", "t@example.com"]);
@@ -1894,9 +1912,9 @@ mod tests {
             std::fs::write(main.join("README"), "hello").unwrap();
             git(&main, &["add", "."]);
             git(&main, &["commit", "-m", "first"]);
-            let worktree = parent.path().canonicalize().unwrap().join("repo-wt-a");
+            let worktree = parent.path().join("repo-wt-a");
             git(&main, &["worktree", "add", "-b", "feature-a", "--", worktree.to_str().unwrap()]);
-            let sibling = parent.path().canonicalize().unwrap().join("repo-wt-b");
+            let sibling = parent.path().join("repo-wt-b");
             let repo = match case {
                 "own" => worktree.clone(),
                 "main" => main.clone(),
@@ -1905,7 +1923,7 @@ mod tests {
                     sibling.clone()
                 }
             };
-            let renamed = parent.path().canonicalize().unwrap().join("repo-wt-renamed");
+            let renamed = parent.path().join("repo-wt-renamed");
 
             let (cwd, args) =
                 move_worktree_command(&repo, worktree.to_str().unwrap(), renamed.to_str().unwrap()).unwrap();
@@ -1920,9 +1938,10 @@ mod tests {
             assert!(!worktree.exists(), "{case}");
             assert!(renamed.exists(), "{case}");
             let listed: Vec<_> = worktrees(&main).unwrap().into_iter().map(|wt| wt.path).collect();
-            let mut expected = vec![main.to_string_lossy().into_owned(), renamed.to_string_lossy().into_owned()];
+            let mut expected =
+                vec![main.to_string_lossy().replace('\\', "/"), renamed.to_string_lossy().replace('\\', "/")];
             if case == "sibling" {
-                expected.push(sibling.to_string_lossy().into_owned());
+                expected.push(sibling.to_string_lossy().replace('\\', "/"));
             }
             assert_eq!(listed[0], expected[0], "{case}: main worktree stays first");
             let (mut rest, mut expected_rest) = (listed[1..].to_vec(), expected[1..].to_vec());

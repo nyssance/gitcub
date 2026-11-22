@@ -2172,6 +2172,7 @@ pub fn commit_range_files(root: &Path, oldest: &str, latest: &str) -> Result<Vec
 /// 只接受完整的对象名或 `HEAD`；浅克隆、`info/grafts`、`refs/replace/*` 会改变父提交或对象本身，让位给 git。
 /// `log` 为真时（调用方是 `git log -m`）另外让位：`log.showRoot=false` 让根提交不出 diff，
 /// `log.diffMerges` 会改变 `-m` 对合并提交的含义。
+#[cfg(unix)]
 pub(crate) fn commit_trees_in_process(
     root: &Path, revision: &str, log: bool,
 ) -> Result<(gix::Repository, Option<gix::ObjectId>, gix::ObjectId), String> {
@@ -2223,6 +2224,14 @@ pub(crate) fn commit_trees_in_process(
     Ok((repo, old_tree, new_tree))
 }
 
+#[cfg(not(unix))]
+#[expect(dead_code)] // Windows keeps the shared history API; the Windows caller uses the Git fallback.
+pub(crate) fn commit_trees_in_process(
+    _: &Path, _: &str, _: bool,
+) -> Result<(gix::Repository, Option<gix::ObjectId>, gix::ObjectId), String> {
+    Err("in-process commit diff is unavailable on this platform".into())
+}
+
 /// `git log -C -M -m -1 --first-parent --raw -z <sha> --` 的进程内实现（diff 队列与重命名检测见 `crate::rename`）。
 ///
 /// raw 段和 numstat 段按 git 的格式拼出来（对象名写完整的，解析时用不到），再交给 `parse_raw_with_numstat`，
@@ -2230,8 +2239,14 @@ pub(crate) fn commit_trees_in_process(
 /// 目标是新增、来源是删除；子模块、`commit_trees_in_process` 让位的情形，重命名检测无法证明一致的情形
 /// （见 `rename::commit_pairs`），以及 numstat 算不出和 git 相同数字的情形（xdiff 设置、`diff.orderFile`、
 /// 路径带 diff 属性、文件超过 16 MiB）交给 git。`Err` 只表示「不走快速路径」。
+#[cfg(unix)]
 pub(crate) fn commit_files_in_process(root: &Path, sha: &str) -> Result<Vec<CommitFile>, String> {
     Ok(parse_raw_with_numstat(&crate::rename::commit_log_bytes(root, sha, false)?))
+}
+
+#[cfg(not(unix))]
+pub(crate) fn commit_files_in_process(_: &Path, _: &str) -> Result<Vec<CommitFile>, String> {
+    Err("in-process commit diff is unavailable on this platform".into())
 }
 
 /// 解析 `--raw -z` 与 `--numstat -z` 混在一起的输出。
@@ -3206,6 +3221,7 @@ mod tests {
 
     /// 提交文件列表的进程内快速路径对照 `git log -C -M -m -1 --first-parent --raw --numstat -z` 的解析结果。
     /// 返回快速路径是否作答。
+    #[cfg(unix)]
     fn compare_commit_files(r: &Path, sha: &str) -> bool {
         let via_git = serde_json::to_value(commit_files_via_git(r, sha).unwrap()).unwrap();
         match commit_files_in_process(r, sha) {
@@ -3217,6 +3233,7 @@ mod tests {
         }
     }
 
+    #[cfg(unix)]
     fn head(r: &Path) -> String {
         git(r, &["rev-parse", "HEAD"]).trim().to_string()
     }
