@@ -19,6 +19,8 @@ export interface IDatabaseOwner {
 export interface IDatabaseGitHubRepository {
   readonly id?: number
   readonly ownerID: number
+  /** Login of the account whose API response populated this record. */
+  readonly accountLogin?: string
   readonly name: string
   readonly private: boolean | null
   readonly htmlURL: string | null
@@ -91,7 +93,7 @@ export class RepositoriesDatabase extends BaseDatabase {
   /** The GitHub repositories table. */
   public readonly gitHubRepositories = this.table<IDatabaseGitHubRepository, number>(
     "gitHubRepositories",
-    "++id, &[ownerID+name]"
+    "++id, &[ownerID+name+accountLogin]"
   )
 
   /** A table containing the names of protected branches per repository. */

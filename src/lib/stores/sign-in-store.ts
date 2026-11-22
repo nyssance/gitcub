@@ -9,7 +9,7 @@ import {
   getHTMLURL,
   getOAuthAuthorizationURL
 } from "../../lib/api"
-import { type Account, isDotComAccount } from "../../models/account"
+import type { Account } from "../../models/account"
 import { fatalError } from "../../upstream/lib/fatal-error"
 import { TypedBaseStore } from "../../upstream/lib/stores/base-store"
 import { shell } from "../app-shell"
@@ -174,7 +174,6 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
   private emitAuthenticate(account: Account) {
     const event: IAuthenticationEvent = { account }
     this.emitter.emit("did-authenticate", event)
-    this.state?.resultCallback({ kind: "success", account })
   }
 
   /**
@@ -210,11 +209,13 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
    */
   public reset() {
     const currentState = this.state
-    this.state?.resultCallback({ kind: "cancelled" })
     this.setState(null)
 
     if (currentState?.kind === SignInStep.Authentication) {
       currentState.oauthState?.onAuthError(new Error("cancelled"))
+    }
+    if (currentState !== null && currentState.kind !== SignInStep.Success) {
+      currentState.resultCallback({ kind: "cancelled" })
     }
   }
 
@@ -229,26 +230,13 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       this.reset()
     }
 
-    const existingAccount = this.accounts.find(isDotComAccount)
-
-    if (existingAccount) {
-      this.setState({
-        kind: SignInStep.ExistingAccountWarning,
-        endpoint,
-        existingAccount,
-        error: null,
-        loading: false,
-        resultCallback: resultCallback ?? noop
-      })
-    } else {
-      this.setState({
-        kind: SignInStep.Authentication,
-        endpoint,
-        error: null,
-        loading: false,
-        resultCallback: resultCallback ?? noop
-      })
-    }
+    this.setState({
+      kind: SignInStep.Authentication,
+      endpoint,
+      error: null,
+      loading: false,
+      resultCallback: resultCallback ?? noop
+    })
   }
 
   /** Begin reauthentication for a specific login at a known API endpoint. */
@@ -337,12 +325,18 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
           return
         }
 
+        const { resultCallback } = this.state
         log.info("[SignInStore] account resolved")
-        this.emitAuthenticate(account)
-        this.setState({
+        const successState: ISuccessState = {
           kind: SignInStep.Success,
-          resultCallback: this.state.resultCallback
-        })
+          resultCallback
+        }
+        this.state = successState
+        this.emitAuthenticate(account)
+        if (this.state === successState) {
+          this.emitUpdate(successState)
+        }
+        resultCallback({ kind: "success", account })
       })
       .catch(e => {
         // Make sure we're still in the same sign in session
@@ -488,26 +482,13 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
 
     const endpoint = getEnterpriseAPIURL(validUrl)
 
-    const existingAccount = this.accounts.find(x => x.endpoint === endpoint)
-
-    if (existingAccount) {
-      this.setState({
-        kind: SignInStep.ExistingAccountWarning,
-        endpoint,
-        existingAccount,
-        error: null,
-        loading: false,
-        resultCallback: currentState.resultCallback
-      })
-    } else {
-      this.setState({
-        kind: SignInStep.Authentication,
-        endpoint,
-        isUnrecognizedEnterpriseServer: isEndpointFromGit && isGHES(endpoint),
-        error: null,
-        loading: false,
-        resultCallback: currentState.resultCallback
-      })
-    }
+    this.setState({
+      kind: SignInStep.Authentication,
+      endpoint,
+      isUnrecognizedEnterpriseServer: isEndpointFromGit && isGHES(endpoint),
+      error: null,
+      loading: false,
+      resultCallback: currentState.resultCallback
+    })
   }
 }

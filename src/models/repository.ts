@@ -3,6 +3,7 @@ import * as Path from "../lib/platform-path"
 import { assertNever, fatalError } from "../upstream/lib/fatal-error"
 import { createEqualityHash } from "../upstream/models/equality-hash"
 import { ForkContributionTarget, type WorkflowPreferences } from "../upstream/models/workflow-preferences"
+import type { IAccountIdentity } from "./account"
 import type { IAheadBehind } from "./branch"
 import { type ForkedGitHubRepository, GitHubRepository } from "./github-repository"
 
@@ -110,6 +111,12 @@ export class Repository {
   public get resolvedGitDir(): string {
     return this.gitDir ?? Path.join(this.path, ".git")
   }
+}
+
+/** Get the account explicitly assigned to a repository, if any. */
+export function getRepositoryAccountIdentity(repository: Repository): IAccountIdentity | null {
+  const { gitHubRepository, login } = repository
+  return gitHubRepository === null || login === null ? null : { endpoint: gitHubRepository.endpoint, login }
 }
 
 export function getRepositoryStateKey(repository: Repository): string {
