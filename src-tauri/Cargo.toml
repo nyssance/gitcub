@@ -27,7 +27,7 @@ log = "0.4"
 chrono = "0.4"
 # 文件监听：别的程序（编辑器、构建、另一个终端里的 git）改了工作区时，
 # 界面不该等到窗口被点一下才更新
-notify = "8"
+notify = "9"
 # 账号信息与 OAuth 需要 HTTPS；用 rustls 避免依赖系统 OpenSSL
 reqwest = { version = "0.13", default-features = false, features = [
   "json",
