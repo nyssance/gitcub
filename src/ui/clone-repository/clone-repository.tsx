@@ -780,6 +780,10 @@ export class CloneRepository extends React.Component<ICloneRepositoryProps, IClo
   private clone = async () => {
     this.setState({ loading: true })
 
+    // TextBox is a controlled legacy component. Let its change callback commit
+    // before snapshotting the request when a form is submitted directly.
+    await Promise.resolve()
+
     const request = this.getSelectedTabState()
     const { path } = request
     const tab = this.props.selectedTab
