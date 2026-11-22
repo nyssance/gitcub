@@ -5,7 +5,6 @@ import { type Account, type IAccountIdentity, isSameAccount } from "../../models
 import { GitHubRepository, type GitHubRepositoryPermission } from "../../models/github-repository"
 import { Owner } from "../../models/owner"
 import {
-  assertIsRepositoryWithGitHubRepository,
   getRepositoryAccountIdentity,
   isRepositoryWithGitHubRepository,
   Repository,
@@ -48,6 +47,7 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
   private protectionEnabledForBranchCache = new Map<string, boolean>()
 
   private emitQueued = false
+  private updateVersion = 0
 
   private readonly db: RepositoriesDatabase
 
@@ -583,8 +583,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
       const { account } = match
       const owner = await this.putOwner(account.endpoint, match.owner)
       const existingRepo = await this.db.gitHubRepositories
-        .where("[ownerID+name]")
-        .equals([owner.id, match.name])
+        .where("[ownerID+name+accountLogin]")
+        .equals([owner.id, match.name, match.account.login.toLowerCase()])
         .first()
 
       if (existingRepo) {
@@ -597,6 +597,7 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
         lastPruneDate: null,
         name: match.name,
         ownerID: owner.id,
+        accountLogin: match.account.login.toLowerCase(),
         parentID: null,
         private: null
       }
@@ -606,36 +607,60 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
     })
   }
 
-  public async setGitHubRepository(repo: Repository, ghRepo: GitHubRepository) {
-    // If nothing has changed we can skip writing to the database and (more
-    // importantly) avoid telling store consumers that the repo store has
-    // changed and just return the repo that was given to us.
-    if (isRepositoryWithGitHubRepository(repo)) {
-      if (repo.gitHubRepository.hash === ghRepo.hash) {
-        return repo
+  /** Clear a remote association only when the caller's snapshot is current. */
+  public async clearGitHubRepository(repo: Repository): Promise<Repository> {
+    const result = await this.db.transaction(
+      "rw",
+      this.db.repositories,
+      this.db.gitHubRepositories,
+      this.db.owners,
+      async () => {
+        const record = await this.db.repositories.get(repo.id)
+        assertNonNullable(record, "Cannot clear a missing repository")
+        if (!hasCurrentAssociation(record, repo) || (record.gitHubRepositoryID === null && record.login === null)) {
+          return { updatedRepo: await this.toRepository(record), changed: false }
+        }
+        const updated = { ...record, gitHubRepositoryID: null, login: null }
+        await this.db.repositories.put(updated)
+        return { updatedRepo: await this.toRepository(updated), changed: true }
       }
-    }
-
-    await this.db.transaction("rw", this.db.repositories, () =>
-      this.db.repositories.update(repo.id, { gitHubRepositoryID: ghRepo.dbID })
     )
-    this.emitUpdatedRepositories()
+    if (result.changed) this.emitUpdatedRepositories()
+    return result.updatedRepo
+  }
 
-    const updatedRepo = new Repository(
-      repo.path,
-      repo.id,
-      ghRepo,
-      repo.missing,
-      repo.alias,
-      repo.workflowPreferences,
-      repo.isTutorialRepository,
-      repo.gitDir,
-      repo.mainWorktreePath,
-      repo.login
+  public async setGitHubRepository(repo: Repository, ghRepo: GitHubRepository, assignLogin?: string | null) {
+    const result = await this.db.transaction(
+      "rw",
+      this.db.repositories,
+      this.db.gitHubRepositories,
+      this.db.owners,
+      async () => {
+        const record = await this.db.repositories.get(repo.id)
+        assertNonNullable(record, "Cannot update a missing repository")
+        const current = await this.toRepository(record)
+        if (!hasCurrentAssociation(record, repo)) return { updatedRepo: current, changed: false }
+        const login =
+          assignLogin !== undefined
+            ? assignLogin
+            : current.gitHubRepository !== null && current.gitHubRepository.endpoint.toLowerCase() !== ghRepo.endpoint.toLowerCase()
+              ? null
+              : current.login
+        const scoped = await this.getGitHubRepositoryForAccount(ghRepo.dbID, login)
+        if (
+          isRepositoryWithGitHubRepository(current) &&
+          current.gitHubRepository.hash === scoped.hash &&
+          current.login === login
+        ) {
+          return { updatedRepo: current, changed: false }
+        }
+        const updated = { ...record, login, gitHubRepositoryID: scoped.dbID }
+        await this.db.repositories.put(updated)
+        return { updatedRepo: await this.toRepository(updated), changed: true }
+      }
     )
-
-    assertIsRepositoryWithGitHubRepository(updatedRepo)
-    return updatedRepo
+    if (result.changed) this.emitUpdatedRepositories()
+    return result.updatedRepo
   }
 
   private async _upsertGitHubRepository(
@@ -644,6 +669,7 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
     ignoreParent = false,
     accountLogin = ""
   ): Promise<GitHubRepository> {
+    accountLogin = accountLogin.toLowerCase()
     const parent =
       "parent" in gitHubRepository && gitHubRepository.parent !== undefined
         ? await this._upsertGitHubRepository(endpoint, gitHubRepository.parent, true, accountLogin)
@@ -666,7 +692,8 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
     // in the parent repository if we can help it or else we'll end up in a
     // perpetual race condition where updating the fork will clear the
     // permissions on the parent and updating the parent will reinstate them.
-    const permissions = getPermissionsString(gitHubRepository) ?? existingRepo?.permissions ?? undefined
+    const reportedPermissions = getPermissionsString(gitHubRepository)
+    const permissions = reportedPermissions === undefined ? existingRepo?.permissions : reportedPermissions
 
     // If we're told to ignore the parent then we'll attempt to use the existing
     // parent and if that fails set it to null. This happens when we want to
@@ -827,16 +854,35 @@ export class RepositoriesStore extends TypedBaseStore<ReadonlyArray<Repository>>
    * (This is the only way we emit updates from this store.)
    */
   private emitUpdatedRepositories() {
-    if (!this.emitQueued) {
-      setImmediate(() => {
-        this.getAll()
-          .then(repos => this.emitUpdate(repos))
-          .catch(e => log.error(`Failed emitting update`, e))
-          .finally(() => (this.emitQueued = false))
-      })
-      this.emitQueued = true
+    this.updateVersion++
+    if (this.emitQueued) return
+    this.emitQueued = true
+    setImmediate(() => this.emitLatestRepositories())
+  }
+
+  private async emitLatestRepositories() {
+    try {
+      let version: number
+      let repos: ReadonlyArray<Repository>
+      do {
+        version = this.updateVersion
+        repos = await this.getAll()
+      } while (version !== this.updateVersion)
+      this.emitQueued = false
+      this.emitUpdate(repos)
+    } catch (e) {
+      this.emitQueued = false
+      log.error(`Failed emitting update`, e)
     }
   }
+}
+
+/** Compute the key for the branch protection cache */
+function hasCurrentAssociation(record: IDatabaseRepository, repository: Repository) {
+  return (
+    (record.login?.toLowerCase() ?? null) === (repository.login?.toLowerCase() ?? null) &&
+    record.gitHubRepositoryID === (repository.gitHubRepository?.dbID ?? null)
+  )
 }
 
 /** Compute the key for the branch protection cache */
@@ -849,11 +895,11 @@ function getKeyPrefix(dbID: number) {
   return `${dbID}-`
 }
 
-function getPermissionsString(repo: IAPIRepository | IAPIFullRepository): GitHubRepositoryPermission {
+function getPermissionsString(repo: IAPIRepository | IAPIFullRepository): GitHubRepositoryPermission | undefined {
   const permissions = "permissions" in repo ? repo.permissions : undefined
 
   if (permissions === undefined) {
-    return null
+    return undefined
   } else if (permissions.admin) {
     return "admin"
   } else if (permissions.push) {

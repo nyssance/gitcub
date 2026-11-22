@@ -481,11 +481,12 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
     }
 
     const endpoint = getEnterpriseAPIURL(validUrl)
+    const existingAccount = this.accounts.find(x => x.endpoint.toLowerCase() === endpoint.toLowerCase())
 
     this.setState({
       kind: SignInStep.Authentication,
       endpoint,
-      isUnrecognizedEnterpriseServer: isEndpointFromGit && isGHES(endpoint),
+      isUnrecognizedEnterpriseServer: isEndpointFromGit && !existingAccount && isGHES(endpoint),
       error: null,
       loading: false,
       resultCallback: currentState.resultCallback
