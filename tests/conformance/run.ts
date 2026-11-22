@@ -93,6 +93,7 @@ const suites = [
         "../../src/lib/stores/pull-request-coordinator.ts"
       ),
       "../../helpers/app-store-test-harness": join(root, "upstream/desktop/helpers/app-store-test-harness.ts"),
+      "../../helpers/changes-state-helper": join(root, "upstream/desktop/helpers/changes-state-helper.ts"),
       "../../../src/lib/stats": join(root, "../../src/lib/stats/index.ts"),
       "../../helpers/test-activity-monitor": join(root, "upstream/desktop/helpers/test-activity-monitor.ts"),
       "../../fake-stats-post": join(root, "upstream/desktop/fake-stats-post.ts")
@@ -218,7 +219,8 @@ const suites = [
       "../../src/lib/trampoline/trampoline-ui-helper": join(root, "../../src/lib/trampoline/trampoline-ui-helper.ts"),
       "../../src/lib/git/credential": join(root, "../../src/lib/git/credential.ts"),
       "../../src/lib/oauth-token": join(root, "../../src/lib/oauth-token.ts"),
-      "../helpers/stores": join(root, "upstream/desktop/helpers/stores/index.ts")
+      "../helpers/stores": join(root, "upstream/desktop/helpers/stores/index.ts"),
+      "../helpers/databases": join(root, "upstream/desktop/helpers/databases/test-repositories-database.ts")
     }
   },
   {
@@ -234,6 +236,7 @@ const suites = [
       "../../../src/ui/dispatcher": join(root, "../../src/ui/clone-dispatcher-contract.ts"),
       "../../../src/ui/lib/default-dir": join(root, "../../src/lib/ui/default-dir.ts"),
       "../../helpers/temp": join(root, "upstream/desktop/helpers/temp.ts"),
+      "../../helpers/mock-api": join(root, "upstream/desktop/helpers/mock-api.ts"),
       "../../helpers/ui/render": join(root, "upstream/desktop/helpers/ui/render.tsx")
     }
   },

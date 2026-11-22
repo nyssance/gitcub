@@ -1,5 +1,6 @@
 // Desktop MIT port; platform imports adapted to Tauri.
 import type { Account } from "../../models/account"
+import type { Repository } from "../../models/repository"
 import type { IGitAccount } from "../../models/git-account"
 import { PopupType } from "../../models/popup"
 import type { SignInDispatcher as Dispatcher } from "../../ui/sign-in-contract"
@@ -16,6 +17,11 @@ class TrampolineUIHelper {
 
   public setDispatcher(dispatcher: Dispatcher) {
     this.dispatcher = dispatcher
+  }
+
+  /** Repository account prompting is optional during credential refresh. */
+  public promptForRepositoryAccount(_repository: Repository): Promise<Account | undefined> {
+    return Promise.resolve(undefined)
   }
 
   public promptAddingSSHHost(host: string, ip: string, keyType: string, fingerprint: string): Promise<boolean> {
