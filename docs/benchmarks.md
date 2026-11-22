@@ -1281,6 +1281,6 @@ BENCH_DIFF_TRACE=1 bun run bench:app              # 打开 diff 时记下每条 
 | open-head | 3.5 | 101.0 | 28.89× |
 | index-entries | 5.6 | 62.9 | 11.31× |
 | refs | 5.0 | 60.6 | 12.11× |
-| status | 643.0 | 410.6 | 0.64× |
+| status | 78.5 | 115.7 | 1.47× |
 
-这组 Windows 数据只证明上述三条可移植路径在这次运行中的进程启动开销优势，不能替代 macOS 的完整 status、history、graph、diff 和 blame 对照。下一步优先把 Windows status 的真实生产路径加入同一基准，再补 Windows blame/raw-diff；在此之前不能宣称 Windows 与 macOS 覆盖等价。
+这组 Windows 数据来自 5 次样本；status 的两次运行绝对值随系统状态波动，但同一次运行中 gix 与 git CLI 都按同一口径比较。它不能替代 macOS 的完整 status、history、graph、diff 和 blame 对照；Windows blame/raw-diff 仍未覆盖。
