@@ -405,7 +405,21 @@ fn decorations(repo: &gix::Repository) -> Result<std::sync::Arc<Decorations>, St
     let decorations = std::sync::Arc::new(derive_decorations(repo, &refs));
     let racy = fingerprint
         .iter()
-        .filter(|(_, modified, _, _, is_dir)| !is_dir && *modified + RACY_WINDOW >= taken)
+        .filter(|(path, modified, _, _, is_dir)| {
+            if *is_dir {
+                return false;
+            }
+            // Windows does not expose a stable file identity through the
+            // portable Metadata API. A ref can therefore be rewritten
+            // in-place with identical size and timestamps. Keep loose refs
+            // in the incremental re-read set on Windows so content changes
+            // cannot leave decorations stale.
+            #[cfg(windows)]
+            if path.components().any(|component| component.as_os_str() == "refs") {
+                return true;
+            }
+            *modified + RACY_WINDOW >= taken
+        })
         .map(|stamp| stamp.0.clone())
         .collect();
     cache.insert(git_dir, RefIndex { fingerprint, racy, refs, decorations: decorations.clone() });
