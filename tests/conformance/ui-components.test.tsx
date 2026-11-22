@@ -799,7 +799,9 @@ test("repository settings: no remote offers Publish; a non-fork has no Fork Beha
   uninstall()
   repositorySettings()
   await screen.findByRole("tab", { name: t("repositorySettings.gitConfig") })
-  await waitFor(() => expect(callsOf("pull_request_repository")).toContainEqual(hosted))
+  await waitFor(() =>
+    expect(callsOf("pull_request_repository")).toContainEqual({ ...hosted, repo: "/preview/repository" })
+  )
   expect(screen.queryByRole("tab", { name: t("repositorySettings.forkBehavior") })).not.toBeInTheDocument()
 })
 
@@ -915,7 +917,7 @@ test("PR list: a repository lookup that finishes after switching is ignored (Ign
   const { args, view } = pullRequests({
     pull_request_repository: remote => (remote.name === prRemote.name ? old.promise : nextRemote)
   })
-  await waitFor(() => expect(callsOf("pull_request_repository")).toContainEqual(prRemote))
+  await waitFor(() => expect(callsOf("pull_request_repository")).toContainEqual({ ...prRemote, repo: "/fixture" }))
   view.rerender(
     <div className="branches-container h-96" style={{ width: 365 }}>
       <div className="branches-container-panel">
@@ -2466,19 +2468,23 @@ test("diff search: ⌘F opens search, Enter and Shift+Enter step through every m
   await user.keyboard("{Meta>}f{/Meta}")
   const search = await screen.findByPlaceholderText(t("diffSearchInput.search"))
   await user.type(search, "word{Enter}")
+  // AriaLiveContainer（Desktop 原样）把播报防抖 1 秒，正好等于 findByText 的默认超时
+  const announced = { timeout: 3000 }
   const result = (current: number, total: number) =>
     t("diffSearchInput.resultCurrentOfTotalForQuery", { current, total, query: "word" })
-  expect(await screen.findByText(result(1, 2))).toBeInTheDocument()
+  expect(await screen.findByText(result(1, 2), undefined, announced)).toBeInTheDocument()
   const first = view.container.querySelector(".cm-search-result-current")
   expect(first).toHaveTextContent("word")
   await user.keyboard("{Enter}")
-  expect(await screen.findByText(result(2, 2))).toBeInTheDocument()
+  expect(await screen.findByText(result(2, 2), undefined, announced)).toBeInTheDocument()
   expect(view.container.querySelector(".cm-search-result-current")).not.toBe(first)
   await user.keyboard("{Shift>}{Enter}{/Shift}")
-  expect(await screen.findByText(result(1, 2))).toBeInTheDocument()
+  expect(await screen.findByText(result(1, 2), undefined, announced)).toBeInTheDocument()
   await user.clear(search)
   await user.type(search, "absent{Enter}")
-  expect(await screen.findByText(t("diffSearchInput.noResultsForQuery", { query: "absent" }))).toBeInTheDocument()
+  expect(
+    await screen.findByText(t("diffSearchInput.noResultsForQuery", { query: "absent" }), undefined, announced)
+  ).toBeInTheDocument()
 })
 
 // ---- Toolbar/Branch dropdown ----
