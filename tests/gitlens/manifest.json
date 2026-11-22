@@ -4050,8 +4050,9 @@
     },
     "tests/e2e/specs/cloudPatches.test.ts": {
       "sha256": "90653689ab0760f117c47b7c3a915710cf80b82578adee7392da7016eb6ec35e",
-      "status": "pending",
-      "rust_tests": []
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens Cloud Patches is a GitKraken hosted sharing service and VS Code webview workflow; GitCub has no equivalent authorized product surface, so this is excluded rather than treated as a Git behavior gap."
     },
     "tests/e2e/specs/graphConflictResolution.test.ts": {
       "sha256": "7615d3ca17b481b8adf4eb2d184a5fc1389915d50fa275977f39da80d48351b5",
@@ -4235,8 +4236,9 @@
     },
     "tests/e2e/specs/subscriptionGates.test.ts": {
       "sha256": "9081c5e98b0a202e6ebd2b35f40613912d2a6056be2c1ba3a592580bc5ef85d1",
-      "status": "pending",
-      "rust_tests": []
+      "status": "excluded",
+      "rust_tests": [],
+      "exclusion": "GitLens/GitKraken account subscription and trial gating in the VS Code extension; GitCub has no subscription gate or authorized account-management surface."
     },
     "tests/e2e/specs/treeView.test.ts": {
       "sha256": "dd637f8a11c3610508c164f0a3c52f269cfeccdbb236fc4b19386c1f4c3a4ccb",
