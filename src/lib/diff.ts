@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core"
+import { platform } from "@tauri-apps/plugin-os"
 
 import { tokenizeFile } from "@/lib/highlighter"
 import type { FileChange } from "@/models/repo-status"
@@ -218,7 +219,7 @@ export async function getWorkingDirectoryDiff(
     return {
       kind: DiffType.Submodule,
       path: file.path,
-      fullPath: info.fullPath,
+      fullPath: platform() === "windows" ? info.fullPath.replaceAll("/", "\\") : info.fullPath,
       url: info.url,
       status: status.submoduleStatus,
       oldSHA: changed ? info.recorded : null,

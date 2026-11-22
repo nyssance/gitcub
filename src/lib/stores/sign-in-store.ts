@@ -251,6 +251,25 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
     }
   }
 
+  /** Begin reauthentication for a specific login at a known API endpoint. */
+  public beginSignInForAccount(
+    endpoint: string,
+    login: string,
+    resultCallback?: (result: SignInResult) => void
+  ) {
+    if (this.state !== null) {
+      this.reset()
+    }
+    this.setState({
+      kind: SignInStep.Authentication,
+      endpoint,
+      expectedLogin: login,
+      error: null,
+      loading: false,
+      resultCallback: resultCallback ?? noop
+    })
+  }
+
   /**
    * Initiate an OAuth sign in using the system configured browser.
    * This method must only be called when the store is in the authentication
@@ -289,6 +308,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       this.setState({
         kind: SignInStep.Authentication,
         endpoint,
+        expectedLogin: currentState.kind === SignInStep.Authentication ? currentState.expectedLogin : undefined,
         isUnrecognizedEnterpriseServer:
           currentState.kind === SignInStep.Authentication ? currentState.isUnrecognizedEnterpriseServer : undefined,
         resultCallback,
@@ -301,7 +321,14 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
           onAuthError: reject
         }
       })
-      shell.openExternal(getOAuthAuthorizationURL(endpoint, csrfToken, shortLived))
+      shell.openExternal(
+        getOAuthAuthorizationURL(
+          endpoint,
+          csrfToken,
+          currentState.kind === SignInStep.Authentication ? currentState.expectedLogin : undefined,
+          shortLived
+        )
+      )
     })
       .then(account => {
         if (this.state?.kind !== SignInStep.Authentication || this.state.oauthState?.state !== csrfToken) {
@@ -344,7 +371,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       return
     }
 
-    const { endpoint, oauthState } = this.state
+    const { endpoint, expectedLogin, oauthState } = this.state
     if (this.resolvingOAuthState === oauthState.state) {
       return
     }
@@ -362,6 +389,11 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       const account = await fetchUser(endpoint, credential.accessToken, true)
       if (!isSignInAttemptActive()) {
         return
+      }
+      if (expectedLogin !== undefined && account.login.toLowerCase() !== expectedLogin.toLowerCase()) {
+        throw new Error(
+          `Please sign in as ${expectedLogin} on ${new URL(getHTMLURL(endpoint)).host}. The browser signed in to a different account.`
+        )
       }
       const stored = await this.accountStore.addAccount(account, credential)
       if (stored !== null) {

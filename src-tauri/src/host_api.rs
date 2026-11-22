@@ -273,6 +273,12 @@ mod tests {
     use super::mock::{response, serve};
     use super::*;
 
+    // Keep the standalone live_gitlab example independent from the application
+    // binary's `account` module while preserving the shared 401 contract.
+    fn is_unauthorized(error: &str) -> bool {
+        error.contains("HTTP 401")
+    }
+
     #[test]
     fn 分页保留查询逗号并拒绝跨域凭据() {
         let url = Url::parse("https://git.example/api/v4/projects").unwrap();
@@ -453,19 +459,19 @@ mod tests {
         let (url, server) = serve(vec![response("401 Unauthorized", "", r#"{"message":"401 Unauthorized"}"#)]);
         let error = tauri::async_runtime::block_on(get(&format!("{url}/api/v4/user"), "expired")).unwrap_err();
         server.join().unwrap();
-        assert!(crate::account::is_unauthorized(&error), "{error}");
+        assert!(is_unauthorized(&error), "{error}");
         assert!(!error.contains("expired"), "错误里不能带令牌: {error}");
 
         let (url, server) = serve(vec![response("403 Forbidden", "", r#"{"message":"403 Forbidden"}"#)]);
         let error = tauri::async_runtime::block_on(get(&format!("{url}/api/v4/projects/1"), "token")).unwrap_err();
         server.join().unwrap();
-        assert!(!crate::account::is_unauthorized(&error), "{error}");
+        assert!(!is_unauthorized(&error), "{error}");
 
         let closed = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let address = closed.local_addr().unwrap();
         drop(closed);
         let error = tauri::async_runtime::block_on(get(&format!("http://{address}/api/v4/user"), "token")).unwrap_err();
-        assert!(!crate::account::is_unauthorized(&error), "断网不是凭据失效: {error}");
+        assert!(!is_unauthorized(&error), "断网不是凭据失效: {error}");
     }
 
     #[test]

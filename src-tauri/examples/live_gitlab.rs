@@ -8,8 +8,6 @@
 //! ```
 
 // 只用到 host_api 的读取函数。
-#![expect(dead_code)]
-
 #[path = "../src/host_api.rs"]
 mod host_api;
 

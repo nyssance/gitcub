@@ -1,4 +1,5 @@
 import { call } from "./bridge"
+import { normalizePath as normalizeGitLensPath } from "@gitlens/utils/path.js"
 
 // GitLens c1f6e5f3c integration 套件（commits.searchTypeMerge、revision、revParseGitDir、env.gitDir、
 // gitIgnoreFilter）的最小适配：原版 helpers.ts 快照照常用 git CLI 准备仓库，它与这些套件导入的
@@ -84,7 +85,8 @@ export class Git {
       case "missing":
         return undefined
       case "regular":
-        return { path: type.gitDir }
+        // GitLens path contracts are URI-like and always use `/`, including on Windows.
+        return { path: normalizeGitLensPath(type.gitDir) }
       case "unsafe":
         throw new GitError(`detected dubious ownership in repository at '${type.path}'`)
       default:

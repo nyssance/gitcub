@@ -2416,6 +2416,12 @@ try {
     source = withoutUnportedGitLensBlocks(suite.file, source)
     source = withGitLensIntegrationGlobals(suite.file, source)
     source = adaptUIDom(suite.file, source, join(root, "control-state.ts"))
+    // Desktop maps the multi-select modifier to Cmd on macOS and Ctrl on Windows.
+    // The upstream UI regression uses user-event's explicit Cmd token, so adapt
+    // only that test source on Windows; the upstream snapshot remains untouched.
+    if (process.platform === "win32" && suite.file === "ui-components.test.tsx") {
+      source = source.replaceAll("{Meta", "{Control").replaceAll("{/Meta}", "{/Control}")
+    }
     let suiteDirectory = root
     if (suite.file === "desktop/e2e/app-launch-test.ts") {
       suiteDirectory = join(temporary, "app/test/e2e")

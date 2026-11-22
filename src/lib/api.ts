@@ -1962,14 +1962,23 @@ export function getAccountForEndpoint(accounts: ReadonlyArray<Account>, endpoint
   return accounts.find(a => a.endpoint === endpoint) ?? null
 }
 
-export function getOAuthAuthorizationURL(endpoint: string, state: string, shortLived: boolean): string {
+export function getOAuthAuthorizationURL(
+  endpoint: string,
+  state: string,
+  login: string | undefined,
+  shortLived: boolean
+): string {
   const urlBase = getHTMLURL(endpoint)
   const scope = encodeURIComponent(
     (shortLived && !isGHES(endpoint) ? [...oauthScopes, "offline_access"] : oauthScopes).join(" ")
   )
+  const accountParameters =
+    login === undefined
+      ? "&prompt=select_account"
+      : `&login=${encodeURIComponent(login)}&allow_signup=false`
 
   return new window.URL(
-    `/login/oauth/authorize?client_id=${ClientID}&scope=${scope}&state=${state}`,
+    `/login/oauth/authorize?client_id=${ClientID}&scope=${scope}&state=${state}${accountParameters}`,
     urlBase
   ).toString()
 }

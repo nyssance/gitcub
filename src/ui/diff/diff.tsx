@@ -13,6 +13,7 @@ import {
 import { diffKind, type DiffTokens, expandDiff, fileKindOf, getDiff, selectableLines } from "@/lib/diff"
 import { diffLineMapping, projectDiffSelection, restoreDiffSelection } from "@/lib/diff-selection-mapping"
 import { ipc } from "@/lib/ipc"
+import { __DARWIN__ } from "@/lib/platform-flags"
 import type { ImageDiff as ImageDiffData } from "@/models/app-state"
 import { ImageDiffView } from "@/ui/diff/image"
 import { Path } from "@/ui/shared/path"
@@ -102,7 +103,9 @@ function FileDiffView(props: Props) {
   useEffect(() => {
     const onWindowKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return
-      if (event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.key === "f") {
+      const shortcutKey = __DARWIN__ ? event.metaKey : event.ctrlKey
+      const otherShortcutKey = __DARWIN__ ? event.ctrlKey : event.metaKey
+      if (shortcutKey && !otherShortcutKey && !event.shiftKey && !event.altKey && event.key === "f") {
         event.preventDefault()
         showSearch()
       }

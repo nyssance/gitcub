@@ -225,7 +225,8 @@ export async function setGlobalConfigValue(key: string, value: string, env?: { H
   return call("config/set", { key, value }, configEnvironment(env))
 }
 export async function getGlobalConfigPath(env?: { HOME: string }) {
-  return call("config/path", {}, configEnvironment(env))
+  const path = call("config/path", {}, configEnvironment(env)) as string
+  return process.platform === "win32" ? normalize(path) : path
 }
 export { executeGit as git } from "../../src/lib/git-execution"
 export function parseConfigLockFilePathFromError(result: { path: string; stderr: string }) {
@@ -512,7 +513,12 @@ export async function listWorktreesFromGitDir(gitDir: string) {
   return call("worktree/git-dir", { gitDir }).map(desktopWorktree)
 }
 export async function resolveMainWorktreePath(repo: { path: string; gitDir?: string; mainWorktreePath?: string }) {
-  return call("worktree/main-path", { repo: repo.path, gitDir: repo.gitDir, mainPath: repo.mainWorktreePath })
+  const path = call("worktree/main-path", {
+    repo: repo.path,
+    gitDir: repo.gitDir,
+    mainPath: repo.mainWorktreePath
+  }) as string | null
+  return path !== null && process.platform === "win32" ? normalize(path) : path
 }
 // Production Rust resolves the main worktree and builds the command; the suite's
 // recorded dugite exec then runs it so the original cwd assertion observes it.
