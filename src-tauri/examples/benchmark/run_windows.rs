@@ -49,17 +49,36 @@ fn measure(iterations: usize, mut f: impl FnMut() -> usize) -> Value {
     json!({"samples_ms": samples, "min_ms": sorted[0], "median_ms": sorted[sorted.len()/2], "max_ms": sorted[sorted.len()-1], "result": result})
 }
 
+fn status_count_gix(repo: &Path) -> usize {
+    let repo = gix::open(repo).expect("打开仓库失败");
+    repo.status(gix::progress::Discard)
+        .expect("status")
+        .untracked_files(gix::status::UntrackedFiles::Files)
+        .into_index_worktree_iter(Vec::new())
+        .expect("status iterator")
+        .filter_map(Result::ok)
+        .count()
+}
+
+fn status_count_git(repo: &Path) -> usize {
+    cli(repo, &["status", "--porcelain=2", "-z", "--untracked-files=all"])
+        .split(|byte| *byte == 0)
+        .filter(|record| !record.is_empty())
+        .count()
+}
+
 fn main() {
     let options = options();
     let repo = gix::open(&options.repo).expect("打开仓库失败");
     let head = repo.head_id().map(|id| id.to_string()).unwrap_or_default();
     let tracked = cli(&options.repo, &["ls-files", "-z"]);
     let tracked_files = tracked.split(|b| *b == 0).filter(|p| !p.is_empty()).count();
+    assert_eq!(status_count_gix(&options.repo), status_count_git(&options.repo), "gix status 与 git CLI 条目数不同");
     let workloads = vec![
         json!({"name":"open-head","command":"git rev-parse HEAD", "gitcub": measure(options.iterations, || { let Ok(repo) = gix::open(&options.repo) else { return 0 }; usize::from(repo.head_id().is_ok()) }), "desktop": measure(options.iterations, || usize::from(!cli(&options.repo, &["rev-parse", "HEAD"]).is_empty()))}),
         json!({"name":"index-entries","command":"git ls-files -z", "gitcub": measure(options.iterations, || { let Ok(repo) = gix::open(&options.repo) else { return 0 }; repo.index_or_empty().map_or(0, |i| i.entries().len()) }), "desktop": measure(options.iterations, || cli(&options.repo, &["ls-files", "-z"]).split(|b| *b == 0).filter(|p| !p.is_empty()).count())}),
         json!({"name":"refs","command":"git for-each-ref --format=%(refname)", "gitcub": measure(options.iterations, || { let Ok(repo) = gix::open(&options.repo) else { return 0 }; let Ok(refs) = repo.references() else { return 0 }; let Ok(iter) = refs.all() else { return 0 }; iter.filter_map(Result::ok).count() }), "desktop": measure(options.iterations, || cli(&options.repo, &["for-each-ref", "--format=%(refname)"]).split(|b| *b == b'\n').filter(|p| !p.is_empty()).count())}),
-        json!({"name":"status","command":"git status --porcelain=2 -z --untracked-files=all", "gitcub": measure(options.iterations, || { let Ok(repo) = gix::open(&options.repo) else { return 0 }; let Ok(platform) = repo.status(gix::progress::Discard) else { return 0 }; platform.untracked_files(gix::status::UntrackedFiles::Files).into_index_worktree_iter(Vec::new()).map_or(0, |items| items.filter_map(Result::ok).count()) }), "desktop": measure(options.iterations, || cli(&options.repo, &["status", "--porcelain=2", "-z", "--untracked-files=all"]).split(|b| *b == 0).filter(|p| !p.is_empty()).count())}),
+        json!({"name":"status","command":"git status --porcelain=2 -z --untracked-files=all", "gitcub": measure(options.iterations, || status_count_gix(&options.repo)), "desktop": measure(options.iterations, || status_count_git(&options.repo))}),
     ];
     let commits = String::from_utf8_lossy(&cli(&options.repo, &["rev-list", "--count", "HEAD"]))
         .trim()
