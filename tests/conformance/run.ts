@@ -2708,7 +2708,14 @@ try {
       [
         executable,
         ...(isBun
-          ? ["test", "--preload", join(root, "source-loader.mjs"), "--preload", join(root, "environment.mjs")]
+          ? [
+              "test",
+              "--test-concurrency=1",
+              "--preload",
+              join(root, "source-loader.mjs"),
+              "--preload",
+              join(root, "environment.mjs")
+            ]
           : [
               "--experimental-test-module-mocks",
               "--import",
