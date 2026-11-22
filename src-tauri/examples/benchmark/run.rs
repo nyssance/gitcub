@@ -1,9 +1,11 @@
-// 基准的实现，由 main.rs 在 unix 下 include!；模块路径相对 examples/benchmark/。
+// Unix 基准的实现；模块路径相对 examples/benchmark/。
+#[cfg(unix)]
 #[path = "../../src/blame.rs"]
 mod blame;
 #[cfg(unix)]
 #[path = "../../src/blame_engine.rs"]
 mod blame_engine;
+#[cfg(unix)]
 #[path = "../../src/blame_model.rs"]
 mod blame_model;
 #[path = "../../src/branch.rs"]

@@ -1271,3 +1271,15 @@ BENCH_BEFORE_LAUNCH=<命令> bun run bench:app      # 每次启动前跑一条�
 BENCH_PAGE_CSS=<css> BENCH_SCROLL_FRAMES=240 bun run bench:app   # 连续滚动前给页面加一段样式
 BENCH_DIFF_TRACE=1 bun run bench:app              # 打开 diff 时记下每条 Tauri 命令相对点击的发出时刻与耗时
 ```
+
+## Windows 可移植覆盖（2026-11-23）
+
+机器：Windows x64，Git 2.56.1.windows.1；当前仓库 `gitcub`（15 commits、2,743 tracked files），每项 2 次。命令为 `bun run bench --no-build --no-synthetic --iterations 2 .`，完整 JSON 在 `test-results/benchmark/report.json`（运行产物不入库）。Windows 例程现在会在同一进程中用 gix 与 git CLI 对照可移植路径：打开并读取 HEAD、索引条目、引用；报告明确标出 Unix 专属 status preload/未跟踪缓存、进程内 blame/raw-diff 未覆盖，不把排除项伪装成通过。
+
+| 负载 | GitCub (ms) | git CLI (ms) | 倍数 |
+|---|---:|---:|---:|
+| open-head | 3.5 | 101.0 | 28.89× |
+| index-entries | 5.6 | 62.9 | 11.31× |
+| refs | 5.0 | 60.6 | 12.11× |
+
+这组 Windows 数据只证明上述三条可移植路径在这次运行中的进程启动开销优势，不能替代 macOS 的完整 status、history、graph、diff 和 blame 对照。下一步优先把 Windows status 的真实生产路径加入同一基准，再补 Windows blame/raw-diff；在此之前不能宣称 Windows 与 macOS 覆盖等价。
