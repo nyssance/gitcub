@@ -17,7 +17,9 @@ const root = fileURLToPath(new URL("../../..", import.meta.url))
 // macOS Unix socket paths are limited to 104 bytes; TMPDIR may already be
 // nested under the runner's isolated directory.
 const directory = await mkdtemp(join(process.platform === "darwin" ? "/private/tmp" : tmpdir(), "gitcub-e2e-"))
-const socket = join(directory, "hasgard.sock")
+// Hasgard uses a Unix socket on macOS/Linux and a named pipe on Windows.
+const socket =
+  process.platform === "win32" ? String.raw`\\.\pipe\tauri-hasgard-day.dreamer.gitcub` : join(directory, "hasgard.sock")
 const artifacts = join(
   root,
   "test-results",
@@ -32,7 +34,10 @@ const memorySamples: Array<{ stage: string; rssKiB: number; at: string }> = []
 /** Native host RSS only: WebKit runs in separate OS-managed processes. */
 export async function recordNativeMemory(stage: string) {
   if (!app?.pid) throw new Error("Application has not started")
-  const { stdout } = await exec("ps", ["-p", String(app.pid), "-o", "rss="])
+  const { stdout } =
+    process.platform === "win32"
+      ? await exec("powershell.exe", ["-NoProfile", "-Command", `(Get-Process -Id ${app.pid}).WorkingSet64 / 1024`])
+      : await exec("ps", ["-p", String(app.pid), "-o", "rss="])
   const rssKiB = Number(stdout.trim())
   assert.ok(Number.isFinite(rssKiB) && rssKiB > 0, "Missing native host RSS")
   memorySamples.push({ stage, rssKiB, at: new Date().toISOString() })
@@ -171,7 +176,9 @@ class Locator {
       try {
         return await hasgard(command, await this.target(), ...args)
       } catch (error) {
-        if (attempt >= 4 || !String(error).includes("No element matches selector")) throw error
+        const message = String(error)
+        if (attempt >= 4 || !(message.includes("No element matches selector") || message.includes("false !== true")))
+          throw error
       }
     }
   }
@@ -350,7 +357,7 @@ before(
     const desktopProfile = join(directory, "desktop-profile")
     if (process.argv.some(arg => arg.includes("macos-workflows"))) await mkdir(desktopProfile)
     const output: string[] = []
-    let executable = join(root, "src-tauri/target/debug/gitcub")
+    let executable = join(root, `src-tauri/target/debug/gitcub${process.platform === "win32" ? ".exe" : ""}`)
     if (process.platform === "darwin") {
       const bundle = join(directory, "GitCub Conformance.app")
       await cp(join(root, "src-tauri/target/debug/bundle/macos/GitCub.app"), bundle, { recursive: true })
@@ -379,7 +386,9 @@ before(
     })
     app.stdout?.on("data", data => output.push(data.toString()))
     app.stderr?.on("data", data => output.push(data.toString()))
-    app.once("close", () => {
+    app.once("error", error => output.push(`[spawn-error] ${error.stack ?? error}\n`))
+    app.once("close", (code, signal) => {
+      output.push(`[close] code=${code ?? "null"} signal=${signal ?? "null"}\n`)
       void writeFile(join(artifacts, "native.log"), output.join(""))
     })
     await poll(
