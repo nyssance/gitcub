@@ -2710,7 +2710,7 @@ try {
         ...(isBun
           ? [
               "test",
-              "--test-concurrency=1",
+              "--max-concurrency=1",
               "--preload",
               join(root, "source-loader.mjs"),
               "--preload",
