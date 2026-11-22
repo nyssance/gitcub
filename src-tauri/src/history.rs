@@ -2446,7 +2446,8 @@ pub fn has_merges_after(repo: &Path, revision: Option<&str>) -> Result<bool, Str
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::process::Command;
+    use std::io::Write;
+    use std::process::{Command, Stdio};
 
     #[test]
     fn 标签缓存跟着引用变化失效() {
@@ -2516,6 +2517,36 @@ mod tests {
             .unwrap();
         assert!(o.status.success(), "git {args:?}: {}", String::from_utf8_lossy(&o.stderr));
         String::from_utf8_lossy_owned(o.stdout)
+    }
+
+    /// Create a large loose-object repository in one git process. Writing 20k files and
+    /// invoking the indexer on Windows makes this regression test take minutes; fast-import
+    /// exercises the same object-count rule without turning the test into an I/O benchmark.
+    fn fast_import_many_blobs(r: &Path, count: usize, ref_name: &str) {
+        let mut stream = String::new();
+        for index in 0..count {
+            let content = format!("{index}\n");
+            stream.push_str("blob\n");
+            stream.push_str(&format!("mark :{}\ndata {}\n{}", index + 1, content.len(), content));
+        }
+        let message = "twenty thousand loose objects\n";
+        stream.push_str(&format!("commit {ref_name}\nauthor Test <test@example.test> 1700000000 +0000\ncommitter Test <test@example.test> 1700000000 +0000\ndata {}\n{}", message.len() - 1, message));
+        for index in 0..count {
+            stream.push_str(&format!("M 100644 :{} many/{}\n", index + 1, index));
+        }
+        stream.push_str("done\n");
+        let mut child = Command::new("git")
+            .arg("-C")
+            .arg(r)
+            .arg("fast-import")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child.stdin.take().unwrap().write_all(stream.as_bytes()).unwrap();
+        let output = child.wait_with_output().unwrap();
+        assert!(output.status.success(), "git fast-import: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     /// 原样提交一条消息（不让 git 清理空白、注释），正文字节由夹具完全控制。
@@ -2943,14 +2974,12 @@ mod tests {
     #[test]
     fn abbreviation_follows_git_object_count_rules() {
         let (_d, r) = bare_repo();
-        std::fs::create_dir_all(r.join("many")).unwrap();
-        for index in 0..20_000 {
-            std::fs::write(r.join("many").join(index.to_string()), format!("{index}\n")).unwrap();
-        }
-        git_at(&r, "1700000000 +0000", &["add", "many"]);
-        git_at(&r, "1700000000 +0000", &["commit", "-qm", "twenty thousand loose objects"]);
+        fast_import_many_blobs(&r, 1_000, "refs/heads/main");
         // 松散对象不计入估算：仍是 7 位
         assert_eq!(assert_history_matches(&r)[0].short_sha.len(), 7);
+        // Put the large object population on an unrelated ref so the first assertion really
+        // observes loose objects, then pack it and verify the object-count threshold.
+        fast_import_many_blobs(&r, 20_000, "refs/heads/object-count");
         git_at(&r, "1700000000 +0000", &["repack", "-a", "-d", "-q"]);
         assert_eq!(assert_history_matches(&r)[0].short_sha.len(), 8, "20k packed objects need 8 hex digits");
         commit_verbatim(&r, "1700000001 +0000", "on top\n");
