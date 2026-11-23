@@ -17,10 +17,13 @@ struct Temp(PathBuf);
 
 impl Temp {
     fn new(tag: &str, content: &str) -> Result<Self, String> {
+        // Windows 的系统时钟一格有十几毫秒，同一格里连续建两个文件时间戳相同，所以再加进程内序号。
+        static SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let p = std::env::temp_dir().join(format!(
-            "gitcub-{tag}-{}-{}",
+            "gitcub-{tag}-{}-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_nanos())
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_nanos()),
+            SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         let mut file = std::fs::OpenOptions::new()
             .write(true)
