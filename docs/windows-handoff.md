@@ -80,44 +80,47 @@ bun tests/conformance/run.ts --no-native
 
 ## 2026-11-23 Windows 实测结果
 
-机器：Windows 11 x64，Git 2.56.1.windows.1，基线 `905b515` 加当天三个修复。
+机器：Windows 11 x64，Git 2.56.1.windows.1（scoop，`ucrt64\bin\git.exe`）。
 
-- `cargo clippy --locked --workspace --all-targets -- -D warnings`：通过（此前 `examples/live_gitlab.rs` 因 `host_api::post` 未使用而失败，已修）。
-- `cargo test --locked --workspace`：338 通过、1 忽略。此前 `interactive::tests::挪到最后` 失败：临时文件名只含时间戳，Windows 时钟粒度粗，连续创建撞名（os error 80），已加进程内序号。
-- `bun tests/conformance/run.ts --no-native`（无其它负载的一轮）：2593 通过、45 失败、其中 15 个是 5 秒超时。日志在 `test-results/win-check/`（不入库）。同时跑 cargo 时失败会涨到 81 个，整轮必须独占机器。
+- `cargo clippy --locked --workspace --all-targets -- -D warnings`：通过。
+- `cargo test --locked --workspace`：338 通过、1 忽略。
+- `bun tests/conformance/run.ts --no-native`（独占机器的一轮）：2615 通过、76 失败。其中 22 个是上游套件；54 个是 `macos-workflows`、`status-responsiveness` 的原生用例，这轮没有准备带 Hasgard 的应用包，全部连不上。这一轮之后又修了通知的 2 个（单独重跑通过），上游套件剩 20 个。日志在 `test-results/win-check/`（不入库）。
+- 整轮必须独占机器、磁盘留足空间：同时跑 cargo 会多出几十个假失败，D 盘写满时链接器报 LNK1318／LNK1201。
 
-### 仍失败的用例（未修）
+### 当天修掉的
 
-Git 行为，优先看：
+| 提交 | 内容 |
+|---|---|
+| `a0159ba` | 外部编辑器与 shell 改为 Desktop 的注册表查找（见上表） |
+| `eb7cd29` | 交互式变基的临时文件名只含时间戳，Windows 时钟粒度粗，连续创建撞名（os error 80） |
+| `94383b6` | 提交钩子的 shell 环境：Desktop 以空环境起 shell，libuv 在 Windows 上仍传 PATH、SYSTEMROOT 等 11 个变量；之前真清空，cmd 没有 PATH、Windows PowerShell 起不来 |
+| `fb61ac4` | 工作树路径照 Desktop `Path.normalize` 归一成反斜杠，否则与仓库路径按字符串比不相等 |
+| `53170d9` | 去掉 Bun 默认的 5 秒单测上限（原版 node:test 没有）；rebase 进度、子模块 pull 之前的失败都是超时，不是 Git 行为差异 |
+| `47809ae`、`7063674` 及之后 | clippy 死代码；`printenvz` 夹具兼容新版 Cargo 目录布局；系统垫片认 `__WIN32__ = false` 的平台模拟（通知的两个「on macOS」用例） |
 
-| 套件 | 失败 | 现象 |
-|---|---:|---|
-| `desktop/pull/pull-test.ts` | 2 | with submodules 两项：单独重跑仍失败，一项 5 秒超时，一项 `Rust bridge exited null` |
-| `desktop/rebase/progress-test.ts` | 3 | 两轮都失败（解决冲突后的进度、REBASE_HEAD、detached HEAD）；未单独重跑 |
-| `desktop/commit-test.ts` | 13 | 只在整轮里失败，单独重跑 25/25 通过；是套件间干扰或负载，不是确定的行为差异 |
-| `gitlens/integration/worktrees.test.ts` | 1 | 默认工作树路径返回 `C:/…`，仓库路径是 `C:\…`，分隔符不一致 |
+### 仍失败的 20 个上游用例
 
-Windows 专属功能：
-
-| 套件 | 失败 | 现象 |
-|---|---:|---|
-| `desktop/get-shell-env-test.ts` | 3 | 夹具找不到 `printenvz` 的问题已修（新版 Cargo 的 `build/gitcub/<hash>/out` 布局），pwsh 通过；git-bash 返回 failure，powershell 进程以 0xffff0000 退出，cmd 的结果里没有 PATH。影响提交钩子的 shell 环境 |
-
-看起来与平台无关、需要在 macOS 上确认的（多数属于清单里 `stale` 的 3.7.0 多账号套件）：
+Windows 相关：
 
 | 套件 | 失败 | 现象 |
 |---|---:|---|
-| `desktop/repositories-list-grouping-test.ts` | 7 | 按账号分组的结果与预期数组不等 |
-| `desktop/ui/clone-repository-test.ts` | 5 | 路径校验与无可用账号的 URL 页 |
+| `desktop/get-shell-env-test.ts` | 1 | git-bash：Desktop 的 `findGitBash` 只认 `\cmd\git.exe` 与 `\mingw64\bin\git.exe`，本机 Git 2.56 在 `\ucrt64\bin\`，Desktop 在这台机器上同样找不到。照原版未改；要不要加 `ucrt64` 待定 |
+| App Launch（e2e） | 2 | 连不上 Hasgard 命名管道（含一个同因的未命名失败）：需要先 `bun scripts/prepare-e2e.ts` 打包并启动应用，这轮没准备 |
+
+与平台无关，回 macOS 处理（多数属于清单里 `stale` 的 3.7.0 多账号套件）：
+
+| 套件 | 失败 | 现象 |
+|---|---:|---|
+| `desktop/repositories-list-grouping-test.ts` | 7 | 原版按账号拆分分组，`groupRepositories` 没拆。项目规则是按平台分页签、不折叠分组，实现还是登记排除需要决定 |
+| `desktop/ui/clone-repository-test.ts` | 5 | 路径校验、无可用账号的 URL 页、登出后清除选择 |
 | `desktop/ui/invalidated-token-test.ts` | 2 | 登出后没有出现登录入口 |
-| `desktop/ui/test-token-expiration-dialog-test.ts` | 1 | 时间差正好 8 小时（本机 UTC+8），本地时间与 UTC 的换算 |
-| `desktop/show-notification-test.ts`、`desktop/notification-permission-test.ts` | 2 | 模拟 macOS 的用例在 Windows 宿主上取到了真实平台 |
+| `desktop/ui/test-token-expiration-dialog-test.ts` | 1 | `fireEvent.change` 切换账号没生效，原因没查实 |
 | `desktop/usage-data-test.ts` | 1 | 示例数据过期，需重新生成 |
 | `desktop/main-process/menu-test.ts` | 1 | Copilot handoff 菜单项；Copilot 已移除，应登记排除 |
-| 未定位 | 3 | 日志里未命名的套件级失败，属于哪个套件没查 |
 
 ### 仍未做
 
 - 上面「手工验收清单」8 项一项都没做；notify 9 的文件监听在 Windows 上仍未验证。
 - 新的编辑器／shell 启动只有命令行拼装与 `cmd.exe` 逐字传参的单元测试，没有在界面里逐个点开验证。
+- 原生套件没有在 Windows 上跑过。
 - 基准只有 open-head、index-entries、refs、status 四项；进程内 blame、raw-diff 与 status 的预检／未跟踪缓存在 Windows 上未覆盖。
