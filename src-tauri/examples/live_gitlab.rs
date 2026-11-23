@@ -7,7 +7,8 @@
 //! GITCUB_LIVE_GITLAB_HOST=<host> cargo run --example live_gitlab
 //! ```
 
-// 只用到 host_api 的读取函数。
+// 只用到 host_api 的读取函数，写请求（post）在这里不调用。
+#[allow(dead_code)]
 #[path = "../src/host_api.rs"]
 mod host_api;
 
