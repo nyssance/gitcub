@@ -6,9 +6,14 @@ import { readdirSync } from "node:fs"
 import { join } from "node:path"
 export function getPrintenvzPath() {
   const builds = join(process.cwd(), "src-tauri/target/debug/build")
-  for (const name of readdirSync(builds)) {
-    if (!name.startsWith("gitcub-")) continue
-    const path = join(builds, name, "out", process.platform === "win32" ? "printenvz.exe" : "printenvz")
+  // Cargo lays build script output out as either build/gitcub-<hash>/out or build/gitcub/<hash>/out.
+  const directories = readdirSync(builds).flatMap(name => {
+    if (name.startsWith("gitcub-")) return [join(builds, name)]
+    if (name === "gitcub") return readdirSync(join(builds, name)).map(hash => join(builds, name, hash))
+    return []
+  })
+  for (const directory of directories) {
+    const path = join(directory, "out", process.platform === "win32" ? "printenvz.exe" : "printenvz")
     try {
       execFileSync(path)
       return path

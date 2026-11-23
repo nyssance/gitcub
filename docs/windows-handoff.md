@@ -50,7 +50,7 @@ bun tests/conformance/run.ts --no-native
 | `src-tauri/src/process.rs` | 子进程加 `CREATE_NO_WINDOW`，不能闪黑框 |
 | `src-tauri/src/credentials.rs` | 导入 Desktop 时从 Windows 凭据管理器读 Desktop 的令牌 |
 | `src-tauri/src/desktop_import.rs` | Desktop 数据在 `%APPDATA%\GitHub Desktop`，安装检测 `%LOCALAPPDATA%\GitHubDesktop` |
-| `src-tauri/src/windows_integrations.rs` | 外部编辑器与 shell：VS Code、Cursor、cmd、PowerShell、pwsh、Windows Terminal、Git Bash |
+| `src-tauri/src/windows_integrations.rs` | 外部编辑器与 shell：Desktop `editors/win32.ts`、`shells/win32.ts`（2970f9ae1）的移植，注册表查找 30 个编辑器、JetBrains Toolbox 产品和 10 个 shell；不含 WSL（Desktop 仅 beta 开启）与自定义集成 |
 | `src-tauri/src/system.rs` | 在资源管理器中显示；终端优先 Windows Terminal，没有则 cmd |
 | `src-tauri/src/shell_env.rs` | 从注册表 `HKLM\SOFTWARE\GitForWindows` 找 Git for Windows |
 | `src-tauri/src/notifications.rs` | Windows 原生通知与权限 |
@@ -77,3 +77,47 @@ bun tests/conformance/run.ts --no-native
 - 推送后不等 CI。版本号只升补丁位，打 `v*` 标签（会触发发布）要等用户说"发"。
 - i18n key 用英文文案的 camelCase，中英两份同步改。
 - 不提交自建 GitLab 的主机名，不打印任何令牌。
+
+## 2026-11-23 Windows 实测结果
+
+机器：Windows 11 x64，Git 2.56.1.windows.1，基线 `905b515` 加当天三个修复。
+
+- `cargo clippy --locked --workspace --all-targets -- -D warnings`：通过（此前 `examples/live_gitlab.rs` 因 `host_api::post` 未使用而失败，已修）。
+- `cargo test --locked --workspace`：338 通过、1 忽略。此前 `interactive::tests::挪到最后` 失败：临时文件名只含时间戳，Windows 时钟粒度粗，连续创建撞名（os error 80），已加进程内序号。
+- `bun tests/conformance/run.ts --no-native`（无其它负载的一轮）：2593 通过、45 失败、其中 15 个是 5 秒超时。日志在 `test-results/win-check/`（不入库）。同时跑 cargo 时失败会涨到 81 个，整轮必须独占机器。
+
+### 仍失败的用例（未修）
+
+Git 行为，优先看：
+
+| 套件 | 失败 | 现象 |
+|---|---:|---|
+| `desktop/pull/pull-test.ts` | 2 | with submodules 两项：单独重跑仍失败，一项 5 秒超时，一项 `Rust bridge exited null` |
+| `desktop/rebase/progress-test.ts` | 3 | 两轮都失败（解决冲突后的进度、REBASE_HEAD、detached HEAD）；未单独重跑 |
+| `desktop/commit-test.ts` | 13 | 只在整轮里失败，单独重跑 25/25 通过；是套件间干扰或负载，不是确定的行为差异 |
+| `gitlens/integration/worktrees.test.ts` | 1 | 默认工作树路径返回 `C:/…`，仓库路径是 `C:\…`，分隔符不一致 |
+
+Windows 专属功能：
+
+| 套件 | 失败 | 现象 |
+|---|---:|---|
+| `desktop/get-shell-env-test.ts` | 3 | 夹具找不到 `printenvz` 的问题已修（新版 Cargo 的 `build/gitcub/<hash>/out` 布局），pwsh 通过；git-bash 返回 failure，powershell 进程以 0xffff0000 退出，cmd 的结果里没有 PATH。影响提交钩子的 shell 环境 |
+
+看起来与平台无关、需要在 macOS 上确认的（多数属于清单里 `stale` 的 3.7.0 多账号套件）：
+
+| 套件 | 失败 | 现象 |
+|---|---:|---|
+| `desktop/repositories-list-grouping-test.ts` | 7 | 按账号分组的结果与预期数组不等 |
+| `desktop/ui/clone-repository-test.ts` | 5 | 路径校验与无可用账号的 URL 页 |
+| `desktop/ui/invalidated-token-test.ts` | 2 | 登出后没有出现登录入口 |
+| `desktop/ui/test-token-expiration-dialog-test.ts` | 1 | 时间差正好 8 小时（本机 UTC+8），本地时间与 UTC 的换算 |
+| `desktop/show-notification-test.ts`、`desktop/notification-permission-test.ts` | 2 | 模拟 macOS 的用例在 Windows 宿主上取到了真实平台 |
+| `desktop/usage-data-test.ts` | 1 | 示例数据过期，需重新生成 |
+| `desktop/main-process/menu-test.ts` | 1 | Copilot handoff 菜单项；Copilot 已移除，应登记排除 |
+| 未定位 | 3 | 日志里未命名的套件级失败，属于哪个套件没查 |
+
+### 仍未做
+
+- 上面「手工验收清单」8 项一项都没做；notify 9 的文件监听在 Windows 上仍未验证。
+- 新的编辑器／shell 启动只有命令行拼装与 `cmd.exe` 逐字传参的单元测试，没有在界面里逐个点开验证。
+- 基准只有 open-head、index-entries、refs、status 四项；进程内 blame、raw-diff 与 status 的预检／未跟踪缓存在 Windows 上未覆盖。
