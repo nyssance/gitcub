@@ -82,6 +82,20 @@ pub struct CaptureOptions {
     pub windows_verbatim_arguments: Option<bool>,
     pub argv0: Option<String>,
 }
+#[cfg(windows)]
+const WINDOWS_REQUIRED_VARIABLES: [&str; 11] = [
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "LOGONSERVER",
+    "PATH",
+    "SYSTEMDRIVE",
+    "SYSTEMROOT",
+    "TEMP",
+    "USERDOMAIN",
+    "USERNAME",
+    "USERPROFILE",
+    "WINDIR",
+];
 pub fn capture(options: CaptureOptions) -> Result<crate::process::ProcessOutput, crate::process::ProcessError> {
     let mut command = std::process::Command::new(&options.shell);
     command.env_clear();
@@ -100,6 +114,14 @@ pub fn capture(options: CaptureOptions) -> Result<crate::process::ProcessOutput,
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
+        // Desktop spawns with `env: {}`, and on Windows libuv still hands the child these
+        // variables from the parent (`required_vars` in libuv src/win/process.c). Without them
+        // cmd has no PATH and PowerShell cannot start.
+        for name in WINDOWS_REQUIRED_VARIABLES {
+            if let Some(value) = std::env::var_os(name) {
+                command.env(name, value);
+            }
+        }
         if options.windows_verbatim_arguments == Some(true) {
             // Rust quotes the actual executable as argv[0]. A Git Bash path with
             // spaces therefore remains intact for MSYS2; remaining args are raw.
