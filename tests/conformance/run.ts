@@ -2567,9 +2567,7 @@ try {
               return paths[args.path] ? { path: join(root, paths[args.path]) } : undefined
             })
             build.onResolve({ filter: /^\.\/temp$/ }, args =>
-              args.importer.replaceAll("\\", "/").endsWith("/helpers/git-config.ts")
-                ? { path: fixtures }
-                : undefined
+              args.importer.replaceAll("\\", "/").endsWith("/helpers/git-config.ts") ? { path: fixtures } : undefined
             )
             build.onResolve({ filter: /^\.\.\/\.\.\/src\// }, args => {
               if (!/(changes-state-helper|test-stats-store)\.ts$/.test(args.importer)) return
@@ -2710,6 +2708,9 @@ try {
         ...(isBun
           ? [
               "test",
+              // node:test, which upstream runs under, has no per-test timeout; Bun defaults to 5 s,
+              // and fixtures that spawn many git processes exceed that on Windows.
+              "--timeout=120000",
               "--max-concurrency=1",
               "--preload",
               join(root, "source-loader.mjs"),
