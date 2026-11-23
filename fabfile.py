@@ -216,7 +216,7 @@ def upgrade(c: Context) -> None:
         # cargo update stays within declared requirements. Report newer incompatible
         # releases (including pinned prereleases) without changing manifests or locks.
         # Unlike cargo-outdated, this does not resolve a rewritten temporary workspace.
-        if not c.run("command -v cargo-upgrade", warn=True, hide=True).ok:
+        if shutil.which("cargo-upgrade") is None:
             c.run("cargo install cargo-edit --locked")
         c.run("cargo upgrade --dry-run --incompatible allow --pinned allow", warn=True)
     # 平级独立包(browser-extension):根没有 workspaces,上面那条完全够不着它们。
