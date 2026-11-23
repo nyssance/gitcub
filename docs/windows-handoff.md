@@ -124,3 +124,40 @@ Windows 相关：
 - 新的编辑器／shell 启动只有命令行拼装与 `cmd.exe` 逐字传参的单元测试，没有在界面里逐个点开验证。
 - 原生套件没有在 Windows 上跑过。
 - 基准只有 open-head、index-entries、refs、status 四项；进程内 blame、raw-diff 与 status 的预检／未跟踪缓存在 Windows 上未覆盖。
+
+## 待办（2026-11-24 记）
+
+### 需要用户决定
+
+1. **文件监听锁住仓库目录**：选中仓库时 notify（`ReadDirectoryChangesW`）持有该目录句柄，文件夹在资源管理器里不能重命名或移动（EBUSY）。Desktop 不监听目录，没有这个限制。原生用例「a repository moved away shows the missing view and Check again recovers it」因此在 Windows 上失败。可选：窗口失焦时停监听、聚焦时刷新；或接受这个限制。
+2. **git-bash 查找是否认 `\ucrt64\bin\git.exe`**：Desktop 的 `findGitBash` 只认 `\cmd\git.exe` 与 `\mingw64\bin\git.exe`。scoop 装的 Git 2.56（PATH 上是 `ucrt64\bin`，没有注册表项）找不到 Git Bash，而钩子环境默认 shell 就是 Git Bash，所以这种安装下钩子环境默认不可用（Desktop 同样）。加上就超出原版。
+3. **仓库分组的 7 个上游用例**（`desktop/repositories-list-grouping-test.ts`）：原版按账号拆分分组，项目规则是按平台分页签、不折叠分组。实现还是登记排除。
+
+### 回 macOS 先做
+
+- `66194d5`（钩子代理移植到 Windows）改了 Unix 路径的结构：连接类型换成别名、去掉一批平台开关，逻辑没变，但没有在 macOS 上编译过。先跑 `cargo clippy`、`cargo test`，再跑原生套件里的钩子用例。
+- `9ad378b`（仓库名取平台 basename）与之后的前端改动只跑了格式化和类型检查；这台 Windows 的 Bun 没有 `bun lint`，`bun lint`、`bun ts7-lint` 要补跑。
+- `tests/conformance/macos-workflows.test.ts` 为 Windows 做了适配（路径选择器转义、修饰键、IPC 地址、多选键、worktree 路径分隔符），在 macOS 上重跑整套确认没有回归。
+- 上游套件里与平台无关的 17 个失败（见上一节表格）和清单里 247 个 `stale`。
+
+### Windows 原生套件还没查完的
+
+`bun scripts/prepare-e2e.ts` 后跑 `bun tests/conformance/run.ts macos-workflows.test.ts`。App Launch 通过；`macos-workflows` 最近一轮 40 通过、8 失败。钩子用例要求 PATH 上的 git 是标准布局（`…\cmd\git.exe`），见上面第 2 条。
+
+| 用例 | 状态 |
+|---|---|
+| multi-file discard…，以及连带的 merge、pull 两个 pre-merge-commit 钩子用例 | 测试用 ⌘ 点击多选，Windows 上是 Ctrl；已改，未重跑确认 |
+| diff layout, whitespace projection and search… | 搜索框能打开，回车后没有出现结果播报；怀疑测试驱动的 Enter 没送到窗口，未确认 |
+| keyboard reorder moves the commit… | 依赖方向键与 Enter，同上，未确认 |
+| history list and commit details render :alias: emoji… | 原因未查 |
+| undoing a local commit from history restores its message… | 原因未查 |
+| a repository moved away… | 见上面第 1 条 |
+
+`status-responsiveness.test.ts` 里的 Trending 原生视图和三指手势是 macOS 专属，其余两个用例在 Windows 上还没单独跑过。
+
+### 其它没做的
+
+- 「手工验收清单」8 项；notify 9 的文件监听除了上面的锁目录问题外没有专门验证。
+- 新的编辑器／shell 启动没有在界面里逐个点开验证。
+- 钩子的「中止」在 Windows 上用 `taskkill /T /F` 结束整棵进程树，没有专门的用例覆盖。
+- Windows 基准仍只有 open-head、index-entries、refs、status 四项。
