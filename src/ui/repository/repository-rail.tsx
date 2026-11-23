@@ -57,6 +57,7 @@ import { accountEmptyState } from "@/lib/account-state"
 import { avatarUrl } from "@/lib/avatar"
 import { ipc } from "@/lib/ipc"
 import { type Route, routes } from "@/lib/navigate"
+import { basename } from "@/lib/platform-path"
 import type { Accounts, Ownership, Remote } from "@/models/app-state"
 import type { ILocalRepositoryState } from "@/models/repository"
 import { InlineError } from "@/ui/shared/inline-error"
@@ -72,7 +73,8 @@ import { InlineError } from "@/ui/shared/inline-error"
  *   第三方 —— 平铺，不分组
  * 归属先按 origin 的 owner 跟账号 login 比，用户可以右键改，手动结果优先。 */
 
-const nameOf = (p: string) => p.split("/").findLast(Boolean) ?? p
+// 平台路径的最后一段：Windows 上路径用反斜杠，按 "/" 切会把整条路径当成名字。
+const nameOf = (p: string) => basename(p) || p
 type Tab = "github" | "gitlab" | "other"
 
 /** 页签：GitHub、GitLab 各含自建实例（平台取自账号记录），没有托管远端或认不出平台的归「其他」。 */

@@ -10,6 +10,7 @@ import { useHistoryStore } from "@/features/history/store"
 import { canDropCommits } from "@/lib/commit-drag"
 import { getDesktopRuntime } from "@/lib/desktop-runtime"
 import { ipc } from "@/lib/ipc"
+import { basename } from "@/lib/platform-path"
 import { useRepositoryPolicy } from "@/lib/use-repository-policy"
 import type { Worktree } from "@/models/app-state"
 import { shouldShowWorktreeDropdown } from "@/upstream/lib/worktree-dropdown"
@@ -306,7 +307,7 @@ export function BranchDropdown({
               className="branches-list-item h-[30px] justify-start rounded-none text-xs font-normal"
               title={w.path}>
               <FileDirectoryIcon size={16} className="icon" />
-              <span className="name">{w.branch ?? w.path.split("/").pop()}</span>
+              <span className="name">{w.branch ?? basename(w.path)}</span>
               {w.main && <span className="description">{t("worktree.main")}</span>}
             </StandardButton>
           ))}

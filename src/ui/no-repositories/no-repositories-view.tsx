@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
+import { basename } from "@/lib/platform-path"
 import { cn } from "@/lib/utils"
 
 interface Props {
@@ -16,7 +17,8 @@ interface Props {
   onClone: (url: string) => Promise<void>
 }
 
-const nameOf = (p: string) => p.split("/").findLast(Boolean) ?? p
+// 平台路径的最后一段：Windows 上路径用反斜杠，按 "/" 切会把整条路径当成名字。
+const nameOf = (p: string) => basename(p) || p
 
 /** 没有选中仓库时的整屏欢迎页。
  *
