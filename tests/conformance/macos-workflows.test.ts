@@ -21,6 +21,12 @@ import { crc32, deflateSync } from "node:zlib"
 import { expect, type Page, recordNativeMemory, skipWelcome, test } from "./e2e/fixtures.ts"
 import { smokeRepoPath } from "./upstream/desktop/e2e/test-helpers.ts"
 const git = (...args: string[]) => execFileSync("git", ["-C", smokeRepoPath, ...args], { encoding: "utf8" }).trim()
+// A path inside a quoted attribute selector: backslash is the CSS escape character, so Windows paths double it.
+const attribute = (value: string) => value.replaceAll("\\", "\\\\")
+// The platform shortcut modifier: Command on macOS, Control elsewhere.
+const modifier = process.platform === "darwin" ? "Meta" : "Control"
+// Desktop list.tsx: multi-select is Command-click on macOS and Control-click elsewhere.
+const multiSelectKey = process.platform === "darwin" ? "metaKey" : "ctrlKey"
 
 test("repository account assignments persist independently through native IPC", async ({ mainWindow: page }) => {
   await page.locator("#desktop-app-container").waitFor({ state: "visible", timeout: 30000 })
@@ -347,7 +353,7 @@ test("diff layout, whitespace projection and search work through the native rend
   await expect(page.locator(".side-by-side-diff-container")).toContainText("new")
   await setDiffOption(page, "Unified")
   // Desktop：⌘F 才弹出搜索框，回车开始搜，结果经 aria-live 播报
-  await page.keyboard.press("Meta+f")
+  await page.keyboard.press(`${modifier}+f`)
   // 搜索框挂载后才自动聚焦；先点一下确保回车落在输入框上
   const search = page.locator(".diff-search input")
   await search.click()
@@ -686,10 +692,11 @@ test("worktree menu creates and switches real worktrees", async ({ mainWindow: p
   await page.locator('input[list="worktree-branches"]').fill("ui-worktree")
   await page.locator('[role="dialog"] input:not([list])').fill(path)
   await page.locator('button:has-text("Create worktree")').click()
-  await expect.poll(() => git("worktree", "list").includes(path)).toBe(true)
+  // Git for Windows prints worktree paths with forward slashes.
+  await expect.poll(() => git("worktree", "list").includes(path.replaceAll("\\", "/"))).toBe(true)
   const resolvedPath = realpathSync(path)
   const resolvedMainPath = realpathSync(smokeRepoPath)
-  await page.locator(`button:has(span[title="${resolvedPath}"])`).click()
+  await page.locator(`button:has(span[title="${attribute(resolvedPath)}"])`).click()
   await expect
     .poll(() =>
       page.evaluate(async () => (await window.__TAURI_INTERNALS__.invoke<AppState>("load_state")).selectedRepository)
@@ -705,8 +712,8 @@ test("worktree menu creates and switches real worktrees", async ({ mainWindow: p
       payload: "show-worktrees"
     })
   })
-  await page.locator(`button:has(span[title="${resolvedMainPath}"])`).waitFor({ state: "visible" })
-  await page.locator(`button:has(span[title="${resolvedMainPath}"])`).click()
+  await page.locator(`button:has(span[title="${attribute(resolvedMainPath)}"])`).waitFor({ state: "visible" })
+  await page.locator(`button:has(span[title="${attribute(resolvedMainPath)}"])`).click()
   await expect
     .poll(() =>
       page.evaluate(async () => (await window.__TAURI_INTERNALS__.invoke<AppState>("load_state")).selectedRepository)
@@ -723,7 +730,9 @@ test("push confirmation pulls then retries without reentering the operation lock
     window.__workflowCalls = []
     ;(window as Window).fetch = (input: RequestInfo | URL, options?: RequestInit) => {
       const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url)
-      const command = url.protocol === "ipc:" ? decodeURIComponent(url.pathname.slice(1)) : ""
+      // Tauri IPC is ipc://localhost/<command> on macOS and http://ipc.localhost/<command> on Windows.
+      const isIPC = url.protocol === "ipc:" || url.hostname === "ipc.localhost"
+      const command = isIPC ? decodeURIComponent(url.pathname.slice(1)) : ""
       if (!["push_with_tags", "pull_output"].includes(command)) return original(input, options)
       const args = JSON.parse(String(options?.body ?? "{}"))
       window.__workflowCalls.push({ command, repo: args.repo })
@@ -765,7 +774,7 @@ test("repository rail marks uncommitted changes in the selected repository", asy
   const main = realpathSync(smokeRepoPath)
   const file = join(smokeRepoPath, "rail-indicator.txt")
   await clickRailRepository(page, main)
-  const dot = page.locator(`button[title="${main}"] [data-testid="repository-changes"]`)
+  const dot = page.locator(`button[title="${attribute(main)}"] [data-testid="repository-changes"]`)
   try {
     writeFileSync(file, "indicator\n")
     await dot.waitFor({ state: "visible" })
@@ -839,7 +848,7 @@ async function startAmendingFromHistory(page: Page) {
 }
 
 async function clickRailRepository(page: Page, path: string) {
-  const button = page.locator(`button[title="${path}"]`)
+  const button = page.locator(`button[title="${attribute(path)}"]`)
   if (!(await button.isVisible())) {
     await page.locator('[data-slot="tabs-trigger"]:has-text("Other")').click()
     await button.waitFor({ state: "visible" })
@@ -860,7 +869,9 @@ test("finishing an old repository operation cannot replace the newly selected re
     window.__workflowCalls = []
     ;(window as Window).fetch = (input: RequestInfo | URL, options?: RequestInit) => {
       const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url)
-      const command = url.protocol === "ipc:" ? decodeURIComponent(url.pathname.slice(1)) : ""
+      // Tauri IPC is ipc://localhost/<command> on macOS and http://ipc.localhost/<command> on Windows.
+      const isIPC = url.protocol === "ipc:" || url.hostname === "ipc.localhost"
+      const command = isIPC ? decodeURIComponent(url.pathname.slice(1)) : ""
       if (!["push_with_tags", "repo_status"].includes(command)) return original(input, options)
       const args = JSON.parse(String(options?.body ?? "{}"))
       window.__workflowCalls.push({ command, repo: args.repo })
@@ -920,7 +931,9 @@ test("failed amendment keeps the draft and excludes concurrent push", async ({ m
     window.__workflowCalls = []
     ;(window as Window).fetch = (input: RequestInfo | URL, options?: RequestInit) => {
       const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url)
-      const command = url.protocol === "ipc:" ? decodeURIComponent(url.pathname.slice(1)) : ""
+      // Tauri IPC is ipc://localhost/<command> on macOS and http://ipc.localhost/<command> on Windows.
+      const isIPC = url.protocol === "ipc:" || url.hostname === "ipc.localhost"
+      const command = isIPC ? decodeURIComponent(url.pathname.slice(1)) : ""
       if (!["amend_commit", "push_with_tags"].includes(command)) return original(input, options)
       const args = JSON.parse(String(options?.body ?? "{}"))
       window.__workflowCalls.push({ command, repo: args.repo })
@@ -992,7 +1005,9 @@ test("fork pull requests list the parent and check out the source through the na
     window.__requestTargets = []
     ;(window as Window).fetch = (input: RequestInfo | URL, options?: RequestInit) => {
       const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url)
-      const command = url.protocol === "ipc:" ? decodeURIComponent(url.pathname.slice(1)) : ""
+      // Tauri IPC is ipc://localhost/<command> on macOS and http://ipc.localhost/<command> on Windows.
+      const isIPC = url.protocol === "ipc:" || url.hostname === "ipc.localhost"
+      const command = isIPC ? decodeURIComponent(url.pathname.slice(1)) : ""
       if (!["pull_request_repository", "pull_requests", "pull_request_source"].includes(command))
         return original(input, options)
       const args = command ? JSON.parse(String(options?.body ?? "{}")) : {}
@@ -1147,11 +1162,11 @@ test("multi-file discard uses one confirmation and preserves unselected files", 
     .toBe(visibleRows)
   await page.locator('.list-scroller [title="batch-a.txt"]').click()
   // Hasgard's click API has no modifiers; dispatch the native DOM mouse sequence.
-  await page.evaluate(() => {
+  await page.evaluate(key => {
     const row = document.querySelector('.list-scroller [title="batch-c.txt"]')!
     for (const type of ["mousedown", "mouseup", "click"])
-      row.dispatchEvent(new MouseEvent(type, { bubbles: true, metaKey: true, button: 0 }))
-  })
+      row.dispatchEvent(new MouseEvent(type, { bubbles: true, [key]: true, button: 0 }))
+  }, multiSelectKey)
   await expect(page.locator("body")).toContainText("2 files selected")
   const indexBefore = git("write-tree")
   await page.evaluate(() => {
@@ -1514,8 +1529,9 @@ test("squashing selected commits asks for the squashed commit message first", as
     await page.locator('[role="tab"]:has-text("History")').click()
     await row("squash probe c").waitFor({ state: "visible", timeout: 15000 })
     await row("squash probe c").click()
-    await row("squash probe b").evaluate(element =>
-      element.dispatchEvent(new MouseEvent("click", { bubbles: true, metaKey: true }))
+    await row("squash probe b").evaluate(
+      (element, key) => element.dispatchEvent(new MouseEvent("click", { bubbles: true, [key]: true })),
+      multiSelectKey
     )
     await row("squash probe b").evaluate(element => {
       const rect = element.getBoundingClientRect()
@@ -1980,7 +1996,7 @@ test("selecting consecutive commits shows their combined diff, non-consecutive o
     git("add", "range-probe.txt")
     git("-c", "commit.gpgsign=false", "commit", "-q", "-m", `range probe ${index + 1}`)
   })
-  const click = (summary: string, modifier: "shiftKey" | "metaKey" | null) =>
+  const click = (summary: string, modifier: "shiftKey" | "metaKey" | "ctrlKey" | null) =>
     page.evaluate(
       ({ summary, modifier }) => {
         const row = document.querySelector(`.desktop-list [title="${summary}"]`)!
@@ -2003,7 +2019,7 @@ test("selecting consecutive commits shows their combined diff, non-consecutive o
     for (const line of lines) await expect(diff).toContainText(line, { timeout: 15000 })
     // 跳过中间那个：不连续，不显示 diff
     await click("range probe 3", null)
-    await click("range probe 1", "metaKey")
+    await click("range probe 1", multiSelectKey)
     await expect(page.locator("#multiple-commits-selected")).toContainText("non-consecutive", { timeout: 15000 })
     // 回到单个提交：只有它自己的那一行是新增
     await click("range probe 2", null)
