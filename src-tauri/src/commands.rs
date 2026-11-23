@@ -526,7 +526,6 @@ pub async fn commit(
     .map_err(|error| error.to_string())?
 }
 
-#[cfg(unix)]
 fn hook_channel(
     events: tauri::ipc::Channel<crate::hooks::HookEvent>,
 ) -> std::sync::Arc<dyn crate::hooks::HookCallbacks> {
@@ -534,10 +533,8 @@ fn hook_channel(
 }
 
 /// 原版 onHookProgress / onHookFailure：进度直接发；失败时等前端 HookFailed 的回答（resolve_hook_failure）
-#[cfg(unix)]
 struct HookChannel(tauri::ipc::Channel<crate::hooks::HookEvent>);
 
-#[cfg(unix)]
 impl crate::hooks::HookCallbacks for HookChannel {
     fn progress(&self, id: u64, hook_name: &str, status: &'static str) {
         let _ = self.0.send(crate::hooks::HookEvent::Progress { id, hook_name: hook_name.into(), status });
@@ -554,11 +551,6 @@ impl crate::hooks::HookCallbacks for HookChannel {
                 .is_ok()
         })
     }
-}
-
-#[cfg(not(unix))]
-fn hook_channel(_: tauri::ipc::Channel<crate::hooks::HookEvent>) -> std::sync::Arc<dyn crate::hooks::HookCallbacks> {
-    std::sync::Arc::new(())
 }
 
 /// 原版 getRepoHooks：前端据此决定要不要先取 shell 环境

@@ -62,7 +62,6 @@ fn bundled() -> Option<&'static PathBuf> {
 }
 
 /// 打包的 git（没打包时为 PATH 上的 git）；钩子代理用它跑 `git hook run`（原版 resolveGitBinary）
-#[cfg(unix)]
 pub fn binary() -> PathBuf {
     bundled().map_or_else(|| PathBuf::from("git"), |root| executable(root))
 }

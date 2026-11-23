@@ -5,21 +5,18 @@
 //! 由应用用登录 shell 的环境跑 `git hook run`，同时报告进度、失败时问用户忽略还是中止。
 //!
 //! 本项目差异：代理不是单独打包的 process-proxy，而是一行 sh 脚本 exec 应用自身的
-//! `--gitcub-hook-proxy` 模式（和 askpass 同一种短路），连接走临时目录里的 Unix socket。
-//! shell 环境由前端照原版 get-shell-env.ts 取好再传进来。其余行为照原版。
+//! `--gitcub-hook-proxy` 模式（和 askpass 同一种短路）。连接在 Unix 上走临时目录里的 Unix socket，
+//! 在 Windows 上和原版 process-proxy 一样走 127.0.0.1 的随机端口加令牌；Windows 上钩子脚本由
+//! Git for Windows 自带的 sh 执行。shell 环境由前端照原版 get-shell-env.ts 取好再传进来。其余行为照原版。
 
-#[cfg(unix)]
 use std::collections::HashMap;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
 /// 应用以钩子代理身份被拉起时的 argv[1]
-#[cfg(unix)]
 pub const PROXY_ARG: &str = "--gitcub-hook-proxy";
-#[cfg(unix)]
 const SOCKET_ENV: &str = "GITCUB_HOOKS_SOCKET";
-#[cfg(unix)]
 const TOKEN_ENV: &str = "GITCUB_HOOKS_TOKEN";
 
 // https://git-scm.com/docs/githooks
@@ -55,12 +52,10 @@ const KNOWN_HOOKS: [&str; 28] = [
 ];
 
 /// 这些钩子的退出码 git 本来就不看，失败了也不问用户
-#[cfg(unix)]
 const IGNORED_ON_FAILURE_HOOKS: [&str; 6] =
     ["post-applypatch", "post-commit", "post-checkout", "post-merge", "pre-auto-gc", "post-rewrite"];
 
 /// 原版注释：这些是 Desktop 给自己的 git 设的，不该漏给用户钩子里调起的 git
-#[cfg(unix)]
 const EXCLUDED_ENV_VARS: [&str; 7] = [
     "GIT_SYSTEM_CONFIG",
     "GIT_EXEC_PATH",
@@ -75,22 +70,17 @@ const EXCLUDED_ENV_VARS: [&str; 7] = [
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HooksEnv {
-    #[cfg(unix)]
     #[serde(default)]
     pub env: Option<HashMap<String, String>>,
-    #[cfg(unix)]
     #[serde(default)]
     pub failure: Option<ShellFailure>,
 }
 
 /// 原版 ShellEnvResult 的 failure（找不到 shell）与 getShellEnv 抛错两种情况
-#[cfg(unix)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellFailure {
-    #[cfg(unix)]
     NotFound { shell_kind: Option<String> },
-    #[cfg(unix)]
     Error,
 }
 
@@ -98,22 +88,15 @@ pub enum ShellFailure {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HookEvent {
-    #[cfg(unix)]
     Progress { id: u64, hook_name: String, status: &'static str },
-    #[cfg(unix)]
     Failure { id: u64, hook_name: String, terminal_output: Vec<u8> },
 }
 
 /// 原版 HookCallbackOptions：进度，以及失败时问用户（true 为忽略并继续）
 pub trait HookCallbacks: Send + Sync {
-    #[cfg(unix)]
     fn progress(&self, id: u64, hook_name: &str, status: &'static str);
-    #[cfg(unix)]
     fn failure(&self, id: u64, hook_name: &str, terminal_output: &[u8]) -> bool;
 }
-
-#[cfg(not(unix))]
-impl HookCallbacks for () {}
 
 /// 原版 getRepoHooks：仓库里实际存在、可执行、在 `filter` 里的已知钩子
 pub fn repo_hooks(repo: &Path, filter: Option<&[String]>) -> Vec<String> {
@@ -171,7 +154,6 @@ fn is_executable(_: &Path) -> bool {
 
 /// 原版 withHooksEnv：没开钩子环境、没要拦截的钩子时原样调用 `run`；否则给它额外的环境变量，
 /// 让 git 把钩子交给代理，`run` 返回后收掉代理与临时目录
-#[cfg(unix)]
 pub fn with_hooks_env<T>(
     repo: &Path, intercept: &[&str], hooks_env: Option<HooksEnv>, callbacks: Option<std::sync::Arc<dyn HookCallbacks>>,
     run: impl FnOnce(Vec<(String, String)>) -> Result<T, String>,
@@ -185,14 +167,6 @@ pub fn with_hooks_env<T>(
         return run(Vec::new());
     }
     proxy::serve(&hooks, hooks_env, callbacks, run)
-}
-
-#[cfg(not(unix))]
-pub fn with_hooks_env<T>(
-    _: &Path, _: &[&str], _: Option<HooksEnv>, _: Option<std::sync::Arc<dyn HookCallbacks>>,
-    run: impl FnOnce(Vec<(String, String)>) -> Result<T, String>,
-) -> Result<T, String> {
-    run(Vec::new())
 }
 
 type Operation = (HooksEnv, Option<std::sync::Arc<dyn HookCallbacks>>);
@@ -229,7 +203,6 @@ pub fn scoped<T>(repo: &Path, intercept: &[&str], run: impl FnOnce() -> Result<T
 }
 
 /// 钩子代理身份的入口：把这次钩子调用交给应用，退出码照应用说的
-#[cfg(unix)]
 pub fn proxy_if_invoked() -> Option<i32> {
     let mut args = std::env::args().skip(1);
     if args.next().as_deref() != Some(PROXY_ARG) {
@@ -238,26 +211,16 @@ pub fn proxy_if_invoked() -> Option<i32> {
     Some(proxy::run_client(args.collect()))
 }
 
-#[cfg(not(unix))]
-pub fn proxy_if_invoked() -> Option<i32> {
-    None
-}
-
-#[cfg(unix)]
 #[allow(unused_imports)] // The conformance and benchmark bridges include this module without the Tauri commands.
 pub use proxy::{abort, resolve_failure, wait_for_failure};
 
-#[cfg(not(unix))]
-pub fn abort(_: u64) {}
-
-#[cfg(not(unix))]
-pub fn resolve_failure(_: u64, _: bool) {}
-
-#[cfg(unix)]
 mod proxy {
     use std::collections::HashMap;
     use std::io::{BufRead, BufReader, Read, Write};
-    use std::os::unix::net::{UnixListener, UnixStream};
+    #[cfg(not(unix))]
+    use std::net::{TcpListener as Listener, TcpStream as Stream};
+    #[cfg(unix)]
+    use std::os::unix::net::{Stream, UnixListener as Listener};
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
     use std::sync::{Arc, LazyLock, Mutex, mpsc};
@@ -266,6 +229,9 @@ mod proxy {
     use serde::{Deserialize, Serialize};
 
     use super::*;
+
+    #[cfg(windows)]
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
     const FRAME_STDERR: u8 = b'E';
     const FRAME_EXIT: u8 = b'X';
@@ -295,8 +261,21 @@ mod proxy {
     pub fn abort(id: u64) {
         if let Some(pid) = RUNNING.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&id).copied() {
             // 原版 AbortController 让 spawn 发 SIGTERM
+            #[cfg(unix)]
             unsafe {
                 libc::kill(pid as libc::pid_t, libc::SIGTERM);
+            }
+            // Windows 没有信号：结束 `git hook run` 连同它起的钩子进程
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                let _ = std::process::Command::new("taskkill")
+                    .args(["/PID", &pid.to_string(), "/T", "/F"])
+                    .creation_flags(CREATE_NO_WINDOW)
+                    .stdin(std::process::Stdio::null())
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .status();
             }
         }
     }
@@ -351,15 +330,26 @@ mod proxy {
     ) -> Result<T, String> {
         let dir = tempfile::Builder::new().prefix("desktop-git-hooks-").tempdir().map_err(|e| e.to_string())?;
         // macOS 的 $TMPDIR 很深，套接字路径会超过 sun_path 的 104 字节；套接字单独放进 /tmp 下的私有目录（0700）
+        #[cfg(unix)]
         let socket_dir = tempfile::Builder::new().prefix("gitcub-").tempdir_in("/tmp").map_err(|e| e.to_string())?;
+        #[cfg(unix)]
         let socket = socket_dir.path().join("s");
-        let listener = UnixListener::bind(&socket).map_err(|e| e.to_string())?;
+        #[cfg(unix)]
+        let listener = Listener::bind(&socket).map_err(|e| e.to_string())?;
+        // 原版 server.listen(0, '127.0.0.1')：只听本机回环上的随机端口，连接靠令牌校验
+        #[cfg(not(unix))]
+        let listener = Listener::bind(("127.0.0.1", 0)).map_err(|e| e.to_string())?;
+        #[cfg(not(unix))]
+        let socket = PathBuf::from(listener.local_addr().map_err(|e| e.to_string())?.to_string());
         let script = proxy_script()?;
         for hook in hooks {
             let path = dir.path().join(hook);
             std::fs::write(&path, &script).map_err(|e| e.to_string())?;
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
+            }
         }
 
         let token = token();
@@ -394,24 +384,33 @@ mod proxy {
         ]);
 
         stop.store(true, Ordering::SeqCst);
-        let _ = UnixStream::connect(&socket);
+        let _ = connect(&socket);
         let _ = server.join();
+        #[cfg(unix)]
         drop(socket_dir);
         drop(dir);
         result
     }
 
-    fn write_frame(connection: &mut UnixStream, kind: u8, data: &[u8]) -> std::io::Result<()> {
+    /// 回连应用：Unix 上是套接字路径，Windows 上是 `127.0.0.1:端口`
+    fn connect(address: &Path) -> std::io::Result<Stream> {
+        #[cfg(unix)]
+        return Stream::connect(address);
+        #[cfg(not(unix))]
+        return Stream::connect(address.to_string_lossy().as_ref());
+    }
+
+    fn write_frame(connection: &mut Stream, kind: u8, data: &[u8]) -> std::io::Result<()> {
         connection.write_all(&[kind])?;
         connection.write_all(&(data.len() as u32).to_be_bytes())?;
         connection.write_all(data)
     }
 
-    fn writeline(connection: &mut UnixStream, message: &str) -> std::io::Result<()> {
+    fn writeline(connection: &mut Stream, message: &str) -> std::io::Result<()> {
         write_frame(connection, FRAME_STDERR, format!("{message}\n").as_bytes())
     }
 
-    fn exit(connection: &mut UnixStream, code: i32) -> std::io::Result<()> {
+    fn exit(connection: &mut Stream, code: i32) -> std::io::Result<()> {
         write_frame(connection, FRAME_EXIT, &code.to_be_bytes())
     }
 
@@ -425,7 +424,10 @@ mod proxy {
         else {
             return env;
         };
-        let Some(git) = std::env::split_paths(path).map(|dir| dir.join("git")).find(|git| is_executable(git)) else {
+        let Some(git) = std::env::split_paths(path)
+            .map(|dir| dir.join(if cfg!(windows) { "git.exe" } else { "git" }))
+            .find(|git| git.is_file() && is_executable(git))
+        else {
             log::debug!("hooks: Failed to find system git in PATH");
             return env;
         };
@@ -442,7 +444,7 @@ mod proxy {
 
     /// 原版 createHooksProxy 返回的那个连接处理函数
     fn handle(
-        connection: UnixStream, expected_token: &str, tmp_hooks_dir: &Path, hooks_env: &HooksEnv,
+        connection: Stream, expected_token: &str, tmp_hooks_dir: &Path, hooks_env: &HooksEnv,
         callbacks: Option<&dyn HookCallbacks>,
     ) -> Result<(), String> {
         let start = Instant::now();
@@ -531,7 +533,13 @@ mod proxy {
         args.push("--".into());
         args.extend(request.args.iter().skip(1).cloned());
 
-        let mut child = std::process::Command::new(crate::git::binary())
+        let mut command = std::process::Command::new(crate::git::binary());
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(CREATE_NO_WINDOW);
+        }
+        let mut child = command
             .args(&args)
             .current_dir(&request.cwd)
             .env_clear()
@@ -559,12 +567,18 @@ mod proxy {
         RUNNING.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&id);
         let status = status?;
 
-        use std::os::unix::process::ExitStatusExt;
+        #[cfg(unix)]
+        let signal = {
+            use std::os::unix::process::ExitStatusExt;
+            status.signal().map(signal_name)
+        };
+        #[cfg(not(unix))]
+        let signal: Option<String> = None;
         let duration = format!("after {:.2}s", start.elapsed().as_secs_f64());
         let prefix = format!("{hook_name} hook");
         let code = status.code();
-        let termination_message = match status.signal() {
-            Some(signal) => format!("{prefix} killed by signal {} {duration}", signal_name(signal)),
+        let termination_message = match signal {
+            Some(signal) => format!("{prefix} killed by signal {signal} {duration}"),
             None => match code {
                 Some(code) if code != 0 => format!("{prefix} failed with code {code} {duration}"),
                 _ => format!("{prefix} done {duration}"),
@@ -591,6 +605,7 @@ mod proxy {
         Ok(())
     }
 
+    #[cfg(unix)]
     fn signal_name(signal: i32) -> String {
         match signal {
             libc::SIGTERM => "SIGTERM".into(),
@@ -608,7 +623,7 @@ mod proxy {
     pub(super) fn proxy(
         socket: &Path, request: &ProxyRequest, stdin: Option<&mut dyn Read>, stderr: &mut dyn Write,
     ) -> i32 {
-        let Ok(mut connection) = UnixStream::connect(socket) else {
+        let Ok(mut connection) = connect(socket) else {
             return 1;
         };
         let Ok(mut header) = serde_json::to_vec(request) else {
@@ -651,6 +666,20 @@ mod proxy {
         };
         let cwd = std::env::current_dir().map(|dir| dir.to_string_lossy().into_owned()).unwrap_or_default();
         // 原版 isStdinConnected：git 不给钩子输入时 stdin 是 /dev/null
+        #[cfg(windows)]
+        let stdin_connected = {
+            use std::os::windows::io::AsRawHandle;
+            #[link(name = "kernel32")]
+            unsafe extern "system" {
+                fn GetFileType(handle: *mut std::ffi::c_void) -> u32;
+            }
+            const FILE_TYPE_DISK: u32 = 1;
+            const FILE_TYPE_PIPE: u32 = 3;
+            // NUL 是字符设备（FILE_TYPE_CHAR），没有句柄时是 FILE_TYPE_UNKNOWN
+            let handle = std::io::stdin().as_raw_handle();
+            !handle.is_null() && matches!(unsafe { GetFileType(handle.cast()) }, FILE_TYPE_DISK | FILE_TYPE_PIPE)
+        };
+        #[cfg(unix)]
         let stdin_connected = {
             use std::os::fd::AsFd;
             use std::os::unix::fs::FileTypeExt;
@@ -700,13 +729,19 @@ mod proxy {
             std::process::Command::new("git").args(["init", "-q"]).current_dir(dir.path()).status().unwrap();
             let hook = dir.path().join(".git/hooks").join(name);
             std::fs::write(&hook, body).unwrap();
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&hook, std::fs::Permissions::from_mode(0o755)).unwrap();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&hook, std::fs::Permissions::from_mode(0o755)).unwrap();
+            }
             dir
         }
 
         fn shell_env() -> HooksEnv {
-            let mut env = std::env::vars().filter(|(k, _)| k == "PATH" || k == "HOME").collect::<HashMap<_, _>>();
+            // Windows 上进程起不来就缺 SystemRoot 这类变量，整份环境都带上
+            let mut env = std::env::vars()
+                .filter(|(k, _)| cfg!(windows) || k == "PATH" || k == "HOME")
+                .collect::<HashMap<_, _>>();
             env.insert("FROM_SHELL".into(), "loaded".into());
             HooksEnv { env: Some(env), failure: None }
         }
@@ -853,10 +888,16 @@ mod proxy {
             let hooks = repo.path().join(".git/hooks");
             std::fs::write(hooks.join("commit-msg"), "#!/bin/sh\n").unwrap();
             std::fs::write(hooks.join("not-a-hook"), "#!/bin/sh\n").unwrap();
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(hooks.join("not-a-hook"), std::fs::Permissions::from_mode(0o755)).unwrap();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(hooks.join("not-a-hook"), std::fs::Permissions::from_mode(0o755)).unwrap();
+            }
             let filter = ["pre-commit".to_string(), "commit-msg".into(), "not-a-hook".into()];
-            assert_eq!(repo_hooks(repo.path(), Some(&filter)), ["pre-commit"]);
+            // 原版在 Windows 上不看可执行位，文件在就算
+            let mut listed = repo_hooks(repo.path(), Some(&filter));
+            listed.sort();
+            assert_eq!(listed, if cfg!(windows) { vec!["commit-msg", "pre-commit"] } else { vec!["pre-commit"] });
             assert!(repo_hooks(repo.path(), Some(&["post-commit".to_string()])).is_empty());
         }
     }
