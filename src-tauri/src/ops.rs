@@ -691,7 +691,19 @@ fn unquote_c_string(value: &str) -> String {
 /// 工作树列表。用 `--porcelain`：默认输出是给人看的，列宽会变。
 pub fn worktrees(repo: &Path) -> Result<Vec<Worktree>, String> {
     let out = Git::new(Some(repo)).args(["worktree", "list", "--porcelain", "-z"]).stdout()?;
-    Ok(parse_worktrees(&out))
+    Ok(normalize_worktree_paths(parse_worktrees(&out)))
+}
+
+/// Desktop worktree.ts normalises each path (`Path.normalize`): Git for Windows prints
+/// `c:/Users/...`, while repository paths use the native separator, and the two are compared.
+fn normalize_worktree_paths(mut list: Vec<Worktree>) -> Vec<Worktree> {
+    if cfg!(windows) {
+        for worktree in &mut list {
+            worktree.path =
+                Path::new(&worktree.path).components().collect::<std::path::PathBuf>().to_string_lossy().into_owned();
+        }
+    }
+    list
 }
 
 pub fn worktrees_from_git_dir(git_dir: &Path) -> Result<Vec<Worktree>, String> {
@@ -700,7 +712,7 @@ pub fn worktrees_from_git_dir(git_dir: &Path) -> Result<Vec<Worktree>, String> {
         .arg(git_dir)
         .args(["worktree", "list", "--porcelain", "-z"])
         .stdout()?;
-    Ok(parse_worktrees(&out))
+    Ok(normalize_worktree_paths(parse_worktrees(&out)))
 }
 
 /// A persisted main-worktree path survives pruning; stale hints fall back to Git metadata.
@@ -1891,6 +1903,13 @@ mod tests {
         assert_eq!(list.len(), 2, "主工作树 + 新建的那个");
         assert!(list[0].main, "第一条是主工作树");
         assert_eq!(list[1].branch.as_deref(), Some("wt-branch"));
+        // Desktop worktree.ts：路径用系统分隔符，和仓库路径能按字符串比较。
+        #[cfg(windows)]
+        {
+            assert!(list.iter().all(|worktree| !worktree.path.contains('/')), "{:?}", list[0].path);
+            let extra = std::fs::canonicalize(&extra).unwrap();
+            assert_eq!(std::fs::canonicalize(&list[1].path).unwrap(), extra);
+        }
 
         remove_worktree(p, extra.to_str().unwrap()).unwrap();
         assert_eq!(worktrees(p).unwrap().len(), 1);
@@ -1938,10 +1957,10 @@ mod tests {
             assert!(!worktree.exists(), "{case}");
             assert!(renamed.exists(), "{case}");
             let listed: Vec<_> = worktrees(&main).unwrap().into_iter().map(|wt| wt.path).collect();
-            let mut expected =
-                vec![main.to_string_lossy().replace('\\', "/"), renamed.to_string_lossy().replace('\\', "/")];
+            // Paths come back with the native separator (Desktop worktree.ts, Path.normalize).
+            let mut expected = vec![main.to_string_lossy().into_owned(), renamed.to_string_lossy().into_owned()];
             if case == "sibling" {
-                expected.push(sibling.to_string_lossy().replace('\\', "/"));
+                expected.push(sibling.to_string_lossy().into_owned());
             }
             assert_eq!(listed[0], expected[0], "{case}: main worktree stays first");
             let (mut rest, mut expected_rest) = (listed[1..].to_vec(), expected[1..].to_vec());
