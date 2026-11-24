@@ -20,6 +20,7 @@
 - 用户纠正功能范围后立即更新本文件中的对应规则，清除冲突表述；不得只在聊天中承诺后继续按旧范围推进。
 - 用户于 2026-11-03 明确：自动更新照 ALwith Desktop，直接用 `@alwith/module-desktop-shell` 的统一实现（Rust 插件 `init_native()` + `DesktopUpdateStatus`），不在本项目另存 updater 副本。启动 30 秒后首查、之后每小时一次，命中自动下载，缓存跨重启并重新验签，就绪期间每 5 分钟复核撤回；左栏底部显示下载进度卡与「重新启动以更新」卡，就绪时主窗弹一次系统确认框。没有手动检查、关于窗口不显示更新状态，不移植 Desktop 的更新就绪横幅（`banners/update-available.tsx`）与下载中退出保护（`installing-update`）。
 - 用户于 2026-11-12 明确：不做 Desktop 3.6.12-beta1 新增的「提交后自动推送」（Push after committing）。提交与推送保持两步，不加该选项，也不列为产品缺口；对应的原版测试登记为排除。
+- 用户于 2026-11-24 明确：Desktop 的多账号（3.6.12 beta 起：克隆与发布的账号选择器、登出后的登录入口、令牌过期对话框的账号切换、多账号统计字段）等 Desktop 出正式版再同步，beta 期间不移植。清单里因此保持 `stale` 的 4 个套件（`clone-repository`、`invalidated-token`、`test-token-expiration-dialog`、`usage-data`）和 30 个 `pending` 的新文件不处理，`tests/test_desktop_catalog.py` 的 2 个失败在此之前是已知状态，不为消掉它们削弱断言或提前移植。
 - 用户于 2026-10-30 明确：不支持 Linux。CI、发布、文档与验收都不列 Linux，不为 Linux 增加构建或适配。
 - 当前开发与验收以用户实际使用的 macOS 为优先；先完成 macOS 已授权的功能和原生回归，不反复以 Windows 验收作为交付缺口，也不擅自转向 Windows 专项工作。
 - 参考 Vendor/desktop 的成熟行为与原版测试、Vendor/vscode-gitlens 的高级能力，持续跟踪上游更新；超越官方不等于无依据重写基础能力。
