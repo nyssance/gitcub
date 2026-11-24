@@ -24,7 +24,7 @@
 - 开发实例（带 Hasgard，可脚本驱动）：`bun run dev:tauri`
 - 本地安装包：`bun tauri build --bundles nsis --config "{\"bundle\":{\"createUpdaterArtifacts\":false}}"`
   （没有更新签名私钥，必须关掉更新器产物，否则打包最后一步失败。）
-- Hasgard 0.7 在 Windows 上走命名管道，默认 `\\.\pipe\tauri-hasgard-<应用标识>`，只允许当前用户连接；`tauri-hasgard` CLI 可 eval 和截图。
+- Hasgard 0.8 在 Windows 上走命名管道，默认 `\\.\pipe\tauri-hasgard-<应用标识>`，只允许当前用户连接；`tauri-hasgard` CLI 可 eval 和截图。
 
 ## 检查与测试
 
