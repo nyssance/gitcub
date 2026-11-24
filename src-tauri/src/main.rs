@@ -126,6 +126,8 @@ fn main() {
             Ok(())
         })
         .on_page_load(|webview, payload| {
+            #[cfg(not(windows))]
+            let _ = (webview, payload);
             #[cfg(windows)]
             if webview.label() == "main"
                 && matches!(payload.event(), tauri::webview::PageLoadEvent::Finished)

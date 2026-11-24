@@ -7,6 +7,8 @@
 //! - Custom integrations (`launchCustomShell`, `launchCustomExternalEditor`) are not ported.
 //! - The `cmd.exe` that Node's `shell: true` puts in front of a shell is started without a console
 //!   window, so opening a terminal never flashes an extra one.
+#![cfg_attr(not(windows), allow(dead_code, reason = "只在 Windows 上调用；其它平台靠单元测试覆盖其中的查找与拼装"))]
+
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 

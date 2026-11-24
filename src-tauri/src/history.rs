@@ -414,8 +414,7 @@ fn decorations(repo: &gix::Repository) -> Result<std::sync::Arc<Decorations>, St
             // in-place with identical size and timestamps. Keep loose refs
             // in the incremental re-read set on Windows so content changes
             // cannot leave decorations stale.
-            #[cfg(windows)]
-            if path.components().any(|component| component.as_os_str() == "refs") {
+            if cfg!(windows) && path.components().any(|component| component.as_os_str() == "refs") {
                 return true;
             }
             *modified + RACY_WINDOW >= taken
