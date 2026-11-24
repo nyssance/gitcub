@@ -21,7 +21,7 @@
     "dev:tauri": "bun tauri dev --features hasgard-testing --config src-tauri/tauri.dev-instance.conf.json"
   },
   "dependencies": {
-    "@alwith/module-desktop-shell": "^0.6.13",
+    "@alwith/module-desktop-shell": "^0.6.14",
     "@alwith/module-store": "^0.6.0",
     "@base-ui/react": "^1.9.0",
     "@floating-ui/core": "^1.8.0",
@@ -37,7 +37,7 @@
     "@lezer/python": "^1.1.19",
     "@lezer/rust": "^1.0.3",
     "@lezer/yaml": "^1.0.4",
-    "@nyssance/atlas": "^0.1.13",
+    "@nyssance/atlas": "^0.1.14",
     "@nyssance/reui": "^2.8.3",
     "@nyssance/shadcn": "^4.23.4",
     "@primer/octicons-react": "^19.42.0",

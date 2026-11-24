@@ -4,7 +4,7 @@
   "workspaces": {
     "": {
       "dependencies": {
-        "@alwith/module-desktop-shell": "^0.6.13",
+        "@alwith/module-desktop-shell": "^0.6.14",
         "@alwith/module-store": "^0.6.0",
         "@base-ui/react": "^1.9.0",
         "@floating-ui/core": "^1.8.0",
@@ -20,7 +20,7 @@
         "@lezer/python": "^1.1.19",
         "@lezer/rust": "^1.0.3",
         "@lezer/yaml": "^1.0.4",
-        "@nyssance/atlas": "^0.1.13",
+        "@nyssance/atlas": "^0.1.14",
         "@nyssance/reui": "^2.8.3",
         "@nyssance/shadcn": "^4.23.4",
         "@primer/octicons-react": "^19.42.0",
@@ -111,7 +111,7 @@
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],
 
-    "@alwith/module-desktop-shell": ["@alwith/module-desktop-shell@0.6.13", "", { "dependencies": { "@base-ui/react": "^1.9.0", "@nyssance/reui": "^2.8.3", "@nyssance/shadcn": "^4.23.4", "class-variance-authority": "^0.7.1", "cn": "^0.5.2", "lucide-react": "^1.77.0" }, "peerDependencies": { "@nyssance/atlas": "^0.1.11", "@tauri-apps/api": "^3.0.0-alpha.3", "react": "^19.3.1", "react-dom": "^19.3.1" }, "optionalPeers": ["@nyssance/atlas"] }, "sha512-BsNYaS9AvE9I4dJsJyoS9/CvbCPIBMMoTl7ZtOhqu7MPIn6dOZuDX2r0eAU7wdo4q/mEuDopFOTWw5BB9yWBNA=="],
+    "@alwith/module-desktop-shell": ["@alwith/module-desktop-shell@0.6.14", "", { "dependencies": { "@base-ui/react": "^1.9.0", "@nyssance/reui": "^2.8.3", "@nyssance/shadcn": "^4.23.4", "class-variance-authority": "^0.7.1", "cn": "^0.5.2", "lucide-react": "^1.77.0" }, "peerDependencies": { "@nyssance/atlas": "^0.1.14", "@tauri-apps/api": "^3.0.0-alpha.3", "react": "^19.3.1", "react-dom": "^19.3.1" }, "optionalPeers": ["@nyssance/atlas"] }, "sha512-5VPNHnI/vGyIH5DUK4fhK5zWSawMejMSKQWd3u6xlddMiqK1DV+iJWAWrpBB+yYN9sGcxJpEU4oE/VgCZ9Fzww=="],
 
     "@alwith/module-store": ["@alwith/module-store@0.6.0", "", { "peerDependencies": { "@tauri-apps/api": "^3.0.0-alpha.3" }, "optionalPeers": ["@tauri-apps/api"] }, "sha512-Uw/MPWlTgz1QZhr8ngLujxGkLJmLxfreGDtNy3vpbUhq2bYaJTLUJFUi7bpOfN7/IOcpr1kl1iGNLRxOocPd/w=="],
 
@@ -277,7 +277,7 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.7", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1 || 2.0.0-beta.2 || 2.0.0-beta.3", "@emnapi/runtime": "^1.7.1 || 2.0.0-beta.2 || 2.0.0-beta.3" } }, "sha512-zJccwplOAbgfZju95IUHazLnx9RAPtPN2YGJXI6UbrgeaR9QfPjGrQL6ERkSAtnVCA4Q+83ApGyaX5zdpCaKkQ=="],
 
-    "@nyssance/atlas": ["@nyssance/atlas@0.1.13", "", { "dependencies": { "embla-carousel": "^8.6.0", "motion": "^14.14.0" }, "peerDependencies": { "@angular/core": ">=20 <24", "@tauri-apps/api": ">=2 <4", "react": "^19.0.0", "svelte": "^5.0.0", "vue": "^3.5.0" }, "optionalPeers": ["@angular/core", "@tauri-apps/api", "react", "svelte", "vue"] }, "sha512-7Jwv4xVB32CwVcmutX6hHDFpZXNLgGGdfjs/3lsH4WOYxRagCOquEjE+kHJPfFODz59WK3VCTQak6W0S9sE/wA=="],
+    "@nyssance/atlas": ["@nyssance/atlas@0.1.14", "", { "dependencies": { "embla-carousel": "^8.6.0", "motion": "^14.14.0" }, "peerDependencies": { "@angular/core": ">=20 <24", "@tauri-apps/api": ">=2 <4", "react": "^19.0.0", "svelte": "^5.0.0", "vue": "^3.5.0" }, "optionalPeers": ["@angular/core", "@tauri-apps/api", "react", "svelte", "vue"] }, "sha512-3Gk0/8/x/9Kbx26iiuX6CwfUVnilMNGbdP2SrtPN0smWZWKOg1Xt9b17+yXHRjjm4UXeUF7NhFVcYlzHEnvq/g=="],
 
     "@nyssance/reui": ["@nyssance/reui@2.8.3", "", { "dependencies": { "@base-ui/react": "^1.9.0", "@date-fns/tz": "^1.5.0", "@dnd-kit/core": "^6.3.1", "@dnd-kit/modifiers": "^9.0.0", "@dnd-kit/sortable": "^10.0.0", "@dnd-kit/utilities": "^3.2.2", "@headless-tree/core": "^1.8.0", "@nyssance/shadcn": "^4.23.4", "@tanstack/react-table": "^9.3.1", "@tanstack/react-virtual": "^3.14.26", "class-variance-authority": "^0.7.1", "cn": "^0.5.2", "date-fns": "^4.4.0", "lucide-react": "^1.73.0", "react-day-picker": "^10.0.2", "react-phone-number-input": "^3.4.18", "shiki": "^4.6.0" }, "peerDependencies": { "react": "^19.3.1", "react-dom": "^19.3.1", "vite": ">=8" }, "optionalPeers": ["vite"] }, "sha512-fQvgmM+/Y4GHJcQQYQ1evGvr4e4+U4Gb+uHQaMF6+M3bCupV8VnaZo2e8C9rIJFAk3foc+njGZ2gTJ4IQwLgwQ=="],
 
