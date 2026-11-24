@@ -25,7 +25,8 @@ class DesktopCatalogTests(unittest.TestCase):
             'copilot-conflict-resolution-error', 'copilot-conflict-resolution-model',
             'copilot-conflict-resolution', 'copilot-error',
             'copilot-in-memory-session-fs-provider', 'copilot-resolution-helpers',
-            'copilot-sdk-auth', 'stores/copilot-store-credentials', 'stores/copilot-store')}
+            'copilot-response-schema', 'copilot-sdk-auth', 'stores/copilot-store-credentials',
+            'stores/copilot-store')}
         copilot.update(f'app/test/unit/ui/{name}-test.tsx' for name in (
             'commit-message', 'commit-message-warning-dialogs',
             'copilot-custom-providers-dialog', 'copilot-preferences',
@@ -80,6 +81,9 @@ class DesktopCatalogTests(unittest.TestCase):
         # replaces with shadcn / Base UI.
         expected.update(('script/npm-test.ts', 'app/test/unit/ui/popover-test.tsx',
                          'app/test/unit/ui/dropdown-select-button-test.tsx'))
+        # GitCub's dialogs are rewrites; equivalent regressions live in ui-components.test.tsx.
+        expected.update(('app/test/unit/ui/add-worktree-dialog-test.tsx',
+                         'app/test/unit/ui/repository-settings-test.tsx'))
         self.assertEqual(set(excluded), expected)
         for entry in excluded.values():
             self.assertTrue(entry.get('exclusion'))
@@ -95,9 +99,8 @@ class DesktopCatalogTests(unittest.TestCase):
             'app/test/unit/refresh-token-consumers-test.ts': 'partial',
             'app/test/unit/repo-rules-test.ts': 'partial',
             # shadcn Collapsible instead of native <details>: one tutorial case excluded (design-adaptations.ts).
-            # GitCub's dialogs are rewrites; equivalent regressions live in ui-components.test.tsx (see note).
-            'app/test/unit/ui/add-worktree-dialog-test.tsx': 'pending',
-            'app/test/unit/ui/repository-settings-test.tsx': 'pending',
+            # User decision 2026-11-24: the list is never split by account; 7 cases removed (design-adaptations.ts).
+            'app/test/unit/repositories-list-grouping-test.ts': 'partial',
             'app/test/unit/ui/tutorial-welcome-surfaces-test.tsx': 'partial',
         }, 'Desktop completeness regressed')
         for path in outstanding:

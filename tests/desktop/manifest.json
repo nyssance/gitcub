@@ -5,7 +5,7 @@
   "files": {
     "app/test/e2e/app-launch.e2e.ts": {
       "sha256": "f87b3317b19b77ecac2a41af90e73df8ce2bb744c0ff333f5f24857b11016691",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/e2e/app-launch-test.ts",
@@ -20,7 +20,7 @@
     },
     "app/test/unit/account-token-lifecycle-test.ts": {
       "sha256": "aecce5afaf7b97c4886854cb21aba539cbd28bef2c7480fd2c3d64f320a8ea8f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/account-token-lifecycle-test.ts",
@@ -30,7 +30,7 @@
     },
     "app/test/unit/accounts-store-test.ts": {
       "sha256": "6697a4a53e29211c065a69bb4bc6600989a608483df49065822e95a26830f9fa",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/accounts-store-test.ts",
@@ -40,7 +40,7 @@
     },
     "app/test/unit/ahead-behind-store-test.ts": {
       "sha256": "83db771dd86af51a2ac0e61abec9b4c7d7d16602b9a01b42ad636d8971a4c114",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ahead-behind-store-test.ts",
@@ -55,7 +55,7 @@
     },
     "app/test/unit/api-error-handling-test.ts": {
       "sha256": "28a4afc02d21c1d950bc79e7740ce7160e184b178a7c0b74c285d63da2138903",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/api-error-handling-test.ts",
@@ -65,7 +65,7 @@
     },
     "app/test/unit/api-test.ts": {
       "sha256": "8dfd8c2e8cecf859a9c7c661a8620baaf5ed536a10cc89decfae9f269ccd43b6",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/api-test.ts",
@@ -76,7 +76,7 @@
     },
     "app/test/unit/app-store-test-harness-test.ts": {
       "sha256": "d8e54c249c67b77b8f62fcf1c1459facc8ff3209a0550e7078940ac4035a4363",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/app-store-test-harness-test.ts",
@@ -104,7 +104,7 @@
     },
     "app/test/unit/authenticated-image-filter-test.ts": {
       "sha256": "622adf1ab20e52c51617a5fa0e23feee04b63250103c4c0307b837c29dd9321d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/authenticated-image-filter-test.ts",
@@ -114,7 +114,7 @@
     },
     "app/test/unit/authenticated-image-token-handler-test.ts": {
       "sha256": "674451672373673c8552bfd098d218a9ec176a32d30699dfcc196ebcc363bc5a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/authenticated-image-token-handler-test.ts",
@@ -124,7 +124,7 @@
     },
     "app/test/unit/authenticated-image-token-resolver-test.ts": {
       "sha256": "67e8f29c1d9aee2b1a46d2e1eaa89ab33331387b5daedf1c959dee0c76d82a6b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/authenticated-image-token-resolver-test.ts",
@@ -134,7 +134,7 @@
     },
     "app/test/unit/branch-pruner-test.ts": {
       "sha256": "e2e61e674fb06b60e4d37a466ed6d9d29f375936df5f349c35dce130970f4489",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/branch-pruner-test.ts",
@@ -144,7 +144,7 @@
     },
     "app/test/unit/bytes-test.ts": {
       "sha256": "73215c75ac3ecfeb9c9f250df377c401d22158c3a44bfdbfc5c21bef30d12c8c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/bytes-test.ts",
@@ -154,7 +154,7 @@
     },
     "app/test/unit/ci-checks-test.ts": {
       "sha256": "37d47baa35dc585bce562cd44116ec97f1858c53de7ec5d188883f3c1295665f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ci-checks-test.ts",
@@ -169,7 +169,7 @@
     },
     "app/test/unit/clone-path-safety-test.ts": {
       "sha256": "618534a811a960b221ae7d6b1426d749cd2bfc20f7d3a74028c0d1bb725786b6",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/clone-path-safety-test.ts",
@@ -184,7 +184,7 @@
     },
     "app/test/unit/cloning-repositories-store-test.ts": {
       "sha256": "76d4579528c29e552350f13b9d6d42bdfdb64defdf01ef55927b99d598d2f2e9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/cloning-repositories-store-test.ts",
@@ -194,7 +194,7 @@
     },
     "app/test/unit/cloning-repository-test.ts": {
       "sha256": "9b76589568b629a74a097dfdf1b3fc2005db96b8f44b9ef5214b8af958f2ddb6",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/cloning-repository-test.ts",
@@ -204,7 +204,7 @@
     },
     "app/test/unit/commit-identity-test.ts": {
       "sha256": "e4b7e942f3b7351af694fd26ea6988d4bc3e1af96cfdc73e9b1c4f1cdfab44d9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/commit-identity-test.ts",
@@ -225,7 +225,7 @@
     },
     "app/test/unit/copilot-app-test.ts": {
       "sha256": "07c102133d45acee1ff5dd30d32a502b2d2be1f788f484ddb17eb7b8528abefa",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-app-test.ts",
@@ -248,7 +248,7 @@
     },
     "app/test/unit/copilot-byok-test.ts": {
       "sha256": "c9a2c2b12b63fe9a9724645a970ab9285703e156a8469bfa05ebd647a371b47e",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-byok-test.ts",
@@ -259,7 +259,7 @@
     },
     "app/test/unit/copilot-commit-message-prompt-test.ts": {
       "sha256": "807577127829b988f0a986312235326f7bee455c0ed5320181066d46a1bb1357",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-commit-message-prompt-test.ts",
@@ -270,7 +270,7 @@
     },
     "app/test/unit/copilot-commit-message-test.ts": {
       "sha256": "563c5ca841b3d93dc3c816d69d2a20abf0cc5867defc97746f18bbb64c1d2d17",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-commit-message-test.ts",
@@ -281,7 +281,7 @@
     },
     "app/test/unit/copilot-conflict-context-test.ts": {
       "sha256": "b387979c6edc0f0af19e6bf879678a8d101acc83e3c28ea0aea44a6853d77a67",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-context-test.ts",
@@ -292,7 +292,7 @@
     },
     "app/test/unit/copilot-conflict-resolution-error-test.ts": {
       "sha256": "ca5a25e8cb8d813585caff6420a7614346061d3ee09fb9cda7856135300a866a",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-resolution-error-test.ts",
@@ -303,7 +303,7 @@
     },
     "app/test/unit/copilot-conflict-resolution-model-test.ts": {
       "sha256": "f327cd4bdad7144e53bf04b9d38028e70fa83be01b5c2aa8992f5f3dbb4a4bdd",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-resolution-model-test.ts",
@@ -314,7 +314,7 @@
     },
     "app/test/unit/copilot-conflict-resolution-test.ts": {
       "sha256": "378d7fbf3bf94f0dec4d66f83d99dfbeefed4a94e471ae6cce22b261ee7d1ec4",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-conflict-resolution-test.ts",
@@ -325,7 +325,7 @@
     },
     "app/test/unit/copilot-error-test.ts": {
       "sha256": "145897dcc3090c88ca7af464d737c26dae5dec6c7624405796d092f1d4e7f221",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-error-test.ts",
@@ -341,7 +341,7 @@
     },
     "app/test/unit/copilot-in-memory-session-fs-provider-test.ts": {
       "sha256": "4b78a0ec07d3475b3f6d6c05784ac7ae64b8bf3e7fde3b0c05b70a6fb98b32a4",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-in-memory-session-fs-provider-test.ts",
@@ -358,7 +358,7 @@
     },
     "app/test/unit/copilot-resolution-helpers-test.ts": {
       "sha256": "2df5a97a8ecaab89001bf02bb949acea926065ce90758d21f14daeb51c43bd8e",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-resolution-helpers-test.ts",
@@ -375,7 +375,7 @@
     },
     "app/test/unit/copilot-sdk-auth-test.ts": {
       "sha256": "56f0a5e9a3ff9d893568dd49a1a927269114c01d8a417fff71142d75266864f6",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/copilot-sdk-auth-test.ts",
@@ -386,7 +386,7 @@
     },
     "app/test/unit/create-branch-test.ts": {
       "sha256": "c67818cf6d75816c96d99635040f8414a44d1fa92f6dce22ec3710411d5fbf1d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/create-branch-test.ts",
@@ -396,7 +396,7 @@
     },
     "app/test/unit/credential-sessions-test.ts": {
       "sha256": "11f7b7d666e99a8620195a948d12cef9360e3dd280d9bd31aac009a92adb4347",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/credential-sessions-test.ts",
@@ -406,7 +406,7 @@
     },
     "app/test/unit/cygwin-test.ts": {
       "sha256": "f08d3e5380749d99120022a7199d250177db604f29af44b81ed03d74c74ee130",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/cygwin-test.ts",
@@ -416,7 +416,7 @@
     },
     "app/test/unit/database-migration-test.ts": {
       "sha256": "f2ded2a2ee1b6f551c35817c8f18c778d1d15a4eb7e37b2ae407326b6faba836",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/database-migration-test.ts",
@@ -427,7 +427,7 @@
     },
     "app/test/unit/dds-converter-test.ts": {
       "sha256": "922ee716c64c2bb9dd1a31cbc519d2c2976ae9e4efcb951bd12a49a9a6994232",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/dds-converter-test.ts",
@@ -437,7 +437,7 @@
     },
     "app/test/unit/desktop-console-transport-test.ts": {
       "sha256": "a7943930caa7da84da8eaaff5be3fd59341e05a8b3c0df9562aa604c933b2ec3",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/desktop-console-transport-test.ts",
@@ -447,7 +447,7 @@
     },
     "app/test/unit/desktop-file-transport-test.ts": {
       "sha256": "54cee6b032d13b6c3758a8259bc435cccd7df8f55b4913b498799ffd65303fb3",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/desktop-file-transport-test.ts",
@@ -457,7 +457,7 @@
     },
     "app/test/unit/diff-parser-test.ts": {
       "sha256": "f3e40f731e855ee3dae2040d1cc53c213aa30aad2fd1a3fd4becbf2aacba16cd",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/diff-parser-test.ts",
@@ -467,7 +467,7 @@
     },
     "app/test/unit/email-test.ts": {
       "sha256": "0eff9ed1f167f98845efd8f21bca75f126d572a683694f886a76275e8431c053",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/email-test.ts",
@@ -477,7 +477,7 @@
     },
     "app/test/unit/endpoint-capabilities-test.ts": {
       "sha256": "4e60c9d9987759f4aaa1b5bd2ed2e8db4a1a11fe099f8f166b1201aedf8f77a8",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/endpoint-capabilities-test.ts",
@@ -487,7 +487,7 @@
     },
     "app/test/unit/enterprise-validate-url-test.ts": {
       "sha256": "45149c4bec4c07ba5fcebbbaf4fe38b9ca9fd4bc7622bff8e53a255f8ef2f8ff",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/enterprise-validate-url-test.ts",
@@ -497,7 +497,7 @@
     },
     "app/test/unit/enum-test.ts": {
       "sha256": "e45cfb460ff241fcefc1a021713b74a7bde3d758bc93125f919590af078431d9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/enum-test.ts",
@@ -507,7 +507,7 @@
     },
     "app/test/unit/fatal-error-test.ts": {
       "sha256": "bf8b0308c02c7773b1a0a6316a916ffce7febb4bce15a208a4bcc57e8b632ed2",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/fatal-error-test.ts",
@@ -517,7 +517,7 @@
     },
     "app/test/unit/file-system-test.ts": {
       "sha256": "943e63814744cf311a0931ae5061304ac524a3f8325be1b407c2378ad40322ce",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/file-system-test.ts",
@@ -527,7 +527,7 @@
     },
     "app/test/unit/filter-changes-logic-test.ts": {
       "sha256": "da95235f1c194daf5be24118cf4c13824fb94eb4d302fccbf6fe814907430077",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/filter-changes-logic-test.ts",
@@ -537,7 +537,7 @@
     },
     "app/test/unit/find-account-test.ts": {
       "sha256": "ae596de79918d9aa2b279a4c02049281b4ea73f9353edea78ccb0a3374fe58e3",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/find-account-test.ts",
@@ -547,7 +547,7 @@
     },
     "app/test/unit/find-forked-remotes-to-prune-test.ts": {
       "sha256": "e0a737c077ec1fd2f9eb8d8c18dbe43e5f7a36530dc15a930bcf6bf55e0b21ea",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/find-forked-remotes-to-prune-test.ts",
@@ -557,7 +557,7 @@
     },
     "app/test/unit/find-upstream-remote-test.ts": {
       "sha256": "77bcad49295f315339e09e0499cf75c8e97491064c8dbd0310d30b34aba8a122",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/find-upstream-remote-test.ts",
@@ -567,7 +567,7 @@
     },
     "app/test/unit/format-commit-message-test.ts": {
       "sha256": "a79a0e542e892fc039c5e18f9fd0e5710d64fbc9f015985c120e2a97a44092b8",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/format-commit-message-test.ts",
@@ -577,7 +577,7 @@
     },
     "app/test/unit/format-duration-test.ts": {
       "sha256": "b79a5fdcaa476ed2e20cbb7e7296fece38a30735aacebe62ce0f5da52c0d652a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/format-duration-test.ts",
@@ -587,7 +587,7 @@
     },
     "app/test/unit/format-number-test.ts": {
       "sha256": "afd62af6d47a466302d1e888693691c778375e91c485adea915e3ef097922919",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/format-number-test.ts",
@@ -597,7 +597,7 @@
     },
     "app/test/unit/format-test.ts": {
       "sha256": "9074c7428b7c86fcb2d6b1602252b61c3439f3381a67c5722a59a06dc494a52f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/format-test.ts",
@@ -607,7 +607,7 @@
     },
     "app/test/unit/fuzzy-find-test.ts": {
       "sha256": "02b5c84c27dfc407379e75fc73168ecc3e16771265d6c72d3814d43ae194856e",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/fuzzy-find-test.ts",
@@ -617,7 +617,7 @@
     },
     "app/test/unit/get-file-hash-test.ts": {
       "sha256": "587988c64ca07b971a2791f3ad41c3161a9624efa4620cec028553d050760f28",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/get-file-hash-test.ts",
@@ -627,7 +627,7 @@
     },
     "app/test/unit/get-shell-env-test.ts": {
       "sha256": "5f7f40b6f31048fc771a7f1749bf6a19780b4cef4d7a7c35808236f0b012ff78",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/get-shell-env-test.ts",
@@ -637,7 +637,7 @@
     },
     "app/test/unit/git-config-isolation-test.ts": {
       "sha256": "ce3bdcd29642a37e5700bfac395607147a64fe426fd4267b77a3e62e83413a1a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/git-config-isolation-test.ts",
@@ -647,7 +647,7 @@
     },
     "app/test/unit/git-info-test.ts": {
       "sha256": "93441897056dbcd6817ba3c48152ccc3a7eec8feb9cd836cb514bab3e8db6bdb",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/git-info-test.ts",
@@ -657,7 +657,7 @@
     },
     "app/test/unit/git-store-cache-test.ts": {
       "sha256": "95115ce31d45070edb7dba90cb85046aaff3205c6893fd0151730b685cab1d88",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/git-store-cache-test.ts",
@@ -667,7 +667,7 @@
     },
     "app/test/unit/git-store-test.ts": {
       "sha256": "e2c28751a5271d81fe3e6c78106dc1d2c576d1e07c923ad380ee47fcbe328d05",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/git-store-test.ts",
@@ -677,7 +677,7 @@
     },
     "app/test/unit/git/add-test.ts": {
       "sha256": "50e96acfe787cee677f4c58f6c5d8ac3323ba492175215420bffa67cdaf8b70d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/add-test.ts",
@@ -687,7 +687,7 @@
     },
     "app/test/unit/git/apply-test.ts": {
       "sha256": "b82bb0b28aabcf92f6b47f8d136627c5a41254a8c0436d0ab0aee9f2b8c079ad",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/apply-test.ts",
@@ -759,7 +759,7 @@
     },
     "app/test/unit/git/branch-test.ts": {
       "sha256": "67874b74c95e4f5be0fa8103f1aa1928860806dbb5e4f6af02c853e59896b638",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/branch-test.ts",
@@ -769,7 +769,7 @@
     },
     "app/test/unit/git/checkout-test.ts": {
       "sha256": "6a29439086ffe1478a604cf76e8f8c651a9739addfd6ff42a76695c7e973b209",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/checkout-test.ts",
@@ -779,7 +779,7 @@
     },
     "app/test/unit/git/cherry-pick-test.ts": {
       "sha256": "4e8f9a2256cb9702d3318bcd3f086420f8968b4e9c7704c5d51c054ce68b1033",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/cherry-pick-test.ts",
@@ -794,7 +794,7 @@
     },
     "app/test/unit/git/clone-test.ts": {
       "sha256": "c8b66b57121d846982835d198fb30310627ff93066fd3f9d5d2f21b7729f4ba7",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/clone-test.ts",
@@ -805,7 +805,7 @@
     },
     "app/test/unit/git/commit-test.ts": {
       "sha256": "e374c7860465dc3dbc4b2a37c1bf2fce5dc13e3c6b159f5b2eed395e5baf0c71",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [
         {
           "rust": "commit_empty_repository",
@@ -851,7 +851,7 @@
     },
     "app/test/unit/git/config-test.ts": {
       "sha256": "de819bbb933e169f4b79460196c8b26c28e15d4444a1e08d3a6dc4ce365f6562",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/config-test.ts",
@@ -861,7 +861,7 @@
     },
     "app/test/unit/git/core-test.ts": {
       "sha256": "753440d6da49dfc54d13bbca8e2fdf110f1f88e0112aa4ab97303e82b8eafa55",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/core-test.ts",
@@ -871,7 +871,7 @@
     },
     "app/test/unit/git/create-tail-stream-test.ts": {
       "sha256": "b363fa82298f34a9619657dbcbadda30675247f9378f1ea265edd8882db4a553",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/create-tail-stream-test.ts",
@@ -881,7 +881,7 @@
     },
     "app/test/unit/git/create-terminal-stream-test.ts": {
       "sha256": "b985ef9182ff9b6890a961cc8c845162cf9b65404c1dc707d3e4d792fdcb289b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/create-terminal-stream-test.ts",
@@ -891,7 +891,7 @@
     },
     "app/test/unit/git/credential-test.ts": {
       "sha256": "6b048f4b383bde201c946fa8eb594e9d9b163b4328409209a13749f3af25fef9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/credential-test.ts",
@@ -901,7 +901,7 @@
     },
     "app/test/unit/git/description-test.ts": {
       "sha256": "267820570228ca858c43af7c826345fde0a117b6f8591f5e85418bf0d24ab7c1",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/description-test.ts",
@@ -911,7 +911,7 @@
     },
     "app/test/unit/git/diff-check-test.ts": {
       "sha256": "8f93fef85c5beee9f9a29f3becfe725b594fe002eaa9ddb7eabcca7493e5e628",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/diff-check-test.ts",
@@ -921,7 +921,7 @@
     },
     "app/test/unit/git/diff-resolution-test.ts": {
       "sha256": "6e699f09aab525b6d286962593fc57bcaec552eb6c5be5f77c48b0c08ddec2ca",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/diff-resolution-test.ts",
@@ -931,7 +931,7 @@
     },
     "app/test/unit/git/diff-stage-test.ts": {
       "sha256": "aaa95c17c306d0a109044f0e514f1fcac0d2f6adbf6015c64efa32179827ebd8",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/diff-stage-test.ts",
@@ -941,7 +941,7 @@
     },
     "app/test/unit/git/diff-test.ts": {
       "sha256": "cbfdc9228c24209128e3462b6c6f6296fe2db2e7ea6fdfccecad1df27a8b95eb",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/diff-test.ts",
@@ -951,7 +951,7 @@
     },
     "app/test/unit/git/environment-test.ts": {
       "sha256": "02ff474d3d57ebfc7862f97aabd4445159f445cd1eb49e1a227f3da2aa09cd3a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/git/environment-test.ts",
@@ -966,7 +966,7 @@
     },
     "app/test/unit/git/fetch-test.ts": {
       "sha256": "2d67b4b70ffbd28a43b15e9d1ac1bd3a58966d3661bea37317f4b291af7c7fe1",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/fetch-test.ts",
@@ -976,7 +976,7 @@
     },
     "app/test/unit/git/for-each-ref-test.ts": {
       "sha256": "b462108ed1f9f79eee23ba733e6c1dc12d1c10574858ff98eabf919b3127d886",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/for-each-ref-test.ts",
@@ -986,7 +986,7 @@
     },
     "app/test/unit/git/format-patch-test.ts": {
       "sha256": "4159f1ef490f58544074c3f5a18fd8e683b3814853b7e48ca9bcb9c8b2d46bd9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/format-patch-test.ts",
@@ -996,7 +996,7 @@
     },
     "app/test/unit/git/git-attributes-test.ts": {
       "sha256": "bfd5516b40d779b60ef514479433dd6ed3058363dc41ba1dfcfb7f062139e302",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/git-attributes-test.ts",
@@ -1006,7 +1006,7 @@
     },
     "app/test/unit/git/gitignore-test.ts": {
       "sha256": "f5e3bf0c70bf14dffc97662af356bf58aba3e7b2d698bae1e206e225fa549be3",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/gitignore-test.ts",
@@ -1016,7 +1016,7 @@
     },
     "app/test/unit/git/init-test.ts": {
       "sha256": "84655835576d33bda481745271af0f128e9bbcfa360445aa5d6db0228d2e1734",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [
         {
           "rust": "init_creates_repository",
@@ -1037,7 +1037,7 @@
     },
     "app/test/unit/git/lfs-test.ts": {
       "sha256": "39072b5d532b415351ddbf9a1e4d0cc01406abe144fb9d080c344d443ba7fe81",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/lfs-test.ts",
@@ -1047,7 +1047,7 @@
     },
     "app/test/unit/git/log-revision-exclusions-test.ts": {
       "sha256": "e89f1f59b69f53cce81bf556256e32ec3fa7302d2b668595f7bfc947782f0c6a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/log-revision-exclusions-test.ts",
@@ -1057,7 +1057,7 @@
     },
     "app/test/unit/git/log-test.ts": {
       "sha256": "1ced39d12aebe0b6f3f165c01c5fedc331adc1fe94d2a974ce14fedc447f0162",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/log-test.ts",
@@ -1067,7 +1067,7 @@
     },
     "app/test/unit/git/merge-test.ts": {
       "sha256": "ea6096ec4b03b324ad3f679612b9956e655fabdfd9965176d444e4d03bd2e654",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/merge-test.ts",
@@ -1077,7 +1077,7 @@
     },
     "app/test/unit/git/multi-operation-terminal-output-test.ts": {
       "sha256": "29f19185992751cf064a7bfee3def97cbaf2946662f509b4a8c854fabb8a592e",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/multi-operation-terminal-output-test.ts",
@@ -1087,7 +1087,7 @@
     },
     "app/test/unit/git/pull/ahead-and-behind-test.ts": {
       "sha256": "78b04498010e2e8f3f9fbdf7b35afb6a0f94deee4e59d94f947440fbcfe82697",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/pull/ahead-and-behind-test.ts",
@@ -1097,7 +1097,7 @@
     },
     "app/test/unit/git/pull/only-ahead-test.ts": {
       "sha256": "31faba46d73805bb886652b153e983f9ff31b76d866ed75f3acb74d8591c29e6",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/pull/only-ahead-test.ts",
@@ -1107,7 +1107,7 @@
     },
     "app/test/unit/git/pull/only-behind-test.ts": {
       "sha256": "003ec764e1ed4852ac09319c52e1fae0beb8fecbc12266ebd678b5514a358178",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/pull/only-behind-test.ts",
@@ -1117,7 +1117,7 @@
     },
     "app/test/unit/git/pull/pull-test.ts": {
       "sha256": "bad72a4e5b60fddfcf65c3aecd6510daae865382f02f8961fc1add788a099011",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/pull/pull-test.ts",
@@ -1127,7 +1127,7 @@
     },
     "app/test/unit/git/push-terminal-chunk-test.ts": {
       "sha256": "e0c0fa79853c4f90080f965232dfdb6bfdbf375303445f0a52ff077c7fe8db6f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/push-terminal-chunk-test.ts",
@@ -1137,7 +1137,7 @@
     },
     "app/test/unit/git/push-test.ts": {
       "sha256": "4f4bc5ffc0c7d16d37b013d5153216b07842d7d368d27a77be0682c599a7a061",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/push-test.ts",
@@ -1147,7 +1147,7 @@
     },
     "app/test/unit/git/rebase-full-test.ts": {
       "sha256": "c7aeef3bca3415dfbcf571c2ffebfc3da69117198ca055cb4a5330da076f227b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/rebase-full-test.ts",
@@ -1157,7 +1157,7 @@
     },
     "app/test/unit/git/rebase/detect-conflict-test.ts": {
       "sha256": "04f6e27092fe7a5d87851849aaa78ee202d71069b3c554efcf1b14056be31d4d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/rebase/detect-conflict-test.ts",
@@ -1167,7 +1167,7 @@
     },
     "app/test/unit/git/rebase/progress-test.ts": {
       "sha256": "382e59b3f631c3c9482732d51833fbccb98e36e05ae6e2be1cfd0d5c3b28a50b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/rebase/progress-test.ts",
@@ -1177,7 +1177,7 @@
     },
     "app/test/unit/git/ref-test.ts": {
       "sha256": "2ed7dd98ad0743ba7e0ca9d0b52fb0135a9dbfa9fb0e03595839de3929465930",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ref-test.ts",
@@ -1187,7 +1187,7 @@
     },
     "app/test/unit/git/reflog-test.ts": {
       "sha256": "bf088af3f3afb952ad1e0cf4ec03aab6f2b98724cd99cd990a24125b27222307",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/reflog-test.ts",
@@ -1207,7 +1207,7 @@
     },
     "app/test/unit/git/remote-discovery-test.ts": {
       "sha256": "f8be2ac106919612b7f7c9a2ce77f43f251f08a10d7676e94b1d93e7aac1daf2",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/remote-discovery-test.ts",
@@ -1217,7 +1217,7 @@
     },
     "app/test/unit/git/remote-management-test.ts": {
       "sha256": "2cc9201667edfb6e46e646dd90ffe24cb5da42541a94629c872f32dc583cbc66",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [
         {
           "rust": "remote_add_treats_names_and_urls_literally",
@@ -1258,7 +1258,7 @@
     },
     "app/test/unit/git/remote-operations-test.ts": {
       "sha256": "fa4230d9223836ce3dcd82d05839a11ee9fc93470e67c7b355f437275d79b61f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/remote-operations-test.ts",
@@ -1268,7 +1268,7 @@
     },
     "app/test/unit/git/remote-test.ts": {
       "sha256": "f277f789243f0f00a23e07dc561d23da6ab5978b95bdb5494b89356800621ac4",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/remote-test.ts",
@@ -1278,7 +1278,7 @@
     },
     "app/test/unit/git/reorder-test.ts": {
       "sha256": "0b4b0afe651bb533e67b0cbbb95d8633eb4335489472761bbecc2c94a592b1e8",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/reorder-test.ts",
@@ -1294,7 +1294,7 @@
     },
     "app/test/unit/git/reset-test.ts": {
       "sha256": "1001f91d91efa59f2012853d0a5e3d6a310b7e5128b877043b26c443949d39d9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/reset-test.ts",
@@ -1304,7 +1304,7 @@
     },
     "app/test/unit/git/rev-parse-test.ts": {
       "sha256": "51c378abbd017b54b91908a29aef2cb04cb9de5d2158984a25cfd623ffb364be",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/rev-parse-test.ts",
@@ -1314,7 +1314,7 @@
     },
     "app/test/unit/git/revert-test.ts": {
       "sha256": "7cfcceed6914bdd7f95228c91293ee7c8e7fb062cce9e5657c8d2760cebee01b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/revert-test.ts",
@@ -1324,7 +1324,7 @@
     },
     "app/test/unit/git/revision-consumers-test.ts": {
       "sha256": "dc554cf280459197755c05ee2c6ce541f1c3d4ab2e8e1d10f512959419c35fe1",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/revision-consumers-test.ts",
@@ -1334,7 +1334,7 @@
     },
     "app/test/unit/git/squash-test.ts": {
       "sha256": "b84d3ccc595bd6bebc8ac6744d61af691c92683f43f74b0ba9ac5db6022d6c25",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/squash-test.ts",
@@ -1344,7 +1344,7 @@
     },
     "app/test/unit/git/stash-test.ts": {
       "sha256": "6b60b83297afbd43d35c44b7336dc739dea54a227ea415b9893e11763085ad22",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stash-test.ts",
@@ -1354,7 +1354,7 @@
     },
     "app/test/unit/git/status-test.ts": {
       "sha256": "db70b9baa6a3c21ea27399c77bc891d537ca80c5ba851b9dfd14761b4c7b124e",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/status-test.ts",
@@ -1364,7 +1364,7 @@
     },
     "app/test/unit/git/submodule-test.ts": {
       "sha256": "53019e939a383fec2c0f82e4a73f3977e5c1b74c6fc09aeb87cb61dea3f1ba77",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/submodule-test.ts",
@@ -1374,7 +1374,7 @@
     },
     "app/test/unit/git/tag-test.ts": {
       "sha256": "9f5e8dce22a31106fca4808117996801305e6dc7eaac4a9c57a8e37183e52745",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/tag-test.ts",
@@ -1384,7 +1384,7 @@
     },
     "app/test/unit/git/worktree-move-test.ts": {
       "sha256": "fe047bd0d84aa03713a5c55e2d0975e07fea35a2acb718a5e31ed5d068912354",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/worktree-move-test.ts",
@@ -1394,7 +1394,7 @@
     },
     "app/test/unit/git/worktree-test.ts": {
       "sha256": "9239c83f8c6334ced72ef3f3f2a6cd9961d59209915942b322013d79985bb1c0",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/worktree-test.ts",
@@ -1409,7 +1409,7 @@
     },
     "app/test/unit/group-branches-test.ts": {
       "sha256": "e3d543aa887c73e91602bc90dded8de4361ec68d58431011fa34d1f5c10cb340",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/group-branches-test.ts",
@@ -1419,7 +1419,7 @@
     },
     "app/test/unit/http-test.ts": {
       "sha256": "814b3bbd14011b5ac347ddde69f69030a56eb58d3c98c2c8714d52e92dc48149",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/http-test.ts",
@@ -1429,7 +1429,7 @@
     },
     "app/test/unit/identifier-rules-test.ts": {
       "sha256": "42e7f085512ed02b09d6f8fcf9eea2533c85c538f072e554751ec1799b8d5481",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/identifier-rules-test.ts",
@@ -1439,7 +1439,7 @@
     },
     "app/test/unit/ipc-contract-test.ts": {
       "sha256": "4976352d5f38a7f8705d606fe5413182f91c549a8b0f2db7f9d6b3347769e3cd",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ipc-contract-test.ts",
@@ -1449,7 +1449,7 @@
     },
     "app/test/unit/is-application-bundle-test.ts": {
       "sha256": "eaf0078e35b179b9e83d32ec94adaeef7054c542f505d34735694c1c484f32b4",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/is-application-bundle-test.ts",
@@ -1459,7 +1459,7 @@
     },
     "app/test/unit/is-record-test.ts": {
       "sha256": "8ac3980159f4f3bf1a496e0ea1b0c2be4d888318f83a9db1d80d5376d5970a1d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/is-record-test.ts",
@@ -1469,7 +1469,7 @@
     },
     "app/test/unit/list-selection-test.ts": {
       "sha256": "399f57f21c0d1107a682e7af0d5ecd9dfaecacb1de3c17b6e3e1dcac585f5327",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/list-selection-test.ts",
@@ -1479,7 +1479,7 @@
     },
     "app/test/unit/local-storage-test.ts": {
       "sha256": "4b02ae9ade6446ebe4072c815f51a3f25cbbd20463bbeac0be8b7f65467f460f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/local-storage-test.ts",
@@ -1489,7 +1489,7 @@
     },
     "app/test/unit/main-process-proxy-test.ts": {
       "sha256": "c0e96d245a495b11da2ac52efa23b94472747fcb95e9f1814d8db142d57764ca",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/main-process-proxy-test.ts",
@@ -1499,7 +1499,7 @@
     },
     "app/test/unit/main-process/menu-test.ts": {
       "sha256": "8db294f8fb2f2ad0f8772a0a62e24e366d84d26447774e17e692e42fc74ff73a",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/main-process/menu-test.ts",
@@ -1510,7 +1510,7 @@
     },
     "app/test/unit/main-process/spell-checker-menu-test.ts": {
       "sha256": "e66a89f0870edfe9bdcfda0865fe5d6d252dbdd0ce4e645ac75b0955cb967c0c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/main-process/spell-checker-menu-test.ts",
@@ -1520,7 +1520,7 @@
     },
     "app/test/unit/mock-api-test.ts": {
       "sha256": "7c4341e4966be90b118582970f6a3ff4fa9938324faba674faf01bcfe959feff",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/mock-api-test.ts",
@@ -1530,7 +1530,7 @@
     },
     "app/test/unit/model-type-guards-test.ts": {
       "sha256": "8543e92ec2bea25815feae36dd8dd99aeb1bc6a3a5f8aba17ce01ef39f900aa6",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/model-type-guards-test.ts",
@@ -1545,7 +1545,7 @@
     },
     "app/test/unit/multi-commit-operation-test.ts": {
       "sha256": "cf24baaa50ca22bd68ce2f145e8077ab54103a58e24f5f237d2db561e6b2f447",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/multi-commit-operation-test.ts",
@@ -1555,7 +1555,7 @@
     },
     "app/test/unit/name-of-test.ts": {
       "sha256": "bc96d564761c4ba8db28f80bdf2c67f27a655ddc6f003b4e3f47f209bd6bb4d7",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/name-of-test.ts",
@@ -1565,7 +1565,7 @@
     },
     "app/test/unit/native-notifications-test.ts": {
       "sha256": "c64f1b9b1337f16fb53ee764392590b014297d1a841617faf9438ce785e26dbf",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/native-notifications-test.ts",
@@ -1575,7 +1575,7 @@
     },
     "app/test/unit/native-notifications-windows-test.ts": {
       "sha256": "e98f524c8bc4f817c7929b8973b304f83d47efccdabdbfa35dc04e4791382457",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/native-notifications-windows-test.ts",
@@ -1585,7 +1585,7 @@
     },
     "app/test/unit/notification-permission-test.ts": {
       "sha256": "189812250b7eefc5d868d27613782cd52084a25860c6c8c50a7761c7456ca312",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/notification-permission-test.ts",
@@ -1600,7 +1600,7 @@
     },
     "app/test/unit/notifications-store-test.ts": {
       "sha256": "7de0d92d8e60fcfb71ab11e4432e7675ac8a445674194464db857f21414c4bdc",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/notifications-store-test.ts",
@@ -1610,7 +1610,7 @@
     },
     "app/test/unit/oauth-authentication-test.ts": {
       "sha256": "5f76731fd51d88b6ffc08d8e2a95d46b6fc5e54082d05545e0f01eb718a549c8",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/oauth-authentication-test.ts",
@@ -1620,7 +1620,7 @@
     },
     "app/test/unit/oauth-token-test.ts": {
       "sha256": "6669455a3bc4564926fa8435e368b7e3e33a43661e044a1608c617618cda1079",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/oauth-token-test.ts",
@@ -1630,7 +1630,7 @@
     },
     "app/test/unit/octicon-test.ts": {
       "sha256": "c76a4246493ef937dfbd7116e1f89e078c9305a3ad86b03f132450a77351cd5a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/octicon-test.ts",
@@ -1640,7 +1640,7 @@
     },
     "app/test/unit/offset-from-test.ts": {
       "sha256": "9de354cce6d0767d69a5557a92af7b721e22eb8f4e44d311362bd5dbb4861cae",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/offset-from-test.ts",
@@ -1650,7 +1650,7 @@
     },
     "app/test/unit/open-file-test.ts": {
       "sha256": "2196b9130fe992f096da34e40cab7d01ae09b9fac4049576951b034ba636719b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/open-file-test.ts",
@@ -1660,7 +1660,7 @@
     },
     "app/test/unit/parse-app-url-test.ts": {
       "sha256": "517a631b8777065a61867c48505e03143b091551c17d71ef5c72b500fe687349",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/parse-app-url-test.ts",
@@ -1670,7 +1670,7 @@
     },
     "app/test/unit/parse-files-to-be-overwritten-test.ts": {
       "sha256": "b941d95efe74c10fd82f8bdce2be3aa0e5124b9c9b3eb4c1d9e0c5b889bbb164",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/parse-files-to-be-overwritten-test.ts",
@@ -1680,7 +1680,7 @@
     },
     "app/test/unit/parse-pac-string-test.ts": {
       "sha256": "8ab1afa91dfa09995ec7abd34e7b9daa5df1ad22aaf05ea72552b79d0172235b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/parse-pac-string-test.ts",
@@ -1690,7 +1690,7 @@
     },
     "app/test/unit/patch-formatter-test.ts": {
       "sha256": "5247aedd36ff43e23285d0141f40ddf570806ebbb6cc56df5677fc9f290c878f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/patch-formatter-test.ts",
@@ -1700,7 +1700,7 @@
     },
     "app/test/unit/path-test.ts": {
       "sha256": "3dc46a96407674761ee6248b8d8d1ace0ec06ef5f7405626f8b0d15131836592",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/path-test.ts",
@@ -1710,7 +1710,7 @@
     },
     "app/test/unit/path-text-test.ts": {
       "sha256": "ea6c9793202aea875ba2a7bb4460836afd4c0d69a18932b99ee73e9ae8cf8f5d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/path-text-test.ts",
@@ -1720,7 +1720,7 @@
     },
     "app/test/unit/popup-manager-test.ts": {
       "sha256": "84b1d01567ba862138f99f82109de0e2c19f7ca5b9a3b210c68f9c7223e3e48c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/popup-manager-test.ts",
@@ -1730,7 +1730,7 @@
     },
     "app/test/unit/progress/clone-test.ts": {
       "sha256": "73d6901e82e86fc4a4754f8a1f89a2b2f509acccab026d56e2c0ae11aaa01283",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/progress/clone-test.ts",
@@ -1740,7 +1740,7 @@
     },
     "app/test/unit/progress/git-test.ts": {
       "sha256": "d5f38952f55c005fb3be73e599857715e3242fd9ac35be758d595d177ea70947",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/progress/git-test.ts",
@@ -1750,7 +1750,7 @@
     },
     "app/test/unit/progress/lfs-test.ts": {
       "sha256": "12493d3e532c9a8e1b7c29f6f894471b3422f29d79042feed5293a435c60ed60",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/progress/lfs-test.ts",
@@ -1760,7 +1760,7 @@
     },
     "app/test/unit/promise-test.ts": {
       "sha256": "a357888e28c7663abd4cb3088b7a530671b4e7f70e4f2f6cc72a6d465e000664",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/promise-test.ts",
@@ -1770,7 +1770,7 @@
     },
     "app/test/unit/promise-with-timeout-test.ts": {
       "sha256": "71228d76171d864e42cb440f6f8740b782b810c943807a398a8cb1ae2da1a397",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/promise-with-timeout-test.ts",
@@ -1780,7 +1780,7 @@
     },
     "app/test/unit/pull-request-refs-test.ts": {
       "sha256": "077ce51ac384d1ee8327a99f51f350c383e75b679d5918fb67e1b210e8cb6857",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/pull-request-refs-test.ts",
@@ -1790,7 +1790,7 @@
     },
     "app/test/unit/refresh-token-consumers-test.ts": {
       "sha256": "e7cb8701451c95b20b536cda7178551496702f945d815766ca4863a86091289d",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/refresh-token-consumers-test.ts",
@@ -1801,7 +1801,7 @@
     },
     "app/test/unit/release-notes-test.ts": {
       "sha256": "e946580273cd793a6a2b65e08a52c6814589b82c244d31fd8f8389d05ac5a3cb",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/release-notes-test.ts",
@@ -1811,7 +1811,7 @@
     },
     "app/test/unit/remote-parsing-test.ts": {
       "sha256": "2bd806d544e4c5c4c427eb6ede58231fd65dfd2d7e42ecd7fc92116d938a25b8",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/remote-parsing-test.ts",
@@ -1821,7 +1821,7 @@
     },
     "app/test/unit/remove-remote-prefix-test.ts": {
       "sha256": "8a9feacde085fe998f93bd7835153599c7865318341df5548d9e8e41f1d6550a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/remove-remote-prefix-test.ts",
@@ -1831,7 +1831,7 @@
     },
     "app/test/unit/repo-rules-test.ts": {
       "sha256": "ae31405dc3fc76b23f44a10f51f3d02e995f0aded3d62f6ba243d12d2d121f14",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repo-rules-test.ts",
@@ -1842,7 +1842,7 @@
     },
     "app/test/unit/repositories-clone-grouping-test.ts": {
       "sha256": "aa28a3f2df2b57b0e70184c8c426022fcdc21b2a7e78397fc68b174fa3759c1a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repositories-clone-grouping-test.ts",
@@ -1852,7 +1852,7 @@
     },
     "app/test/unit/repositories-database-test.ts": {
       "sha256": "c9566d7970e223cbe77f69d492bd5a4221cec37cbf1adbe781f63ff4adde5471",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repositories-database-test.ts",
@@ -1863,7 +1863,7 @@
     },
     "app/test/unit/repositories-list-grouping-test.ts": {
       "sha256": "ddd839337350d308456498d202fedc60229650785daac424c4b1600a66b5e8b7",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repositories-list-grouping-test.ts",
@@ -1873,7 +1873,7 @@
     },
     "app/test/unit/repositories-store-test.ts": {
       "sha256": "270a3aba9454c318fe9746aa4f2014879f72cdb89c6152ebc831c5eace10ec67",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repositories-store-test.ts",
@@ -1888,7 +1888,7 @@
     },
     "app/test/unit/repository-matching-test.ts": {
       "sha256": "3f4117de2561907410285fbeca367dcea7d3e6d58908bbfddbe9d0a4f0d075b2",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repository-matching-test.ts",
@@ -1909,7 +1909,7 @@
     },
     "app/test/unit/repository-test.ts": {
       "sha256": "b823837faf1e2c2fe47451ba50bf79fd2ca74e583fd98a41112812fb58325710",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repository-test.ts",
@@ -1919,7 +1919,7 @@
     },
     "app/test/unit/round-test.ts": {
       "sha256": "9723cedd5b7d8727bf0d1be21b84f13db089cba0f4b0160526cb8eca6057e37d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/round-test.ts",
@@ -1929,7 +1929,7 @@
     },
     "app/test/unit/sanitize-ref-name-test.ts": {
       "sha256": "ba69df31e767438092d0cec8c8fbe7975b5cc449d59e49d2d2b1566cf06c6d2c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/sanitize-ref-name-test.ts",
@@ -1939,7 +1939,7 @@
     },
     "app/test/unit/sanitized-repository-name-test.ts": {
       "sha256": "5a31fa37c7441a825720b590d3a7f5101e50e6c41f77b2daa1d76e433077c575",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/sanitized-repository-name-test.ts",
@@ -1949,7 +1949,7 @@
     },
     "app/test/unit/script/version-test.ts": {
       "sha256": "53672ba6f0f3c2ebdfba1b486af36c37304c47f985b5c3244488b6ee7f325225",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/script/version-test.ts",
@@ -1959,7 +1959,7 @@
     },
     "app/test/unit/section-list-selection-test.ts": {
       "sha256": "80ac9d0168a3d38f1d3c6b0fe682cf38987277abfb7414b1b1ac3afdfe2cd079",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/section-list-selection-test.ts",
@@ -1969,7 +1969,7 @@
     },
     "app/test/unit/section-list-test.ts": {
       "sha256": "b4fe702baca638b2acb826f82fae1c625bcfbfd8a17e7b474090d50aebfa96da",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/section-list-test.ts",
@@ -1979,7 +1979,7 @@
     },
     "app/test/unit/short-lived-token-rollout-test.ts": {
       "sha256": "077ba1c7a7b5ceebd285339bee964c57e4eb23a67517272362b6452d3243f622",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/short-lived-token-rollout-test.ts",
@@ -1989,7 +1989,7 @@
     },
     "app/test/unit/show-notification-test.ts": {
       "sha256": "46eefe3d79c62eb0c87f52ba8a6bbe01823a1a5e444bd9cc674c8f6a8af40402",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/show-notification-test.ts",
@@ -1999,7 +1999,7 @@
     },
     "app/test/unit/sign-in-store-test.ts": {
       "sha256": "43d99403bdd2d0c3759a90c60c18f8f4f44643c93ba7cf1e3b1f4922f1650165",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/sign-in-store-test.ts",
@@ -2009,7 +2009,7 @@
     },
     "app/test/unit/squashed-commit-description-test.ts": {
       "sha256": "685cb2fb45b62ec3643502daea95accf7b375c9602b0251cd144f8b5ccd8016f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/squashed-commit-description-test.ts",
@@ -2019,7 +2019,7 @@
     },
     "app/test/unit/squirrel-error-parser-test.ts": {
       "sha256": "0ec261081475604acea9c7693c60582c06d7dc366df065e512ee20c2b259af65",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/squirrel-error-parser-test.ts",
@@ -2029,7 +2029,7 @@
     },
     "app/test/unit/ssh-test.ts": {
       "sha256": "ac9920b02779f285a52ac815de06b323dc597bc1f0c9ccc27c786e36e1e17b52",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ssh-test.ts",
@@ -2039,7 +2039,7 @@
     },
     "app/test/unit/stats-store-test.ts": {
       "sha256": "2e98db10e709b00a7c4a61aeaf5a9317b216ac8df046da6462c34d889832c655",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stats-store-test.ts",
@@ -2050,7 +2050,7 @@
     },
     "app/test/unit/status-parser-test.ts": {
       "sha256": "59b282b3a4a7537e73880da8fe72eba2c744f631ed08fc3899d0f54c35256d58",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/status-parser-test.ts",
@@ -2060,7 +2060,7 @@
     },
     "app/test/unit/status-utils-test.ts": {
       "sha256": "8849ac86f9e47767bb9d34592c7ff73addccdf6ba69664dafafa499675346c33",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/status-utils-test.ts",
@@ -2080,7 +2080,7 @@
     },
     "app/test/unit/stores/app-store-indicators-test.ts": {
       "sha256": "443254dec2f89d01087e7b28b8ddefab6f8768192b46d0340f649ee4b4ded7bf",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/app-store-indicators-test.ts",
@@ -2090,7 +2090,7 @@
     },
     "app/test/unit/stores/app-store-token-refresh-stats-test.ts": {
       "sha256": "ac434d0a212344fd98b33f65f26dbce3ffbe6e08a9f702fc7df18c78eb33e6c2",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/app-store-token-refresh-stats-test.ts",
@@ -2178,7 +2178,7 @@
     },
     "app/test/unit/stores/copilot-store-credentials-test.ts": {
       "sha256": "41b70e6b459538756c4ea3f7127337641fc8f242487a09006034a715e615c3b2",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/copilot-store-credentials-test.ts",
@@ -2189,7 +2189,7 @@
     },
     "app/test/unit/stores/copilot-store-test.ts": {
       "sha256": "b8808bb0dd61b85f0fb08659a9a7a0c9fd4dafafcabd8af2c8db45c0a61db7da",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/copilot-store-test.ts",
@@ -2200,7 +2200,7 @@
     },
     "app/test/unit/stores/github-user-store-test.ts": {
       "sha256": "585a0ee75ba45647c2c3e9b6042396e8e85710671571f6562daee9ffd1dfc838",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/github-user-store-test.ts",
@@ -2210,7 +2210,7 @@
     },
     "app/test/unit/stores/updates/update-changed-files-test.ts": {
       "sha256": "a95d44b04fea5a0769dd55f0e89dc4c9e46303e426141f36fd476dc93a6038fe",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/updates/update-changed-files-test.ts",
@@ -2220,7 +2220,7 @@
     },
     "app/test/unit/stores/updates/update-conflict-state-test.ts": {
       "sha256": "5202e4dd2c072b76847356a73d47f619faa49996da891cc4fb71a4d1e0bfb0a4",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/updates/update-conflict-state-test.ts",
@@ -2230,7 +2230,7 @@
     },
     "app/test/unit/stores/updates/update-remote-url-test.ts": {
       "sha256": "d3ab23df4fc3610b6fe803ed64e720ff500e4425fdb9f2d01757af7a17560281",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/stores/updates/update-remote-url-test.ts",
@@ -2240,7 +2240,7 @@
     },
     "app/test/unit/tailer-test.ts": {
       "sha256": "ec5577166d4fc7c5e081fc318cdffca4fe8d6db25899045a4a81913c98f53396",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/tailer-test.ts",
@@ -2250,7 +2250,7 @@
     },
     "app/test/unit/text-diff-expansion-test.ts": {
       "sha256": "73efc24458d59f10c632413ad7bc90393faafbb5b871a3272e32d666d0f75410",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/text-diff-expansion-test.ts",
@@ -2260,7 +2260,7 @@
     },
     "app/test/unit/text-token-parser-test.ts": {
       "sha256": "57fc01d0aab33a678f1a365e91d6f8227142173a93efe7c67c67ab21e5ceffe9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/text-token-parser-test.ts",
@@ -2275,7 +2275,7 @@
     },
     "app/test/unit/truncate-with-ellipsis-test.ts": {
       "sha256": "681656e977fbfb563214dea656e0f112f1a66d592d4b5849b2c78a023a3c0bf0",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/truncate-with-ellipsis-test.ts",
@@ -2296,7 +2296,7 @@
     },
     "app/test/unit/ui/appearance-test.tsx": {
       "sha256": "350a7d9c439ea3c8674ffffa51a37c9bc0fa5499ae179d6b364f3bac34d58651",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/appearance-test.ts",
@@ -2306,7 +2306,7 @@
     },
     "app/test/unit/ui/aria-live-container-test.tsx": {
       "sha256": "71a4ea3f63d7fcb08ae10758a3bfac80feeea5e348d42ab318632b46aacc0f09",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/aria-live-container-test.ts",
@@ -2346,7 +2346,7 @@
     },
     "app/test/unit/ui/banner-surfaces-test.tsx": {
       "sha256": "399cc63f678b6e0ee6f6f472bb537b126fcf78ff33f787bfc23f478ef31fa572",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/banner-surfaces-test.ts",
@@ -2356,7 +2356,7 @@
     },
     "app/test/unit/ui/branch-empty-states-test.tsx": {
       "sha256": "6400e6559f6a44ca300dec75f3558c0cdc0c11b96e9b33badc4a7201559a2215",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/branch-empty-states-test.ts",
@@ -2366,7 +2366,7 @@
     },
     "app/test/unit/ui/branch-list-item-test.tsx": {
       "sha256": "740d5231da6701f6f398b2b7d1a3088303c85bdea32cfa035317dfa6eab57534",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/branch-list-item-test.ts",
@@ -2396,7 +2396,7 @@
     },
     "app/test/unit/ui/commit-message-test.tsx": {
       "sha256": "82d90fa0421c29b2bb449c716cffa490cb828ab2d5b42dda0d0dc8217dc77e2a",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/commit-message-test.ts",
@@ -2407,7 +2407,7 @@
     },
     "app/test/unit/ui/commit-message-warning-dialogs-test.tsx": {
       "sha256": "166879003859a1b24678638d0aa2376713a3098e64139f8eccb525f3b10dffad",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/commit-message-warning-dialogs-test.ts",
@@ -2424,7 +2424,7 @@
     },
     "app/test/unit/ui/component-primitives-test.tsx": {
       "sha256": "95332cf1db3dca5a6521ae37ae23ea1d53a157a3f516512d6a30eed58617d413",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/component-primitives-test.ts",
@@ -2434,7 +2434,7 @@
     },
     "app/test/unit/ui/control-primitives-test.tsx": {
       "sha256": "a95e59e30d597ecf0277af718e12b12f22ab3d207f85ccfd3aa67c6da389eeaa",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/control-primitives-test.ts",
@@ -2456,7 +2456,7 @@
     },
     "app/test/unit/ui/copilot-custom-providers-dialog-test.tsx": {
       "sha256": "49c2280137200989a89c4e09f8caf3491b4af89f90ed77100101558c68fd0393",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/copilot-custom-providers-dialog-test.ts",
@@ -2467,7 +2467,7 @@
     },
     "app/test/unit/ui/copilot-preferences-test.tsx": {
       "sha256": "e041aaa31eb14f12250287bbdb45c22915baa995911f1e45225199697278bbf8",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/copilot-preferences-test.ts",
@@ -2478,7 +2478,7 @@
     },
     "app/test/unit/ui/copy-button-test.tsx": {
       "sha256": "d08294496947e53da61a30afa9866306f02980775321d0c4ef479863a408ae4d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/copy-button-test.ts",
@@ -2488,7 +2488,7 @@
     },
     "app/test/unit/ui/delete-worktree-dialogs-test.tsx": {
       "sha256": "914b7a928928bee05e833f34b9f81da492757e075b6a0c5aaf245e9a5a80638c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/delete-worktree-dialogs-test.ts",
@@ -2498,7 +2498,7 @@
     },
     "app/test/unit/ui/dialog-action-wrappers-test.tsx": {
       "sha256": "261ce01c42f6a17623d681c2fc8c7e9e55fca2991d6514f7c9ec22bfda01466d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/dialog-action-wrappers-test.ts",
@@ -2508,7 +2508,7 @@
     },
     "app/test/unit/ui/dialog-and-input-description-test.tsx": {
       "sha256": "ef799b7308d484a8c804aa0aec0cf7e41430cbebf033cab69d432fe2733b129d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/dialog-and-input-description-test.ts",
@@ -2518,7 +2518,7 @@
     },
     "app/test/unit/ui/dialog-composition-and-toggle-test.tsx": {
       "sha256": "8f57a727b04aca5d8172dee56857e74b820b6d0e1e669e1702dc97d7aa12b004",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/dialog-composition-and-toggle-test.ts",
@@ -2528,7 +2528,7 @@
     },
     "app/test/unit/ui/dialog-focus-test.tsx": {
       "sha256": "bd6278c578265a697275041a2283ddd15da24f75b10b4a8232da897962db476f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/dialog-focus-test.ts",
@@ -2544,7 +2544,7 @@
     },
     "app/test/unit/ui/email-attribution-warning-test.tsx": {
       "sha256": "1cacd95c1ea47883908ea8d38cc07bdf6c9cb0598a058e6480edf21c4ce30ce1",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/email-attribution-warning-test.ts",
@@ -2554,7 +2554,7 @@
     },
     "app/test/unit/ui/focus-container-test.tsx": {
       "sha256": "8ec7f37149356c91360996662fc0eb814d32c568a2b3f171b5200e77df7c03de",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/focus-container-test.ts",
@@ -2564,7 +2564,7 @@
     },
     "app/test/unit/ui/helper-side-effect-surfaces-test.tsx": {
       "sha256": "4ebf0d84f23958806bd5d3ddee1c9a793a018afe1ae4357957499b7fa08787fd",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/helper-side-effect-surfaces-test.ts",
@@ -2574,7 +2574,7 @@
     },
     "app/test/unit/ui/input-description-and-textarea-test.tsx": {
       "sha256": "77bebe8701addd3229035f24305970af0f76cc5bb90105ed1ad40d587f2f040d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/input-description-and-textarea-test.ts",
@@ -2594,7 +2594,7 @@
     },
     "app/test/unit/ui/issues-autocompletion-provider-test.tsx": {
       "sha256": "d9ee3e6172f75bbd2b8a8633168e48ac7eb68c1cc4535b1d34c9274abba1f29b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/issues-autocompletion-provider-test.ts",
@@ -2604,7 +2604,7 @@
     },
     "app/test/unit/ui/layout-and-message-components-test.tsx": {
       "sha256": "5884275fb57cc73e661dad78b3eec009ebafcc4da0fbb42eaddeba1a871c396d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/layout-and-message-components-test.ts",
@@ -2624,7 +2624,7 @@
     },
     "app/test/unit/ui/password-text-box-test.tsx": {
       "sha256": "760649d28f2040c9a491d5c58ad6b42a0058881b8cf5b47ab8431e293bf7596c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/password-text-box-test.ts",
@@ -2634,7 +2634,7 @@
     },
     "app/test/unit/ui/path-and-selection-surfaces-test.tsx": {
       "sha256": "448fc06a064ecc03cf98049bd66053bb7403b16ca2a3dde89d52f3c4245a0375",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/path-and-selection-surfaces-test.ts",
@@ -2644,7 +2644,7 @@
     },
     "app/test/unit/ui/path-text-and-link-button-test.tsx": {
       "sha256": "02132fa0bda95e9f3ff1e78cf7f8aef7706d1a510ba37be326115bb37e2f8f30",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/path-text-and-link-button-test.ts",
@@ -2675,7 +2675,7 @@
     },
     "app/test/unit/ui/relative-time-test.tsx": {
       "sha256": "cd381339100b3492fbf02fdb286df8798a38f9a04e7c0ad700dacdb8f25f6888",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/relative-time-test.ts",
@@ -2695,7 +2695,7 @@
     },
     "app/test/unit/ui/repository-directory-exceptions-test.tsx": {
       "sha256": "2c1f102d152fc4b7c8c8729d20f50a2dcdf7b4b4a217a329afc96d415b8025c3",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/repository-directory-exceptions-test.ts",
@@ -2710,7 +2710,7 @@
     },
     "app/test/unit/ui/repository-list-item-test.tsx": {
       "sha256": "01118000f1fc847f9347a46cc188cd6cc634944c4acfa63144e46237c7ef4611",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/repository-list-item-test.ts",
@@ -2731,7 +2731,7 @@
     },
     "app/test/unit/ui/rulesets-and-publish-surfaces-test.tsx": {
       "sha256": "87600c9143705452d1459a042d36b101713b6e87012eb8319449208311ce672b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/rulesets-and-publish-surfaces-test.ts",
@@ -2741,7 +2741,7 @@
     },
     "app/test/unit/ui/section-list-scroll-test.tsx": {
       "sha256": "37e973fc0b7bcd4c0a6ac872f1c3b868d752809cdacbaf84c3ed8e2b23a2bc32",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/section-list-scroll-test.ts",
@@ -2751,7 +2751,7 @@
     },
     "app/test/unit/ui/side-by-side-diff-row-test.tsx": {
       "sha256": "e67eb61c863110753fba8a657316e17373a4bc17297ebb11ff54f21064ebd563",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/side-by-side-diff-row-test.ts",
@@ -2761,7 +2761,7 @@
     },
     "app/test/unit/ui/small-action-and-dialog-surfaces-test.tsx": {
       "sha256": "6de32e17c2c74944a7d1dc7766f541084ab3c7f8e411ad9e022a0444b3490ac9",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/small-action-and-dialog-surfaces-test.ts",
@@ -2771,7 +2771,7 @@
     },
     "app/test/unit/ui/stash-and-switch-branch-dialog-test.tsx": {
       "sha256": "b784194498d89609d5c1a29d6b790ca986ca22ee32ea1b52837fe2c86da03e2c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/stash-and-switch-branch-dialog-test.ts",
@@ -2781,7 +2781,7 @@
     },
     "app/test/unit/ui/static-status-and-link-components-test.tsx": {
       "sha256": "5c4973e6e17d009c46ee276b2abbbd48b484a9d2f4037dabf863988adf80cff7",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/static-status-and-link-components-test.ts",
@@ -2791,7 +2791,7 @@
     },
     "app/test/unit/ui/structural-and-text-components-test.tsx": {
       "sha256": "e33ee57608c942358e688d03139590bdb2df9beb7c95208c107b866453fc12cf",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/structural-and-text-components-test.ts",
@@ -2801,7 +2801,7 @@
     },
     "app/test/unit/ui/tab-bar-item-test.tsx": {
       "sha256": "ed7a9601282100ce165b5937b36514ae252ee6ba65a6bdff2d12f88498a3f394",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/tab-bar-item-test.ts",
@@ -2811,7 +2811,7 @@
     },
     "app/test/unit/ui/tab-bar-test.tsx": {
       "sha256": "278f203be62ba6534798e8358243c8bc33d1af016c4546041dab88ff54441ccb",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/tab-bar-test.ts",
@@ -2821,7 +2821,7 @@
     },
     "app/test/unit/ui/test-copilot-snapshot-card-dialog-test.tsx": {
       "sha256": "72206ba8bf8c028a716c6654df4a3f109b2d1fae5e07b5a28ab4dbde96228629",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/test-copilot-snapshot-card-dialog-test.ts",
@@ -2842,7 +2842,7 @@
     },
     "app/test/unit/ui/text-box-test.tsx": {
       "sha256": "3e8d80e41cf16e8ffb42b9e9998861d36e74f6ed342e11a1ca72c93153e90039",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/text-box-test.ts",
@@ -2852,7 +2852,7 @@
     },
     "app/test/unit/ui/tutorial-welcome-surfaces-test.tsx": {
       "sha256": "ce587b316802ba55117374788334d164fee3b621fb0fca3c1c564119a94f318f",
-      "status": "stale",
+      "status": "partial",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/tutorial-welcome-surfaces-test.ts",
@@ -2863,7 +2863,7 @@
     },
     "app/test/unit/ui/visual-helper-surfaces-test.tsx": {
       "sha256": "a95cd72444c5dcfd2a9679aa07c10614a57eb320db78a0b61e59bc5721ef921e",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/visual-helper-surfaces-test.ts",
@@ -2883,7 +2883,7 @@
     },
     "app/test/unit/ui/worktree-list-item-test.tsx": {
       "sha256": "b6060da89cfb4da146d963c6110d0cee5f627623839bf5dd6c795507c1bbbd3f",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/ui/worktree-list-item-test.ts",
@@ -2893,7 +2893,7 @@
     },
     "app/test/unit/unique-coauthors-as-authors-test.ts": {
       "sha256": "e60521e1f369b04e874da76807efe30334e28fef3dfe24e0743c4a1ba1d2ff6b",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/unique-coauthors-as-authors-test.ts",
@@ -2914,7 +2914,7 @@
     },
     "app/test/unit/welcome-test.ts": {
       "sha256": "99fd92883f51e0423a09e88615ad1950c0582ce33dbd813190e671d9fa9a1143",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/welcome-test.ts",
@@ -2924,7 +2924,7 @@
     },
     "app/test/unit/worktree-dropdown-test.ts": {
       "sha256": "7432447a7cbb9f6d1499cb1c299ea5e0c7162af9fb5d128f29f47893e69ec8b6",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/worktree-dropdown-test.ts",
@@ -2934,7 +2934,7 @@
     },
     "app/test/unit/worktree-test.ts": {
       "sha256": "7986292d43586abccc47f8dde86645b7306cea544494e4b89b6ded12105a778a",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/model-worktree-test.ts",
@@ -2944,7 +2944,7 @@
     },
     "app/test/unit/wrap-rich-text-commit-message-test.ts": {
       "sha256": "e7dbc41e715e8368593aed57e99f773c090662198ea6cbecb124c1ac9c90eacb",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/wrap-rich-text-commit-message-test.ts",
@@ -2954,7 +2954,7 @@
     },
     "app/test/unit/write-default-readme-test.ts": {
       "sha256": "b6fabc856686df650fc4d6c0bdaacdd8fb5a5ea1615c09d77b31b9fcde26e7f3",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/write-default-readme-test.ts",
@@ -3000,7 +3000,7 @@
     },
     "script/changelog/test/parser-test.ts": {
       "sha256": "259c9e136fc374d681cc22a4a6c192e5fbf32ebe0e323282cf072a75c0a7dd8d",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/script/changelog/parser-test.ts",
@@ -3015,7 +3015,7 @@
     },
     "script/copilot-test.ts": {
       "sha256": "a722c468ffb24a7b0f1e2d2478334036c72393f3d6905bacc6d8c0c321c85256",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/script/copilot-test.ts",
@@ -3026,7 +3026,7 @@
     },
     "script/native-module-build-test.ts": {
       "sha256": "da4e4e59fd32ddf69aaae6cdd3247d48ed15235f4133ce670a03f673c6c29a5c",
-      "status": "stale",
+      "status": "ported",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/native-module-build-test.ts",
@@ -3042,7 +3042,7 @@
     },
     "script/webpack-copilot-timers-test.ts": {
       "sha256": "d81b5712447f7e4193ca4b3711b2d9788e77f0c0ab324cba54d9cb2398ca23f7",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/script/webpack-copilot-timers-test.ts",
@@ -3053,7 +3053,7 @@
     },
     "script/webpack-koffi-test.ts": {
       "sha256": "688501a9d22add6e32070bd9f20d8cce1dfee02f0aad7bde4583394956cb3f5d",
-      "status": "stale",
+      "status": "excluded",
       "rust_tests": [],
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/webpack-koffi-test.ts",

@@ -2,6 +2,8 @@ import { execFileSync } from "node:child_process"
 import { release } from "node:os"
 export function platform() {
   const flags = globalThis as typeof globalThis & { __WIN32__?: boolean; __DARWIN__?: boolean }
+  // A suite that sets __WIN32__ on another host is simulating Windows; the host's own __DARWIN__ stays set.
+  if (flags.__WIN32__ && process.platform !== "win32") return "windows"
   if (flags.__DARWIN__) return "macos"
   if (flags.__WIN32__) return "windows"
   // A suite that clears __WIN32__ on a Windows host is simulating another platform.

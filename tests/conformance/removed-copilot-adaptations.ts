@@ -20,7 +20,7 @@ export function withoutRemovedCopilot(file: string, source: string): string {
   if (file === "desktop/main-process/menu-test.ts") {
     return source
       .replace(/^import \{ enableCopilotAppHandoff \}[^\n]*\n/m, "")
-      .replace(/ {4}it\('gates Copilot handoff[\s\S]*?(?= {4}\/\/ The boolean parameters)/, "")
+      .replace(/ {4}it\('(?:gates|offers) Copilot handoff[\s\S]*?(?= {4}\/\/ The boolean parameters)/, "")
       .replace(
         / {6}const copilot = repository\.submenu\.find\([\s\S]*?(?= {6}assert\.ok\(\n {8}repository\.submenu\.some)/,
         ""
