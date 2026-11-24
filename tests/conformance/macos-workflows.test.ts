@@ -22,7 +22,7 @@ import { expect, type Page, recordNativeMemory, skipWelcome, test } from "./e2e/
 import { smokeRepoPath } from "./upstream/desktop/e2e/test-helpers.ts"
 const git = (...args: string[]) => execFileSync("git", ["-C", smokeRepoPath, ...args], { encoding: "utf8" }).trim()
 // A path inside a quoted attribute selector: backslash is the CSS escape character, so Windows paths double it.
-const attribute = (value: string) => value.replaceAll("\\", "\\\\")
+const attribute = (value: string) => value.replaceAll("\\", String.raw`\\`)
 // The platform shortcut modifier: Command on macOS, Control elsewhere.
 const modifier = process.platform === "darwin" ? "Meta" : "Control"
 // Desktop list.tsx: multi-select is Command-click on macOS and Control-click elsewhere.

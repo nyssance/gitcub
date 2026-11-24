@@ -117,8 +117,109 @@ pub struct Watching(pub Mutex<Option<Handle>>);
 
 pub struct Handle {
     pub repo: PathBuf,
-    /// 丢掉它就等于停掉监听：发送端一没，工作线程收到 Disconnected 自行退出
-    _watcher: RecommendedWatcher,
+    /// 丢掉它就等于停掉监听：发送端一没，工作线程收到 Disconnected 自行退出。
+    /// None = 目录让出去了，见 [`Watching::release`]。
+    #[cfg_attr(not(any(windows, test)), expect(dead_code, reason = "只靠 Drop 停监听"))]
+    watcher: Option<RecommendedWatcher>,
+    /// 让出去之后目录没了（被改名或挪走），等它回来再盯。
+    #[cfg(any(windows, test))]
+    lost: bool,
+}
+
+/// Windows 上 `ReadDirectoryChangesW` 要一直拿着仓库目录的句柄，拿着的时候这个文件夹
+/// 在资源管理器里改不了名、挪不走（原版不监听目录，没有这个限制）。资源管理器到前台时
+/// 把句柄放掉，离开时再盯上并补一次刷新：改名挪动照常，其余时间的实时刷新也还在。
+#[cfg(any(windows, test))]
+impl Watching {
+    /// 放掉目录句柄，记住是哪个仓库。
+    fn release(&self) {
+        if let Some(handle) = self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut() {
+            handle.watcher = None;
+        }
+    }
+
+    /// 重新盯上让出去的仓库。返回需要通知前端刷新的仓库：刚盯回来（让出期间的变化没收到），
+    /// 或者目录没了（前端据此显示「找不到仓库」）。目录没了之后只等它重新出现，不反复通知。
+    fn resume(&self, start: impl FnOnce(&Path) -> Result<RecommendedWatcher, String>) -> Option<PathBuf> {
+        let mut slot = self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let handle = slot.as_mut().filter(|handle| handle.watcher.is_none())?;
+        if handle.lost && !handle.repo.is_dir() {
+            return None;
+        }
+        match start(&handle.repo) {
+            Ok(watcher) => {
+                handle.watcher = Some(watcher);
+                handle.lost = false;
+                Some(handle.repo.clone())
+            }
+            Err(error) => {
+                log::warn!("重新监听 {} 失败: {error}", handle.repo.display());
+                let first = !std::mem::replace(&mut handle.lost, true);
+                first.then(|| handle.repo.clone())
+            }
+        }
+    }
+}
+
+/// 资源管理器在前台时让出仓库目录，见 [`Watching::release`]。
+#[cfg(windows)]
+pub fn yield_to_explorer(app: AppHandle) {
+    use tauri::Manager as _;
+    std::thread::spawn(move || {
+        let mut last = (0, false);
+        loop {
+            std::thread::sleep(Duration::from_millis(250));
+            let state = app.state::<Watching>();
+            if state.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+                continue;
+            }
+            if explorer_in_foreground(&mut last) {
+                state.release();
+            } else if let Some(repo) = state.resume(|repo| start(&app, repo)) {
+                emit_change(&app, &repo);
+            }
+        }
+    });
+}
+
+/// 前台窗口是不是资源管理器的（文件夹窗口、桌面、任务栏都算）。`last` 记上一次查过的进程，
+/// 前台没换就不再开进程句柄。
+#[cfg(windows)]
+fn explorer_in_foreground(last: &mut (u32, bool)) -> bool {
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{
+        OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
+    };
+    use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowThreadProcessId};
+    let mut pid = 0u32;
+    unsafe { GetWindowThreadProcessId(GetForegroundWindow(), Some(&mut pid)) };
+    if pid == 0 {
+        return false;
+    }
+    if last.0 == pid {
+        return last.1;
+    }
+    let explorer = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) }.is_ok_and(|process| {
+        let mut buffer = [0u16; 1024];
+        let mut length = buffer.len() as u32;
+        let named = unsafe {
+            QueryFullProcessImageNameW(
+                process,
+                PROCESS_NAME_WIN32,
+                windows::core::PWSTR(buffer.as_mut_ptr()),
+                &mut length,
+            )
+        }
+        .is_ok();
+        let _ = unsafe { CloseHandle(process) };
+        named
+            && String::from_utf16_lossy(&buffer[..length as usize])
+                .rsplit('\\')
+                .next()
+                .is_some_and(|name| name.eq_ignore_ascii_case("explorer.exe"))
+    });
+    *last = (pid, explorer);
+    explorer
 }
 
 /// 开始监听 `repo`，替换掉上一个。
@@ -129,7 +230,23 @@ pub fn watch(app: &AppHandle, repo: &Path, state: &Watching) -> Result<(), Strin
     }
     // 先把旧的放掉，免得两个监听同时往前端发
     *slot = None;
+    let watcher = start(app, repo)?;
+    *slot = Some(Handle {
+        repo: repo.to_path_buf(),
+        watcher: Some(watcher),
+        #[cfg(any(windows, test))]
+        lost: false,
+    });
+    Ok(())
+}
 
+/// 建立对 `repo` 的监听并起好事件泵；丢掉返回值就停。
+fn start(app: &AppHandle, repo: &Path) -> Result<RecommendedWatcher, String> {
+    let (app, event_repo) = (app.clone(), repo.to_path_buf());
+    start_with(repo, move || emit_change(&app, &event_repo))
+}
+
+fn start_with(repo: &Path, changed: impl Fn() + Send + 'static) -> Result<RecommendedWatcher, String> {
     let (tx, rx) = mpsc::channel();
     let mut watcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
         match res {
@@ -154,13 +271,8 @@ pub fn watch(app: &AppHandle, repo: &Path, state: &Watching) -> Result<(), Strin
             watcher.watch(directory, RecursiveMode::Recursive).map_err(|e| format!("监听 Git 元数据失败: {e}"))?;
         }
     }
-
-    let app = app.clone();
-    let event_repo = repo.to_path_buf();
-    std::thread::spawn(move || pump(app, root, event_repo, git_dirs, rx));
-
-    *slot = Some(Handle { repo: repo.to_path_buf(), _watcher: watcher });
-    Ok(())
+    std::thread::spawn(move || pump(changed, root, git_dirs, rx));
+    Ok(watcher)
 }
 
 /// 收事件、防抖、发通知。仓库被切走时发送端一丢，这里自然退出。
@@ -170,7 +282,7 @@ fn emit_change(app: &AppHandle, repo: &Path) {
     }
 }
 
-fn pump(app: AppHandle, repo: PathBuf, event_repo: PathBuf, git_dirs: Vec<PathBuf>, rx: mpsc::Receiver<notify::Event>) {
+fn pump(changed: impl Fn(), repo: PathBuf, git_dirs: Vec<PathBuf>, rx: mpsc::Receiver<notify::Event>) {
     let mut ignored: HashMap<PathBuf, bool> = HashMap::new();
     let mut pending = false;
     let mut first: Option<Instant> = None;
@@ -184,14 +296,14 @@ fn pump(app: AppHandle, repo: PathBuf, event_repo: PathBuf, git_dirs: Vec<PathBu
                 }
                 // 一直有动静也不能一直不发
                 if pending && first.is_some_and(|t| t.elapsed() >= MAX_WAIT) {
-                    emit_change(&app, &event_repo);
+                    changed();
                     pending = false;
                     first = None;
                 }
             }
             Err(mpsc::RecvTimeoutError::Timeout) => {
                 if pending {
-                    emit_change(&app, &event_repo);
+                    changed();
                     pending = false;
                     first = None;
                 }
@@ -250,6 +362,54 @@ mod tests {
         watcher.watch(directory.path(), RecursiveMode::Recursive).unwrap();
         assert!(descriptors() < before + 100, "recursive watching must not hold one descriptor per file");
         assert!(crate::git::Git::new(None).args(["--version"]).output().unwrap().status.success());
+    }
+
+    fn yielded(repo: &Path) -> (Watching, mpsc::Receiver<()>, impl Fn(&Path) -> Result<RecommendedWatcher, String>) {
+        gix::init(repo).unwrap();
+        let (tx, rx) = mpsc::channel();
+        let start = move |repo: &Path| {
+            let tx = tx.clone();
+            start_with(repo, move || {
+                let _ = tx.send(());
+            })
+        };
+        let watching = Watching(Mutex::new(Some(Handle {
+            repo: repo.to_path_buf(),
+            watcher: Some(start(repo).unwrap()),
+            lost: false,
+        })));
+        watching.release();
+        (watching, rx, start)
+    }
+
+    #[test]
+    fn a_yielded_repository_is_watched_again_and_refreshed_once() {
+        let directory = tempfile::tempdir().unwrap();
+        let repo = directory.path().join("repo");
+        std::fs::create_dir(&repo).unwrap();
+        let (watching, changes, start) = yielded(&repo);
+        assert!(watching.0.lock().unwrap().as_ref().unwrap().watcher.is_none());
+        // 让出期间没有监听：这次改动收不到，靠盯回来时的那一次通知补上
+        std::fs::write(repo.join("while-yielded"), "").unwrap();
+        assert!(changes.recv_timeout(QUIET * 3).is_err());
+        assert_eq!(watching.resume(&start), Some(repo.clone()));
+        assert_eq!(watching.resume(&start), None, "已经盯着就不再通知");
+        std::fs::write(repo.join("after"), "").unwrap();
+        changes.recv_timeout(Duration::from_secs(10)).expect("盯回来之后的改动照常通知");
+    }
+
+    #[test]
+    fn a_repository_moved_while_yielded_is_reported_once_and_watched_when_it_returns() {
+        let directory = tempfile::tempdir().unwrap();
+        let (repo, moved) = (directory.path().join("repo"), directory.path().join("moved"));
+        std::fs::create_dir(&repo).unwrap();
+        let (watching, _changes, start) = yielded(&repo);
+        std::fs::rename(&repo, &moved).unwrap();
+        assert_eq!(watching.resume(&start), Some(repo.clone()), "目录没了要通知前端一次");
+        assert_eq!(watching.resume(&start), None, "之后只等它回来");
+        std::fs::rename(&moved, &repo).unwrap();
+        assert_eq!(watching.resume(&start), Some(repo.clone()));
+        assert!(watching.0.lock().unwrap().as_ref().unwrap().watcher.is_some());
     }
 
     #[test]

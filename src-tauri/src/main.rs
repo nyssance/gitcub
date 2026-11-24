@@ -116,6 +116,8 @@ fn main() {
                 eprintln!("Notifications unavailable: {error}");
             }
             named_store::init(app.handle())?;
+            #[cfg(windows)]
+            watch::yield_to_explorer(app.handle().clone());
             // 把资源目录告诉 git 模块，好让它优先用打包进来的 git
             match app.path().resource_dir() {
                 Ok(dir) => git::set_resource_dir(&dir),
