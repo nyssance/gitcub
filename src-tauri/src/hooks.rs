@@ -220,7 +220,7 @@ mod proxy {
     #[cfg(not(unix))]
     use std::net::{TcpListener as Listener, TcpStream as Stream};
     #[cfg(unix)]
-    use std::os::unix::net::{Stream, UnixListener as Listener};
+    use std::os::unix::net::{UnixListener as Listener, UnixStream as Stream};
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
     use std::sync::{Arc, LazyLock, Mutex, mpsc};

@@ -194,16 +194,16 @@ fn decorations(repo: &gix::Repository) -> Result<Decorations, String> {
         }
     }
 
-    let head = match repo.head().map_err(|e| format!("读取 HEAD 失败: {e}"))?.kind {
-        gix::head::Kind::Symbolic(reference) => match reference.target {
+    let head = match repo.head().map_err(|e| format!("读取 HEAD 失败: {e}"))?.detach_repo() {
+        gix::HeadOwned::Symbolic(reference) => match reference.target {
             gix::refs::Target::Object(id) => Some((id.to_string(), reference.name.shorten().to_string())),
             gix::refs::Target::Symbolic(_) => None,
         },
-        gix::head::Kind::Detached { peeled, target } => {
+        gix::HeadOwned::Detached { peeled, target } => {
             let id = peeled.unwrap_or(target).to_string();
             Some((id, "HEAD".into()))
         }
-        gix::head::Kind::Unborn(_) => None,
+        gix::HeadOwned::Unborn(_) => None,
     };
     Ok(Decorations { branches, head })
 }

@@ -346,10 +346,10 @@ fn derive_decorations(repo: &gix::Repository, table: &RefTable) -> Decorations {
 
     let head = match repo.head() {
         Err(_) => HeadState::Unsupported,
-        Ok(head) => match head.kind {
-            gix::head::Kind::Unborn(_) => HeadState::Unborn,
-            gix::head::Kind::Detached { target, .. } => HeadState::Detached(target),
-            gix::head::Kind::Symbolic(reference) => match reference.target {
+        Ok(head) => match head.detach_repo() {
+            gix::HeadOwned::Unborn(_) => HeadState::Unborn,
+            gix::HeadOwned::Detached { target, .. } => HeadState::Detached(target),
+            gix::HeadOwned::Symbolic(reference) => match reference.target {
                 gix::refs::Target::Object(id) => HeadState::Symbolic { branch: reference.name.as_bstr().to_vec(), id },
                 gix::refs::Target::Symbolic(_) => HeadState::Unsupported,
             },

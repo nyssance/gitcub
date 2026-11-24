@@ -2868,7 +2868,7 @@ mod tests {
                 .expect("one.txt 的 stage 1");
             let metadata = gix::index::fs::Metadata::from_path_no_follow(&r.join("one.txt")).unwrap();
             index.entries_mut()[stage1].stat = gix::index::entry::Stat::from_fs(&metadata).unwrap();
-            index.write(Default::default()).unwrap();
+            index.write(Default::default(), Default::default()).unwrap();
             let clean = answered(&r, "one.txt", FileKind::Normal, "stage 1 干净");
             assert!(!has(&clean, " 000000000000 M"), "{}", String::from_utf8_lossy(&clean));
         }
