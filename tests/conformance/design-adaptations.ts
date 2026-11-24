@@ -18,5 +18,15 @@ export function withoutNativeDetails(file: string, source: string): string {
     if (start === -1) throw new Error("app-launch-test: Auto-update block not found")
     return source.slice(0, start)
   }
+  if (file === "desktop/repositories-list-grouping-test.ts") {
+    // User decision 2026-11-24: the repository list is never split into per-account groups. The rail
+    // is tabbed by platform (GitHub / GitLab / other) and does not fold into groups, so the seven
+    // account-qualifier cases cannot apply. The owner / Enterprise / Other cases stay.
+    const start = source.indexOf("  it('splits an owner by retained account assignments")
+    const end = source.indexOf("  it('groups repositories by owners/Enterprise/Other'")
+    if (start === -1 || end === -1 || end < start)
+      throw new Error("repositories-list-grouping-test: account grouping block not found")
+    return source.slice(0, start) + source.slice(end)
+  }
   return source
 }

@@ -84,6 +84,8 @@
 
 - 用户于 2026-10-22 明确要求 Tab 使用胶囊式标准 shadcn Tabs，不使用独立按钮或下划线式页签。
 - 用户于 2026-11-03 明确：仓库导航按平台分页签——GitHub、GitLab（各含自建实例）和没有托管远端的「其他」，页签只用图标（simple-icons），不再分「我的 / 第三方」页签，也不按 owner 或托管平台折叠分组。同一页签里自己的仓库在前，别人的仓库名字用浅色并带 owner 标签；所有仓库都显示改动圆点。默认进入 GitHub，不因列表为空、未登录或账号验证失败自动切换页签。
+- 用户于 2026-11-24 明确：仓库列表不按账号拆分分组（Desktop 3.7.0 的 account qualifier 分组不做，也不列为产品缺口）；`repositories-list-grouping-test.ts` 里对应的 7 个原版用例由 `tests/conformance/design-adaptations.ts` 排除，owner／Enterprise／Other 分组的用例保留。
+- 用户于 2026-11-24 明确：Windows 上查找 Git Bash 时额外认 `\ucrt64\bin\git.exe`（Git for Windows 的 UCRT64 构建，原版 `findGitBash` 只认 `\cmd\` 与 `\mingw64\bin\`），这是相对 Desktop 的有意差异。
 - 账号、远端读取失败不能冒充未登录、无远端或空仓库列表，也不能覆盖最后一次成功缓存。macOS 仓库递归监听使用 FSEvents，禁止强制 kqueue 为构建目录的每个文件持有描述符。
 
 - CI 界面以 Desktop 原版组件及交互为基准，GitHub/GitLab 共用组件，平台差异只在数据与接口适配层处理，不另造 GitLab 面板。用户已明确允许步骤区使用 ReUI；须保留失败定位、状态、时长及跳转行为。

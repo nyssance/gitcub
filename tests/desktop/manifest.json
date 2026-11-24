@@ -1868,7 +1868,7 @@
       "runner": {
         "snapshot": "tests/conformance/upstream/desktop/repositories-list-grouping-test.ts",
         "command": "bun run test:upstream",
-        "adaptation": "Original suite unchanged against production code via API shape adapter; verified by the unchanged upstream suite."
+        "adaptation": "API shape adapter; the 7 per-account grouping cases are removed by tests/conformance/design-adaptations.ts (user decision 2026-11-24: the list is never split by account); the 3 owner / Enterprise / Other cases run unchanged."
       }
     },
     "app/test/unit/repositories-store-test.ts": {

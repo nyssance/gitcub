@@ -25,6 +25,10 @@ export const findGitBash = async () => {
     bashPath = join(gitPath, "../../usr/bin/bash.exe")
   } else if (gitPath?.toLowerCase().endsWith(String.raw`\mingw64\bin\git.exe`)) {
     bashPath = join(gitPath, "../../../usr/bin/bash.exe")
+  } else if (gitPath?.toLowerCase().endsWith(String.raw`\ucrt64\bin\git.exe`)) {
+    // 原版没有这一条：Git for Windows 新的 UCRT64 构建（如 scoop 装的 2.56）把 git.exe 放在这里，
+    // 又没有注册表项，原版因此找不到 Git Bash，钩子环境默认不可用。目录结构与 mingw64 相同。
+    bashPath = join(gitPath, "../../../usr/bin/bash.exe")
   } else {
     const installPath = await getGitInstallPath()
     if (installPath) bashPath = join(installPath, "usr/bin/bash.exe")

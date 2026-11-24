@@ -134,8 +134,8 @@ Windows 相关：
    - 选中仓库后切到资源管理器，给仓库文件夹改名、挪走：应成功；回到 GitCub 显示「找不到仓库」；改回原名后自动恢复。
    - 编辑器在前台改文件、GitCub 在旁边：列表仍实时刷新。
    - 从终端或其他程序改名仍会被拒（只认资源管理器），原生用例「a repository moved away…」由测试进程改名，预计仍失败，需要按这个限制调整或登记。
-2. **git-bash 查找是否认 `\ucrt64\bin\git.exe`**：Desktop 的 `findGitBash` 只认 `\cmd\git.exe` 与 `\mingw64\bin\git.exe`。scoop 装的 Git 2.56（PATH 上是 `ucrt64\bin`，没有注册表项）找不到 Git Bash，而钩子环境默认 shell 就是 Git Bash，所以这种安装下钩子环境默认不可用（Desktop 同样）。加上就超出原版。
-3. **仓库分组的 7 个上游用例**（`desktop/repositories-list-grouping-test.ts`）：原版按账号拆分分组，项目规则是按平台分页签、不折叠分组。实现还是登记排除。
+2. ~~git-bash 查找是否认 `\ucrt64\bin\git.exe`~~ **已决定并实现**（2026-11-24）：认。`src/lib/hooks/get-shell.ts` 的 `findGitBash` 多一条 `\ucrt64\bin\git.exe`，目录结构同 mingw64；这是相对 Desktop 的有意差异，已写进 AGENTS.md。待 Windows 验证：scoop 的 Git 2.56 下钩子环境默认可用，`desktop/get-shell-env-test.ts` 的 git-bash 用例通过。
+3. ~~仓库分组的 7 个上游用例~~ **已决定**（2026-11-24）：不按账号拆分分组。7 个用例由 `tests/conformance/design-adaptations.ts` 排除，其余 3 个照跑（macOS 上 3/3 通过）。
 
 ### 回 macOS 先做
 
