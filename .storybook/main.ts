@@ -7,7 +7,7 @@ const config: StorybookConfig = {
   framework: { name: "@storybook/react-vite", options: {} },
   addons: ["@storybook/addon-a11y"],
   core: { disableTelemetry: true },
-  typescript: { reactDocgen: false },
+  typescript: { docgenSpecifier: "@typescript/typescript6" },
   async viteFinal(config) {
     const { mergeConfig } = await import("vite")
     return mergeConfig(config, {
