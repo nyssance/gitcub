@@ -212,13 +212,9 @@ def upgrade(c: Context) -> None:
     # 下方 cargo update 不依赖 Bun 安装出的 Rust 源码。
     c.run("bun update")
     with c.cd("src-tauri"):
-        c.run("cargo update")
-        # cargo update stays within declared requirements. Report newer incompatible
-        # releases (including pinned prereleases) without changing manifests or locks.
-        # Unlike cargo-outdated, this does not resolve a rewritten temporary workspace.
-        if shutil.which("cargo-upgrade") is None:
-            c.run("cargo install cargo-edit --locked")
-        c.run("cargo upgrade --dry-run --incompatible allow --pinned allow", warn=True)
+        # --verbose also lists each direct dependency whose newest release is outside its declared range
+        # (`Unchanged … (available: …)`); raising that range is left to a person.
+        c.run("cargo update --verbose")
     # 平级独立包(browser-extension):根没有 workspaces,上面那条完全够不着它们。
     # 用 c.cd 而不是 `bun --cwd` —— bun 1.3.14 的 `bun update --cwd <相对路径>` 直接
     # ENOENT(只认绝对路径),而同一个 flag 在 `bun install` 上却正常,踩过一次。
